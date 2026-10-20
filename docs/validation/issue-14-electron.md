@@ -58,7 +58,6 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 
 第二版实际顶层 CDHash `260b3a02cbd27ff5eadfb16d96b0b0bb34359374`；helper CDHash `36c9fcca331ba218d10eb0ae0e101c76ae73e20d`。asar SHA256 `e4c4b2375c6cae151bc8cd10c163842563982c2c66aec58ffda9cb6fcbdc6cd7`。递归 strict 签名验证通过；完整签名、哈希、编译 receipt 另存 `/tmp/mosey-electron-dock-v2-provenance.json`，第一版 provenance 不覆盖。第二版冻结后仍需实际 LaunchServices 启动/可见菜单/必要手动授权验证；不把这个无 inspector 的子进程测试冒充 LS 独立责任链。
 
-
 ## 第二版冻结产物的独立 LaunchServices 未授权基线（2026-10-20）
 
 最终两项审查均为 0 findings。源码提交 `2cafc41fa06a9867df1a81b6dd5bdb9be18dcb84` 对应的第二版冻结应用与构建 provenance 的哈希匹配，严格递归签名验证通过；未重建、重签或移动冻结应用，旧失败第一版仍保留。数值证据归档于 `probes/results/issue-14/electron/`：`build-provenance.json`、`evidence/launchservices-before-grant.jsonl` 和 `evidence/automated/` 下的开发/打包运行与生命周期 JSON/JSONL；没有复制 PNG 或捕获像素。
@@ -66,7 +65,6 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 操作者通过 CUA 按冻结应用的精确路径进行 LaunchServices 启动，实际看到 Idle corgi 与菜单。该次主进程 PID 90330、父 PID 1；自有 native helper PID 90429、父 PID 90330。启动验证后状态窗显示 Blocked / Unavailable，Electron 宿主权限诊断为 denied。原生 preflight 输出 `permission_unavailable`、`shareableContentQueryAttempted: false`，随后 summary 同样为权限不可用，helper 退出码 2；没有 stream 配置或捕获，`supportEdge` 始终为 null。
 
 已请用户手动授予这个冻结的新版 Mosey Screen Recording 权限，当前尚未收到回复，授权后捕获及独立责任链验证仍待完成。自动化中开发/打包的继承权限与三次 helper 生命周期测试通过，不能替代此次真实 LaunchServices 身份授权，也不作为授权后独立捕获已经通过的证据。
-
 
 ## 第二版手动授权后的真实 Electron / LaunchServices 验证（2026-10-20；阶段历史）
 
@@ -82,7 +80,6 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 
 本轮进展已记录于 [#14 评论](https://github.com/Frost-96/mosey/issues/14#issuecomment-6289855466)，议题保持 OPEN，待用户准备后继续运行中撤权验证。
 
-
 ## 撤权操作报告与后续观测不一致（2026-10-20；阶段历史，原因未明）
 
 在此前正常到时结束之后，另开一轮运行中撤权验证。用户报告“本轮已关闭，并完成系统退出提示”；但随后 CUA 的设置 AX 状态及本地截图均显示开关仍为 on。该轮 `00732` 的原主进程 PID 93655、helper PID 93718 在约 95 秒仍存活，日志继续提供 idle-current heartbeat；最终约 120 秒正常完成、code 0。未观察到实际关闭状态或系统退出提示，不能将这轮正常结束写成已观察撤权。
@@ -90,7 +87,6 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 代理随后通过菜单 Quit 退出，再从同一冻结应用精确路径进行 LaunchServices 重启。新 `849d4` 运行仍报告宿主 granted，并实际获得 native stream 配置和完整帧；代理通过菜单 Stop 停止。数值证据保存为 `launchservices-revoke-run.jsonl`、`launchservices-revoke-relaunch-run.jsonl`、`revoke-live-baseline.json`、`revoke-after-user-report.json`、`revoke-observation-discrepancy.json`，均位于 `probes/results/issue-14/electron/evidence/`；没有复制图片。此前 `86a1` 正常完成和 `revoke-baseline.json` 的历史说明保持不变。
 
 已确认的是用户操作报告与随后系统/进程观测不一致；原因未明，不据此归因于用户、TCC 或实现，也不判定运行中撤权通过或产品失败。当前只请用户澄清操作的是正式 Mosey 还是原生 probe、之后是否重新开启，不要求重复操作。Dock 已恢复 bottom / autohide on，大小及放大滑块未变。#14 保持 OPEN，撤权验收继续待确认。
-
 
 ## 已确认关闭权限后的独立重启（2026-10-20）
 
@@ -109,7 +105,6 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 复现时使用本文“构建、资源与签名”的正式入口生成新的候选，记录源码/receipt/最终签名和三个二进制哈希，冻结后不再重建。通过精确路径正常 LaunchServices 启动，菜单启动一次有界 Dock validation，并记录 host/helper PID、父 PID 与 userData 数字日志；自动化入口和命令见仓库 README。人工授权后分别操作底部/左右稳定及显隐，按 `probes/README.md` 的离线 alpha 工具将本地独立 PNG 的 threshold 128 最大连通分量 bbox/count/hash 与完整帧比较；不将截图上传或归档入仓库。权限对照需操作者明确确认正式 Mosey 开关状态，正常 Quit 后重启同一冻结应用再启动验证，检查 unavailable/no-query/code 2 且无 stream/frame。历史数值路径见本文件各节，当前归档根为 `probes/results/issue-14/electron/`；图像只存在操作者本地，动态同步和实时撤权须另设时间对照，不能由这些稳定/重启步骤推导。
 
 收尾时通过菜单 Quit 退出最终验证应用，针对本轮 PID 94930/94941 及前轮 93655/93718 的进程检查无残留。系统正式 Mosey 权限保持 off，未改独立原生 probe 权限。冻结第二版 `Mosey.app` 与全部本地 PNG 原样保留在本次 v2 证据目录，未删除或重建。
-
 
 ## 最终早期验证结项结论
 
