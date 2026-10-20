@@ -107,3 +107,5 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 产品支撑边缘规则、动态同步误差、长期 CPU/内存、强放大与 tooltip/分割组合、Dock/显示配置变化及实时撤权仍留后续验证。稳定轮廓吻合不等于产品可站立；所有结果继续 `supportEdge: null`，没有碰撞或攀爬实现。议题是否满足早期验证范围由后续 spec review 判断，本次不关闭 #14。
 
 复现时使用本文“构建、资源与签名”的正式入口生成新的候选，记录源码/receipt/最终签名和三个二进制哈希，冻结后不再重建。通过精确路径正常 LaunchServices 启动，菜单启动一次有界 Dock validation，并记录 host/helper PID、父 PID 与 userData 数字日志；自动化入口和命令见仓库 README。人工授权后分别操作底部/左右稳定及显隐，按 `probes/README.md` 的离线 alpha 工具将本地独立 PNG 的 threshold 128 最大连通分量 bbox/count/hash 与完整帧比较；不将截图上传或归档入仓库。权限对照需操作者明确确认正式 Mosey 开关状态，正常 Quit 后重启同一冻结应用再启动验证，检查 unavailable/no-query/code 2 且无 stream/frame。历史数值路径见本文件各节，当前归档根为 `probes/results/issue-14/electron/`；图像只存在操作者本地，动态同步和实时撤权须另设时间对照，不能由这些稳定/重启步骤推导。
+
+收尾时通过菜单 Quit 退出最终验证应用，针对本轮 PID 94930/94941 及前轮 93655/93718 的进程检查无残留。系统正式 Mosey 权限保持 off，未改独立原生 probe 权限。冻结第二版 `Mosey.app` 与全部本地 PNG 原样保留在本次 v2 证据目录，未删除或重建。
