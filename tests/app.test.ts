@@ -123,6 +123,16 @@ test("a real app displays one animated corgi and quits from its menu", async () 
             devicePixelRatio,
             presentation,
             scripts: Array.from(document.scripts).map((script) => script.src),
+            scriptDetails: Array.from(document.scripts).map((script) => ({
+              outerHTML: script.outerHTML.slice(0, 12000),
+              src: script.src,
+              type: script.type,
+              async: script.async,
+              defer: script.defer,
+              noModule: script.noModule,
+              connected: script.isConnected,
+            })),
+            scriptTimeline: Reflect.get(window, "__DEBUG_pr18_scriptTimeline"),
             resources: performance.getEntriesByType("resource").map((entry) => {
               const resource = entry as PerformanceResourceTiming;
               return {
@@ -162,6 +172,52 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         ),
       );
       await writeFile(`${prefix}-forge.log`, serverOutput);
+      const responses = await page
+        .evaluate(async () => {
+          const urls = [
+            ...new Set(
+              performance
+                .getEntriesByType("resource")
+                .map((entry) => entry.name),
+            ),
+          ].filter((url) => {
+            const parsed = new URL(url, location.href);
+            return (
+              parsed.origin === location.origin &&
+              /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(
+                parsed.href,
+              )
+            );
+          });
+          return Promise.all(
+            urls.map(async (url) => {
+              try {
+                const response = await fetch(url, {
+                  cache: "force-cache",
+                  signal: AbortSignal.timeout(2000),
+                });
+                const body = await response.text();
+                return {
+                  url,
+                  status: response.status,
+                  mime: response.headers.get("content-type"),
+                  bodyLength: body.length,
+                  body: body.slice(0, 3 * 1024 * 1024),
+                  truncated: body.length > 3 * 1024 * 1024,
+                  provenance:
+                    "Failure-time fetch; not proof of original response bytes",
+                };
+              } catch (error) {
+                return { url, error: String(error) };
+              }
+            }),
+          );
+        })
+        .catch((error: unknown) => ({ error: String(error) }));
+      await writeFile(
+        `${prefix}-responses.json`,
+        JSON.stringify(responses, null, 2),
+      );
       const moduleProbe = await page
         .evaluate<Record<string, unknown>>(
           String.raw`(async () => {

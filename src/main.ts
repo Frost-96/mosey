@@ -145,7 +145,18 @@ async function start() {
     publish();
   });
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-  pet.webContents.on("will-navigate", (event) => event.preventDefault());
+  pet.webContents.on("will-navigate", (event, url) => {
+    log.info("DEBUG-pr18 will-navigate", {
+      url,
+      isMainFrame: event.isMainFrame,
+    });
+    event.preventDefault();
+  });
+  pet.webContents.on(
+    "did-start-navigation",
+    (_event, url, _inPlace, isMainFrame) =>
+      log.info("DEBUG-pr18 did-start-navigation", { url, isMainFrame }),
+  );
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
