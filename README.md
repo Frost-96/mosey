@@ -21,7 +21,7 @@ pnpm package:mac    # Forge + 官方 Vite 插件，构建本地 darwin-arm64 .ap
 pnpm test:packaged  # 启动刚生成的真实 .app
 ```
 
-`pnpm build` 通过相同 Forge package 流程构建当前平台产物；本票交付与测试限定 macOS arm64。应用在 `out/Mosey-darwin-arm64/Mosey.app`，可用 Finder 打开。打包不签名、不公证、不自动发布；交付范围是本机验证。首次安装需要网络下载依赖与 Electron 二进制。
+`pnpm build` 通过相同 Forge package 流程构建当前平台产物；本票交付与测试限定 macOS arm64。应用在 `out/Mosey-darwin-arm64/Mosey.app`，可用 Finder 打开。打包使用 Forge 的 macOS 签名流程进行本地 ad-hoc 签名；没有开发者证书、公证或自动发布，交付范围是本机验证。首次安装需要网络下载依赖与 Electron 二进制。
 
 单 package，无 packages workspace 字段。pnpm 12 将设置统一放在名为 `pnpm-workspace.yaml` 的配置文件；该文件只管理安装策略，未引入多包 workspace。Forge 要求 hoisted 安装布局，使用 `nodeLinker: hoisted`。Electron 44 npm 包提供显式 `install-electron`，根包 postinstall 执行该命令，避免首次启动时才下载。开发 Node 由 `.node-version` / `.nvmrc` / engines 锁定；Electron 内置 Node **24.22.0** 随 Electron 升级，不能用开发 Node 替换。
 
@@ -65,3 +65,9 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 #2 已接入 XState、受限 IPC、正式素材管线、单实例与本地日志，并扩展真实应用测试验证脚底与重复启动；本次记录见 [验证文档](docs/validation/issue-2.md)。真实桌面层叠、工作应用焦点、真实鼠标菜单栏退出及打包应用断网启动仍需独立证据。API 菜单回调不能替代真实鼠标验收，也不表示完整首版通过。
 
 以下为 #13 工程基线历史记录，不作为 #2 新实现的通过证据：`pnpm check` 全部通过；清空 node_modules 后 `pnpm install --frozen-lockfile` 通过；开发整应用测试 1/1（1.70s），打包整应用测试 1/1（1.08s）。运行时 JSON 两种模式均为 Electron 44.9.1 / Node 24.22.0。打包截图已人工检查为完整、透明背景的柯基，无滚动条。测试后检查本工作树路径的进程列表，无应用或 Forge 进程残留。GitHub Actions 首次远程运行 [39397051399](https://github.com/Frost-96/mosey/actions/runs/39397051399) 在 setup-node 的自动包管理器缓存阶段失败：此时 pnpm 尚未安装，提示找不到 pnpm 可执行文件，后续应用检查均未执行。现已关闭 setup-node 的自动包管理器缓存，让锁定的 Node 先安装，再安装 pnpm；修复后的远程运行 [39397492660](https://github.com/Frost-96/mosey/actions/runs/39397492660) 全部通过，包括 frozen install、类型/lint/格式、真实开发测试、Apple Silicon 打包、真实打包测试和产物上传。
+
+## 可选 Dock 验证（#14）
+
+默认启动仍只显示待机柯基和菜单栏，不进行屏幕捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
+
+此入口是实际 Forge/Vite 应用中的独立实验，尚未提供宠物碰撞、攀爬或固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。

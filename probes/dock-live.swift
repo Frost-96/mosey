@@ -28,6 +28,7 @@ struct Options {
             }
             if flag == "--idle-current" { o.idleCurrent=true;continue }
             if flag == "--overlay" { o.overlay=true; continue }
+            if flag == "--no-app-status" { o.appStatus=false;continue }
             if flag == "--app-status" { o.appStatus = true; continue }
             guard !args.isEmpty else { fail("Missing value for \(flag)") }
             let value = args.removeFirst()
