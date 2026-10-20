@@ -81,3 +81,12 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 #14 仍 OPEN。上述证据补齐最终 Electron 身份的独立启动、授权捕获、三个方向稳定轮廓及左右隐藏清理；动态同步精度、运行中撤权、长期资源及产品支撑边缘等仍有验收缺口。所有记录保持 `supportEdge: null`，没有攀爬实现或固定边界降级。
 
 本轮进展已记录于 [#14 评论](https://github.com/Frost-96/mosey/issues/14#issuecomment-6289855466)，议题保持 OPEN，待用户准备后继续运行中撤权验证。
+
+
+## 撤权操作报告与后续观测不一致（2026-10-20；原因未明）
+
+在此前正常到时结束之后，另开一轮运行中撤权验证。用户报告“本轮已关闭，并完成系统退出提示”；但随后 CUA 的设置 AX 状态及本地截图均显示开关仍为 on。该轮 `00732` 的原主进程 PID 93655、helper PID 93718 在约 95 秒仍存活，日志继续提供 idle-current heartbeat；最终约 120 秒正常完成、code 0。未观察到实际关闭状态或系统退出提示，不能将这轮正常结束写成已观察撤权。
+
+代理随后通过菜单 Quit 退出，再从同一冻结应用精确路径进行 LaunchServices 重启。新 `849d4` 运行仍报告宿主 granted，并实际获得 native stream 配置和完整帧；代理通过菜单 Stop 停止。数值证据保存为 `launchservices-revoke-run.jsonl`、`launchservices-revoke-relaunch-run.jsonl`、`revoke-live-baseline.json`、`revoke-after-user-report.json`、`revoke-observation-discrepancy.json`，均位于 `probes/results/issue-14/electron/evidence/`；没有复制图片。此前 `86a1` 正常完成和 `revoke-baseline.json` 的历史说明保持不变。
+
+已确认的是用户操作报告与随后系统/进程观测不一致；原因未明，不据此归因于用户、TCC 或实现，也不判定运行中撤权通过或产品失败。当前只请用户澄清操作的是正式 Mosey 还是原生 probe、之后是否重新开启，不要求重复操作。Dock 已恢复 bottom / autohide on，大小及放大滑块未变。#14 保持 OPEN，撤权验收继续待确认。
