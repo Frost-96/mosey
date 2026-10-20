@@ -144,28 +144,22 @@ async function start() {
     visibility = "hidden";
     publish();
   });
+  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
+    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
+    : undefined;
+  const devOrigin = devURL ? new URL(devURL).origin : undefined;
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   pet.webContents.on("will-navigate", (event, url) => {
-    log.info("DEBUG-pr18 will-navigate", {
-      url,
-      isMainFrame: event.isMainFrame,
-    });
-    event.preventDefault();
+    // Allow reload of only the exact configured development entry.
+    // Keep every other navigation, and every packaged navigation, blocked.
+    if (!devURL || url !== devURL) event.preventDefault();
   });
-  pet.webContents.on(
-    "did-start-navigation",
-    (_event, url, _inPlace, isMainFrame) =>
-      log.info("DEBUG-pr18 did-start-navigation", { url, isMainFrame }),
-  );
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
   pet.webContents.on("render-process-gone", (_event, details) =>
     log.error("Pet renderer exited", details.reason),
   );
-  const devOrigin = MAIN_WINDOW_VITE_DEV_SERVER_URL
-    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).origin
-    : undefined;
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
@@ -176,27 +170,8 @@ async function start() {
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.webContents.on("console-message", (details) =>
-    log.info("DEBUG-pr18 renderer-console", details.message),
-  );
-  pet.webContents.once("did-finish-load", () =>
-    log.info("DEBUG-pr18 did-finish-load", {
-      visible: pet.isVisible(),
-      loading: pet.webContents.isLoading(),
-    }),
-  );
-  pet.on("show", () =>
-    log.info("DEBUG-pr18 show", { visible: pet.isVisible() }),
-  );
-  pet.on("hide", () =>
-    log.info("DEBUG-pr18 hide", { visible: pet.isVisible() }),
-  );
-  pet.once("ready-to-show", () => {
-    log.info("DEBUG-pr18 ready-to-show", { visible: pet.isVisible() });
-    pet.showInactive();
-  });
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL)
-    await pet.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  pet.once("ready-to-show", () => pet?.showInactive());
+  if (devURL) await pet.loadURL(devURL);
   else
     await pet.loadFile(
       path.join(

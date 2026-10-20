@@ -73,203 +73,10 @@ test.runIf(packaged)(
 test("a real app displays one animated corgi and quits from its menu", async () => {
   let app: ElectronApplication | undefined;
   let server: ChildProcess | undefined;
-  let serverOutput = "";
   const errors: string[] = [];
   let shim: string | undefined;
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
-  const debugSnapshot = async (phase: string) => {
-    if (!app) return;
-    await mkdir("test-results", { recursive: true });
-    const prefix = `test-results/DEBUG-pr18-${packaged ? "packaged" : "development"}-${phase}`;
-    const main = await app
-      .evaluate(({ app, BrowserWindow }) => ({
-        logsPath: app.getPath("logs"),
-        windows: BrowserWindow.getAllWindows().map((window) => ({
-          id: window.id,
-          visible: window.isVisible(),
-          minimized: window.isMinimized(),
-          focused: window.isFocused(),
-          bounds: window.getBounds(),
-          loading: window.webContents.isLoading(),
-          url: window.webContents.getURL(),
-        })),
-      }))
-      .catch((error: unknown) => ({ error: String(error) }));
-    const pages = [];
-    for (const page of app.windows()) {
-      const beforeProbe = await page
-        .evaluate(async () => {
-          const canvas = document.querySelector("canvas");
-          let presentation: unknown;
-          try {
-            presentation = await Promise.race([
-              window.mosey?.getPresentation(),
-              new Promise((resolve) =>
-                setTimeout(() => resolve("getPresentation timeout"), 1000),
-              ),
-            ]);
-          } catch (error) {
-            presentation = String(error);
-          }
-          const pixels = canvas
-            ?.getContext("2d")
-            ?.getImageData(0, 0, canvas.width, canvas.height).data;
-          const beforeProbe = {
-            url: location.href,
-            readyState: document.readyState,
-            hidden: document.hidden,
-            visibilityState: document.visibilityState,
-            devicePixelRatio,
-            presentation,
-            scripts: Array.from(document.scripts).map((script) => script.src),
-            scriptDetails: Array.from(document.scripts).map((script) => ({
-              outerHTML: script.outerHTML.slice(0, 12000),
-              src: script.src,
-              type: script.type,
-              async: script.async,
-              defer: script.defer,
-              noModule: script.noModule,
-              connected: script.isConnected,
-            })),
-            scriptTimeline: Reflect.get(window, "__DEBUG_pr18_scriptTimeline"),
-            resources: performance.getEntriesByType("resource").map((entry) => {
-              const resource = entry as PerformanceResourceTiming;
-              return {
-                name: resource.name.slice(0, 512),
-                type: resource.initiatorType,
-                duration: resource.duration,
-                transferSize: resource.transferSize,
-                responseStatus: resource.responseStatus,
-              };
-            }),
-            bridgeType: typeof window.mosey,
-            canvas: canvas
-              ? {
-                  width: canvas.width,
-                  height: canvas.height,
-                  clientWidth: canvas.clientWidth,
-                  clientHeight: canvas.clientHeight,
-                  alphaPixels: pixels
-                    ? Array.from(pixels).filter(
-                        (v, i) => i % 4 === 3 && v > 127,
-                      ).length
-                    : null,
-                }
-              : null,
-          };
-          return beforeProbe;
-        })
-        .catch((error: unknown) => ({ error: String(error) }));
-      pages.push(beforeProbe);
-      // Persist original failure evidence before any secondary probe can fail.
-      await writeFile(
-        `${prefix}-before.json`,
-        JSON.stringify(
-          { prefix: "DEBUG-pr18", phase, errors, main, pages },
-          null,
-          2,
-        ),
-      );
-      await writeFile(`${prefix}-forge.log`, serverOutput);
-      const responses = await page
-        .evaluate(async () => {
-          const urls = [
-            ...new Set(
-              performance
-                .getEntriesByType("resource")
-                .map((entry) => entry.name),
-            ),
-          ].filter((url) => {
-            const parsed = new URL(url, location.href);
-            return (
-              parsed.origin === location.origin &&
-              /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(
-                parsed.href,
-              )
-            );
-          });
-          return Promise.all(
-            urls.map(async (url) => {
-              try {
-                const response = await fetch(url, {
-                  cache: "force-cache",
-                  signal: AbortSignal.timeout(2000),
-                });
-                const body = await response.text();
-                return {
-                  url,
-                  status: response.status,
-                  mime: response.headers.get("content-type"),
-                  bodyLength: body.length,
-                  body: body.slice(0, 3 * 1024 * 1024),
-                  truncated: body.length > 3 * 1024 * 1024,
-                  provenance:
-                    "Failure-time fetch; not proof of original response bytes",
-                };
-              } catch (error) {
-                return { url, error: String(error) };
-              }
-            }),
-          );
-        })
-        .catch((error: unknown) => ({ error: String(error) }));
-      await writeFile(
-        `${prefix}-responses.json`,
-        JSON.stringify(responses, null, 2),
-      );
-      const moduleProbe = await page
-        .evaluate<Record<string, unknown>>(
-          String.raw`(async () => {
-        const urls = [...new Set([
-          ...performance.getEntriesByType("resource").map((entry) => entry.name),
-          ...Array.from(document.scripts).map((script) => script.src),
-        ])].filter((url) => {
-          const parsed = new URL(url, location.href);
-          return parsed.origin === location.origin && /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(parsed.href);
-        });
-        const moduleProbes = await Promise.all(urls.map(async (url) => {
-          const started = performance.now();
-          const result = await Promise.race([
-            import(url).then(
-              (module) => ({ state: "resolved", exportNames: Object.keys(module).slice(0, 20) }),
-              (error) => ({ state: "rejected", error: String(error), stack: error?.stack }),
-            ),
-            new Promise((resolve) => setTimeout(() => resolve({ state: "timeout" }), 1000)),
-          ]);
-          return { url, elapsedMs: performance.now() - started, ...result };
-        }));
-        const canvas = document.querySelector("canvas");
-        return { moduleProbes, afterProbeCanvas: canvas ? { width: canvas.width, height: canvas.height } : null };
-      })()`,
-        )
-        .catch((error: unknown) => ({ error: String(error) }));
-      pages[pages.length - 1] = { ...beforeProbe, ...moduleProbe };
-      const localLog = await page
-        .getByLabel("Local log")
-        .inputValue({ timeout: 500 })
-        .catch(() => undefined);
-      if (localLog && path.isAbsolute(localLog)) {
-        const { readFile } = await import("node:fs/promises");
-        await writeFile(
-          `${prefix}-native.jsonl`,
-          await readFile(localLog),
-        ).catch(() => {});
-      }
-    }
-    const { readFile } = await import("node:fs/promises");
-    if ("logsPath" in main) {
-      const tail = await readFile(
-        path.join(main.logsPath, "main.log"),
-        "utf8",
-      ).catch(String);
-      await writeFile(`${prefix}-main.log`, tail.slice(-32000));
-    }
-    await writeFile(`${prefix}-forge.log`, serverOutput);
-    const evidence = { prefix: "DEBUG-pr18", phase, errors, main, pages };
-    await writeFile(`${prefix}.json`, JSON.stringify(evidence, null, 2));
-    console.log("DEBUG-pr18", JSON.stringify(evidence));
-  };
   try {
     if (!packaged) {
       shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
@@ -288,17 +95,18 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         stdio: "pipe",
         detached: true,
       });
+      let output = "";
       server.stdout?.on("data", (data: Buffer) => {
-        serverOutput = (serverOutput + data.toString()).slice(-128000);
+        output += data.toString();
       });
       server.stderr?.on("data", (data: Buffer) => {
-        serverOutput = (serverOutput + data.toString()).slice(-128000);
+        output += data.toString();
       });
       await expect
         .poll(
           () => {
-            if (server?.exitCode !== null) throw new Error(serverOutput);
-            return serverOutput;
+            if (server?.exitCode !== null) throw new Error(output);
+            return output;
           },
           { timeout: 60000 },
         )
@@ -331,22 +139,88 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       console.log(message.type(), message.text()),
     );
     expect(app.windows()).toHaveLength(1);
+    const opaquePixelCount = () =>
+      window.evaluate(() => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) return 0;
+        const pixels = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        return Array.from(pixels).filter(
+          (value, i) => i % 4 === 3 && value > 127,
+        ).length;
+      });
     await expect
-      .poll(
-        async () =>
-          window.evaluate(() => {
-            const canvas = document.querySelector("canvas");
-            if (!canvas) return 0;
-            const pixels = canvas
-              .getContext("2d")!
-              .getImageData(0, 0, canvas.width, canvas.height).data;
-            return Array.from(pixels).filter(
-              (value, i) => i % 4 === 3 && value > 127,
-            ).length;
-          }),
-        { timeout: 10000 },
-      )
+      .poll(opaquePixelCount, { timeout: 10000 })
       .toBeGreaterThan(5000);
+    if (!packaged) {
+      // Renderer-originated navigation exercises will-navigate; page.reload()
+      // uses a browser API that can bypass the application's navigation guard.
+      await window.evaluate(() => {
+        document.documentElement.dataset.reloadIdentity = "original-document";
+        location.reload();
+      });
+      await expect
+        .poll(
+          () =>
+            window.evaluate(
+              () => document.documentElement.dataset.reloadIdentity ?? null,
+            ),
+          { timeout: 10000 },
+        )
+        .toBe(null);
+      await expect
+        .poll(opaquePixelCount, { timeout: 10000 })
+        .toBeGreaterThan(5000);
+    }
+    // Renderer-originated navigation to another path must be stopped by the
+    // navigation guard itself, including packaged navigation back to its own URL.
+    const originalURL = window.url();
+    const deniedURLs = [new URL("unexpected-navigation", originalURL).href];
+    if (packaged) deniedURLs.push(originalURL);
+    for (const destination of deniedURLs) {
+      await window.evaluate(() => {
+        document.documentElement.dataset.navigationIdentity = "same-document";
+      });
+      const prevented = await app.evaluate(
+        async ({ BrowserWindow }, destination) => {
+          const contents = BrowserWindow.getAllWindows()[0]!.webContents;
+          return new Promise<boolean>((resolve, reject) => {
+            const listener = (event: Electron.Event, url: string) => {
+              if (url !== destination) return;
+              clearTimeout(timer);
+              contents.off("will-navigate", listener);
+              resolve(event.defaultPrevented);
+            };
+            const timer = setTimeout(() => {
+              contents.off("will-navigate", listener);
+              reject(
+                new Error("Renderer navigation did not reach will-navigate"),
+              );
+            }, 5000);
+            contents.on("will-navigate", listener);
+            void contents
+              .executeJavaScript(
+                `location.href = ${JSON.stringify(destination)}`,
+              )
+              .catch((error: unknown) => {
+                clearTimeout(timer);
+                contents.off("will-navigate", listener);
+                reject(error);
+              });
+          });
+        },
+        destination,
+      );
+      expect(prevented).toBe(true);
+      expect(window.url()).toBe(originalURL);
+      expect(
+        await window.evaluate(
+          () => document.documentElement.dataset.navigationIdentity,
+        ),
+      ).toBe("same-document");
+      expect(await opaquePixelCount()).toBeGreaterThan(5000);
+    }
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(app.process().spawnfile, packaged ? [] : ["."], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
@@ -561,9 +435,6 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       JSON.stringify(runtime, null, 2),
     );
   } catch (error) {
-    await debugSnapshot("failure").catch((diagnosticError: unknown) =>
-      console.error("DEBUG-pr18 snapshot failure", diagnosticError),
-    );
     await mkdir("test-results", { recursive: true });
     for (const [i, window] of (app?.windows() ?? []).entries())
       await window

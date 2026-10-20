@@ -4,7 +4,6 @@ import { atlasSchema } from "./shared/assets";
 import type { Presentation } from "./shared/contract";
 
 try {
-  console.info("DEBUG-pr18 renderer-module-entered");
   const atlas = atlasSchema.parse(metadata);
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Pet canvas is absent");
@@ -12,9 +11,7 @@ try {
   if (!context) throw new Error("Canvas 2D is unavailable");
   const image = new Image();
   image.src = idleUrl;
-  console.info("DEBUG-pr18 atlas-decode-start", idleUrl);
   await image.decode();
-  console.info("DEBUG-pr18 atlas-decode-complete", image.width, image.height);
   if (image.width !== atlas.width || image.height !== atlas.height)
     throw new Error("Atlas pixels do not match metadata");
   // Keep Canvas details here; metadata uses only image-space geometry.
@@ -67,13 +64,6 @@ try {
   }
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
-  console.info(
-    "DEBUG-pr18 renderer-synchronized",
-    presentation,
-    document.visibilityState,
-    canvas.width,
-    canvas.height,
-  );
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
   );
