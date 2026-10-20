@@ -165,7 +165,25 @@ async function start() {
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.once("ready-to-show", () => pet?.showInactive());
+  pet.webContents.on("console-message", (details) =>
+    log.info("DEBUG-pr18 renderer-console", details.message),
+  );
+  pet.webContents.once("did-finish-load", () =>
+    log.info("DEBUG-pr18 did-finish-load", {
+      visible: pet.isVisible(),
+      loading: pet.webContents.isLoading(),
+    }),
+  );
+  pet.on("show", () =>
+    log.info("DEBUG-pr18 show", { visible: pet.isVisible() }),
+  );
+  pet.on("hide", () =>
+    log.info("DEBUG-pr18 hide", { visible: pet.isVisible() }),
+  );
+  pet.once("ready-to-show", () => {
+    log.info("DEBUG-pr18 ready-to-show", { visible: pet.isVisible() });
+    pet.showInactive();
+  });
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL)
     await pet.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   else

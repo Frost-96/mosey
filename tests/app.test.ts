@@ -77,6 +77,106 @@ test("a real app displays one animated corgi and quits from its menu", async () 
   let shim: string | undefined;
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
+  const debugSnapshot = async (phase: string) => {
+    if (!app) return;
+    await mkdir("test-results", { recursive: true });
+    const prefix = `test-results/DEBUG-pr18-${packaged ? "packaged" : "development"}-${phase}`;
+    const main = await app
+      .evaluate(({ app, BrowserWindow }) => ({
+        logsPath: app.getPath("logs"),
+        windows: BrowserWindow.getAllWindows().map((window) => ({
+          id: window.id,
+          visible: window.isVisible(),
+          minimized: window.isMinimized(),
+          focused: window.isFocused(),
+          bounds: window.getBounds(),
+          loading: window.webContents.isLoading(),
+          url: window.webContents.getURL(),
+        })),
+      }))
+      .catch((error: unknown) => ({ error: String(error) }));
+    const pages = [];
+    for (const page of app.windows()) {
+      pages.push(
+        await page
+          .evaluate(async () => {
+            const canvas = document.querySelector("canvas");
+            let presentation: unknown;
+            try {
+              presentation = await Promise.race([
+                window.mosey?.getPresentation(),
+                new Promise((resolve) =>
+                  setTimeout(() => resolve("getPresentation timeout"), 1000),
+                ),
+              ]);
+            } catch (error) {
+              presentation = String(error);
+            }
+            const pixels = canvas
+              ?.getContext("2d")
+              ?.getImageData(0, 0, canvas.width, canvas.height).data;
+            return {
+              url: location.href,
+              readyState: document.readyState,
+              hidden: document.hidden,
+              visibilityState: document.visibilityState,
+              devicePixelRatio,
+              presentation,
+              scripts: Array.from(document.scripts).map((script) => script.src),
+              resources: performance
+                .getEntriesByType("resource")
+                .map((entry) => {
+                  const resource = entry as PerformanceResourceTiming;
+                  return {
+                    name: resource.name.slice(0, 512),
+                    type: resource.initiatorType,
+                    duration: resource.duration,
+                    transferSize: resource.transferSize,
+                    responseStatus: resource.responseStatus,
+                  };
+                }),
+              bridgeType: typeof window.mosey,
+              canvas: canvas
+                ? {
+                    width: canvas.width,
+                    height: canvas.height,
+                    clientWidth: canvas.clientWidth,
+                    clientHeight: canvas.clientHeight,
+                    alphaPixels: pixels
+                      ? Array.from(pixels).filter(
+                          (v, i) => i % 4 === 3 && v > 127,
+                        ).length
+                      : null,
+                  }
+                : null,
+            };
+          })
+          .catch((error: unknown) => ({ error: String(error) })),
+      );
+      const localLog = await page
+        .getByLabel("Local log")
+        .inputValue({ timeout: 500 })
+        .catch(() => undefined);
+      if (localLog && path.isAbsolute(localLog)) {
+        const { readFile } = await import("node:fs/promises");
+        await writeFile(
+          `${prefix}-native.jsonl`,
+          await readFile(localLog),
+        ).catch(() => {});
+      }
+    }
+    const { readFile } = await import("node:fs/promises");
+    if ("logsPath" in main) {
+      const tail = await readFile(
+        path.join(main.logsPath, "main.log"),
+        "utf8",
+      ).catch(String);
+      await writeFile(`${prefix}-main.log`, tail.slice(-32000));
+    }
+    const evidence = { prefix: "DEBUG-pr18", phase, errors, main, pages };
+    await writeFile(`${prefix}.json`, JSON.stringify(evidence, null, 2));
+    console.log("DEBUG-pr18", JSON.stringify(evidence));
+  };
   try {
     if (!packaged) {
       shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
@@ -369,6 +469,9 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       JSON.stringify(runtime, null, 2),
     );
   } catch (error) {
+    await debugSnapshot("failure").catch((diagnosticError: unknown) =>
+      console.error("DEBUG-pr18 snapshot failure", diagnosticError),
+    );
     await mkdir("test-results", { recursive: true });
     for (const [i, window] of (app?.windows() ?? []).entries())
       await window
