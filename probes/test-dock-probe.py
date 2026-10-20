@@ -10,11 +10,12 @@ for args in [('--duration', '0'), ('--duration', 'nan'), ('--interval', 'inf'), 
     result = run(*args)
     assert result.returncode == 64 and not result.stdout, (args, result.stderr)
 start = time.monotonic()
-result = run('--scenario', 'hidden', '--duration', '0.3', '--interval', '0.1', '--no-overlay')
+result = run('--scenario', 'hidden', '--duration', '0.3', '--interval', '0.1', '--no-overlay', '--item-overlay')
 assert result.returncode == 0, result.stderr
 records = [json.loads(line) for line in result.stdout.splitlines()]
 assert records[0]['type'] == 'environment'
 environment = records[0]
+assert environment['itemOverlayRequested'] is True and environment['itemOverlay'] is False
 assert environment['screenCoordinateSpace'] == 'AppKit global points, bottom-left origin'
 assert all(isinstance(screen['displayID'], int) for screen in environment['screens'])
 samples = [r for r in records if r['type'] == 'sample']

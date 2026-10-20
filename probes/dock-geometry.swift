@@ -9,13 +9,15 @@ struct Options {
     var duration = 10.0
     var interval = 0.2
     var overlay = true
+    var itemOverlay = false
 }
 func usage() {
     print("""
     dock-geometry [--scenario baseline|hidden|shown|magnification|left|right|permission-denied|permission-revoked]
-                  [--duration 0.1..120] [--interval 0.05..5] [--no-overlay]
+                  [--duration 0.1..120] [--interval 0.05..5] [--no-overlay] [--item-overlay]
     Emits bounded JSONL evidence to stdout. Move/show/hide/configure the Dock yourself.
-    Amber overlay = unverified AX candidate; never a product support edge.
+    Amber = unverified AXList edge; optional cyan = unverified AXDockItem edges.
+    --no-overlay disables both. Neither overlay is a product support edge.
     No permission prompts or system preference writes. Ctrl-C stops immediately.
     """)
 }
@@ -27,6 +29,7 @@ var args = Array(CommandLine.arguments.dropFirst())
 while !args.isEmpty {
     let flag = args.removeFirst()
     if flag == "--help" { usage(); exit(0) }
+    if flag == "--item-overlay" { options.itemOverlay = true; continue }
     if flag == "--no-overlay" { options.overlay = false; continue }
     guard !args.isEmpty else { invalid("Missing value for \(flag)") }
     let value = args.removeFirst()
@@ -80,6 +83,29 @@ final class EdgeView: NSView {
         path.stroke()
     }
 }
+final class ItemEdgeView: NSView {
+    var orientation = "bottom"
+    var itemBounds: [CGRect] = []
+    var displayBounds = CGRect.zero
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.cyan.setStroke()
+        let path = NSBezierPath(); path.lineWidth = 2
+        for r in itemBounds {
+            switch orientation {
+            case "bottom":
+                let y = displayBounds.maxY - r.minY
+                path.move(to: NSPoint(x: r.minX - displayBounds.minX, y: y))
+                path.line(to: NSPoint(x: r.maxX - displayBounds.minX, y: y))
+            case "left", "right":
+                let x = (orientation == "left" ? r.maxX : r.minX) - displayBounds.minX
+                path.move(to: NSPoint(x: x, y: displayBounds.maxY - r.minY))
+                path.line(to: NSPoint(x: x, y: displayBounds.maxY - r.maxY))
+            default: continue
+            }
+        }
+        path.stroke()
+    }
+}
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 let panel = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -87,6 +113,12 @@ panel.isOpaque = false; panel.backgroundColor = .clear; panel.hasShadow = false
 panel.level = .floating; panel.hidesOnDeactivate = false; panel.ignoresMouseEvents = true
 panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenNone]
 let edgeView = EdgeView(); panel.contentView = edgeView
+// Separate diagnostic canvas keeps the existing narrow amber-list overlay unchanged.
+let itemPanel = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+itemPanel.isOpaque = false; itemPanel.backgroundColor = .clear; itemPanel.hasShadow = false
+itemPanel.level = .floating; itemPanel.hidesOnDeactivate = false; itemPanel.ignoresMouseEvents = true
+itemPanel.collectionBehavior = [.canJoinAllSpaces, .fullScreenNone]
+let itemView = ItemEdgeView(); itemPanel.contentView = itemView
 #if arch(arm64)
 let architecture = "arm64"
 #else
@@ -102,7 +134,7 @@ emit(["type": "environment", "os": ProcessInfo.processInfo.operatingSystemVersio
       "coordinateSpace": "AX and CGWindow geometry: CoreGraphics global points, top-left origin",
       "screenCoordinateSpace": "AppKit global points, bottom-left origin",
       "screens": NSScreen.screens.map { ["displayID": ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.intValue ?? -1, "frame": rect($0.frame), "visibleFrameDiagnosticOnly": rect($0.visibleFrame), "scale": $0.backingScaleFactor] as [String: Any] },
-      "overlay": options.overlay, "permissionScope": "Current executable/launch host only; never transferred to packaged Electron"])
+      "overlay": options.overlay, "itemOverlayRequested": options.itemOverlay, "itemOverlay": options.overlay && options.itemOverlay, "permissionScope": "Current executable/launch host only; never transferred to packaged Electron"])
 let started = ProcessInfo.processInfo.systemUptime
 var count = 0; var candidateCount = 0; var desktopSampleCount = 0
 func sample() {
@@ -118,7 +150,7 @@ func sample() {
         ["bounds": $0[kCGWindowBounds as String] ?? [:], "layer": $0[kCGWindowLayer as String] ?? -1, "alpha": $0[kCGWindowAlpha as String] ?? -1] as [String: Any]
     }
     let sampleDeadline = min(started + options.duration, ProcessInfo.processInfo.systemUptime + 0.5)
-    var nodes: [[String: Any]] = []; var candidates: [CGRect] = []; var visited = 0
+    var nodes: [[String: Any]] = []; var candidates: [CGRect] = []; var items: [CGRect] = []; var visited = 0
     var axError: Int32 = -999; var truncated = false
     if let dock {
         let root = AXUIElementCreateApplication(dock.processIdentifier)
@@ -131,6 +163,7 @@ func sample() {
             let role = roleValue as? String ?? "unknown"
             if let r = axRect(node) {
                 nodes.append(["role": role, "bounds": rect(r), "depth": depth])
+                if role == "AXDockItem", primaryBounds.contains(r) { items.append(r) }
                 let notScreen = r.width < primaryBounds.width * 0.95 || r.height < primaryBounds.height * 0.95
                 // Modern Docks can float inside the display (observed bottom inset: 10 pt).
                 // This is a candidate-selection heuristic, never a visibility/contour proof.
@@ -164,6 +197,8 @@ func sample() {
     }
     let candidate = !truncated && desktopObservationAvailable && candidates.count == 1 ? candidates.first : nil
     panel.orderOut(nil)
+    itemPanel.orderOut(nil)
+    itemView.itemBounds = []
     if let r = candidate, options.overlay {
         // AppKit Y origin is the bottom of the primary display, regardless of secondary screens.
         let primaryHeight = NSScreen.screens.first?.frame.height ?? primaryBounds.height
@@ -171,6 +206,14 @@ func sample() {
         if orientation == "bottom" { line = NSRect(x: r.minX, y: primaryHeight - r.minY - 3, width: r.width, height: 6) }
         else { line = NSRect(x: (orientation == "left" ? r.maxX : r.minX) - 3, y: primaryHeight - r.maxY, width: 6, height: r.height) }
         edgeView.orientation = orientation; panel.setFrame(line, display: true); edgeView.needsDisplay = true; panel.orderFrontRegardless()
+    }
+    if options.overlay && options.itemOverlay, trusted, !truncated, candidate != nil,
+       let primaryScreen = NSScreen.screens.first(where: {
+           ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == primaryID
+       }), !items.isEmpty {
+        itemView.orientation = orientation; itemView.itemBounds = items; itemView.displayBounds = primaryBounds
+        itemPanel.setFrame(primaryScreen.frame, display: true); itemView.needsDisplay = true
+        itemPanel.orderFrontRegardless()
     }
     if candidate != nil { candidateCount += 1 }
     let reason = !desktopObservationAvailable ? "desktop_unavailable" : (truncated ? "accessibility_tree_incomplete" : (!trusted ? "accessibility_unavailable" : (axError != 0 ? "accessibility_query_failed" : (candidate == nil ? "no_unique_visible_AXList_candidate" : "candidate_requires_visual_validation"))))
@@ -191,6 +234,7 @@ while ProcessInfo.processInfo.systemUptime - started < options.duration {
     if ProcessInfo.processInfo.systemUptime - started < options.duration { sample() }
 }
 panel.orderOut(nil)
+itemPanel.orderOut(nil)
 emit(["type": "summary", "sampleCount": count, "samplesWithCandidate": candidateCount,
       "productFeasibility": "unverified", "elapsed": ProcessInfo.processInfo.systemUptime - started,
       "desktopSampleCount": desktopSampleCount,
