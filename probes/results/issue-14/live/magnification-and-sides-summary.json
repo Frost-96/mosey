@@ -135,5 +135,13 @@
       "sourceSHA256": "c6ca19d73ea4b5860135fbec28ea6922fb901e4c4caf0c0d36c776281e89310f",
       "contourFNV1a64": "28c7871aea87c6fb"
     }
-  ]
+  ],
+  "postAppExpiryScreenshot": {
+    "boundsPixels": null,
+    "nonzeroAlphaPixelCount": 0,
+    "selectedPixelCount": 0,
+    "sourceLocalPath": "/tmp/mosey-live-magnification-20261020/139.png",
+    "sourceSHA256": "096fa0c37edbda1de730bf5aaed17949f88e0d4f2a069da1ec794936b8aec8f3",
+    "limit": "After 120-second app run; does not prove live hidden callback handling in this run"
+  }
 }
