@@ -14,6 +14,8 @@
 
 底部设置试验后，通过系统设置恢复自动隐藏开启，并读回为 1。位置、大小、放大设置未改变。两组桌面会话中屏幕录制预检为真，仅属于执行宿主；未用它采集屏幕，也不推断产品拥有授权。
 
+三份 JSONL 均采集自审查修复前的 a0e5be5 探针，原样保留。旧版 environment.coordinateSpace 文本未区分屏幕字段：screens.frame 与 visibleFrameDiagnosticOnly 实际为 AppKit 左下原点；AX/CG 样本为 CoreGraphics 左上原点。后续 8890caf 已分别标明并补充 display ID，不用旧标注推断多屏几何。
+
 系统 SDK 的 HIServices/AXError.h 将 -25211 定义为 kAXErrorAPIDisabled。该状态无法区分从未授权与用户拒绝；未实测授权后撤销。AXUIElement.h 说明消息超时只对指定对象生效，探针现已对每个查询对象设置超时。
 
 ## 研究与接入判断
