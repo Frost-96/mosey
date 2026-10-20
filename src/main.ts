@@ -8,6 +8,7 @@ import {
   ipcMain,
 } from "electron";
 import path from "node:path";
+import { DockValidation } from "./platform/dock-validation";
 import log from "electron-log/main";
 import { createActor } from "xstate";
 import { petBehavior } from "./behavior/resting";
@@ -42,29 +43,51 @@ async function start() {
     arch: process.arch,
   });
   const quit = () => app.quit();
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: "Mosey",
-        submenu: [
-          {
-            label: "Quit Mosey",
-            accelerator: "CommandOrControl+Q",
-            click: quit,
-          },
-        ],
-      },
-    ]),
-  );
+  let drained = false;
+  const refreshMenus = () => {
+    const diagnostic: Electron.MenuItemConstructorOptions = {
+      label: "Dock validation",
+      submenu: dockValidation.menu(),
+    };
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: "Mosey",
+          submenu: [
+            {
+              label: "Quit Mosey",
+              accelerator: "CommandOrControl+Q",
+              click: quit,
+            },
+          ],
+        },
+        diagnostic,
+      ]),
+    );
+    tray.setContextMenu(
+      Menu.buildFromTemplate([
+        diagnostic,
+        { label: "Quit Mosey", click: quit },
+      ]),
+    );
+  };
+  app.on("before-quit", (event) => {
+    if (!drained) {
+      event.preventDefault();
+      void dockValidation.stop("application quit").finally(() => {
+        drained = true;
+        app.quit();
+      });
+    }
+  });
   const icon = nativeImage.createFromDataURL(
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==",
   );
   const tray = new Tray(icon);
   tray.setTitle("🐾");
   tray.setToolTip("Mosey");
-  tray.setContextMenu(
-    Menu.buildFromTemplate([{ label: "Quit Mosey", click: quit }]),
-  );
+  const dockValidation = new DockValidation(refreshMenus);
+  refreshMenus();
   const area = screen.getPrimaryDisplay().workArea;
   const pet = new BrowserWindow({
     width: 240,
