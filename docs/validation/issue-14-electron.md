@@ -90,3 +90,20 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 代理随后通过菜单 Quit 退出，再从同一冻结应用精确路径进行 LaunchServices 重启。新 `849d4` 运行仍报告宿主 granted，并实际获得 native stream 配置和完整帧；代理通过菜单 Stop 停止。数值证据保存为 `launchservices-revoke-run.jsonl`、`launchservices-revoke-relaunch-run.jsonl`、`revoke-live-baseline.json`、`revoke-after-user-report.json`、`revoke-observation-discrepancy.json`，均位于 `probes/results/issue-14/electron/evidence/`；没有复制图片。此前 `86a1` 正常完成和 `revoke-baseline.json` 的历史说明保持不变。
 
 已确认的是用户操作报告与随后系统/进程观测不一致；原因未明，不据此归因于用户、TCC 或实现，也不判定运行中撤权通过或产品失败。当前只请用户澄清操作的是正式 Mosey 还是原生 probe、之后是否重新开启，不要求重复操作。Dock 已恢复 bottom / autohide on，大小及放大滑块未变。#14 保持 OPEN，撤权验收继续待确认。
+
+
+## 已确认关闭权限后的独立重启（2026-10-20）
+
+后续 CUA 明确观察到系统设置中正式 Mosey 为 off、独立原生 probe 仍为 on。正常菜单 Quit 后，从同一冻结第二版应用精确路径经 LaunchServices 重新启动：main PID 94930、父 PID 1，helper PID 94941、父 PID 94930。状态窗为 Blocked / Unavailable，宿主诊断为 denied；native 输出 `permission_unavailable`、`shareableContentQueryAttempted: false` 和同状态 summary，helper code 2，未出现 stream 配置或帧。三个冻结 SHA256 再次核对未变。证据为 `probes/results/issue-14/electron/evidence/launchservices-revoked-confirmed-run.jsonl` 与 `launchservices-revoked-confirmed-summary.json`。
+
+因此，正式 Electron 身份在手动授权后可捕获、关闭权限后独立重启会拒绝查询并失效，均已有真实观察。上节操作报告冲突仍保留为历史，不能追溯补造当时的 off 时刻；运行中精确撤权时序及其响应延迟仍未测，也不把正常到时结束或此次重启阻断称作实时撤权通过。
+
+## 早期验证结论与后续接入建议
+
+#14 的范围是独立早期技术验证，不是产品攀爬切片。现有证据支持将 **ScreenCaptureKit 隔离 Dock 窗口像素、native worker 做有界 alpha 分析、通过受校验数字协议向 Electron 传递诊断** 作为可行候选；这不是最终桥接方案决定。需要显式 Screen Recording 权限以及清楚的拒绝/撤销后状态；本地 ad-hoc 授权身份不证明 Developer ID 分发、签名更新或授权持久性。
+
+接入成本包括 native helper 资源放置、编译与嵌套签名、版本/哈希关联、进程生命周期、有限队列与 worker 资源、callback 中断/idle/旧帧失效、宿主接收和结束超时、打包及权限责任链复验。AX 几何可作诊断，但其容器边界不保证对应放大后的可见轮廓；CGWindow 宿主矩形和 workArea 也不是可靠可见轮廓替代。失效时保持 unavailable，不降级为固定边界。
+
+产品支撑边缘规则、动态同步误差、长期 CPU/内存、强放大与 tooltip/分割组合、Dock/显示配置变化及实时撤权仍留后续验证。稳定轮廓吻合不等于产品可站立；所有结果继续 `supportEdge: null`，没有碰撞或攀爬实现。议题是否满足早期验证范围由后续 spec review 判断，本次不关闭 #14。
+
+复现时使用本文“构建、资源与签名”的正式入口生成新的候选，记录源码/receipt/最终签名和三个二进制哈希，冻结后不再重建。通过精确路径正常 LaunchServices 启动，菜单启动一次有界 Dock validation，并记录 host/helper PID、父 PID 与 userData 数字日志；自动化入口和命令见仓库 README。人工授权后分别操作底部/左右稳定及显隐，按 `probes/README.md` 的离线 alpha 工具将本地独立 PNG 的 threshold 128 最大连通分量 bbox/count/hash 与完整帧比较；不将截图上传或归档入仓库。权限对照需操作者明确确认正式 Mosey 开关状态，正常 Quit 后重启同一冻结应用再启动验证，检查 unavailable/no-query/code 2 且无 stream/frame。历史数值路径见本文件各节，当前归档根为 `probes/results/issue-14/electron/`；图像只存在操作者本地，动态同步和实时撤权须另设时间对照，不能由这些稳定/重启步骤推导。
