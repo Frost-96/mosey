@@ -16,12 +16,12 @@ const frame = z.strictObject({
 export const atlasSchema = z
   .strictObject({
     version: z.literal(1),
-    action: z.literal("resting"),
-    image: z.literal("idle-atlas.png"),
+    action: z.enum(["resting", "tilt", "paw", "belly"]),
+    image: z.string().regex(/^(idle|tilt|paw|belly)-atlas\.png$/),
     width: integer.positive(),
     height: integer.positive(),
     pixelRatio: z.literal(2),
-    loop: z.literal("repeat"),
+    loop: z.enum(["repeat", "once"]),
     hitAlphaThreshold: z.literal(128),
     frames: z.array(frame).min(1),
   })

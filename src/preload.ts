@@ -1,11 +1,15 @@
 import { contextBridge, ipcRenderer } from "electron";
 import {
   assetErrorSchema,
+  inputSchema,
   channels,
   presentationSchema,
   type PetBridge,
 } from "./shared/contract";
 const bridge: PetBridge = {
+  input(event) {
+    ipcRenderer.send(channels.input, inputSchema.parse(event));
+  },
   async getPresentation() {
     return presentationSchema.parse(
       await ipcRenderer.invoke(channels.getPresentation),
