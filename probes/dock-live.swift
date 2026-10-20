@@ -74,11 +74,7 @@ final class JSONLog: @unchecked Sendable {
         text.stringValue="Checking existing screen-recording permission…\nLocal log: \(logPath)\nNo permission request will be made."
         window.contentView?.addSubview(text)
         let quit=NSButton(title:"Quit",target:self,action:#selector(quitProbe)); quit.frame=NSRect(x:420,y:15,width:100,height:32)
-        window.contentView?.addSubview(quit); window.center(); window.makeKeyAndOrderFront(nil); app.activate(ignoringOtherApps:true); app.finishLaunching()
-    }
-    func pump() {
-        while let event=NSApplication.shared.nextEvent(matching:.any,until:Date.distantPast,inMode:.default,dequeue:true) { NSApplication.shared.sendEvent(event) }
-        NSApplication.shared.updateWindows()
+        window.contentView?.addSubview(quit); window.center(); window.makeKeyAndOrderFront(nil); app.activate(ignoringOtherApps:true)
     }
     func update(_ status:String,_ logPath:String) { text.stringValue="\(status)\n\nLocal log: \(logPath)\nResearch identity only; not final Electron packaging." }
     @objc func quitProbe() { requestedQuit=true }
@@ -251,21 +247,43 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 }
 
+@MainActor final class NativeLifecycle:NSObject,NSApplicationDelegate {
+    let options:Options;let log:JSONLog;var ui:StatusUI?;var task:Task<Void,Never>?
+    init(_ options:Options,_ log:JSONLog) { self.options=options;self.log=log }
+    func applicationDidFinishLaunching(_ notification:Notification) {
+        if options.appStatus { ui=StatusUI(logPath:options.output!) }
+        task=Task { await DockLive.run(options:options,log:log,ui:ui) }
+    }
+    func applicationShouldTerminate(_ sender:NSApplication)->NSApplication.TerminateReply {
+        if let ui { ui.requestedQuit=true;return .terminateCancel }
+        return .terminateNow
+    }
+}
 @main struct DockLive {
-    @MainActor static func main() async {
+    @MainActor static func main() {
         mach_timebase_info(&timebase)
-        let options=Options.parse();let log=JSONLog(options.output);let start=mach_absolute_time()
-        let ui=options.appStatus ? StatusUI(logPath:options.output!) : nil
-        if options.overlay && !options.appStatus { NSApplication.shared.setActivationPolicy(.accessory) }
-        log.emit(["type":"environment","os":ProcessInfo.processInfo.operatingSystemVersionString,"bundleID":Bundle.main.bundleIdentifier as Any? ?? NSNull(),"bundlePath":Bundle.main.bundlePath,"executable":CommandLine.arguments[0],"processID":ProcessInfo.processInfo.processIdentifier,"parentPID":getppid(),"appStatus":options.appStatus,"overlayRequested":options.overlay,"orientation":options.orientation,"outputLocalPath":options.output as Any? ?? NSNull(),"buildMode":"optimized_-O","scenario":options.scenario,"scenarioIsOperatorLabelOnly":true,"machTimebaseNumer":timebase.numer,"machTimebaseDenom":timebase.denom,"permissionScope":"This launch identity only; CLI host and LaunchServices app are separate experiments","supportEdge":NSNull()])
-        // Independent watchdog bounds setup/shutdown as well as the requested observation.
-        DispatchQueue.global().asyncAfter(deadline:.now()+options.duration+10) {
-            log.emit(["type":"summary","status":"watchdog_timeout","supportEdge":NSNull()]);exit(124)
+        let options=Options.parse()
+        // Arm before any log write or AppKit initialization: stdout may already be full.
+        // _exit must not wait for logging locks, blocked writes, async cleanup or UI.
+        DispatchQueue.global().asyncAfter(deadline:.now()+options.duration+10) { _exit(124) }
+        let log=JSONLog(options.output)
+        if options.appStatus || options.overlay {
+            // LaunchServices and AppKit own the real main-thread event loop.
+            let app=NSApplication.shared;let lifecycle=NativeLifecycle(options,log)
+            app.delegate=lifecycle;app.setActivationPolicy(options.appStatus ? .regular:.accessory)
+            withExtendedLifetime(lifecycle) { app.run() }
+        } else {
+            Task { await run(options:options,log:log,ui:nil) }
+            dispatchMain()
         }
+    }
+    @MainActor static func run(options:Options,log:JSONLog,ui:StatusUI?) async {
+        let start=mach_absolute_time()
+        log.emit(["type":"environment","os":ProcessInfo.processInfo.operatingSystemVersionString,"bundleID":Bundle.main.bundleIdentifier as Any? ?? NSNull(),"bundlePath":Bundle.main.bundlePath,"executable":CommandLine.arguments[0],"processID":ProcessInfo.processInfo.processIdentifier,"parentPID":getppid(),"appStatus":options.appStatus,"overlayRequested":options.overlay,"orientation":options.orientation,"outputLocalPath":options.output as Any? ?? NSNull(),"buildMode":"optimized_-O","scenario":options.scenario,"scenarioIsOperatorLabelOnly":true,"machTimebaseNumer":timebase.numer,"machTimebaseDenom":timebase.denom,"permissionScope":"This launch identity only; CLI host and LaunchServices app are separate experiments","supportEdge":NSNull()])
         guard CGPreflightScreenCaptureAccess() else {
             log.emit(["type":"unavailable","status":"permission_unavailable","shareableContentQueryAttempted":false,"supportEdge":NSNull()])
             ui?.update("BLOCKED: no existing screen-recording grant.\nNo request made. Grant manually only if desired, then relaunch.",options.output ?? "stdout")
-            if let ui { while age(mach_absolute_time(),start)<options.duration && !ui.requestedQuit { ui.pump(); try? await Task.sleep(nanoseconds:100_000_000) } }
+            if let ui { while age(mach_absolute_time(),start)<options.duration && !ui.requestedQuit { try? await Task.sleep(nanoseconds:100_000_000) } }
             log.emit(["type":"summary","status":"permission_unavailable","supportEdge":NSNull()]);exit(2)
         }
         var stream:SCStream?;var receiver:Receiver?
@@ -301,7 +319,6 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
             ui?.update("CAPTURING: isolated Dock alpha statistics only.\nNo pixel files, audio or uploads.",options.output ?? "stdout")
             let runStart=mach_absolute_time()
             while age(mach_absolute_time(),runStart)<options.duration && !(ui?.requestedQuit ?? false) {
-                ui?.pump()
                 try? await Task.sleep(nanoseconds:UInt64(min(options.interval,0.5)*1_000_000_000))
                 if !CGPreflightScreenCaptureAccess() { sink.invalidate("permission_lost");outcome="permission_lost";break }
                 guard let current=NSScreen.screens.first(where:{($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value==display}),CGMainDisplayID()==display,current.frame==initialFrame,current.backingScaleFactor==initialScale else { sink.invalidate("display_configuration_changed");outcome="display_configuration_changed";break }
@@ -322,7 +339,7 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
         ui?.update("STOPPED: \(outcome).\nStatistics remain diagnostic; no product collision edge accepted.",options.output ?? "stdout")
         if let ui {
             let stoppedAt=mach_absolute_time()
-            while (age(mach_absolute_time(),start)<options.duration || age(mach_absolute_time(),stoppedAt)<2) && !ui.requestedQuit { ui.pump(); try? await Task.sleep(nanoseconds:100_000_000) }
+            while (age(mach_absolute_time(),start)<options.duration || age(mach_absolute_time(),stoppedAt)<2) && !ui.requestedQuit { try? await Task.sleep(nanoseconds:100_000_000) }
         }
         exit(outcome=="completed" ? 0:2)
     }

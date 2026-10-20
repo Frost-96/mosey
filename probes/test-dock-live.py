@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Bounded real-process CLI seam. Never grants permission or saves pixels."""
-import json, pathlib, subprocess, sys, tempfile, time
+import json, os, pathlib, subprocess, sys, tempfile, time
 binary=sys.argv[1]
 def run(*args):
     return subprocess.run([binary,*args],capture_output=True,text=True,timeout=20)
@@ -25,3 +25,22 @@ with tempfile.TemporaryDirectory(prefix='mosey-live-cli-') as directory:
     result=run('--duration','0.1','--output',str(existing))
     assert result.returncode==73 and existing.read_text()=='preserve me'
 print('PASS: CLI validation, bounded native lifecycle, fail-closed/no-permission-request output')
+
+# A real full stdout pipe can block the first environment record, even without TCC.
+readfd,writefd=os.pipe()
+os.set_blocking(writefd,False)
+try:
+    while True: os.write(writefd,b'x'*4096)
+except BlockingIOError: pass
+os.set_blocking(writefd,True)
+started=time.monotonic()
+blocked=subprocess.Popen([binary,'--duration','0.1'],stdout=writefd,stderr=subprocess.DEVNULL)
+os.close(writefd)
+try:
+    try: code=blocked.wait(timeout=13)
+    except subprocess.TimeoutExpired:
+        blocked.kill();blocked.wait();raise AssertionError('Full stdout pipe prevented the hard deadline')
+    assert code==124,code
+    assert time.monotonic()-started<13
+finally: os.close(readfd)
+print('PASS: prefilled stdout cannot prevent duration+10s hard termination')
