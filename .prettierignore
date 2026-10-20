@@ -3,3 +3,5 @@ node_modules
 out
 test-results
 pnpm-lock.yaml
+
+src/assets/generated/
