@@ -98,111 +98,97 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       .catch((error: unknown) => ({ error: String(error) }));
     const pages = [];
     for (const page of app.windows()) {
-      pages.push(
-        await page
-          .evaluate(async () => {
-            const canvas = document.querySelector("canvas");
-            let presentation: unknown;
-            try {
-              presentation = await Promise.race([
-                window.mosey?.getPresentation(),
-                new Promise((resolve) =>
-                  setTimeout(() => resolve("getPresentation timeout"), 1000),
-                ),
-              ]);
-            } catch (error) {
-              presentation = String(error);
-            }
-            const pixels = canvas
-              ?.getContext("2d")
-              ?.getImageData(0, 0, canvas.width, canvas.height).data;
-            const beforeProbe = {
-              url: location.href,
-              readyState: document.readyState,
-              hidden: document.hidden,
-              visibilityState: document.visibilityState,
-              devicePixelRatio,
-              presentation,
-              scripts: Array.from(document.scripts).map((script) => script.src),
-              resources: performance
-                .getEntriesByType("resource")
-                .map((entry) => {
-                  const resource = entry as PerformanceResourceTiming;
-                  return {
-                    name: resource.name.slice(0, 512),
-                    type: resource.initiatorType,
-                    duration: resource.duration,
-                    transferSize: resource.transferSize,
-                    responseStatus: resource.responseStatus,
-                  };
-                }),
-              bridgeType: typeof window.mosey,
-              canvas: canvas
-                ? {
-                    width: canvas.width,
-                    height: canvas.height,
-                    clientWidth: canvas.clientWidth,
-                    clientHeight: canvas.clientHeight,
-                    alphaPixels: pixels
-                      ? Array.from(pixels).filter(
-                          (v, i) => i % 4 === 3 && v > 127,
-                        ).length
-                      : null,
-                  }
-                : null,
-            };
-            // Only after the original assertion failed: preserve the state above,
-            // then distinguish cached module evaluation/rejection from missing body execution.
-            const urls = [
-              ...new Set([
-                ...beforeProbe.resources.map((resource) => resource.name),
-                ...beforeProbe.scripts,
-              ]),
-            ].filter((url) => {
-              const parsed = new URL(url, location.href);
-              return (
-                parsed.origin === location.origin &&
-                /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(
-                  parsed.href,
-                )
-              );
-            });
-            const moduleProbes = await Promise.all(
-              urls.map(async (url) => {
-                const started = performance.now();
-                const result = await Promise.race([
-                  import(/* @vite-ignore */ url).then(
-                    (module) => ({
-                      state: "resolved",
-                      exportNames: Object.keys(module).slice(0, 20),
-                    }),
-                    (error: unknown) => ({
-                      state: "rejected",
-                      error: String(error),
-                      stack: error instanceof Error ? error.stack : undefined,
-                    }),
-                  ),
-                  new Promise<{ state: string }>((resolve) =>
-                    setTimeout(() => resolve({ state: "timeout" }), 1000),
-                  ),
-                ]);
-                return {
-                  url,
-                  elapsedMs: performance.now() - started,
-                  ...result,
-                };
-              }),
-            );
-            return {
-              ...beforeProbe,
-              moduleProbes,
-              afterProbeCanvas: canvas
-                ? { width: canvas.width, height: canvas.height }
-                : null,
-            };
-          })
-          .catch((error: unknown) => ({ error: String(error) })),
+      const beforeProbe = await page
+        .evaluate(async () => {
+          const canvas = document.querySelector("canvas");
+          let presentation: unknown;
+          try {
+            presentation = await Promise.race([
+              window.mosey?.getPresentation(),
+              new Promise((resolve) =>
+                setTimeout(() => resolve("getPresentation timeout"), 1000),
+              ),
+            ]);
+          } catch (error) {
+            presentation = String(error);
+          }
+          const pixels = canvas
+            ?.getContext("2d")
+            ?.getImageData(0, 0, canvas.width, canvas.height).data;
+          const beforeProbe = {
+            url: location.href,
+            readyState: document.readyState,
+            hidden: document.hidden,
+            visibilityState: document.visibilityState,
+            devicePixelRatio,
+            presentation,
+            scripts: Array.from(document.scripts).map((script) => script.src),
+            resources: performance.getEntriesByType("resource").map((entry) => {
+              const resource = entry as PerformanceResourceTiming;
+              return {
+                name: resource.name.slice(0, 512),
+                type: resource.initiatorType,
+                duration: resource.duration,
+                transferSize: resource.transferSize,
+                responseStatus: resource.responseStatus,
+              };
+            }),
+            bridgeType: typeof window.mosey,
+            canvas: canvas
+              ? {
+                  width: canvas.width,
+                  height: canvas.height,
+                  clientWidth: canvas.clientWidth,
+                  clientHeight: canvas.clientHeight,
+                  alphaPixels: pixels
+                    ? Array.from(pixels).filter(
+                        (v, i) => i % 4 === 3 && v > 127,
+                      ).length
+                    : null,
+                }
+              : null,
+          };
+          return beforeProbe;
+        })
+        .catch((error: unknown) => ({ error: String(error) }));
+      pages.push(beforeProbe);
+      // Persist original failure evidence before any secondary probe can fail.
+      await writeFile(
+        `${prefix}-before.json`,
+        JSON.stringify(
+          { prefix: "DEBUG-pr18", phase, errors, main, pages },
+          null,
+          2,
+        ),
       );
+      await writeFile(`${prefix}-forge.log`, serverOutput);
+      const moduleProbe = await page
+        .evaluate<Record<string, unknown>>(
+          String.raw`(async () => {
+        const urls = [...new Set([
+          ...performance.getEntriesByType("resource").map((entry) => entry.name),
+          ...Array.from(document.scripts).map((script) => script.src),
+        ])].filter((url) => {
+          const parsed = new URL(url, location.href);
+          return parsed.origin === location.origin && /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(parsed.href);
+        });
+        const moduleProbes = await Promise.all(urls.map(async (url) => {
+          const started = performance.now();
+          const result = await Promise.race([
+            import(url).then(
+              (module) => ({ state: "resolved", exportNames: Object.keys(module).slice(0, 20) }),
+              (error) => ({ state: "rejected", error: String(error), stack: error?.stack }),
+            ),
+            new Promise((resolve) => setTimeout(() => resolve({ state: "timeout" }), 1000)),
+          ]);
+          return { url, elapsedMs: performance.now() - started, ...result };
+        }));
+        const canvas = document.querySelector("canvas");
+        return { moduleProbes, afterProbeCanvas: canvas ? { width: canvas.width, height: canvas.height } : null };
+      })()`,
+        )
+        .catch((error: unknown) => ({ error: String(error) }));
+      pages[pages.length - 1] = { ...beforeProbe, ...moduleProbe };
       const localLog = await page
         .getByLabel("Local log")
         .inputValue({ timeout: 500 })
