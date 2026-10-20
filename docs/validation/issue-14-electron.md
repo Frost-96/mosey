@@ -68,7 +68,7 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 已请用户手动授予这个冻结的新版 Mosey Screen Recording 权限，当前尚未收到回复，授权后捕获及独立责任链验证仍待完成。自动化中开发/打包的继承权限与三次 helper 生命周期测试通过，不能替代此次真实 LaunchServices 身份授权，也不作为授权后独立捕获已经通过的证据。
 
 
-## 第二版手动授权后的真实 Electron / LaunchServices 验证（2026-10-20）
+## 第二版手动授权后的真实 Electron / LaunchServices 验证（2026-10-20；阶段历史）
 
 用户手动授权同一个冻结第二版 Mosey 后，独立 LaunchServices 主进程 PID 91387、父 PID 1 实际启动 helper 并获得 ScreenCaptureKit 完整帧；不再只是自动化宿主继承权限。冻结应用的 executable、helper 与 asar 三项 SHA256 在授权及各轮后再次核对未变。数值日志、分析与独立稳定截图的 alpha 摘要位于 `probes/results/issue-14/electron/evidence/`；截图只保留本地，没有复制 PNG。
 
@@ -83,7 +83,7 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 本轮进展已记录于 [#14 评论](https://github.com/Frost-96/mosey/issues/14#issuecomment-6289855466)，议题保持 OPEN，待用户准备后继续运行中撤权验证。
 
 
-## 撤权操作报告与后续观测不一致（2026-10-20；原因未明）
+## 撤权操作报告与后续观测不一致（2026-10-20；阶段历史，原因未明）
 
 在此前正常到时结束之后，另开一轮运行中撤权验证。用户报告“本轮已关闭，并完成系统退出提示”；但随后 CUA 的设置 AX 状态及本地截图均显示开关仍为 on。该轮 `00732` 的原主进程 PID 93655、helper PID 93718 在约 95 秒仍存活，日志继续提供 idle-current heartbeat；最终约 120 秒正常完成、code 0。未观察到实际关闭状态或系统退出提示，不能将这轮正常结束写成已观察撤权。
 
@@ -104,8 +104,15 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 
 接入成本包括 native helper 资源放置、编译与嵌套签名、版本/哈希关联、进程生命周期、有限队列与 worker 资源、callback 中断/idle/旧帧失效、宿主接收和结束超时、打包及权限责任链复验。AX 几何可作诊断，但其容器边界不保证对应放大后的可见轮廓；CGWindow 宿主矩形和 workArea 也不是可靠可见轮廓替代。失效时保持 unavailable，不降级为固定边界。
 
-产品支撑边缘规则、动态同步误差、长期 CPU/内存、强放大与 tooltip/分割组合、Dock/显示配置变化及实时撤权仍留后续验证。稳定轮廓吻合不等于产品可站立；所有结果继续 `supportEdge: null`，没有碰撞或攀爬实现。议题是否满足早期验证范围由后续 spec review 判断，本次不关闭 #14。
+产品支撑边缘规则、动态同步误差、长期 CPU/内存、强放大与 tooltip/分割组合、Dock/显示配置变化及实时撤权仍留后续验证。稳定轮廓吻合不等于产品可站立；所有结果继续 `supportEdge: null`，没有碰撞或攀爬实现。针对最终证据 tip `d96a813` 的 Standards 与 Spec 两轴审查均为 0 剩余发现，支持按 #14 独立早期技术验证范围结项；这不代表 #8 产品攀爬完成。
 
 复现时使用本文“构建、资源与签名”的正式入口生成新的候选，记录源码/receipt/最终签名和三个二进制哈希，冻结后不再重建。通过精确路径正常 LaunchServices 启动，菜单启动一次有界 Dock validation，并记录 host/helper PID、父 PID 与 userData 数字日志；自动化入口和命令见仓库 README。人工授权后分别操作底部/左右稳定及显隐，按 `probes/README.md` 的离线 alpha 工具将本地独立 PNG 的 threshold 128 最大连通分量 bbox/count/hash 与完整帧比较；不将截图上传或归档入仓库。权限对照需操作者明确确认正式 Mosey 开关状态，正常 Quit 后重启同一冻结应用再启动验证，检查 unavailable/no-query/code 2 且无 stream/frame。历史数值路径见本文件各节，当前归档根为 `probes/results/issue-14/electron/`；图像只存在操作者本地，动态同步和实时撤权须另设时间对照，不能由这些稳定/重启步骤推导。
 
 收尾时通过菜单 Quit 退出最终验证应用，针对本轮 PID 94930/94941 及前轮 93655/93718 的进程检查无残留。系统正式 Mosey 权限保持 off，未改独立原生 probe 权限。冻结第二版 `Mosey.app` 与全部本地 PNG 原样保留在本次 v2 证据目录，未删除或重建。
+
+
+## 最终早期验证结项结论
+
+Standards 与 Spec 对最终证据及结论的两轴审查均无剩余发现；#14 已满足早期技术验证范围，可按本票 scope 结项。上文 OPEN / 等待用户的表述保留为各阶段历史；实际 issue 状态由任务协调者更新，本次文档提交不执行关闭操作。可行候选、权限成本及失效策略已有可复现代码和数值证据，最终桥接仍未选定。
+
+后续仍需验证：25 次动态 PNG 尝试因 sandbox exit 1 失败，因此动态同步误差未测；运行中精确撤权时序未测；强放大与 tooltip / 分割组合、Dock / 显示配置变更、长期资源、产品支撑边缘，以及分发签名与授权持久性未测。关闭权限后独立重启阻断已有实证，不能替代运行中撤权测试。这些边界不阻止本次早期验证结项，但不构成 #8 攀爬验收或产品可站立承诺，也不允许固定边界降级。
