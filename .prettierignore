@@ -1,0 +1,7 @@
+node_modules
+.vite
+out
+test-results
+pnpm-lock.yaml
+
+src/assets/generated/
