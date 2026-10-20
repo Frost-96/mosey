@@ -1,0 +1,809 @@
+{
+  "sourceLog": "/Users/frost/Library/Application Support/Mosey/dock-validation/run-4ba84906-0677-4b35-9f54-e0a298d83031.jsonl",
+  "preservedLog": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/evidence/launchservices-native-run.jsonl",
+  "logSHA256": "4540a19a5dcc32514e6d06126331766944ae3652d01537e4a1b4abc44fe5f180",
+  "snapshotUnixSeconds": 1792495521.494689,
+  "hostIdentity": {
+    "processID": 91387,
+    "parentPID": 1,
+    "helperProcessID": 91425,
+    "helperParentPID": 91387,
+    "packaged": true,
+    "appPath": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/Mosey.app/Contents/Resources/app.asar"
+  },
+  "nativeRecordTypes": {
+    "environment": 1,
+    "dock_windows": 1,
+    "stream_configuration": 1,
+    "heartbeat": 672,
+    "frame": 96
+  },
+  "hostRecordTypes": {
+    "electron-host": 1,
+    "native": 771,
+    "electron-stop": 1
+  },
+  "lastHostRecord": {
+    "type": "electron-stop",
+    "code": null,
+    "signal": "SIGTERM",
+    "reason": "user stop",
+    "supportEdge": null
+  },
+  "lastNativeHeartbeat": {
+    "type": "heartbeat",
+    "acceptedComplete": 96,
+    "acceptedCompleteSequence": null,
+    "alphaAnalyzedCount": 96,
+    "backpressureSkipped": 0,
+    "callbackCount": 212,
+    "callbackSilenceInvalidations": 2,
+    "callbackTimeoutSeconds": 1,
+    "candidateStatus": "unavailable_or_stale",
+    "completeReceived": 96,
+    "frameStatusCounts": {
+      "0": 96,
+      "1": 114,
+      "3": 2
+    },
+    "idleCallbacks": 114,
+    "idleCurrentPolicy": true,
+    "incompleteCallbacks": 116,
+    "intervalSkipped": 0,
+    "invalidationReason": "callback_silence",
+    "lastAcceptedSourceAgeSeconds": null,
+    "lastAcceptedSourceDisplayMachTicks": null,
+    "lastCallbackAgeSeconds": 32.6224825,
+    "lastCompleteSourceAgeSeconds": 32.7167175,
+    "lastFrameStatusCode": 3,
+    "lastObservedStatus": "callback_silence",
+    "lateComplete": 0,
+    "latestCompleteSequence": 96,
+    "maxObservedCallbackGapSeconds": 19.654263166666667,
+    "pendingCompleteCount": 0,
+    "pendingDiscardedOnInvalidation": 0,
+    "pendingQueued": 0,
+    "pendingReplaced": 0,
+    "processedComplete": 96,
+    "streamErrorCode": null,
+    "supersededProcessed": 0,
+    "upstreamDroppedFrames": "not_observable",
+    "supportEdge": null,
+    "elapsed": 73.543607125
+  },
+  "configuration": {
+    "type": "stream_configuration",
+    "alphaThreshold": 128,
+    "backgroundAlpha": 0,
+    "backingScale": 2,
+    "callbackTimeoutSeconds": 1,
+    "coordinateSpace": "Raster pixels top-left; primary-local points divide by backingScale; candidate contour remains unverified",
+    "diagnosticMaxFrameAgeSeconds": 1,
+    "filterContentRectPoints": {
+      "x": 0,
+      "y": 0,
+      "width": 1470,
+      "height": 956
+    },
+    "filterPointPixelScale": 2,
+    "idleCurrentPolicy": true,
+    "independentWindowFilter": true,
+    "localIntervalGate": false,
+    "pixelFormat": "BGRA",
+    "primaryBoundsCGPoints": {
+      "x": 0,
+      "y": 0,
+      "width": 1470,
+      "height": 956
+    },
+    "primaryFrameAppKitPoints": {
+      "x": 0,
+      "y": 0,
+      "width": 1470,
+      "height": 956
+    },
+    "queueDepth": 3,
+    "rasterHeight": 1912,
+    "rasterWidth": 2940,
+    "requestedMinimumFrameIntervalSeconds": 0.1,
+    "schedulingPolicy": "one_worker_plus_latest_complete_slot",
+    "shouldBeOpaque": false,
+    "supportEdge": null,
+    "windowID": 42,
+    "windowIsOnScreenDiagnosticOnly": false
+  },
+  "frames": {
+    "count": 96,
+    "mappingValidCount": 96,
+    "acceptedEmissionCount": 96,
+    "firstElapsed": 19.831511625,
+    "lastElapsed": 40.83739908333334,
+    "rawAlphaZeroCount": 1,
+    "largestComponentBoundsRangesPixelsIncludesTransitions": {
+      "x": {
+        "min": 161,
+        "max": 236
+      },
+      "y": {
+        "min": 1655,
+        "max": 1872
+      },
+      "width": {
+        "min": 2470,
+        "max": 2618
+      },
+      "height": {
+        "min": 40,
+        "max": 247
+      }
+    },
+    "processingSeconds": {
+      "min": 0.009152208333333333,
+      "max": 0.04147633333333334
+    },
+    "sourceAgeAtProcessingEndSeconds": {
+      "min": 0.009924833333333334,
+      "max": 0.049096625
+    },
+    "callbackAgeFromDisplaySeconds": {
+      "min": 0.000475625,
+      "max": 0.00756975
+    },
+    "contourGroups": [
+      {
+        "hash": "cbb7e31dbf8d4f91",
+        "count": 58,
+        "firstElapsed": 21.914911083333333,
+        "lastElapsed": 40.64145766666667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1744,
+          "width": 2618,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "cbb7e31dbf8d4f91",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "5d49451c82b885df",
+        "count": 4,
+        "firstElapsed": 20.60847875,
+        "lastElapsed": 20.901649416666668,
+        "boundsPixels": {
+          "x": 211,
+          "y": 1744,
+          "width": 2568,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2568,
+          "fnv1a64": "5d49451c82b885df",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "3e9f5feba111e28f",
+        "count": 2,
+        "firstElapsed": 21.712055,
+        "lastElapsed": 21.80954125,
+        "boundsPixels": {
+          "x": 163,
+          "y": 1744,
+          "width": 2616,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2616,
+          "fnv1a64": "3e9f5feba111e28f",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "2e4280b8aed65d55",
+        "count": 1,
+        "firstElapsed": 19.831511625,
+        "lastElapsed": 19.831511625,
+        "boundsPixels": null,
+        "inwardCoordinatesPixels": {
+          "axisCount": 0,
+          "fnv1a64": "2e4280b8aed65d55",
+          "minInwardCoordinate": null,
+          "maxInwardCoordinate": null
+        }
+      },
+      {
+        "hash": "7507083881b0c409",
+        "count": 1,
+        "firstElapsed": 19.90618154166667,
+        "lastElapsed": 19.90618154166667,
+        "boundsPixels": {
+          "x": 236,
+          "y": 1813,
+          "width": 2470,
+          "height": 99
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2470,
+          "fnv1a64": "7507083881b0c409",
+          "minInwardCoordinate": 1813,
+          "maxInwardCoordinate": 1911
+        }
+      },
+      {
+        "hash": "9db704929bf17987",
+        "count": 1,
+        "firstElapsed": 19.990841125,
+        "lastElapsed": 19.990841125,
+        "boundsPixels": {
+          "x": 185,
+          "y": 1792,
+          "width": 2576,
+          "height": 120
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2576,
+          "fnv1a64": "9db704929bf17987",
+          "minInwardCoordinate": 1792,
+          "maxInwardCoordinate": 1842
+        }
+      },
+      {
+        "hash": "2294888f98009a3e",
+        "count": 1,
+        "firstElapsed": 20.09625833333333,
+        "lastElapsed": 20.09625833333333,
+        "boundsPixels": {
+          "x": 169,
+          "y": 1655,
+          "width": 2610,
+          "height": 247
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2610,
+          "fnv1a64": "2294888f98009a3e",
+          "minInwardCoordinate": 1655,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "fcca302adf960d37",
+        "count": 1,
+        "firstElapsed": 20.19932783333333,
+        "lastElapsed": 20.19932783333333,
+        "boundsPixels": {
+          "x": 173,
+          "y": 1699,
+          "width": 2606,
+          "height": 203
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2606,
+          "fnv1a64": "fcca302adf960d37",
+          "minInwardCoordinate": 1699,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "35c7e3b3be32492f",
+        "count": 1,
+        "firstElapsed": 20.305544166666667,
+        "lastElapsed": 20.305544166666667,
+        "boundsPixels": {
+          "x": 195,
+          "y": 1744,
+          "width": 2584,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2584,
+          "fnv1a64": "35c7e3b3be32492f",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "327beaf62951a1db",
+        "count": 1,
+        "firstElapsed": 20.41110125,
+        "lastElapsed": 20.41110125,
+        "boundsPixels": {
+          "x": 201,
+          "y": 1717,
+          "width": 2578,
+          "height": 185
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2578,
+          "fnv1a64": "327beaf62951a1db",
+          "minInwardCoordinate": 1717,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "c943b1c59578d6c3",
+        "count": 1,
+        "firstElapsed": 20.507947041666668,
+        "lastElapsed": 20.507947041666668,
+        "boundsPixels": {
+          "x": 209,
+          "y": 1717,
+          "width": 2570,
+          "height": 185
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2570,
+          "fnv1a64": "c943b1c59578d6c3",
+          "minInwardCoordinate": 1717,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "d10f0eb83f5ae2a1",
+        "count": 1,
+        "firstElapsed": 21.008281625,
+        "lastElapsed": 21.008281625,
+        "boundsPixels": {
+          "x": 209,
+          "y": 1744,
+          "width": 2570,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2570,
+          "fnv1a64": "d10f0eb83f5ae2a1",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "daf1995c62d786b5",
+        "count": 1,
+        "firstElapsed": 21.11017354166667,
+        "lastElapsed": 21.11017354166667,
+        "boundsPixels": {
+          "x": 205,
+          "y": 1744,
+          "width": 2574,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2574,
+          "fnv1a64": "daf1995c62d786b5",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "5bda79790aaece93",
+        "count": 1,
+        "firstElapsed": 21.21248466666667,
+        "lastElapsed": 21.21248466666667,
+        "boundsPixels": {
+          "x": 191,
+          "y": 1744,
+          "width": 2588,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2588,
+          "fnv1a64": "5bda79790aaece93",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "e553fa9d77c0783d",
+        "count": 1,
+        "firstElapsed": 21.310782,
+        "lastElapsed": 21.310782,
+        "boundsPixels": {
+          "x": 181,
+          "y": 1744,
+          "width": 2598,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2598,
+          "fnv1a64": "e553fa9d77c0783d",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "c7835f98a4837801",
+        "count": 1,
+        "firstElapsed": 21.400358625,
+        "lastElapsed": 21.400358625,
+        "boundsPixels": {
+          "x": 177,
+          "y": 1744,
+          "width": 2602,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2602,
+          "fnv1a64": "c7835f98a4837801",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "40b26c7c74bcfb15",
+        "count": 1,
+        "firstElapsed": 21.50931033333333,
+        "lastElapsed": 21.50931033333333,
+        "boundsPixels": {
+          "x": 173,
+          "y": 1744,
+          "width": 2606,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2606,
+          "fnv1a64": "40b26c7c74bcfb15",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "b3ba3d508cce965b",
+        "count": 1,
+        "firstElapsed": 21.613909375,
+        "lastElapsed": 21.613909375,
+        "boundsPixels": {
+          "x": 167,
+          "y": 1744,
+          "width": 2612,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2612,
+          "fnv1a64": "b3ba3d508cce965b",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "63009f763537e76f",
+        "count": 1,
+        "firstElapsed": 22.22111029166667,
+        "lastElapsed": 22.22111029166667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1740,
+          "width": 2618,
+          "height": 162
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "63009f763537e76f",
+          "minInwardCoordinate": 1740,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "5389ab1709d60167",
+        "count": 1,
+        "firstElapsed": 22.323431333333332,
+        "lastElapsed": 22.323431333333332,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1734,
+          "width": 2618,
+          "height": 168
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "5389ab1709d60167",
+          "minInwardCoordinate": 1734,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "8b5a0070ce28e1d7",
+        "count": 1,
+        "firstElapsed": 22.421780791666666,
+        "lastElapsed": 22.421780791666666,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1734,
+          "width": 2618,
+          "height": 168
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "8b5a0070ce28e1d7",
+          "minInwardCoordinate": 1734,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "461b69c8a010667",
+        "count": 1,
+        "firstElapsed": 22.529737041666667,
+        "lastElapsed": 22.529737041666667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1734,
+          "width": 2618,
+          "height": 168
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "461b69c8a010667",
+          "minInwardCoordinate": 1734,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "71838393b17846d9",
+        "count": 1,
+        "firstElapsed": 22.614691208333333,
+        "lastElapsed": 22.614691208333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1731,
+          "width": 2618,
+          "height": 171
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "71838393b17846d9",
+          "minInwardCoordinate": 1731,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "73bcdc3424718fe",
+        "count": 1,
+        "firstElapsed": 22.714690208333334,
+        "lastElapsed": 22.714690208333334,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1730,
+          "width": 2618,
+          "height": 172
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "73bcdc3424718fe",
+          "minInwardCoordinate": 1730,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "607a8429367e2053",
+        "count": 1,
+        "firstElapsed": 22.81927508333333,
+        "lastElapsed": 22.81927508333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1730,
+          "width": 2618,
+          "height": 172
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "607a8429367e2053",
+          "minInwardCoordinate": 1730,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "95efe1ab8633fa9e",
+        "count": 1,
+        "firstElapsed": 22.91897941666667,
+        "lastElapsed": 22.91897941666667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1730,
+          "width": 2618,
+          "height": 172
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "95efe1ab8633fa9e",
+          "minInwardCoordinate": 1730,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "272540dda3400386",
+        "count": 1,
+        "firstElapsed": 23.02631183333333,
+        "lastElapsed": 23.02631183333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1730,
+          "width": 2618,
+          "height": 172
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "272540dda3400386",
+          "minInwardCoordinate": 1730,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "6ac4dfa94e8e8759",
+        "count": 1,
+        "firstElapsed": 23.128546208333333,
+        "lastElapsed": 23.128546208333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1731,
+          "width": 2618,
+          "height": 171
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "6ac4dfa94e8e8759",
+          "minInwardCoordinate": 1731,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "ef6f19bb10153999",
+        "count": 1,
+        "firstElapsed": 23.226806208333333,
+        "lastElapsed": 23.226806208333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1731,
+          "width": 2618,
+          "height": 171
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "ef6f19bb10153999",
+          "minInwardCoordinate": 1731,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "8de4b798334dcd67",
+        "count": 1,
+        "firstElapsed": 23.32752154166667,
+        "lastElapsed": 23.32752154166667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1734,
+          "width": 2618,
+          "height": 168
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "8de4b798334dcd67",
+          "minInwardCoordinate": 1734,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "47e6b8b2a9a6d067",
+        "count": 1,
+        "firstElapsed": 23.43264275,
+        "lastElapsed": 23.43264275,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1734,
+          "width": 2618,
+          "height": 168
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "47e6b8b2a9a6d067",
+          "minInwardCoordinate": 1734,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "5c09d2faf28dabdf",
+        "count": 1,
+        "firstElapsed": 23.531355583333333,
+        "lastElapsed": 23.531355583333333,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1738,
+          "width": 2618,
+          "height": 164
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2618,
+          "fnv1a64": "5c09d2faf28dabdf",
+          "minInwardCoordinate": 1738,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "805932cda1ec81df",
+        "count": 1,
+        "firstElapsed": 27.34361804166667,
+        "lastElapsed": 27.34361804166667,
+        "boundsPixels": {
+          "x": 161,
+          "y": 1744,
+          "width": 2616,
+          "height": 158
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2616,
+          "fnv1a64": "805932cda1ec81df",
+          "minInwardCoordinate": 1744,
+          "maxInwardCoordinate": 1794
+        }
+      },
+      {
+        "hash": "40536738e7211f9d",
+        "count": 1,
+        "firstElapsed": 40.739963125,
+        "lastElapsed": 40.739963125,
+        "boundsPixels": {
+          "x": 167,
+          "y": 1758,
+          "width": 2606,
+          "height": 154
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2606,
+          "fnv1a64": "40536738e7211f9d",
+          "minInwardCoordinate": 1758,
+          "maxInwardCoordinate": 1808
+        }
+      },
+      {
+        "hash": "1cabc5bb8988223b",
+        "count": 1,
+        "firstElapsed": 40.83739908333334,
+        "lastElapsed": 40.83739908333334,
+        "boundsPixels": {
+          "x": 210,
+          "y": 1872,
+          "width": 2520,
+          "height": 40
+        },
+        "inwardCoordinatesPixels": {
+          "axisCount": 2520,
+          "fnv1a64": "1cabc5bb8988223b",
+          "minInwardCoordinate": 1872,
+          "maxInwardCoordinate": 1909
+        }
+      }
+    ]
+  },
+  "idleCurrentEvidence": {
+    "heartbeatCount": 94,
+    "sourceAgeSeconds": {
+      "min": 1.0575075833333334,
+      "max": 11.237673333333333
+    },
+    "callbackAgeSeconds": {
+      "min": 0.001989458333333333,
+      "max": 0.10110295833333333
+    }
+  },
+  "pngComparison": {
+    "verdict": "not_observed",
+    "reason": "All 25 timestamped dynamic bottom captures exited1 due to the reported sandbox capture restriction; no dynamic bottom-NNN.png exists. Later separately authorized stable PNG belongs to a different run and is not substituted.",
+    "attempts": 25,
+    "successExitCount": 0,
+    "existingBottomPNGCount": 0,
+    "unattributedOtherPNGNames": [
+      "diagnostic.png",
+      "left-stable.png"
+    ]
+  },
+  "phaseEvidenceLimits": [
+    "Operator reported sweep/magnification/hide, but this log has no synchronized user phase markers; numeric variation cannot be assigned to exact gesture intervals.",
+    "Repeated native contour hash establishes native stability only; it is not independent PNG agreement.",
+    "Source timestamp remains original under idle-current; heartbeat receipt does not create new pixels.",
+    "All geometry remains diagnostic; no supportEdge is accepted."
+  ],
+  "finalLogPreserved": true
+}

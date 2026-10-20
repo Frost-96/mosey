@@ -66,3 +66,18 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 操作者通过 CUA 按冻结应用的精确路径进行 LaunchServices 启动，实际看到 Idle corgi 与菜单。该次主进程 PID 90330、父 PID 1；自有 native helper PID 90429、父 PID 90330。启动验证后状态窗显示 Blocked / Unavailable，Electron 宿主权限诊断为 denied。原生 preflight 输出 `permission_unavailable`、`shareableContentQueryAttempted: false`，随后 summary 同样为权限不可用，helper 退出码 2；没有 stream 配置或捕获，`supportEdge` 始终为 null。
 
 已请用户手动授予这个冻结的新版 Mosey Screen Recording 权限，当前尚未收到回复，授权后捕获及独立责任链验证仍待完成。自动化中开发/打包的继承权限与三次 helper 生命周期测试通过，不能替代此次真实 LaunchServices 身份授权，也不作为授权后独立捕获已经通过的证据。
+
+
+## 第二版手动授权后的真实 Electron / LaunchServices 验证（2026-10-20）
+
+用户手动授权同一个冻结第二版 Mosey 后，独立 LaunchServices 主进程 PID 91387、父 PID 1 实际启动 helper 并获得 ScreenCaptureKit 完整帧；不再只是自动化宿主继承权限。冻结应用的 executable、helper 与 asar 三项 SHA256 在授权及各轮后再次核对未变。数值日志、分析与独立稳定截图的 alpha 摘要位于 `probes/results/issue-14/electron/evidence/`；截图只保留本地，没有复制 PNG。
+
+首轮底部动态日志 `launchservices-native-run.jsonl` 有 96 个完整帧，用户报告已完成扫过、停留和隐藏操作。25 次动态截图尝试因 sandbox exit 1 失败，因此只能确认真实动态帧到达和数值变化，不能报告动态 PNG 同步一致，也未证明输入延迟或产品性能预算。
+
+随后 left、right、bottom 三方向稳定阶段，独立本地 PNG 的 alpha 最大连通分量与至少一个完整 native 帧的 bbox、选中像素数和轮廓 hash 精确吻合：left `b8866a892bf5c5df`、right `28c7871aea87c6fb`、bottom `482e416eedfcf32d`。比较阈值为 128；这是分别采集的稳定阶段，不证明逐帧同步或全颜色像素相等。左右隐藏后均清空候选和已接受时间戳；只有 left 观察到实际 alpha zero，不将 right 的 suspended / callback silence 写成 alpha zero。
+
+最后底部 `86a1` 运行的最终日志已完整保全，66 个完整帧，native summary 在约 120.2177 秒报告 completed，宿主以 code 0 / native completion 正常结束。用户尚未回复撤权，设置仍为 on，因此这是正常有界完成，运行中撤权未测。`revoke-baseline.json` 仅是此前当前帧基线，不能当作撤权通过；已重新请用户准备好后再开始该测试。系统 Dock 已恢复原 bottom、自动隐藏 on，大小和放大滑块未变。
+
+#14 仍 OPEN。上述证据补齐最终 Electron 身份的独立启动、授权捕获、三个方向稳定轮廓及左右隐藏清理；动态同步精度、运行中撤权、长期资源及产品支撑边缘等仍有验收缺口。所有记录保持 `supportEdge: null`，没有攀爬实现或固定边界降级。
+
+本轮进展已记录于 [#14 评论](https://github.com/Frost-96/mosey/issues/14#issuecomment-6289855466)，议题保持 OPEN，待用户准备后继续运行中撤权验证。
