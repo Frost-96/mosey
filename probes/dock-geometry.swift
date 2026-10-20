@@ -53,6 +53,8 @@ func rect(_ r: CGRect) -> [String: Double] {
     ["x": r.minX, "y": r.minY, "width": r.width, "height": r.height]
 }
 func attr(_ element: AXUIElement, _ key: String) -> (AXError, CFTypeRef?) {
+    // Messaging timeouts belong to an AX object; children do not inherit the root's value.
+    AXUIElementSetMessagingTimeout(element, 0.05)
     var value: CFTypeRef?
     let error = AXUIElementCopyAttributeValue(element, key as CFString, &value)
     return (error, value)
@@ -92,14 +94,17 @@ let architecture = "unsupported_non_arm64"
 #endif
 let primaryID = CGMainDisplayID()
 let primaryBounds = CGDisplayBounds(primaryID)
+let desktopAvailable = primaryID != 0 && !NSScreen.screens.isEmpty && primaryBounds.width > 0 && primaryBounds.height > 0
 emit(["type": "environment", "os": ProcessInfo.processInfo.operatingSystemVersionString,
       "architecture": architecture,
       "processID": ProcessInfo.processInfo.processIdentifier, "executable": CommandLine.arguments[0],
-      "primaryDisplayID": primaryID, "coordinateSpace": "CoreGraphics global points, top-left origin; AppKit converted only for overlay",
-      "screens": NSScreen.screens.map { ["frame": rect($0.frame), "visibleFrameDiagnosticOnly": rect($0.visibleFrame), "scale": $0.backingScaleFactor] as [String: Any] },
+      "primaryDisplayID": primaryID, "desktopAvailable": desktopAvailable,
+      "coordinateSpace": "AX and CGWindow geometry: CoreGraphics global points, top-left origin",
+      "screenCoordinateSpace": "AppKit global points, bottom-left origin",
+      "screens": NSScreen.screens.map { ["displayID": ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.intValue ?? -1, "frame": rect($0.frame), "visibleFrameDiagnosticOnly": rect($0.visibleFrame), "scale": $0.backingScaleFactor] as [String: Any] },
       "overlay": options.overlay, "permissionScope": "Current executable/launch host only; never transferred to packaged Electron"])
 let started = ProcessInfo.processInfo.systemUptime
-var count = 0; var candidateCount = 0
+var count = 0; var candidateCount = 0; var desktopSampleCount = 0
 func sample() {
     let dock = NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == "com.apple.dock" }
     let trusted = AXIsProcessTrusted()
@@ -107,6 +112,8 @@ func sample() {
     let prefs = UserDefaults.standard.persistentDomain(forName: "com.apple.dock") ?? [:]
     let orientation = prefs["orientation"] as? String ?? "unknown"
     let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+    let desktopObservationAvailable = desktopAvailable && windows != nil
+    if desktopObservationAvailable { desktopSampleCount += 1 }
     let dockWindows = (windows ?? []).filter { ($0[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value == dock?.processIdentifier }.map {
         ["bounds": $0[kCGWindowBounds as String] ?? [:], "layer": $0[kCGWindowLayer as String] ?? -1, "alpha": $0[kCGWindowAlpha as String] ?? -1] as [String: Any]
     }
@@ -135,14 +142,19 @@ func sample() {
                 }
                 if role == "AXList", notScreen, touches, !intersection.isNull { candidates.append(r) }
             }
-            if depth < 3 {
-                let (_, childValue) = attr(node, kAXChildrenAttribute)
-                for child in (childValue as? [AXUIElement] ?? []).prefix(64) { walk(child, depth + 1) }
+            let (childError, childValue) = attr(node, kAXChildrenAttribute)
+            if childError != .success && childError != .attributeUnsupported && childError != .noValue { truncated = true }
+            let children = childValue as? [AXUIElement] ?? []
+            if depth == 3 {
+                if !children.isEmpty { truncated = true }
+                return
             }
+            if children.count > 64 { truncated = true }
+            for child in children.prefix(64) { walk(child, depth + 1) }
         }
-        if trusted && error == .success { walk(root, 0) }
+        if desktopObservationAvailable && trusted && error == .success { walk(root, 0) }
     }
-    let candidate = candidates.count == 1 ? candidates.first : nil
+    let candidate = !truncated && desktopObservationAvailable && candidates.count == 1 ? candidates.first : nil
     panel.orderOut(nil)
     if let r = candidate, options.overlay {
         // AppKit Y origin is the bottom of the primary display, regardless of secondary screens.
@@ -153,12 +165,12 @@ func sample() {
         edgeView.orientation = orientation; panel.setFrame(line, display: true); edgeView.needsDisplay = true; panel.orderFrontRegardless()
     }
     if candidate != nil { candidateCount += 1 }
-    let reason = !trusted ? "accessibility_unavailable" : (axError != 0 ? "accessibility_query_failed" : (candidate == nil ? "no_unique_visible_AXList_candidate" : "candidate_requires_visual_validation"))
+    let reason = !desktopObservationAvailable ? "desktop_unavailable" : (truncated ? "accessibility_tree_incomplete" : (!trusted ? "accessibility_unavailable" : (axError != 0 ? "accessibility_query_failed" : (candidate == nil ? "no_unique_visible_AXList_candidate" : "candidate_requires_visual_validation"))))
     emit(["type": "sample", "index": count, "elapsed": ProcessInfo.processInfo.systemUptime - started,
           "timestamp": ISO8601DateFormatter().string(from: Date()), "scenario": options.scenario,
           "scenarioIsOperatorLabelOnly": true, "accessibilityTrusted": trusted, "screenCapturePermission": capture,
           "dockProcessFound": dock != nil, "dockAXError": axError, "axNodes": nodes, "axTreeTruncated": truncated,
-          "windowListAvailable": windows != nil, "dockWindowsDiagnosticOnly": dockWindows,
+          "desktopObservationAvailable": desktopObservationAvailable, "windowListAvailable": windows != nil, "dockWindowsDiagnosticOnly": dockWindows,
           "dockConfigDiagnosticOnly": ["orientation": orientation, "autohide": prefs["autohide"] ?? NSNull(), "magnification": prefs["magnification"] ?? NSNull(), "tilesize": prefs["tilesize"] ?? NSNull()],
           "candidateBounds": candidate.map { rect($0) } as Any? ?? NSNull(), "candidateCount": candidates.count,
           "supportEdge": NSNull(), "geometryStatus": reason,
@@ -173,5 +185,6 @@ while ProcessInfo.processInfo.systemUptime - started < options.duration {
 panel.orderOut(nil)
 emit(["type": "summary", "sampleCount": count, "samplesWithCandidate": candidateCount,
       "productFeasibility": "unverified", "elapsed": ProcessInfo.processInfo.systemUptime - started,
-      "outcome": candidateCount == 0 ? "negative_no_usable_edge_observed" : "candidate_only_needs_visual_validation",
+      "desktopSampleCount": desktopSampleCount,
+      "outcome": desktopSampleCount == 0 ? "unavailable_desktop_session" : (candidateCount == 0 ? "negative_no_usable_edge_observed" : "candidate_only_needs_visual_validation"),
       "limit": "No Dock climb implemented. Repeat in signed packaged Electron host and supported system/display matrix."])
