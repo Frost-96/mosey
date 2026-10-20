@@ -352,7 +352,10 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
             let docks=content.windows.filter { $0.owningApplication?.bundleIdentifier=="com.apple.dock" }
             let candidates=docks.filter { abs($0.frame.minX-primary.minX)<1 && abs($0.frame.minY-primary.minY)<1 && abs($0.frame.width-primary.width)<1 && abs($0.frame.height-primary.height)<1 && $0.windowLayer==20 }
             log.emit(["type":"dock_windows","windows":docks.map { ["windowID":$0.windowID,"frame":rectangle($0.frame),"isOnScreen":$0.isOnScreen,"layer":$0.windowLayer] as [String:Any] },"primaryDisplayID":display,"supportEdge":NSNull()])
-            let selected=options.windowID.flatMap { id in docks.first { $0.windowID==id } } ?? (options.windowID==nil && candidates.count==1 ? candidates.first : nil)
+            // isOnScreen only disambiguates host identity; pixels still establish no product edge.
+            let onScreenCandidates=candidates.filter { $0.isOnScreen }
+            let automatic=candidates.count==1 ? candidates.first : (onScreenCandidates.count==1 ? onScreenCandidates.first : nil)
+            let selected=options.windowID.flatMap { id in docks.first { $0.windowID==id } } ?? (options.windowID==nil ? automatic : nil)
             guard let selected else { throw NSError(domain:"MoseyNoUniqueDockHost",code:2) }
             let filter=SCContentFilter(desktopIndependentWindow:selected)
             let width=Int((initialFrame.width*initialScale).rounded()),height=Int((initialFrame.height*initialScale).rounded())

@@ -24,3 +24,26 @@ const bridge: PetBridge = {
   },
 };
 contextBridge.exposeInMainWorld("mosey", bridge);
+
+// Temporary early main-world exception evidence: static import failures can
+// precede Playwright's pageerror listener and the renderer module body.
+contextBridge.executeInMainWorld({
+  func: () => {
+    window.addEventListener("error", (event) => {
+      window.mosey.reportAssetError(
+        `DEBUG-pr18 early-error ${event.message} ${event.filename}:${event.lineno}:${event.colno} ${String(event.error?.stack ?? "")}`.slice(
+          0,
+          500,
+        ),
+      );
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      window.mosey.reportAssetError(
+        `DEBUG-pr18 early-rejection ${String(event.reason?.stack ?? event.reason)}`.slice(
+          0,
+          500,
+        ),
+      );
+    });
+  },
+});
