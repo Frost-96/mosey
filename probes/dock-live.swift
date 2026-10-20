@@ -14,7 +14,7 @@ var timebase = mach_timebase_info_data_t()
 func seconds(_ ticks: UInt64) -> Double { Double(ticks) * Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000 }
 func age(_ now: UInt64, _ before: UInt64) -> Double { now >= before ? seconds(now-before) : -seconds(before-now) }
 struct Options {
-    var duration = 15.0; var interval = 0.1; var threshold = 128; var maxAge = 1.0
+    var duration = 15.0; var interval = 0.1; var threshold = 128; var maxAge = 1.0; var callbackTimeout=1.0; var idleCurrent=false
     var windowID: UInt32?; var output: String?; var appStatus = false; var scenario = "baseline"; var overlay = false; var orientation = "bottom"
     static func parse() -> Options {
         var o = Options(); o.appStatus=Bundle.main.bundleURL.pathExtension=="app"; var durationExplicit = false
@@ -22,10 +22,11 @@ struct Options {
         while !args.isEmpty {
             let flag = args.removeFirst()
             if flag == "--help" {
-                print("dock-live [--duration 0.1..120] [--interval 0.05..5] [--threshold 1..255] [--max-frame-age 0.05..10] [--window-id ID] [--scenario LABEL] [--output ABSOLUTE_NEW.jsonl] [--app-status] [--overlay] [--orientation bottom|left|right]")
+                print("dock-live [--duration 0.1..120] [--interval 0.05..5] [--threshold 1..255] [--max-frame-age 0.05..10] [--window-id ID] [--scenario LABEL] [--output ABSOLUTE_NEW.jsonl] [--app-status] [--idle-current] [--callback-timeout 0.05..10] [--overlay] [--orientation bottom|left|right]")
                 print("Optimized build required. Existing screen-capture grant only; no request APIs, images, audio or uploads. Raster statistics never establish a product support edge.")
                 exit(0)
             }
+            if flag == "--idle-current" { o.idleCurrent=true;continue }
             if flag == "--overlay" { o.overlay=true; continue }
             if flag == "--app-status" { o.appStatus = true; continue }
             guard !args.isEmpty else { fail("Missing value for \(flag)") }
@@ -33,6 +34,7 @@ struct Options {
             switch flag {
             case "--duration": guard let n=Double(value), n.isFinite, (0.1...120).contains(n) else { fail("Invalid duration") }; o.duration=n; durationExplicit=true
             case "--interval": guard let n=Double(value), n.isFinite, (0.05...5).contains(n) else { fail("Invalid interval") }; o.interval=n
+            case "--callback-timeout": guard let n=Double(value),n.isFinite,(0.05...10).contains(n) else { fail("Invalid callback timeout") };o.callbackTimeout=n
             case "--max-frame-age": guard let n=Double(value), n.isFinite, (0.05...10).contains(n) else { fail("Invalid frame age") }; o.maxAge=n
             case "--threshold": guard let n=Int(value), (1...255).contains(n) else { fail("Invalid alpha threshold") }; o.threshold=n
             case "--window-id": guard let n=UInt32(value), n>0 else { fail("Invalid window ID") }; o.windowID=n
@@ -168,20 +170,52 @@ func attachmentRect(_ value:Any?)->CGRect? {
     }
 }
 final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
-    let lock=NSLock(); let worker=DispatchQueue(label:"mosey.dock.alpha",qos:.utility)
-    let log:JSONLog; let options:Options; let start:UInt64
+    struct Job {
+        let sample:CMSampleBuffer;let info:[SCStreamFrameInfo:Any]
+        let received:UInt64;let source:UInt64?;let epoch:Int;let sequence:Int
+    }
+    let lock=NSLock();let worker=DispatchQueue(label:"mosey.dock.alpha",qos:.utility)
+    let log:JSONLog;let options:Options;let start:UInt64
     let clearBackground=CGColor(gray:0,alpha:0)
     var expectedWidth=0;var expectedHeight=0;var expectedScale=1.0
-    var latestContour:[Int]?;var lastFrameStatus:Int?;var statusCounts:[String:Int]=[:];var invalidationReason="no_complete_frame"
-    var busy=false; var active=true; var epoch=0; var errorCode:Int?
-    var callbacks=0; var complete=0; var processed=0;var analyzed=0;var acceptedCount=0; var skipped=0; var intervalSkipped=0; var incomplete=0; var idle=0; var late=0
-    var lastCallback:UInt64?; var lastSource:UInt64?; var lastAcceptedSource:UInt64?; var lastScheduled:UInt64?; var maxCallbackGap=0.0
-    var status="waiting_for_complete_frame"
+    var latestContour:[Int]?;var lastFrameStatus:Int?;var statusCounts:[String:Int]=[:]
+    var invalidationReason="no_complete_frame";var status="waiting_for_complete_frame"
+    var busy=false;var pending:Job?;var active=true;var epoch=0;var errorCode:Int?
+    var completeSequence=0;var acceptedSequence:Int?
+    var callbacks=0;var complete=0;var processed=0;var analyzed=0;var acceptedCount=0
+    var pendingQueued=0;var pendingReplaced=0;var invalidatedPending=0;var supersededProcessed=0
+    var incomplete=0;var idle=0;var late=0;var silenceInvalidated=false;var silenceInvalidations=0
+    var lastCallback:UInt64?;var lastSource:UInt64?;var lastAcceptedSource:UInt64?;var maxCallbackGap=0.0
     init(_ log:JSONLog,_ options:Options,_ start:UInt64) { self.log=log;self.options=options;self.start=start }
-    func stop() { lock.lock();active=false;epoch+=1;lastAcceptedSource=nil;latestContour=nil;if invalidationReason=="none" { invalidationReason="stopped" };lock.unlock() }
-    func invalidate(_ reason:String) { lock.lock(); epoch+=1;lastAcceptedSource=nil;latestContour=nil;invalidationReason=reason;status=reason;lock.unlock() }
+    // Caller holds lock. Complete arrivals suppress old geometry immediately; only
+    // the latest processed sequence can establish another diagnostic candidate.
+    func clearLocked(_ reason:String,discardPending:Bool) {
+        lastAcceptedSource=nil;latestContour=nil;acceptedSequence=nil
+        invalidationReason=reason;status=reason
+        if discardPending { if pending != nil { invalidatedPending+=1 };pending=nil }
+    }
+    func stop() { lock.lock();active=false;epoch+=1;clearLocked("stopped",discardPending:true);lock.unlock() }
+    func invalidate(_ reason:String) { lock.lock();epoch+=1;clearLocked(reason,discardPending:true);lock.unlock() }
+    func expireSilenceLocked(_ now:UInt64) {
+        // Invalidate once per callback gap, including a sole in-flight worker.
+        // An idle callback after a pause cannot make pre-gap work valid again.
+        if let prior=lastCallback,age(now,prior)>options.callbackTimeout,!silenceInvalidated {
+            silenceInvalidated=true;silenceInvalidations+=1
+            epoch+=1;clearLocked("callback_silence",discardPending:true)
+        }
+    }
+    func currentnessLocked(_ now:UInt64)->String {
+        expireSilenceLocked(now)
+        guard active,latestContour != nil,let source=lastAcceptedSource,
+              acceptedSequence==completeSequence,pending==nil,
+              let callback=lastCallback,age(now,callback)>=0,age(now,callback)<=options.callbackTimeout else { return "unavailable_or_stale" }
+        let sourceAge=age(now,source)
+        if sourceAge>=0 && sourceAge<=options.maxAge { return "current_from_source_age" }
+        if options.idleCurrent && sourceAge>=0 && lastFrameStatus==SCFrameStatus.idle.rawValue { return "current_via_idle_heartbeat" }
+        return "unavailable_or_stale"
+    }
     func stream(_ stream:SCStream,didStopWithError error:Error) {
-        lock.lock();errorCode=(error as NSError).code;active=false;epoch+=1;lastAcceptedSource=nil;latestContour=nil;invalidationReason="stream_error";status="stream_error";lock.unlock()
+        lock.lock();errorCode=(error as NSError).code;active=false;epoch+=1;clearLocked("stream_error",discardPending:true);lock.unlock()
         log.emit(["type":"stream_error","errorDomain":(error as NSError).domain,"errorCode":(error as NSError).code,"supportEdge":NSNull()])
     }
     func stream(_ stream:SCStream,didOutputSampleBuffer sampleBuffer:CMSampleBuffer,of type:SCStreamOutputType) {
@@ -190,60 +224,80 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
         let info=(CMSampleBufferGetSampleAttachmentsArray(sampleBuffer,createIfNecessary:false) as? [[SCStreamFrameInfo:Any]])?.first ?? [:]
         let frameStatus=(info[.status] as? NSNumber)?.intValue ?? -1
         let source=(info[.displayTime] as? NSNumber)?.uint64Value
-        lock.lock(); callbacks+=1;lastFrameStatus=frameStatus;statusCounts[String(frameStatus),default:0]+=1
-        if let previous=lastCallback { maxCallbackGap=max(maxCallbackGap,age(received,previous)) };lastCallback=received
-        guard active else { lock.unlock(); return }
+        lock.lock();callbacks+=1;lastFrameStatus=frameStatus;statusCounts[String(frameStatus),default:0]+=1
+        expireSilenceLocked(received)
+        if let previous=lastCallback { maxCallbackGap=max(maxCallbackGap,age(received,previous)) };lastCallback=received;silenceInvalidated=false
+        guard active else { lock.unlock();return }
         if frameStatus != SCFrameStatus.complete.rawValue {
             incomplete+=1
-            if frameStatus == SCFrameStatus.idle.rawValue { idle+=1;status="idle_no_new_frame" }
-            else { epoch+=1;lastAcceptedSource=nil;latestContour=nil;invalidationReason="incomplete_status_\(frameStatus)";status=invalidationReason }
-            lock.unlock(); return
+            if frameStatus==SCFrameStatus.idle.rawValue { idle+=1;status="idle_no_new_frame" }
+            else { epoch+=1;clearLocked("incomplete_status_\(frameStatus)",discardPending:true) }
+            lock.unlock();return
         }
-        complete+=1;lastSource=source
-        if busy { skipped+=1;lock.unlock();return }
-        if let prior=lastScheduled,age(received,prior)<options.interval { intervalSkipped+=1;lock.unlock();return }
-        busy=true;lastScheduled=received;let token=epoch;lock.unlock()
-        worker.async { [self] in
-            let processingStart=mach_absolute_time()
-            let sourceAge=source.map { age(processingStart,$0) }
-            let fresh=sourceAge.map { $0>=0 && $0<=options.maxAge } ?? false
-            let raster = fresh && CMSampleBufferIsValid(sampleBuffer) ? CMSampleBufferGetImageBuffer(sampleBuffer).flatMap { analyze($0,threshold:options.threshold,orientation:options.orientation) } : nil
-            let finished=mach_absolute_time()
-            let postAge=source.map { age(finished,$0) }
-            let content=attachmentRect(info[.contentRect])
-            let frameScale=(info[.scaleFactor] as? NSNumber)?.doubleValue
-            let contentScale=(info[.contentScale] as? NSNumber)?.doubleValue
-            let mappingValid=content.map { abs($0.minX)<0.01 && abs($0.minY)<0.01 && abs($0.width-Double(expectedWidth)/expectedScale)<0.01 && abs($0.height-Double(expectedHeight)/expectedScale)<0.01 } == true && frameScale == expectedScale && contentScale == 1 && raster?.stats["width"] as? Int == expectedWidth && raster?.stats["height"] as? Int == expectedHeight
-            lock.lock();processed+=1;if raster != nil { analyzed+=1 }
-            let stillFresh=postAge.map { $0>=0 && $0<=options.maxAge } ?? false
-            if !stillFresh { late+=1 }
-            let accepted=active && token==epoch && stillFresh && raster != nil && raster?.stats["fullySelectedRaster"] as? Bool != true && mappingValid
-            if accepted { acceptedCount+=1;lastAcceptedSource=source;latestContour=raster?.contour;invalidationReason="none";status="complete_raster_diagnostic" }
-            else {
-                lastAcceptedSource=nil;latestContour=nil
-                if token==epoch { invalidationReason=source==nil ? "source_timestamp_unavailable":(!stillFresh ? "stale_frame":(!mappingValid ? "mapping_unreliable":"alpha_not_isolated_or_invalid")) }
-                status=invalidationReason
-            }
-            let rejectionReason=accepted ? "none":invalidationReason
-            busy=false;lock.unlock()
-            var record:[String:Any]=["type":"frame","elapsed":age(finished,start),"status":accepted ? "complete_raster_diagnostic" : "rejected","frameStatus":frameStatus,"sourceDisplayMachTicks":source as Any? ?? NSNull(),"receivedMachTicks":received,"processingStartMachTicks":processingStart,"processingEndMachTicks":finished,"callbackAgeFromDisplaySeconds":source.map { age(received,$0) } as Any? ?? NSNull(),"queueWaitSeconds":age(processingStart,received),"processingSeconds":age(finished,processingStart),"rejectionReason":rejectionReason,"sourceAgeAtProcessingEndSeconds":postAge as Any? ?? NSNull(),"supportEdge":NSNull(),"raster":raster?.stats as Any? ?? NSNull(),"mappingValid":mappingValid]
-            if let n=info[.scaleFactor] as? NSNumber { record["frameScaleFactor"]=n }
-            if let n=info[.contentScale] as? NSNumber { record["frameContentScale"]=n }
-            if let content { record["frameContentRectPoints"]=rectangle(content) }
-            if let screenRect=attachmentRect(info[.screenRect]) { record["frameScreenRectDiagnostic"]=rectangle(screenRect) }
-            log.emit(record)
+        complete+=1;completeSequence+=1;lastSource=source
+        clearLocked("new_complete_pending",discardPending:false)
+        let job=Job(sample:sampleBuffer,info:info,received:received,source:source,epoch:epoch,sequence:completeSequence)
+        if busy {
+            pendingQueued+=1;if pending != nil { pendingReplaced+=1 };pending=job
+            lock.unlock();return
         }
+        busy=true;lock.unlock()
+        worker.async { [self] in processLoop(job) }
+    }
+    func processLoop(_ first:Job) {
+        var next:Job?=first
+        while let job=next {
+            process(job)
+            lock.lock()
+            next=active ? pending:nil;pending=nil
+            if next==nil { busy=false }
+            lock.unlock()
+        }
+    }
+    func process(_ job:Job) {
+        let processingStart=mach_absolute_time()
+        lock.lock();let eligible=active && job.epoch==epoch && job.sequence==completeSequence;lock.unlock()
+        let sourceAge=job.source.map { age(processingStart,$0) }
+        let fresh=sourceAge.map { $0>=0 && $0<=options.maxAge } ?? false
+        let raster=eligible && fresh && CMSampleBufferIsValid(job.sample) ? CMSampleBufferGetImageBuffer(job.sample).flatMap { analyze($0,threshold:options.threshold,orientation:options.orientation) }:nil
+        let finished=mach_absolute_time();let postAge=job.source.map { age(finished,$0) }
+        let content=attachmentRect(job.info[.contentRect])
+        let frameScale=(job.info[.scaleFactor] as? NSNumber)?.doubleValue
+        let contentScale=(job.info[.contentScale] as? NSNumber)?.doubleValue
+        let mappingValid=content.map { abs($0.minX)<0.01 && abs($0.minY)<0.01 && abs($0.width-Double(expectedWidth)/expectedScale)<0.01 && abs($0.height-Double(expectedHeight)/expectedScale)<0.01 } == true && frameScale==expectedScale && contentScale==1 && raster?.stats["width"] as? Int==expectedWidth && raster?.stats["height"] as? Int==expectedHeight
+        lock.lock();processed+=1;if raster != nil { analyzed+=1 }
+        let stillFresh=postAge.map { $0>=0 && $0<=options.maxAge } ?? false
+        if !stillFresh { late+=1 }
+        let callbackFresh=lastCallback.map { age(finished,$0)>=0 && age(finished,$0)<=options.callbackTimeout } ?? false
+        let latest=job.sequence==completeSequence
+        if !latest { supersededProcessed+=1 }
+        let accepted=active && job.epoch==epoch && latest && stillFresh && callbackFresh && mappingValid && raster?.stats["fullySelectedRaster"] as? Bool != true
+        let rejectionReason:String
+        if accepted {
+            acceptedCount+=1;lastAcceptedSource=job.source;acceptedSequence=job.sequence;latestContour=raster?.contour
+            invalidationReason="none";status=lastFrameStatus==SCFrameStatus.idle.rawValue ? "idle_no_new_frame":"complete_raster_diagnostic"
+            rejectionReason="none"
+        } else {
+            rejectionReason = !latest ? "superseded_by_newer_complete" : (job.epoch != epoch || !active ? invalidationReason : (job.source==nil ? "source_timestamp_unavailable":(!stillFresh ? "stale_frame":(!callbackFresh ? "callback_silence":(!mappingValid ? "mapping_unreliable":"alpha_not_isolated_or_invalid")))))
+            // A superseded worker must not overwrite a newer pending/invalidation state.
+            if latest && job.epoch==epoch { clearLocked(rejectionReason,discardPending:false) }
+        }
+        lock.unlock()
+        var record:[String:Any]=["type":"frame","frameSequence":job.sequence,"elapsed":age(finished,start),"status":accepted ? "complete_raster_diagnostic":"rejected","frameStatus":SCFrameStatus.complete.rawValue,"sourceDisplayMachTicks":job.source as Any? ?? NSNull(),"receivedMachTicks":job.received,"processingStartMachTicks":processingStart,"processingEndMachTicks":finished,"callbackAgeFromDisplaySeconds":job.source.map { age(job.received,$0) } as Any? ?? NSNull(),"queueWaitSeconds":age(processingStart,job.received),"processingSeconds":age(finished,processingStart),"rejectionReason":rejectionReason,"sourceAgeAtProcessingEndSeconds":postAge as Any? ?? NSNull(),"supportEdge":NSNull(),"raster":raster?.stats as Any? ?? NSNull(),"mappingValid":mappingValid]
+        if let n=job.info[.scaleFactor] as? NSNumber { record["frameScaleFactor"]=n }
+        if let n=job.info[.contentScale] as? NSNumber { record["frameContentScale"]=n }
+        if let content { record["frameContentRectPoints"]=rectangle(content) }
+        if let screenRect=attachmentRect(job.info[.screenRect]) { record["frameScreenRectDiagnostic"]=rectangle(screenRect) }
+        log.emit(record)
     }
     func overlayContour()->[Int]? {
         lock.lock();defer {lock.unlock()}
-        guard active,let source=lastAcceptedSource,age(mach_absolute_time(),source)<=options.maxAge else { return nil }
-        return latestContour
+        return currentnessLocked(mach_absolute_time())=="unavailable_or_stale" ? nil:latestContour
     }
     func snapshot()->[String:Any] {
         lock.lock();defer {lock.unlock()};let now=mach_absolute_time()
-        let currentAge=lastAcceptedSource.map { age(now,$0) }
-        let fresh=currentAge.map { $0>=0 && $0<=options.maxAge } ?? false
-        return ["lastFrameStatusCode":lastFrameStatus as Any? ?? NSNull(),"frameStatusCounts":statusCounts,"invalidationReason":invalidationReason,"lastObservedStatus":status,"callbackCount":callbacks,"completeReceived":complete,"processedComplete":processed,"alphaAnalyzedCount":analyzed,"acceptedComplete":acceptedCount,"backpressureSkipped":skipped,"intervalSkipped":intervalSkipped,"incompleteCallbacks":incomplete,"idleCallbacks":idle,"lateComplete":late,"lastCallbackAgeSeconds":lastCallback.map { age(now,$0) } as Any? ?? NSNull(),"lastCompleteSourceAgeSeconds":lastSource.map { age(now,$0) } as Any? ?? NSNull(),"lastAcceptedSourceAgeSeconds":currentAge as Any? ?? NSNull(),"maxObservedCallbackGapSeconds":maxCallbackGap,"candidateStatus":fresh ? status : "unavailable_or_stale","upstreamDroppedFrames":"not_observable","streamErrorCode":errorCode as Any? ?? NSNull(),"supportEdge":NSNull()]
+        let currentness=currentnessLocked(now)
+        return ["lastFrameStatusCode":lastFrameStatus as Any? ?? NSNull(),"frameStatusCounts":statusCounts,"invalidationReason":invalidationReason,"lastObservedStatus":status,"callbackCount":callbacks,"completeReceived":complete,"processedComplete":processed,"alphaAnalyzedCount":analyzed,"acceptedComplete":acceptedCount,"backpressureSkipped":pendingReplaced,"callbackSilenceInvalidations":silenceInvalidations,"pendingQueued":pendingQueued,"pendingReplaced":pendingReplaced,"pendingDiscardedOnInvalidation":invalidatedPending,"supersededProcessed":supersededProcessed,"pendingCompleteCount":pending==nil ? 0:1,"latestCompleteSequence":completeSequence,"acceptedCompleteSequence":acceptedSequence as Any? ?? NSNull(),"intervalSkipped":0,"incompleteCallbacks":incomplete,"idleCallbacks":idle,"lateComplete":late,"lastCallbackAgeSeconds":lastCallback.map { age(now,$0) } as Any? ?? NSNull(),"lastCompleteSourceAgeSeconds":lastSource.map { age(now,$0) } as Any? ?? NSNull(),"lastAcceptedSourceAgeSeconds":lastAcceptedSource.map { age(now,$0) } as Any? ?? NSNull(),"lastAcceptedSourceDisplayMachTicks":lastAcceptedSource as Any? ?? NSNull(),"maxObservedCallbackGapSeconds":maxCallbackGap,"candidateStatus":currentness,"idleCurrentPolicy":options.idleCurrent,"callbackTimeoutSeconds":options.callbackTimeout,"upstreamDroppedFrames":"not_observable","streamErrorCode":errorCode as Any? ?? NSNull(),"supportEdge":NSNull()]
     }
 }
 
@@ -279,7 +333,7 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
     }
     @MainActor static func run(options:Options,log:JSONLog,ui:StatusUI?) async {
         let start=mach_absolute_time()
-        log.emit(["type":"environment","os":ProcessInfo.processInfo.operatingSystemVersionString,"bundleID":Bundle.main.bundleIdentifier as Any? ?? NSNull(),"bundlePath":Bundle.main.bundlePath,"executable":CommandLine.arguments[0],"processID":ProcessInfo.processInfo.processIdentifier,"parentPID":getppid(),"appStatus":options.appStatus,"overlayRequested":options.overlay,"orientation":options.orientation,"outputLocalPath":options.output as Any? ?? NSNull(),"buildMode":"optimized_-O","scenario":options.scenario,"scenarioIsOperatorLabelOnly":true,"machTimebaseNumer":timebase.numer,"machTimebaseDenom":timebase.denom,"permissionScope":"This launch identity only; CLI host and LaunchServices app are separate experiments","supportEdge":NSNull()])
+        log.emit(["type":"environment","os":ProcessInfo.processInfo.operatingSystemVersionString,"bundleID":Bundle.main.bundleIdentifier as Any? ?? NSNull(),"bundlePath":Bundle.main.bundlePath,"executable":CommandLine.arguments[0],"processID":ProcessInfo.processInfo.processIdentifier,"parentPID":getppid(),"appStatus":options.appStatus,"overlayRequested":options.overlay,"orientation":options.orientation,"idleCurrentPolicy":options.idleCurrent,"callbackTimeoutSeconds":options.callbackTimeout,"schedulingPolicy":"one_worker_plus_latest_complete_slot","outputLocalPath":options.output as Any? ?? NSNull(),"buildMode":"optimized_-O","scenario":options.scenario,"scenarioIsOperatorLabelOnly":true,"machTimebaseNumer":timebase.numer,"machTimebaseDenom":timebase.denom,"permissionScope":"This launch identity only; CLI host and LaunchServices app are separate experiments","supportEdge":NSNull()])
         guard CGPreflightScreenCaptureAccess() else {
             log.emit(["type":"unavailable","status":"permission_unavailable","shareableContentQueryAttempted":false,"supportEdge":NSNull()])
             ui?.update("BLOCKED: no existing screen-recording grant.\nNo request made. Grant manually only if desired, then relaunch.",options.output ?? "stdout")
@@ -312,7 +366,7 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
             config.minimumFrameInterval=CMTime(seconds:options.interval,preferredTimescale:600)
             let capture=SCStream(filter:filter,configuration:config,delegate:sink);stream=capture
             try capture.addStreamOutput(sink,type:.screen,sampleHandlerQueue:DispatchQueue(label:"mosey.dock.callback",qos:.userInitiated))
-            log.emit(["type":"stream_configuration","windowID":selected.windowID,"windowIsOnScreenDiagnosticOnly":selected.isOnScreen,"independentWindowFilter":true,"filterContentRectPoints":rectangle(filter.contentRect),"filterPointPixelScale":filter.pointPixelScale,"rasterWidth":width,"rasterHeight":height,"primaryFrameAppKitPoints":rectangle(initialFrame),"primaryBoundsCGPoints":rectangle(primary),"backingScale":initialScale,"pixelFormat":"BGRA","shouldBeOpaque":false,"backgroundAlpha":0,"queueDepth":3,"requestedMinimumFrameIntervalSeconds":options.interval,"diagnosticMaxFrameAgeSeconds":options.maxAge,"alphaThreshold":options.threshold,"coordinateSpace":"Raster pixels top-left; primary-local points divide by backingScale; candidate contour remains unverified","supportEdge":NSNull()])
+            log.emit(["type":"stream_configuration","windowID":selected.windowID,"windowIsOnScreenDiagnosticOnly":selected.isOnScreen,"independentWindowFilter":true,"filterContentRectPoints":rectangle(filter.contentRect),"filterPointPixelScale":filter.pointPixelScale,"rasterWidth":width,"rasterHeight":height,"primaryFrameAppKitPoints":rectangle(initialFrame),"primaryBoundsCGPoints":rectangle(primary),"backingScale":initialScale,"pixelFormat":"BGRA","shouldBeOpaque":false,"backgroundAlpha":0,"queueDepth":3,"requestedMinimumFrameIntervalSeconds":options.interval,"diagnosticMaxFrameAgeSeconds":options.maxAge,"idleCurrentPolicy":options.idleCurrent,"callbackTimeoutSeconds":options.callbackTimeout,"localIntervalGate":false,"schedulingPolicy":"one_worker_plus_latest_complete_slot","alphaThreshold":options.threshold,"coordinateSpace":"Raster pixels top-left; primary-local points divide by backingScale; candidate contour remains unverified","supportEdge":NSNull()])
             let outline=options.overlay ? LiveContour(initialFrame,initialScale,options.orientation):nil
             defer { outline?.update(nil) }
             try await capture.startCapture()
