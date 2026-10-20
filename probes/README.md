@@ -95,3 +95,15 @@ The native screenshot is an operator action, outside both probes. It is not auth
 `--overlay` draws the cyan raster contour on a nonactivating, input-ignoring primary-display panel for 0.1–30 seconds. It requires the PNG pixel dimensions to match the current primary display's pixel dimensions; otherwise it reports an unavailable/mismatch status and draws nothing. `displayPoints` reports the source-pixels-per-display-point ratios and local point mapping. Equal dimensions alone do not prove the image is an uncropped primary-display capture: verify its provenance and display configuration yourself. The contour is a static captured frame; it cannot follow subsequent icon motion or show/hide changes.
 
 The CLI smoke tests use temporary independently encoded transparent/asymmetric PNGs and verify public process results, including threshold selection and top-left pixel coordinates. They do not prove the captured image contains only visible Dock pixels. Actual raster alpha can include shadow, background, tooltip or stale/occluded/partial contents, and threshold choice changes the contour. Compare multiple thresholds and real magnification frames locally. All results keep `supportEdge: null` and `productFeasibility: unverified`; a promising isolated capture still needs a public live-capture route, bounded latency, visibility, permission/revocation and final packaged-host validation.
+
+### Optional largest-component experiment
+
+A detached Dock tooltip can become the topmost alpha in an isolated capture. To investigate this failure separately, `--largest-component` keeps only the largest **4-connected** component of pixels meeting the threshold before computing bounds/contour:
+
+```sh
+/tmp/mosey-dock-probe/dock-alpha /tmp/mosey-dock-probe/dock-window-isolated.png --threshold 128 --largest-component > /tmp/mosey-dock-probe/dock-alpha-largest.json
+```
+
+Default analysis still uses all threshold-selected alpha. With the flag, `selectionMode` becomes `largest_4_connected_alpha_component`; `selectedPixelCount` refers to the retained component, `thresholdPixelCount` counts all raw threshold-selected pixels, and `nonzeroAlphaPixelCount` remains the raw nonzero-alpha count. `componentCount` is populated only when segmentation runs. Equal-sized components deterministically retain the first component encountered by a top-to-bottom, left-to-right seed scan. Diagonally touching pixels are separate components. The source file is never changed.
+
+This can exclude a detached tooltip, but can also discard disconnected icons, badges or menus, or retain a large unrelated/background component. Connectivity depends on alpha threshold, shadow and antialiasing. It is an experimental segmentation rule, **not** a product support-edge rule. Overlay mapping and provenance checks still apply, `supportEdge` remains null, and visible body alignment must be compared locally. Flood-fill work and its temporary stack scale with decoded image size; no real-time latency or packaged live-capture guarantee follows from this offline tool.

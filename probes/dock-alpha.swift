@@ -11,15 +11,17 @@ var path: String?
 var threshold: Int?
 var orientation = "bottom"
 var overlay = false
+var largestComponent = false
 var duration = 5.0
 var args = Array(CommandLine.arguments.dropFirst())
 while !args.isEmpty {
     let arg = args.removeFirst()
     if arg == "--help" {
-        print("dock-alpha LOCAL.png --threshold 1..255 [--orientation bottom|left|right] [--overlay] [--duration 0.1..30]")
+        print("dock-alpha LOCAL.png --threshold 1..255 [--orientation bottom|left|right] [--overlay] [--largest-component] [--duration 0.1..30]")
         print("Reads existing PNG alpha only. Cyan raster outline is a diagnostic, never verified support geometry.")
         exit(0)
     }
+    if arg == "--largest-component" { largestComponent = true; continue }
     if arg == "--overlay" { overlay = true; continue }
     if !arg.hasPrefix("--") {
         guard path == nil else { fail("Only one local PNG path is allowed") }; path = arg; continue
@@ -74,6 +76,52 @@ for y in 0..<height {
         default: if inward[y] == -1 { inward[y] = x }
         }
     }
+}
+let thresholdPixelCount = selected
+var componentCount: Int?
+if largestComponent {
+    // Reuse decoded alpha as a visited bitmap; never modify or save the source file.
+    // Stack entries fit Int32 because the decoder permits at most 50 million pixels.
+    var stack: [Int32] = []
+    var componentInward = [Int](repeating: -1, count: inward.count)
+    var touchedAxes: [Int] = []
+    var components = 0
+    selected = 0
+    for seed in 0..<(width * height) {
+        guard Int(pixels[seed * 4 + 3]) >= threshold else { continue }
+        components += 1
+        var size = 0
+        var cMinX = width; var cMinY = height; var cMaxX = -1; var cMaxY = -1
+        func enqueue(_ index: Int) {
+            guard Int(pixels[index * 4 + 3]) >= threshold else { return }
+            pixels[index * 4 + 3] = 0
+            stack.append(Int32(index))
+        }
+        enqueue(seed)
+        while let stored = stack.popLast() {
+            let index = Int(stored); let x = index % width; let y = index / width
+            size += 1
+            cMinX = min(cMinX, x); cMaxX = max(cMaxX, x); cMinY = min(cMinY, y); cMaxY = max(cMaxY, y)
+            let axis = orientation == "bottom" ? x : y
+            let value = orientation == "bottom" ? y : x
+            if componentInward[axis] == -1 {
+                componentInward[axis] = value; touchedAxes.append(axis)
+            } else if orientation == "left" { componentInward[axis] = max(componentInward[axis], value) }
+            else { componentInward[axis] = min(componentInward[axis], value) }
+            if x > 0 { enqueue(index - 1) }
+            if x + 1 < width { enqueue(index + 1) }
+            if y > 0 { enqueue(index - width) }
+            if y + 1 < height { enqueue(index + width) }
+        }
+        // Row-major seed order breaks equal-size ties at the topmost, then leftmost seed.
+        if size > selected {
+            selected = size; inward = componentInward
+            minX = cMinX; maxX = cMaxX; minY = cMinY; maxY = cMaxY
+        }
+        for axis in touchedAxes { componentInward[axis] = -1 }
+        touchedAxes.removeAll(keepingCapacity: true)
+    }
+    componentCount = components
 }
 let contour: [[String: Int]] = inward.enumerated().compactMap { index, value in
     guard value >= 0 else { return nil }
@@ -134,10 +182,13 @@ let result: [String: Any] = [
     "type": "dock_alpha_diagnostic", "sourceLocalPath": url.path,
     "sourcePixels": ["width": width, "height": height, "coordinateSpace": "Image pixels, top-left origin"],
     "alphaThreshold": threshold, "thresholdComparison": "alpha >= threshold, integer range 0...255",
-    "selectedPixelCount": selected, "nonzeroAlphaPixelCount": nonzero, "boundsPixels": bounds,
+    "selectedPixelCount": selected, "thresholdPixelCount": thresholdPixelCount, "nonzeroAlphaPixelCount": nonzero,
+    "selectionMode": largestComponent ? "largest_4_connected_alpha_component" : "all_threshold_alpha",
+    "componentCount": componentCount as Any? ?? NSNull(),
+    "componentTieBreak": "First row-major seed: topmost, then leftmost pixel; ties retain first component", "boundsPixels": bounds,
     "orientation": orientation, "inwardContourPixels": contour, "displayPoints": displayPoints,
     "overlayStatus": overlayStatus, "supportEdge": NSNull(), "productFeasibility": "unverified",
-    "limit": "Existing raster alpha diagnostic only. Capture provenance, shadows, tooltips, stale frames and occlusion require validation. No live geometry route or product support edge established."
+    "limit": "Existing raster alpha diagnostic only. Capture provenance, shadows, tooltips, stale frames and occlusion require validation. Largest-component segmentation can omit detached icons, badges or menus and is not a product geometry rule. No live geometry route or product support edge established."
 ]
 let data = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])
 FileHandle.standardOutput.write(data); FileHandle.standardOutput.write(Data([10]))

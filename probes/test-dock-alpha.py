@@ -33,6 +33,28 @@ with tempfile.TemporaryDirectory(prefix='mosey-alpha-') as directory:
     assert value['inwardContourPixels']==[{'x':1,'y':0},{'x':2,'y':1}]
     assert value['sourcePixels']['coordinateSpace']=='Image pixels, top-left origin'
     assert value['supportEdge'] is None
+    separated=directory/'separated.png'
+    rows=[bytearray(24) for _ in range(4)]
+    for x,y in [(4,0),(1,2),(2,2),(3,2),(1,3)]: rows[y][4*x:4*x+4]=bytes([255,0,0,255])
+    png(separated,rows)
+    result=run(separated,'--threshold','128','--largest-component')
+    assert result.returncode==0,result.stderr
+    value=json.loads(result.stdout)
+    assert value['boundsPixels']=={'x':1,'y':2,'width':3,'height':2}
+    assert value['selectedPixelCount']==4 and value['thresholdPixelCount']==5 and value['nonzeroAlphaPixelCount']==5
+    assert value['componentCount']==2 and value['selectionMode']=='largest_4_connected_alpha_component'
+    assert value['inwardContourPixels']==[{'x':1,'y':2},{'x':2,'y':2},{'x':3,'y':2}]
+    assert value['supportEdge'] is None
+    diagonal=directory/'diagonal-tie.png'
+    rows=[bytearray(12) for _ in range(2)]
+    for x,y in [(1,0),(0,1)]: rows[y][4*x:4*x+4]=bytes([255,0,0,255])
+    png(diagonal,rows)
+    result=run(diagonal,'--threshold','128','--largest-component')
+    assert result.returncode==0,result.stderr
+    value=json.loads(result.stdout)
+    assert value['componentCount']==2 and value['selectedPixelCount']==1
+    assert value['boundsPixels']=={'x':1,'y':0,'width':1,'height':1}
+    assert value['inwardContourPixels']==[{'x':1,'y':0}]
 if len(sys.argv)>2:
     lookup=subprocess.run([sys.argv[2]],capture_output=True,text=True,timeout=20)
     assert lookup.returncode in [0,2],lookup.stderr
@@ -41,4 +63,4 @@ if len(sys.argv)>2:
     if lookup.returncode==2: assert result['windows']==[]
     for window in result['windows']:
         assert set(window)=={'windowID','frame','isOnScreen','layer'}
-print('PASS: missing file, transparent image, alpha threshold, independently known top-left contour, optional metadata lookup')
+print('PASS: missing file, transparent image, alpha threshold, independently known contour, largest 4-connected component/tie, optional metadata lookup')
