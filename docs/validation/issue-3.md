@@ -44,3 +44,9 @@ Standards P2 已修复：8ms 光标轮询仅在窗口显示时运行，隐藏立
 本机检查已安装 Electron 44.9.1 的 `node_modules/electron/electron.d.ts`：`setIgnoreMouseEvents` 是整窗鼠标忽略开关；`acceptFirstMouse` 只决定非活跃窗口点击是否传给 web contents，不能替代 alpha 系统路由；可表达系统输入区域的 `setShape` 标明只支持 Windows/Linux，不支持本次 macOS 目标。安装包未提供 Chromium/Electron 的完整 C++ 实现源码，不能把类型声明检查说成内核实现验证。当前本地 API 检查没有发现能直接在 macOS 上设置逐帧 alpha 系统输入区域的现成 Electron 能力。
 
 因此 Spec P1 的帧 IPC／光标轮询竞态与真实桌面证据缺口保持开放。原生 NSWindow 命中扩展或全局主动事件拦截属于候选替代路线，前者需验证 Electron/AppKit 集成是否真能把事件交给下层应用，后者可能有辅助功能／输入监控授权及维护成本；本轮均未验证，不能承诺免授权或宣称解决。没有新增原生桥、权限要求或系统钩子。
+
+## 最终集成交付
+
+集成分支 `integration/issue-3-awake-click` 的代码提交 `9d77bb26e987ceb61a603df4e32552ec8a84e25e` 再次通过 `pnpm check`、`pnpm package:mac` 和真实打包整应用测试（1/1，14.86s）。本次集成 `test-results/packaged-*` 来自最终打包复核；`development-*` 复制自实现工作树最近的成功运行，并非在集成目录重新运行开发测试。Standards 对修复提交作只读复核，确认隐藏轮询问题消除；Spec 两项 P1 仍保留。
+
+最终打包应用位于此工作树 `out/Mosey-darwin-arm64/Mosey.app`；已通过 CUA 启动，读取的页面地址来自此包内 `app.asar`，仅说明最终包已运行，不能作为系统命中或焦点通过。已向用户提供真实鼠标验收步骤，等待结果。未关闭 #3，未合并 main，未宣称远程 CI 通过。集成工作树保留，实施工作树申请归档。
