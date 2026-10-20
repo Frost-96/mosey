@@ -179,6 +179,25 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(idleFrames.has(await pixels())).toBe(true);
     }
     expect(responses.size).toBe(3);
+    // A system visibility change cancels the reaction; showing resumes interaction.
+    await window.mouse.click(120, 180);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.hide(),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.showInactive(),
+    );
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
+      .toBe(true);
+    await window.mouse.click(120, 180);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(idleFrames.has(await pixels())).toBe(false);
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
+      .toBe(true);
     expect(errors).toEqual([]);
     await mkdir("test-results", { recursive: true });
     await window.screenshot({
