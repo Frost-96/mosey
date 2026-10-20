@@ -25,7 +25,11 @@
 
 - [app-frozen-granted-show-hide-quit.jsonl](app-frozen-granted-show-hide-quit.jsonl)：用户授权后，系统设置读回该应用开关为on。通过LaunchServices重新启动，parentPID=1、相同bundle路径，窗口显示CAPTURING。25.35秒内70次回调（6次complete、62次idle、2次suspended），3帧分析、2次忙门跳过、1次间隔跳过。完整帧包含真实全透明帧、显示主体(227,1744,2486,158)以及隐藏动画主体(227,1764,2486,148)。suspended后候选失效。点击真实Quit按钮后日志写出completed summary，桌面控制返回procNotFound；未把该返回误记为采集失败。默认1秒年龄门限会使静止idle后的历史轮廓过期，不是可用于站位的最终策略。
 
-这已直接证明宿主可采集不等于独立.app获得授权；尚不能把“未获授权”写成用户点击拒绝，更不能写成撤销已测。应用重建会改变ad hoc身份，因此此次授权验证期间不重建或移动该文件。
+- [撤销后重启](app-frozen-revoked-relaunch.jsonl)：用户手动关闭该应用屏幕录制权限，系统设置实际读回off。同一冻结文件重新启动，窗口显示BLOCKED；日志明确`shareableContentQueryAttempted:false`，没有stream_configuration或frame，Quit后summary为permission_unavailable。签名再次核对仍为上述CDHash。读取退出后UI时桌面工具又启动了一次应用，形成[第二次重启](app-frozen-revoked-second-relaunch.jsonl)，结果一致，并再次通过Quit结束。代理没有重新授权。
+
+撤销操作对应的采样轮次此前已经120秒到期，故仅验证了撤销后重启，不证明运行中撤销的错误通知、系统终止行为或清理时序。上述结果也不能称作用户在授权提示中点击拒绝。
+
+这已直接证明宿主可采集不等于独立.app获得授权；应用重建会改变ad hoc身份，因此此次授权验证期间不重建或移动该文件。
 
 ## 代码检查与待验收
 
@@ -33,4 +37,4 @@
 
 Standards未发现文档规范违反；提出一项P3维护建议：PNG与CVPixelBuffer探针各自实现阈值／连通分量算法。目前保留两个实验入口，避免在桥接尚未锁定时扩大构建结构；这不是正式适配的共享模块设计。若采用该路线，应统一分析内核或建立同输入对照，不能默许两者语义长期分叉。Spec审查的P2和AppKit生命周期问题已修复并复核。
 
-尚未验证：权限撤销／用户拒绝、实时放大与侧边组合、Dock进程／显示配置变化、最终Electron身份与打包、长期资源与延迟预算。#14保持OPEN；不声称攀爬完成或已选定正式桥接，不引入固定边界降级。
+尚未验证：采集中撤销／提示中拒绝、实时放大与侧边组合、Dock进程／显示配置变化、最终Electron身份与打包、长期资源与延迟预算。#14保持OPEN；不声称攀爬完成或已选定正式桥接，不引入固定边界降级。
