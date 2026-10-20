@@ -65,12 +65,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     window.on("console", (message) =>
       console.log(message.type(), message.text()),
     );
-    await window.waitForLoadState("load");
     expect(app.windows()).toHaveLength(1);
     await expect
       .poll(
         async () =>
-          window.locator("canvas").evaluate((canvas: HTMLCanvasElement) => {
+          window.evaluate(() => {
+            const canvas = document.querySelector("canvas");
+            if (!canvas) return 0;
             const pixels = canvas
               .getContext("2d")!
               .getImageData(0, 0, canvas.width, canvas.height).data;
@@ -81,6 +82,31 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         { timeout: 10000 },
       )
       .toBeGreaterThan(5000);
+    // A second launch must exit without adding a pet or terminating the first.
+    const duplicate = spawn(app.process().spawnfile, packaged ? [] : ["."], {
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+      stdio: "ignore",
+    });
+    try {
+      await expect.poll(() => duplicate.exitCode, { timeout: 10000 }).toBe(0);
+      expect(app.windows()).toHaveLength(1);
+      expect(await window.evaluate(() => document.body.innerText)).toBe("");
+    } finally {
+      if (duplicate.exitCode === null) duplicate.kill();
+    }
+    expect(
+      await window.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const data = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        let bottom = -1;
+        for (let y = 0; y < canvas.height; y++)
+          for (let x = 0; x < canvas.width; x++)
+            if (data[(y * canvas.width + x) * 4 + 3] > 127) bottom = y;
+        return Math.round((bottom + 1) / globalThis.devicePixelRatio);
+      }),
+    ).toBe(240);
     const capture = async () =>
       PNG.sync.read(await window.screenshot({ omitBackground: true }));
     const first = await capture();
