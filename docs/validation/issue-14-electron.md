@@ -38,10 +38,22 @@ Playwright 启动的 Electron 或打包应用仍可能继承执行宿主责任�
 
 独立原生历史探针与原始证据 `probes/` 使用其自身编译/CLI/物理检查，不进入正式 TypeScript/Prettier 格式边界；没有批量重写旧原始数据。应用 `src/`、tests、tools 和构建配置仍全部执行 typecheck/lint/format。
 
-## 本机自动化结果（2026-10-20）
+## 第一版自动化结果（2026-10-20；后续独立启动发现缺陷）
 
 macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试 1/1（8.19 秒），最终签名打包测试 1/1（6.59 秒）。两种模式每次均真实进入 native stream 配置，三次运行均完成对自有 helper 的 SIGSTOP 故障注入：传输过期清理、重复 Stop 清理、Quit 清理。每次 helper 已从 OS 进程表消失，应用退出码为 0；不把开发/Playwright 的继承权限写成独立应用授权。
 
 最终候选产物在本票工作树 `out/Mosey-darwin-arm64/Mosey.app`。`codesign --verify --deep --strict` 通过（这里只是递归验证，不是 blanket deep 签名）。实际顶层标识 `dev.frost.mosey`、CDHash `3ea5bd0347ae7f8153054afaebeb1bffee947ae4`；嵌套 helper 标识 `dev.frost.mosey.dock-helper`、CDHash `36c9fcca331ba218d10eb0ae0e101c76ae73e20d`，均为 ad-hoc，TeamIdentifier not set。helper SHA256 `31c2e44db610009c9a38618fff72fcda3aa4f12d4bfc511695783a070b76cd63`；app.asar SHA256 `93a8d5fa951ce50379aeffa21cb93ea8a9698bec015f92e97bd06c0f2f58e11c`。
 
 本地完整签名/哈希/编译 receipt 保存于 `/tmp/mosey-electron-dock-final-provenance.json`；两模式各三份数字日志和生命周期摘要在该工作树 `test-results/`，不会随应用 userData 的三份轮转丢失。未把截图或 native 像素放入此票证据。最终独立 LaunchServices 启动、必要的手动授权与真实 Dock 动态比较仍由操作者在冻结产物上执行；此自动化结果不替代那些证据。
+
+## 独立启动缺陷与第二版修复（2026-10-20）
+
+第一版的独立 LaunchServices 启动停在主进程，没有 renderer，也没有新的启动日志；本地 sample 显示 NSAlert modal，但 stdout/stderr 没有提供异常文本，因此不引用未经观察的错误消息。冻结的第一版副本保持原样，尚未请求用户授权。
+
+外部整应用回归不使用 Playwright inspector：把实际打包 app 复制到临时目录（开发 checkout 及其 node_modules 之外），以 cwd `/` 和仅 HOME/PATH/TMPDIR 的环境启动真实 executable，要求它创建 renderer，再仅终止该测试拥有的进程。原始 out 路径通过约 0.7 秒；冻结副本和自动临时副本均在 8 秒无 renderer 失败。提前访问 powerMonitor 的假设经单变量修复实验仍失败，已撤回。
+
+已确认 app.asar 第一版没有 node_modules，而 main.mjs 保留外部 `electron-log/main` import。原 out 路径能向祖先开发目录解析该包，独立副本不能。Forge Vite 默认只复制 .vite，因此现显式保留 .vite、package.json 和锁定的 electron-log 5.4.4 运行包；不改变依赖版本，不依赖宿主 Node/npm，不将 CommonJS logger 盲目打入 ESM。其包没有传递运行依赖，其余应用依赖已由 Vite 打包。第二版 asar 内有 52 个 electron-log 路径条目。仅此打包修复后，同一独立回归通过约 2.49 秒。
+
+正常 packaged 验收也改为从临时副本运行，继续验证可见宠物、动画、安全隔离、单实例、菜单和三次 native 生命周期。最终 `pnpm check` 通过；开发 1 个通过、独立打包专属回归跳过（8.42 秒）；打包 2 个通过（8.02 秒）。两模式三次运行均实际 capturing，并执行自有 helper SIGSTOP / 传输过期、重复 Stop、运行中 Quit 清理，未跳过活进程路径。数字日志仍在 test-results；这不证明独立 LaunchServices 的权限责任归属。
+
+第二版实际顶层 CDHash `260b3a02cbd27ff5eadfb16d96b0b0bb34359374`；helper CDHash `36c9fcca331ba218d10eb0ae0e101c76ae73e20d`。asar SHA256 `e4c4b2375c6cae151bc8cd10c163842563982c2c66aec58ffda9cb6fcbdc6cd7`。递归 strict 签名验证通过；完整签名、哈希、编译 receipt 另存 `/tmp/mosey-electron-dock-v2-provenance.json`，第一版 provenance 不覆盖。第二版冻结后仍需实际 LaunchServices 启动/可见菜单/必要手动授权验证；不把这个无 inspector 的子进程测试冒充 LS 独立责任链。

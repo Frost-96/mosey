@@ -1,17 +1,81 @@
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { mkdir, mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+test.runIf(packaged)(
+  "packaged app starts a renderer without an inspector bootstrap",
+  async () => {
+    const relocated = await mkdtemp(path.join(os.tmpdir(), "mosey-relocated-"));
+    const bundle = path.join(relocated, "Mosey.app");
+    execFileSync("/usr/bin/ditto", [
+      path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+      bundle,
+    ]);
+    const child = spawn(
+      process.env.MOSEY_STARTUP_EXECUTABLE ??
+        path.join(bundle, "Contents/MacOS/Mosey"),
+      [],
+      {
+        env: {
+          HOME: os.homedir(),
+          PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+          TMPDIR: os.tmpdir(),
+        },
+        cwd: "/",
+        stdio: "pipe",
+      },
+    );
+    let output = "";
+    child.stdout.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    child.stderr.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    const descendants = () =>
+      execFileSync("/bin/ps", ["-axo", "pid=,ppid=,args="], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line))
+        .filter((match) => match && Number(match[2]) === child.pid);
+    try {
+      await expect
+        .poll(
+          () => {
+            if (child.exitCode !== null)
+              throw new Error(`App exited before renderer startup: ${output}`);
+            return descendants().some((match) =>
+              match![3].includes("--type=renderer"),
+            );
+          },
+          { timeout: 8000 },
+        )
+        .toBe(true);
+      expect(output).not.toMatch(/Uncaught Exception|Error launching app/);
+    } finally {
+      child.kill("SIGTERM");
+      await expect
+        .poll(() => child.exitCode !== null || child.signalCode !== null, {
+          timeout: 3000,
+        })
+        .toBe(true);
+      await rm(relocated, { recursive: true, force: true });
+    }
+  },
+);
+
 test("a real app displays one animated corgi and quits from its menu", async () => {
   let app: ElectronApplication | undefined;
   let server: ChildProcess | undefined;
   const errors: string[] = [];
   let shim: string | undefined;
+  let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
   try {
     if (!packaged) {
@@ -48,12 +112,20 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         )
         .toContain("MOSEY_TEST_READY");
     }
+    if (packaged) {
+      packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
+      execFileSync("/usr/bin/ditto", [
+        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+        path.join(packagedRoot, "Mosey.app"),
+      ]);
+    }
     app = await electron.launch(
       packaged
         ? {
             timeout: 20000,
-            executablePath: path.resolve(
-              "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
+            executablePath: path.join(
+              packagedRoot!,
+              "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
         : { args: ["."], timeout: 20000 },
@@ -327,5 +399,6 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       });
     }
     if (shim) await rm(shim, { recursive: true, force: true });
+    if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
   }
 });
