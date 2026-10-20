@@ -33,6 +33,15 @@ with tempfile.TemporaryDirectory(prefix='mosey-alpha-') as directory:
     assert value['inwardContourPixels']==[{'x':1,'y':0},{'x':2,'y':1}]
     assert value['sourcePixels']['coordinateSpace']=='Image pixels, top-left origin'
     assert value['supportEdge'] is None
+    result=run(known,'--threshold','128','--overlay','--duration','0.1')
+    assert result.returncode==0,result.stderr
+    mapping=json.loads(result.stdout)
+    assert mapping['overlayStatus'] in ['desktop_unavailable','source_dimensions_do_not_match_primary_display']
+    assert mapping['displayPoints'] is None and mapping['supportEdge'] is None
+    if mapping['overlayStatus']=='source_dimensions_do_not_match_primary_display':
+        diagnostic=mapping['mappingDiagnostics']
+        assert diagnostic['sourceRasterWidth']==4 and diagnostic['sourceRasterHeight']==3
+        assert diagnostic['expectedRasterWidth']>0 and diagnostic['expectedRasterHeight']>0
     separated=directory/'separated.png'
     rows=[bytearray(24) for _ in range(4)]
     for x,y in [(4,0),(1,2),(2,2),(3,2),(1,3)]: rows[y][4*x:4*x+4]=bytes([255,0,0,255])
