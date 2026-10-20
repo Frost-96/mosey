@@ -11,7 +11,7 @@ python3 probes/test-dock-probe.py /tmp/mosey-dock-probe/dock-geometry
 /tmp/mosey-dock-probe/dock-geometry --scenario baseline --duration 10 > /tmp/mosey-dock-probe/baseline.jsonl
 ```
 
-The external CLI smoke checks launch the real process and validate its public output, termination, invalid arguments and fail-closed result. They do **not** verify actual Dock edges or human-visible overlay alignment. `--help` documents bounded sampling: 0.1–120 seconds, 0.05–5 second interval; the last synchronous native query can overrun the deadline slightly. Every AX attribute query sets a 50 ms messaging timeout on its own element (child objects do not inherit root timeouts); the walk has a 64-node/3-level walk limit and a 0.5 second per-sample traversal budget. No screen images are captured or saved. JSONL is emitted to stdout, so choose a fresh local destination for each bounded run.
+The external CLI smoke checks also verify `--item-overlay` is accepted while `--no-overlay` disables both overlay types, and all support geometry stays unverified. They launch the real process and validate its public output, termination, invalid arguments and fail-closed result. They do **not** verify actual Dock edges or human-visible overlay alignment. `--help` documents bounded sampling: 0.1–120 seconds, 0.05–5 second interval; the last synchronous native query can overrun the deadline slightly. Every AX attribute query sets a 50 ms messaging timeout on its own element (child objects do not inherit root timeouts); the walk has a 64-node/3-level walk limit and a 0.5 second per-sample traversal budget. No screen images are captured or saved. JSONL is emitted to stdout, so choose a fresh local destination for each bounded run.
 
 ## Run the real scenarios
 
@@ -32,6 +32,18 @@ Use a normal desktop, hold the display configuration steady, and record the prim
 - Permission unavailable/denied/revoked: run with `--scenario permission-denied` from a launch host already lacking AX permission, or `permission-revoked` after the operator independently revokes an existing grant. Repeat after relaunch as appropriate. Do not change permissions merely to make the probe pass. Record what the system actually reports; these labels cannot distinguish never-granted from denied. No prompt is generated. The current process/host's grant does not establish a packaged Electron grant.
 
 Scenario names are operator annotations, **not assertions that those states occurred**. Record the matching timestamps, observed Dock state, overlay alignment and any uncertainty in the evidence notes. Compare visually with local screenshots or recordings made through already-authorized tools when available; do not grant a permission just to generate evidence. If unavailable, record that evidence gap. Restore any settings you changed yourself when finished.
+
+## Optional per-item diagnostic overlay
+
+The default remains the amber AXList candidate line. For a separate magnification investigation, opt into cyan per-item segments:
+
+```sh
+/tmp/mosey-dock-probe/dock-geometry --scenario magnification --duration 15 --item-overlay > /tmp/mosey-dock-probe/magnification-items.jsonl
+```
+
+Each cyan segment follows the inward-facing edge of an observed, fully display-contained `AXDockItem` rectangle: top/minY for bottom Dock, right/maxX for left Dock, left/minX for right Dock. The transparent full-primary-display canvas is a nonactivating panel that ignores mouse input. Both canvases are removed at completion. `--no-overlay` suppresses both amber and cyan regardless of flag order. No screenshots are acquired by this option; any authorized visual comparison stays local.
+
+The item canvas only appears while AX is trusted, traversal is complete, and the existing unique root-list candidate is available. Loss of those conditions removes the segments on the next sample. Item rectangles remain recorded in `axNodes`; the flag adds visual diagnostics, not a product collision path. Compare each segment against the actual icon silhouette/background during magnification: AX item rectangles can include padding and are not proven visible support contours. `supportEdge` remains null even if cyan segments track magnification.
 
 ## Reading the evidence
 
