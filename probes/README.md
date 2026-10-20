@@ -63,3 +63,35 @@ When there is no reliable route, preserve this failed/unverified result. Do not 
 - **Bridge if evidence supports one:** a small signed Swift helper communicating bounded JSON over stdio is a candidate that avoids a Node native ABI dependency, but adds child-process lifecycle, hardened runtime/signing, packaging placement, error handling and TCC identity testing. An Objective-C++/N-API addon avoids a separate process but adds arm64 Electron ABI/build/rebuild/signing maintenance and must keep native calls off latency-sensitive work. Neither option is selected by this probe. No public plugin or persistent daemon is introduced.
 
 Retest the chosen route within the final packaged/signed Electron application: current host permission, standalone Swift operation and successful property assignments are not product evidence. Record system versions and display configurations separately. A geometry route needs reliable visible state, actual changing support contour, temporal lag and permission-failure evidence before the product can use it.
+
+## Inspect an existing isolated Dock PNG locally
+
+`dock-alpha.swift` is a separate one-shot research tool. It reads an existing local PNG through ImageIO/CoreGraphics, evaluates 8-bit alpha at the explicitly supplied threshold, and emits selected bounds, pixel counts and an inward-facing raster contour. It does not capture pixels, invoke permission APIs, change settings or upload anything. No image files belong in the repository.
+
+The optional `dock-capture-windows.swift` metadata lookup uses ScreenCaptureKit to return only Dock window IDs, frames, on-screen flags and layers. It first checks existing screen-capture authorization; if unavailable it exits 2 before asking for shareable content. It never requests access, starts a capture stream or returns other applications' titles. Existing grants can still fail, and window IDs can change between launches. A screen-sized frame is still not visible Dock geometry.
+
+Build and run locally:
+
+```sh
+mkdir -p /tmp/mosey-dock-probe
+swiftc -module-cache-path /tmp/mosey-dock-probe/module-cache probes/dock-alpha.swift -o /tmp/mosey-dock-probe/dock-alpha
+swiftc -parse-as-library -module-cache-path /tmp/mosey-dock-probe/module-cache probes/dock-capture-windows.swift -o /tmp/mosey-dock-probe/dock-capture-windows
+python3 probes/test-dock-alpha.py /tmp/mosey-dock-probe/dock-alpha /tmp/mosey-dock-probe/dock-capture-windows
+/tmp/mosey-dock-probe/dock-capture-windows > /tmp/mosey-dock-probe/dock-capture-windows.json
+```
+
+Inspect the lookup result locally and select the actual on-screen Dock window ID. Only when the user has authorized a **local native screenshot**, substitute that observed session-specific ID for `WINDOW_ID` below and run the native capture separately:
+
+```sh
+screencapture -x -o -l WINDOW_ID /tmp/mosey-dock-probe/dock-window-isolated.png
+/tmp/mosey-dock-probe/dock-alpha /tmp/mosey-dock-probe/dock-window-isolated.png --threshold 128 > /tmp/mosey-dock-probe/dock-alpha.json
+/tmp/mosey-dock-probe/dock-alpha /tmp/mosey-dock-probe/dock-window-isolated.png --threshold 128 --orientation bottom --overlay --duration 5 > /tmp/mosey-dock-probe/dock-alpha-overlay.json
+```
+
+The native screenshot is an operator action, outside both probes. It is not authorization for remote screenshots or uploads. Do not substitute an arbitrary enumerated window, upload the PNG, or copy it into repository evidence. If lookup is unavailable, stop that route rather than requesting permission. For an already available PNG, the alpha inspector works independently of lookup and desktop access.
+
+`sourcePixels`, `boundsPixels` and `inwardContourPixels` use integer image pixels with top-left origin. Alpha selection is `alpha >= threshold`, with an explicit integer threshold 1–255. Bounds include selected pixel cells; a transparent image has null bounds and an empty contour. `bottom` emits the topmost selected pixel per column, `left` the rightmost per row, and `right` the leftmost per row. The left overlay uses the right boundary of each selected pixel cell; other overlays use its top/left boundary. Non-alpha PNGs and oversized images fail explicitly; decoding is bounded to 50 million pixels and 16384 pixels per axis.
+
+`--overlay` draws the cyan raster contour on a nonactivating, input-ignoring primary-display panel for 0.1–30 seconds. It requires the PNG pixel dimensions to match the current primary display's pixel dimensions; otherwise it reports an unavailable/mismatch status and draws nothing. `displayPoints` reports the source-pixels-per-display-point ratios and local point mapping. Equal dimensions alone do not prove the image is an uncropped primary-display capture: verify its provenance and display configuration yourself. The contour is a static captured frame; it cannot follow subsequent icon motion or show/hide changes.
+
+The CLI smoke tests use temporary independently encoded transparent/asymmetric PNGs and verify public process results, including threshold selection and top-left pixel coordinates. They do not prove the captured image contains only visible Dock pixels. Actual raster alpha can include shadow, background, tooltip or stale/occluded/partial contents, and threshold choice changes the contour. Compare multiple thresholds and real magnification frames locally. All results keep `supportEdge: null` and `productFeasibility: unverified`; a promising isolated capture still needs a public live-capture route, bounded latency, visibility, permission/revocation and final packaged-host validation.
