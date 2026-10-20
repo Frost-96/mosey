@@ -131,8 +131,17 @@ async function start() {
   };
   // Polling is a best-effort adapter: an enter-and-click within this interval
   // can race the OS. Real first-click acceptance remains a separate gate.
-  const pointerPoll = setInterval(routePointer, 8);
-  pet.on("closed", () => clearInterval(pointerPoll));
+  let pointerPoll: ReturnType<typeof setInterval> | undefined;
+  const stopPointerPolling = () => {
+    if (pointerPoll !== undefined) clearInterval(pointerPoll);
+    pointerPoll = undefined;
+  };
+  const startPointerPolling = () => {
+    if (pet.isDestroyed() || visibility !== "visible") return;
+    routePointer();
+    pointerPoll ??= setInterval(routePointer, 8);
+  };
+  pet.on("closed", stopPointerPolling);
   const presentation = () =>
     presentationSchema.parse({
       posture: behavior.getSnapshot().value,
@@ -179,12 +188,16 @@ async function start() {
   behavior.subscribe(publish);
   pet.on("show", () => {
     visibility = "visible";
+    startPointerPolling();
     publish();
   });
   pet.on("hide", () => {
     visibility = "hidden";
+    stopPointerPolling();
+    // Immediately release any last opaque region, independent of cursor polling.
+    pet.setIgnoreMouseEvents(true, { forward: true });
+    ignoring = true;
     behavior.send({ type: "CANCEL" });
-    routePointer();
     publish();
   });
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
