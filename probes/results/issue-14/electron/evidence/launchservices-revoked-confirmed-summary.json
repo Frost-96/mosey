@@ -1,0 +1,55 @@
+{
+  "unixSeconds": 1792496264.3923771,
+  "systemMoseyToggle": "off",
+  "systemNativeProbeToggle": "on",
+  "ui": "Blocked: native screen-recording permission unavailable",
+  "currentness": "Unavailable",
+  "hostPID": 94930,
+  "hostParentPID": 1,
+  "nativeEnvironment": {
+    "type": "environment",
+    "appStatus": false,
+    "buildMode": "optimized_-O",
+    "bundleID": null,
+    "bundlePath": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/Mosey.app/Contents/Resources/native",
+    "callbackTimeoutSeconds": 1,
+    "executable": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/Mosey.app/Contents/Resources/native/dock-live",
+    "idleCurrentPolicy": true,
+    "machTimebaseDenom": 3,
+    "machTimebaseNumer": 125,
+    "orientation": "bottom",
+    "os": "Version 27.0.1 (Build 26A434)",
+    "outputLocalPath": null,
+    "overlayRequested": false,
+    "parentPID": 94930,
+    "permissionScope": "This launch identity only; CLI host and LaunchServices app are separate experiments",
+    "processID": 94941,
+    "scenario": "formal-electron-diagnostic",
+    "scenarioIsOperatorLabelOnly": true,
+    "schedulingPolicy": "one_worker_plus_latest_complete_slot",
+    "supportEdge": null
+  },
+  "nativeResult": [
+    {
+      "type": "unavailable",
+      "status": "permission_unavailable",
+      "shareableContentQueryAttempted": false,
+      "supportEdge": null
+    },
+    {
+      "type": "summary",
+      "supportEdge": null,
+      "status": "permission_unavailable"
+    }
+  ],
+  "exit": {
+    "type": "electron-stop",
+    "code": 2,
+    "signal": null,
+    "reason": "native completion",
+    "supportEdge": null
+  },
+  "binaryHashesUnchanged": true,
+  "verified": "revoked_permission_after_independent_relaunch",
+  "runtimeRevocationTiming": "not established; prior run ended normally and exact manual off transition was not observed"
+}

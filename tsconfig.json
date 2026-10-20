@@ -9,7 +9,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "types": ["node", "vite/client"],
-    "lib": ["ES2023", "DOM"]
+    "lib": ["ES2023", "DOM"],
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true
   },
-  "include": ["*.ts", "src", "tests"]
+  "include": ["*.ts", "src", "tests", "tools"]
 }
