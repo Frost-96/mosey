@@ -131,16 +131,24 @@ func sample() {
             let role = roleValue as? String ?? "unknown"
             if let r = axRect(node) {
                 nodes.append(["role": role, "bounds": rect(r), "depth": depth])
-                let intersection = r.intersection(primaryBounds)
                 let notScreen = r.width < primaryBounds.width * 0.95 || r.height < primaryBounds.height * 0.95
-                let touches: Bool
+                // Modern Docks can float inside the display (observed bottom inset: 10 pt).
+                // This is a candidate-selection heuristic, never a visibility/contour proof.
+                // Full containment rejects the observed hidden AXList below the display.
+                let nearEdge: Bool
                 switch orientation {
-                case "bottom": touches = abs(r.maxY - primaryBounds.maxY) < 8 && r.height < primaryBounds.height * 0.4
-                case "left": touches = abs(r.minX - primaryBounds.minX) < 8 && r.width < primaryBounds.width * 0.4
-                case "right": touches = abs(r.maxX - primaryBounds.maxX) < 8 && r.width < primaryBounds.width * 0.4
-                default: touches = false
+                case "bottom":
+                    let inset = primaryBounds.maxY - r.maxY
+                    nearEdge = inset >= 0 && inset <= min(r.height * 0.5, primaryBounds.height * 0.05) && r.height < primaryBounds.height * 0.4
+                case "left":
+                    let inset = r.minX - primaryBounds.minX
+                    nearEdge = inset >= 0 && inset <= min(r.width * 0.5, primaryBounds.width * 0.05) && r.width < primaryBounds.width * 0.4
+                case "right":
+                    let inset = primaryBounds.maxX - r.maxX
+                    nearEdge = inset >= 0 && inset <= min(r.width * 0.5, primaryBounds.width * 0.05) && r.width < primaryBounds.width * 0.4
+                default: nearEdge = false
                 }
-                if role == "AXList", notScreen, touches, !intersection.isNull { candidates.append(r) }
+                if role == "AXList", notScreen, nearEdge, primaryBounds.contains(r) { candidates.append(r) }
             }
             let (childError, childValue) = attr(node, kAXChildrenAttribute)
             if childError != .success && childError != .attributeUnsupported && childError != .noValue { truncated = true }
