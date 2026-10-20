@@ -153,6 +153,7 @@ final class RasterOutline: NSView {
 }
 var overlayStatus = "not_requested"
 var displayPoints: Any = NSNull()
+var mappingDiagnostics: Any = NSNull()
 var panel: NSPanel?
 if overlay {
     let app = NSApplication.shared; app.setActivationPolicy(.accessory)
@@ -160,7 +161,16 @@ if overlay {
     if let screen = NSScreen.screens.first(where: {
         ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == display
     }), display != 0 {
-        if width == CGDisplayPixelsWide(display), height == CGDisplayPixelsHigh(display) {
+        // Window PNGs use the screen backing raster, which can differ from
+        // CGDisplayPixelsWide/High under a scaled Retina display mode.
+        let expectedWidth = Int((screen.frame.width * screen.backingScaleFactor).rounded())
+        let expectedHeight = Int((screen.frame.height * screen.backingScaleFactor).rounded())
+        mappingDiagnostics = ["displayID": display, "screenPointWidth": screen.frame.width,
+                              "screenPointHeight": screen.frame.height, "backingScaleFactor": screen.backingScaleFactor,
+                              "expectedRasterWidth": expectedWidth, "expectedRasterHeight": expectedHeight,
+                              "sourceRasterWidth": width, "sourceRasterHeight": height,
+                              "cgDisplayPixelsDiagnosticOnly": ["width": CGDisplayPixelsWide(display), "height": CGDisplayPixelsHigh(display)]] as [String: Any]
+        if width == expectedWidth, height == expectedHeight {
             let xScale = Double(width) / screen.frame.width
             let yScale = Double(height) / screen.frame.height
             displayPoints = ["displayID": display, "width": screen.frame.width, "height": screen.frame.height,
@@ -187,7 +197,7 @@ let result: [String: Any] = [
     "componentCount": componentCount as Any? ?? NSNull(),
     "componentTieBreak": "First row-major seed: topmost, then leftmost pixel; ties retain first component", "boundsPixels": bounds,
     "orientation": orientation, "inwardContourPixels": contour, "displayPoints": displayPoints,
-    "overlayStatus": overlayStatus, "supportEdge": NSNull(), "productFeasibility": "unverified",
+    "overlayStatus": overlayStatus, "mappingDiagnostics": mappingDiagnostics, "supportEdge": NSNull(), "productFeasibility": "unverified",
     "limit": "Existing raster alpha diagnostic only. Capture provenance, shadows, tooltips, stale frames and occlusion require validation. Largest-component segmentation can omit detached icons, badges or menus and is not a product geometry rule. No live geometry route or product support edge established."
 ]
 let data = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])
