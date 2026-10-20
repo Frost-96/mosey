@@ -1,0 +1,139 @@
+{
+  "appMagnification": {
+    "operatorReport": "完成; did not separately confirm magnitude",
+    "summary": {
+      "acceptedComplete": 76,
+      "alphaAnalyzedCount": 76,
+      "backpressureSkipped": 0,
+      "callbackCount": 393,
+      "candidateStatus": "unavailable_or_stale",
+      "completeReceived": 106,
+      "elapsed": 120.15875879166667,
+      "frameStatusCounts": {
+        "0": 106,
+        "1": 286,
+        "3": 1
+      },
+      "idleCallbacks": 286,
+      "incompleteCallbacks": 287,
+      "intervalSkipped": 30,
+      "invalidationReason": "stopped",
+      "lastAcceptedSourceAgeSeconds": null,
+      "lastCallbackAgeSeconds": 0.09110629166666667,
+      "lastCompleteSourceAgeSeconds": 28.089164625,
+      "lastFrameStatusCode": 1,
+      "lastObservedStatus": "idle_no_new_frame",
+      "lateComplete": 0,
+      "maxObservedCallbackGapSeconds": 80.11666895833334,
+      "processedComplete": 76,
+      "productFeasibility": "unverified",
+      "status": "completed",
+      "streamErrorCode": null,
+      "supportEdge": null,
+      "type": "summary",
+      "upstreamDroppedFrames": "not_observable"
+    },
+    "nonemptyAnalyzedFrames": 75,
+    "largestComponentBoundsRanges": {
+      "x": [
+        161,
+        207
+      ],
+      "y": [
+        1730,
+        1752
+      ],
+      "width": [
+        2572,
+        2618
+      ],
+      "height": [
+        158,
+        172
+      ]
+    },
+    "firstAnalyzedElapsed": 80.234159,
+    "lastAnalyzedElapsed": 92.102747375
+  },
+  "screenshots": [
+    {
+      "alphaThreshold": 128,
+      "boundsPixels": {
+        "height": 158,
+        "width": 2618,
+        "x": 161,
+        "y": 1744
+      },
+      "componentCount": 2,
+      "selectedPixelCount": 411792,
+      "thresholdPixelCount": 420280,
+      "nonzeroAlphaPixelCount": 425134,
+      "orientation": "bottom",
+      "selectionMode": "largest_4_connected_alpha_component",
+      "sourcePixels": {
+        "coordinateSpace": "Image pixels, top-left origin",
+        "height": 1912,
+        "width": 2940
+      },
+      "label": "hover-stable",
+      "sourceLocalPath": "/tmp/mosey-live-magnification-20261020/100.png",
+      "sourceSHA256": "0f8e6c49d895f087b1415bba4451bdeae493d9ed83641732a066ee34e4bb9593",
+      "contourFNV1a64": "cbb7e31dbf8d4f91",
+      "rawBoundsPixels": {
+        "height": 242,
+        "width": 2618,
+        "x": 161,
+        "y": 1660
+      },
+      "matchesFinalLiveContourHash": true
+    },
+    {
+      "alphaThreshold": 128,
+      "boundsPixels": {
+        "height": 1700,
+        "width": 118,
+        "x": 9,
+        "y": 140
+      },
+      "componentCount": 1,
+      "selectedPixelCount": 199724,
+      "thresholdPixelCount": 199724,
+      "nonzeroAlphaPixelCount": 200009,
+      "orientation": "left",
+      "selectionMode": "largest_4_connected_alpha_component",
+      "sourcePixels": {
+        "coordinateSpace": "Image pixels, top-left origin",
+        "height": 1912,
+        "width": 2940
+      },
+      "label": "left",
+      "sourceLocalPath": "/tmp/mosey-live-left-shown-20261020.png",
+      "sourceSHA256": "14b9b0df8eeb7f141922476647191bf9aca6e42df72a056e9c62e65091a68670",
+      "contourFNV1a64": "b8866a892bf5c5df"
+    },
+    {
+      "alphaThreshold": 128,
+      "boundsPixels": {
+        "height": 1700,
+        "width": 118,
+        "x": 2813,
+        "y": 140
+      },
+      "componentCount": 1,
+      "selectedPixelCount": 199724,
+      "thresholdPixelCount": 199724,
+      "nonzeroAlphaPixelCount": 200004,
+      "orientation": "right",
+      "selectionMode": "largest_4_connected_alpha_component",
+      "sourcePixels": {
+        "coordinateSpace": "Image pixels, top-left origin",
+        "height": 1912,
+        "width": 2940
+      },
+      "label": "right",
+      "sourceLocalPath": "/tmp/mosey-live-right-shown-20261020.png",
+      "sourceSHA256": "c6ca19d73ea4b5860135fbec28ea6922fb901e4c4caf0c0d36c776281e89310f",
+      "contourFNV1a64": "28c7871aea87c6fb"
+    }
+  ]
+}
