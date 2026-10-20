@@ -73,6 +73,7 @@ test.runIf(packaged)(
 test("a real app displays one animated corgi and quits from its menu", async () => {
   let app: ElectronApplication | undefined;
   let server: ChildProcess | undefined;
+  let serverOutput = "";
   const errors: string[] = [];
   let shim: string | undefined;
   let packagedRoot: string | undefined;
@@ -115,7 +116,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
             const pixels = canvas
               ?.getContext("2d")
               ?.getImageData(0, 0, canvas.width, canvas.height).data;
-            return {
+            const beforeProbe = {
               url: location.href,
               readyState: document.readyState,
               hidden: document.hidden,
@@ -150,6 +151,55 @@ test("a real app displays one animated corgi and quits from its menu", async () 
                   }
                 : null,
             };
+            // Only after the original assertion failed: preserve the state above,
+            // then distinguish cached module evaluation/rejection from missing body execution.
+            const urls = [
+              ...new Set([
+                ...beforeProbe.resources.map((resource) => resource.name),
+                ...beforeProbe.scripts,
+              ]),
+            ].filter((url) => {
+              const parsed = new URL(url, location.href);
+              return (
+                parsed.origin === location.origin &&
+                /(?:idle-atlas\.(?:png|json)\?import|shared\/assets\.ts|zod\.js\?|src\/renderer\.ts)/.test(
+                  parsed.href,
+                )
+              );
+            });
+            const moduleProbes = await Promise.all(
+              urls.map(async (url) => {
+                const started = performance.now();
+                const result = await Promise.race([
+                  import(/* @vite-ignore */ url).then(
+                    (module) => ({
+                      state: "resolved",
+                      exportNames: Object.keys(module).slice(0, 20),
+                    }),
+                    (error: unknown) => ({
+                      state: "rejected",
+                      error: String(error),
+                      stack: error instanceof Error ? error.stack : undefined,
+                    }),
+                  ),
+                  new Promise<{ state: string }>((resolve) =>
+                    setTimeout(() => resolve({ state: "timeout" }), 1000),
+                  ),
+                ]);
+                return {
+                  url,
+                  elapsedMs: performance.now() - started,
+                  ...result,
+                };
+              }),
+            );
+            return {
+              ...beforeProbe,
+              moduleProbes,
+              afterProbeCanvas: canvas
+                ? { width: canvas.width, height: canvas.height }
+                : null,
+            };
           })
           .catch((error: unknown) => ({ error: String(error) })),
       );
@@ -173,6 +223,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       ).catch(String);
       await writeFile(`${prefix}-main.log`, tail.slice(-32000));
     }
+    await writeFile(`${prefix}-forge.log`, serverOutput);
     const evidence = { prefix: "DEBUG-pr18", phase, errors, main, pages };
     await writeFile(`${prefix}.json`, JSON.stringify(evidence, null, 2));
     console.log("DEBUG-pr18", JSON.stringify(evidence));
@@ -195,18 +246,17 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         stdio: "pipe",
         detached: true,
       });
-      let output = "";
       server.stdout?.on("data", (data: Buffer) => {
-        output += data.toString();
+        serverOutput = (serverOutput + data.toString()).slice(-128000);
       });
       server.stderr?.on("data", (data: Buffer) => {
-        output += data.toString();
+        serverOutput = (serverOutput + data.toString()).slice(-128000);
       });
       await expect
         .poll(
           () => {
-            if (server?.exitCode !== null) throw new Error(output);
-            return output;
+            if (server?.exitCode !== null) throw new Error(serverOutput);
+            return serverOutput;
           },
           { timeout: 60000 },
         )
