@@ -1,0 +1,4 @@
+node_modules/
+.vite/
+out/
+test-results/
