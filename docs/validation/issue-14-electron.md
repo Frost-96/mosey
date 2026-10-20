@@ -57,3 +57,12 @@ macOS 27.0.1、Apple Silicon：`pnpm check` 通过；最终开发整应用测试
 正常 packaged 验收也改为从临时副本运行，继续验证可见宠物、动画、安全隔离、单实例、菜单和三次 native 生命周期。最终 `pnpm check` 通过；开发 1 个通过、独立打包专属回归跳过（8.42 秒）；打包 2 个通过（8.02 秒）。两模式三次运行均实际 capturing，并执行自有 helper SIGSTOP / 传输过期、重复 Stop、运行中 Quit 清理，未跳过活进程路径。数字日志仍在 test-results；这不证明独立 LaunchServices 的权限责任归属。
 
 第二版实际顶层 CDHash `260b3a02cbd27ff5eadfb16d96b0b0bb34359374`；helper CDHash `36c9fcca331ba218d10eb0ae0e101c76ae73e20d`。asar SHA256 `e4c4b2375c6cae151bc8cd10c163842563982c2c66aec58ffda9cb6fcbdc6cd7`。递归 strict 签名验证通过；完整签名、哈希、编译 receipt 另存 `/tmp/mosey-electron-dock-v2-provenance.json`，第一版 provenance 不覆盖。第二版冻结后仍需实际 LaunchServices 启动/可见菜单/必要手动授权验证；不把这个无 inspector 的子进程测试冒充 LS 独立责任链。
+
+
+## 第二版冻结产物的独立 LaunchServices 未授权基线（2026-10-20）
+
+最终两项审查均为 0 findings。源码提交 `2cafc41fa06a9867df1a81b6dd5bdb9be18dcb84` 对应的第二版冻结应用与构建 provenance 的哈希匹配，严格递归签名验证通过；未重建、重签或移动冻结应用，旧失败第一版仍保留。数值证据归档于 `probes/results/issue-14/electron/`：`build-provenance.json`、`evidence/launchservices-before-grant.jsonl` 和 `evidence/automated/` 下的开发/打包运行与生命周期 JSON/JSONL；没有复制 PNG 或捕获像素。
+
+操作者通过 CUA 按冻结应用的精确路径进行 LaunchServices 启动，实际看到 Idle corgi 与菜单。该次主进程 PID 90330、父 PID 1；自有 native helper PID 90429、父 PID 90330。启动验证后状态窗显示 Blocked / Unavailable，Electron 宿主权限诊断为 denied。原生 preflight 输出 `permission_unavailable`、`shareableContentQueryAttempted: false`，随后 summary 同样为权限不可用，helper 退出码 2；没有 stream 配置或捕获，`supportEdge` 始终为 null。
+
+已请用户手动授予这个冻结的新版 Mosey Screen Recording 权限，当前尚未收到回复，授权后捕获及独立责任链验证仍待完成。自动化中开发/打包的继承权限与三次 helper 生命周期测试通过，不能替代此次真实 LaunchServices 身份授权，也不作为授权后独立捕获已经通过的证据。
