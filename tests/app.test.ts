@@ -1,7 +1,16 @@
+import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { spawn, execFileSync, type ChildProcess } from "node:child_process";
-import { mkdir, mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
+import { spawn, execFileSync } from "node:child_process";
+import {
+  mkdir,
+  mkdtemp,
+  writeFile,
+  rm,
+  realpath,
+  copyFile,
+  stat,
+} from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
@@ -72,49 +81,27 @@ test.runIf(packaged)(
   },
 );
 
-test("a real app displays one animated corgi and quits from its menu", async () => {
+// Development owns Forge's existing 60s startup allowance as well as the 90s
+// application scenario budget. Each behavior still has its own bounded poll.
+const appTestTimeout = packaged ? 90000 : 150000;
+test(
+  "a real app displays one animated corgi and quits from its menu",
+  exercisePet,
+  appTestTimeout,
+);
+
+async function exercisePet() {
+  const profile = await realpath(
+    await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
+  );
   let app: ElectronApplication | undefined;
-  let server: ChildProcess | undefined;
+  let stopForge: (() => Promise<void>) | undefined;
   const errors: string[] = [];
-  let shim: string | undefined;
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
-  const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-profile-"));
+  const ownedDiagnosticLogs = new Set<string>();
   try {
-    if (!packaged) {
-      shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
-      const executable = path.join(
-        shim,
-        "Electron.app/Contents/MacOS/Electron",
-      );
-      await mkdir(path.dirname(executable), { recursive: true });
-      await writeFile(
-        executable,
-        "#!/bin/sh\necho MOSEY_TEST_READY\nexec /bin/cat\n",
-      );
-      await chmod(executable, 0o755);
-      server = spawn("pnpm", ["start"], {
-        env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
-        stdio: "pipe",
-        detached: true,
-      });
-      let output = "";
-      server.stdout?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      server.stderr?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      await expect
-        .poll(
-          () => {
-            if (server?.exitCode !== null) throw new Error(output);
-            return output;
-          },
-          { timeout: 60000 },
-        )
-        .toContain("MOSEY_TEST_READY");
-    }
+    if (!packaged) stopForge = await startForge();
     if (packaged) {
       packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
       execFileSync("/usr/bin/ditto", [
@@ -136,6 +123,9 @@ test("a real app displays one animated corgi and quits from its menu", async () 
             args: [".", scaleArgument, `--user-data-dir=${profile}`],
             timeout: 20000,
           },
+    );
+    expect(await app.evaluate(({ app }) => app.getPath("userData"))).toBe(
+      profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
     const loginMenu = await app.evaluate(({ Menu, app }) => {
@@ -248,6 +238,40 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       ).toBe("same-document");
       expect(await opaquePixelCount()).toBeGreaterThan(5000);
     }
+    // External display-scale stimulus against the real renderer. CDP emulates
+    // DPR only; this is not evidence of changing physical display hardware.
+    const changedRatio =
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1") === 2 ? 1 : 2;
+    const displaySession = await window.context().newCDPSession(window);
+    await displaySession.send("Emulation.setDeviceMetricsOverride", {
+      width: 240,
+      height: 240,
+      deviceScaleFactor: changedRatio,
+      mobile: false,
+    });
+    await expect
+      .poll(() =>
+        window.evaluate(() => ({
+          ratio: devicePixelRatio,
+          width: document.querySelector("canvas")!.width,
+          height: document.querySelector("canvas")!.height,
+        })),
+      )
+      .toEqual({
+        ratio: changedRatio,
+        width: 240 * changedRatio,
+        height: 240 * changedRatio,
+      });
+    expect(await opaquePixelCount()).toBeGreaterThan(
+      changedRatio === 2 ? 20000 : 5000,
+    );
+    await displaySession.send("Emulation.clearDeviceMetricsOverride");
+    await expect
+      .poll(() =>
+        window.evaluate(() => document.querySelector("canvas")!.width),
+      )
+      .toBe(240 * Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"));
+    await displaySession.detach();
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(
       app.process().spawnfile,
@@ -603,6 +627,211 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(await petBounds()).toEqual(reloaded);
       expect(idleFrames.has(await pixels())).toBe(true);
     }
+    // A busy renderer can queue release and immediate re-grab before either
+    // main-process presentation returns. Use public DOM pointer input in one
+    // renderer task to preserve that ordering, with a real active mouse pointer.
+    await placeAwayFromPhysicalCursor();
+    await window.evaluate(() => {
+      document.querySelector("canvas")!.addEventListener(
+        "pointerdown",
+        (event) => {
+          document.documentElement.dataset.rapidPointer = String(
+            (event as PointerEvent).pointerId,
+          );
+        },
+        { once: true },
+      );
+    });
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, -120, { steps: 5 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 200);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const rapidHeld = await petBounds();
+    await window.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      const pointerId = Number(document.documentElement.dataset.rapidPointer);
+      const options = {
+        pointerId,
+        pointerType: "mouse",
+        button: 0,
+        clientX: 120,
+        clientY: 180,
+        screenX: globalThis.screenX + 120,
+        screenY: globalThis.screenY + 180,
+        bubbles: true,
+      };
+      canvas.dispatchEvent(
+        new PointerEvent("pointerup", { ...options, buttons: 0 }),
+      );
+      canvas.dispatchEvent(
+        new PointerEvent("pointerdown", { ...options, buttons: 1 }),
+      );
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(
+      await window.evaluate(() =>
+        document
+          .querySelector("canvas")!
+          .hasPointerCapture(
+            Number(document.documentElement.dataset.rapidPointer),
+          ),
+      ),
+    ).toBe(true);
+    expect(await petBounds()).toEqual(rapidHeld);
+    await window.mouse.move(120, 260, { steps: 3 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeGreaterThan(rapidHeld.y + 40);
+    await window.mouse.up();
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    // Inject only Electron's external display boundary. Actual renderer, IPC,
+    // pointer capture, drawing and native window placement remain in use.
+    const recoverOnDisplayChange = (event: string) =>
+      app!.evaluate(({ screen, BrowserWindow }, event) => {
+        const original = screen.getPrimaryDisplay;
+        const display = original();
+        const area = display.workArea;
+        screen.getPrimaryDisplay = () => ({
+          ...display,
+          id: display.id + 1,
+          workArea: {
+            x: area.x + 40,
+            y: area.y + 40,
+            width: area.width - 80,
+            height: area.height - 80,
+          },
+        });
+        try {
+          screen.emit(event, {}, screen.getPrimaryDisplay(), [
+            "workArea",
+            "scaleFactor",
+          ]);
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          return { bounds: pet.getBounds(), visible: pet.isVisible() };
+        } finally {
+          screen.getPrimaryDisplay = original;
+        }
+      }, event);
+    for (const [phase, event] of [
+      ["idle", "display-metrics-changed"],
+      ["pressed", "display-metrics-changed"],
+      ["dragging", "display-metrics-changed"],
+      ["flutter", "display-added"],
+      ["falling", "display-removed"],
+    ]) {
+      if (phase === "pressed") {
+        // Landing ends with idle pixels before it becomes ordinary resting.
+        // Establish the same sustained idle condition as the earlier click
+        // interruption test before exercising the drag threshold.
+        for (let sample = 0; sample < 3; sample++) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          expect(idleFrames.has(await pixels())).toBe(true);
+        }
+      }
+      await placeAwayFromPhysicalCursor();
+      const before = await petBounds();
+      if (phase !== "idle") {
+        await window.evaluate(() => {
+          document.querySelector("canvas")!.addEventListener(
+            "pointerdown",
+            (event) => {
+              document.documentElement.dataset.topologyPointer = String(
+                (event as PointerEvent).pointerId,
+              );
+            },
+            { once: true },
+          );
+        });
+        await window.mouse.move(120, 180);
+        await window.mouse.down();
+        if (phase === "pressed") {
+          // Stay below the drag threshold: resting→resting still invalidates
+          // this accepted press and must release its browser capture.
+          await window.mouse.move(121, 180);
+          expect(await petBounds()).toEqual(before);
+        } else {
+          await window.mouse.move(120, -120, { steps: 5 });
+          await expect
+            .poll(async () => (await petBounds()).y)
+            .toBeLessThan(ground.y - 200);
+          const elevated = await petBounds();
+          if (phase !== "dragging") await window.mouse.up();
+          if (phase === "flutter")
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          if (phase === "falling")
+            await expect
+              .poll(async () => (await petBounds()).y, { interval: 10 })
+              .toBeGreaterThan(elevated.y + 20);
+        }
+      }
+      const recovered = await recoverOnDisplayChange(event!);
+      expect(recovered.visible, phase).toBe(true);
+      expect(recovered.bounds, phase).toEqual({
+        x: before.x === area.x ? area.x + 40 : area.x + area.width - 280,
+        y: ground.y - 40,
+        width: 240,
+        height: 240,
+      });
+      if (phase === "dragging" || phase === "pressed") {
+        await expect
+          .poll(() =>
+            window.evaluate(() =>
+              document
+                .querySelector("canvas")!
+                .hasPointerCapture(
+                  Number(document.documentElement.dataset.topologyPointer),
+                ),
+            ),
+          )
+          .toBe(false);
+      }
+      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      // Old held-pointer movement/release cannot revive the cancelled drag.
+      await window.mouse.move(500, -500);
+      await window.mouse.up();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(await petBounds(), phase).toEqual(recovered.bounds);
+      expect(idleFrames.has(await pixels()), phase).toBe(true);
+      // New input must still grab the freshly drawn body at its new position.
+      await window.mouse.move(120, 180);
+      await window.mouse.down();
+      await window.mouse.move(120, 100, { steps: 3 });
+      await expect
+        .poll(async () => (await petBounds()).y)
+        .toBeLessThan(recovered.bounds.y - 40);
+      await window.mouse.up();
+      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    }
+    // Preserve the actual manual hide choice while the display topology changes.
+    const invokeVisibility = (label: string) =>
+      app!.evaluate(({ Menu }, label) => {
+        const item = Menu.getApplicationMenu()
+          ?.items.find((entry) => entry.label === "Mosey")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+        item.click();
+      }, label);
+    await invokeVisibility("Hide Mosey");
+    expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
+      false,
+    );
+    await app.evaluate(({ screen }) => {
+      screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+        "workArea",
+      ]);
+    });
+    expect(
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]!.isVisible(),
+      ),
+    ).toBe(false);
+    await invokeVisibility("Show Mosey");
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
@@ -638,6 +867,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(body).not.toContain("Failed:");
       const localLog = await diagnostic.getByLabel("Local log").inputValue();
       expect(path.isAbsolute(localLog)).toBe(true);
+      ownedDiagnosticLogs.add(localLog);
       const contents = await readFile(localLog, "utf8");
       expect((await stat(localLog)).size).toBeLessThanOrEqual(8 * 1024 * 1024);
       const records = contents
@@ -700,10 +930,15 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     const firstRun = await inspectRun();
     if (firstRun.capturing) {
       await expect
-        .poll(async () =>
-          (await readFile(firstRun.localLog, "utf8")).includes(
-            '"type":"heartbeat"',
-          ),
+        // Stream configuration precedes await startCapture and the first
+        // 100ms heartbeat. Allow the existing 2s watchdog + 250ms check cadence
+        // and file-observation margin, rather than Vitest's default 1s window.
+        .poll(
+          async () =>
+            (await readFile(firstRun.localLog, "utf8")).includes(
+              '"type":"heartbeat"',
+            ),
+          { timeout: 2500 },
         )
         .toBe(true);
       process.kill(firstRun.nativePID, "SIGSTOP");
@@ -767,6 +1002,15 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
+    // Keep bounded native evidence before an isolated profile is removed.
+    for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
+      const info = await stat(localLog).catch(() => undefined);
+      if (info && info.size <= 8 * 1024 * 1024)
+        await copyFile(
+          localLog,
+          `test-results/failure-${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+        ).catch(() => {});
+    }
     for (const [i, window] of (app?.windows() ?? []).entries())
       await window
         .screenshot({
@@ -783,20 +1027,8 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       }
     }
     await app?.close().catch(() => {});
-    if (server?.pid) {
-      try {
-        process.kill(-server.pid, "SIGTERM");
-      } catch {
-        /* already exited */
-      }
-      await new Promise<void>((resolve) => {
-        if (server!.exitCode !== null || server!.signalCode !== null)
-          return resolve();
-        server!.once("exit", () => resolve());
-      });
-    }
-    await rm(profile, { recursive: true, force: true });
-    if (shim) await rm(shim, { recursive: true, force: true });
+    await stopForge?.();
     if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
+    await rm(profile, { recursive: true, force: true });
   }
-});
+}

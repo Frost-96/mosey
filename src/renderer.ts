@@ -1,3 +1,9 @@
+import walkingUrl from "./assets/generated/walking-atlas.png";
+import walking from "./assets/generated/walking-atlas.json";
+import stretchingUrl from "./assets/generated/stretching-atlas.png";
+import stretching from "./assets/generated/stretching-atlas.json";
+import playingUrl from "./assets/generated/playing-atlas.png";
+import playing from "./assets/generated/playing-atlas.json";
 import idleUrl from "./assets/generated/idle-atlas.png";
 import tiltUrl from "./assets/generated/tilt-atlas.png";
 import pawUrl from "./assets/generated/paw-atlas.png";
@@ -15,12 +21,16 @@ import falling from "./assets/generated/falling-atlas.json";
 import landingUrl from "./assets/generated/landing-atlas.png";
 import landing from "./assets/generated/landing-atlas.json";
 import { atlasSchema } from "./shared/assets";
+import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
 try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [walking, walkingUrl],
+      [stretching, stretchingUrl],
+      [playing, playingUrl],
       [tilt, tiltUrl],
       [paw, pawUrl],
       [belly, bellyUrl],
@@ -42,24 +52,52 @@ try {
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  const scale = window.devicePixelRatio;
-  canvas.width = Math.round(240 * scale);
-  canvas.height = Math.round(240 * scale);
-  canvas.style.width = "240px";
-  canvas.style.height = "240px";
-  context.scale(scale, scale);
   let previous = "",
-    scheduled = 0,
+    frameRequest = 0,
+    frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
+    size: "medium",
+    geometryRevision: 0,
     posture: "resting",
+    direction: "right",
     visibility: "hidden",
     actionId: 0,
     startedAt: Date.now(),
   };
+  function cancelDrawing() {
+    clearTimeout(frameTimer);
+    cancelAnimationFrame(frameRequest);
+    frameTimer = 0;
+    frameRequest = 0;
+  }
+  function requestDraw() {
+    frameTimer = 0;
+    if (
+      presentation.visibility === "visible" &&
+      presentation.frozenAt === undefined &&
+      !document.hidden
+    )
+      frameRequest = requestAnimationFrame(draw);
+  }
   function draw() {
-    scheduled = 0;
+    frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
+    const geometry = petGeometry(presentation.size);
+    // A new primary display can change backing scale without changing CSS size.
+    // Check every visible draw, including the first draw after hiding.
+    const ratio = window.devicePixelRatio;
+    if (
+      canvas!.width !== Math.round(geometry.side * ratio) ||
+      canvas!.height !== Math.round(geometry.side * ratio)
+    ) {
+      canvas!.width = Math.round(geometry.side * ratio);
+      canvas!.height = Math.round(geometry.side * ratio);
+      canvas!.style.width = `${geometry.side}px`;
+      canvas!.style.height = `${geometry.side}px`;
+      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
+      previous = "";
+    }
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
     )!;
@@ -67,9 +105,15 @@ try {
       (sum, frame) => sum + frame.durationMs,
       0,
     );
-    const elapsed = Math.max(0, Date.now() - presentation.startedAt);
+    const elapsed = Math.max(
+      0,
+      (presentation.frozenAt ?? Date.now()) - presentation.startedAt,
+    );
     if (atlas.loop === "once" && elapsed >= total) {
-      if (completed !== presentation.actionId) {
+      if (
+        presentation.frozenAt === undefined &&
+        completed !== presentation.actionId
+      ) {
         completed = presentation.actionId;
         window.mosey.input({ type: "done", actionId: completed });
       }
@@ -81,30 +125,51 @@ try {
         remaining -= frame.durationMs;
         index++;
       }
-      const key = `${presentation.actionId}:${index}`;
+      const key = `${presentation.geometryRevision}:${presentation.actionId}:${presentation.direction}:${index}`;
       if (key !== previous) {
         const { region, foot } = atlas.frames[index]!;
-        context!.clearRect(0, 0, 240, 240);
+        context!.clearRect(0, 0, geometry.side, geometry.side);
+        context!.save();
+        if (presentation.direction === "left") {
+          context!.translate(geometry.side, 0);
+          context!.scale(-1, 1);
+        }
         context!.drawImage(
           image,
           region.x,
           region.y,
           region.width,
           region.height,
-          120 - foot.x / atlas.pixelRatio,
-          240 - foot.y / atlas.pixelRatio,
-          region.width / atlas.pixelRatio,
-          region.height / atlas.pixelRatio,
+          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale,
+          geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
+          (region.width / atlas.pixelRatio) * geometry.assetScale,
+          (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
+        context!.restore();
         window.mosey.input({
           type: "frame",
+          geometryRevision: presentation.geometryRevision,
           actionId: presentation.actionId,
           frame: index,
         });
         previous = key;
       }
     }
-    scheduled = requestAnimationFrame(draw);
+    if (
+      presentation.frozenAt !== undefined ||
+      (atlas.loop === "once" && elapsed >= total)
+    )
+      return;
+    let boundary = 0;
+    for (const frame of atlas.frames) {
+      boundary += frame.durationMs;
+      if (boundary > elapsed % total) break;
+    }
+    // Sleep until the next pose, then align the actual Canvas work with refresh.
+    frameTimer = window.setTimeout(
+      requestDraw,
+      Math.max(1, boundary - (elapsed % total)),
+    );
   }
   let gesture: { pointerId: number; id: number } | undefined;
   let nextGesture = 0;
@@ -117,19 +182,33 @@ try {
       canvas!.releasePointerCapture(current.pointerId);
   }
   canvas.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || gesture) return;
+    if (event.button !== 0 || event.ctrlKey || gesture) return;
     const rect = canvas.getBoundingClientRect();
     gesture = { pointerId: event.pointerId, id: ++nextGesture };
     canvas.setPointerCapture(event.pointerId);
     event.preventDefault();
     window.mosey.input({
       type: "press",
+      geometryRevision: presentation.geometryRevision,
       actionId: presentation.actionId,
       gestureId: gesture.id,
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
       screenX: event.screenX,
       screenY: event.screenY,
+    });
+  });
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    if (gesture) return;
+    cancelDrawing();
+    const rect = canvas.getBoundingClientRect();
+    window.mosey.input({
+      type: "context",
+      geometryRevision: presentation.geometryRevision,
+      actionId: presentation.actionId,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
     });
   });
   canvas.addEventListener("pointermove", (event) => {
@@ -150,15 +229,21 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
-    if (value.visibility === "hidden") finish("cancel");
+    if (value.geometryRevision !== presentation.geometryRevision)
+      finish("cancel");
+    if (value.frozenAt !== undefined) completed = -1;
     presentation = value;
-    if (scheduled) cancelAnimationFrame(scheduled);
-    scheduled = 0;
-    if (value.visibility === "visible" && !document.hidden)
-      scheduled = requestAnimationFrame(draw);
+    cancelDrawing();
+    requestDraw();
   }
+  // A queued cancellation belongs to one captured gesture, never to a newer
+  // press that happened before its main-process messages reached this renderer.
+  const unsubscribeCancellation = window.mosey.onGestureCancellation((id) => {
+    if (gesture?.id === id) finish("cancel");
+  });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
+  window.addEventListener("resize", () => synchronize(presentation));
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
   );
@@ -167,7 +252,8 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
-      cancelAnimationFrame(scheduled);
+      unsubscribeCancellation();
+      cancelDrawing();
     },
     { once: true },
   );

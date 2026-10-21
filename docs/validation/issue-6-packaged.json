@@ -1,0 +1,19 @@
+{
+  "hiddenRendererWorkBefore": {
+    "frames": 5,
+    "draws": 1
+  },
+  "hiddenRendererWorkAfter": {
+    "frames": 5,
+    "draws": 1
+  },
+  "visibilityRestoredInactive": true,
+  "launches": 5,
+  "recovery": [
+    "corrupt-primary",
+    "interrupted-temp",
+    "failed-commit",
+    "both-invalid"
+  ],
+  "preservedSize": "large"
+}
