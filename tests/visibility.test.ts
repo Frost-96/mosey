@@ -183,7 +183,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await expect.poll(visible).toBe(false);
     await app.close();
     app = await launch();
-    await app.firstWindow();
+    await (await app.firstWindow()).waitForLoadState("load");
     expect(await visible()).toBe(false);
     duplicate = spawn(
       app.process().spawnfile,
@@ -216,7 +216,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await writeFile(path.join(profile, "preferences.json"), "{broken");
     await writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1');
     app = await launch();
-    await app.firstWindow();
+    await (await app.firstWindow()).waitForLoadState("load");
     expect(await visible()).toBe(false);
     await invoke("Show Mosey");
     await expect.poll(visible).toBe(true);
@@ -231,7 +231,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));
     app = await launch();
-    await app.firstWindow();
+    await (await app.firstWindow()).waitForLoadState("load");
     expect(await visible()).toBe(false);
     await invoke("Show Mosey");
     expect(await visible()).toBe(false);
@@ -251,6 +251,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     );
     app = await launch();
     const recovered = await app.firstWindow();
+    await recovered.waitForLoadState("load");
     await expect.poll(visible).toBe(true);
     await expect
       .poll(() =>
