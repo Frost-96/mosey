@@ -1,0 +1,18 @@
+{
+  "ciRun": 39573419481,
+  "ciArtifact": "failure-development-autonomy.png",
+  "reference": "development-autonomy-idle-2.png",
+  "width": 240,
+  "height": 240,
+  "rgbaDifferingPixels": 0,
+  "alphaDifferingPixels": 0,
+  "opaqueRgbDifferingPixels": 0,
+  "bodyBounds": {
+    "left": 15,
+    "right": 224,
+    "top": 39,
+    "bottom": 239
+  },
+  "opaquePixels": 23997,
+  "interpretation": "CI post-failure screenshot equals a valid live-rendered idle breath exactly; original reference set was not persisted, so its omission mechanism cannot be reconstructed."
+}
