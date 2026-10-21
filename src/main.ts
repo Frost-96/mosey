@@ -16,6 +16,7 @@ import { PreferencesStore } from "./platform/preferences";
 import { DockValidation } from "./platform/dock-validation";
 import log from "electron-log/main";
 import { createActor } from "xstate";
+import { Timeline } from "./behavior/timeline";
 import { petBehavior, autonomy } from "./behavior/resting";
 import {
   assetErrorSchema,
@@ -42,7 +43,12 @@ else void start();
 
 async function start() {
   // Retain the native tray for the entire application lifetime.
-  const behavior = createActor(petBehavior).start();
+  const timeline = new Timeline();
+  const behavior = createActor(petBehavior, {
+    clock: timeline,
+    input: { now: timeline.now },
+  }).start();
+  let bodyMenu: Menu | undefined;
   let visibility: Presentation["visibility"] = "hidden";
   let suspended = false;
   log.transports.file.maxSize = 1024 * 1024;
@@ -62,20 +68,24 @@ async function start() {
   });
   const quit = () => app.quit();
   let drained = false;
+  const setVisibility = (next: "visible" | "hidden") => {
+    if (!preferences.setVisibility(next)) return;
+    dismissBodyMenu();
+    if (next === "hidden") pet.hide();
+    else {
+      behavior.send({ type: "CANCEL" });
+      displayed = undefined;
+      positionOnGround();
+      pet.showInactive();
+    }
+    refreshMenus();
+  };
   const visibilityItem = (): Electron.MenuItemConstructorOptions => ({
     label: preferences.visibility === "visible" ? "Hide Mosey" : "Show Mosey",
-    click: () => {
-      const next = preferences.visibility === "visible" ? "hidden" : "visible";
-      if (!preferences.setVisibility(next)) return;
-      if (next === "hidden") pet.hide();
-      else {
-        behavior.send({ type: "CANCEL" });
-        displayed = undefined;
-        positionOnGround();
-        pet.showInactive();
-      }
-      refreshMenus();
-    },
+    click: () =>
+      setVisibility(
+        preferences.visibility === "visible" ? "hidden" : "visible",
+      ),
   });
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
@@ -146,6 +156,23 @@ async function start() {
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  const finishBodyMenu = (menu: Menu) => {
+    if (bodyMenu !== menu) return;
+    bodyMenu = undefined;
+    timeline.resume();
+    if (!pet.isDestroyed()) {
+      publish();
+      routePointer();
+    }
+  };
+  const dismissBodyMenu = () => {
+    const menu = bodyMenu;
+    if (!menu) return;
+    menu.closePopup(pet);
+    // Lifecycle cancellation owns the pause even if the OS never opened its
+    // tracking loop and therefore does not deliver a popup completion callback.
+    finishBodyMenu(menu);
+  };
   const positionOnGround = () => {
     const ground = screen.getPrimaryDisplay().workArea;
     const { width, height } = pet.getBounds();
@@ -210,6 +237,7 @@ async function start() {
     constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
   };
   const cancelInteraction = () => {
+    dismissBodyMenu();
     gesture = undefined;
     stopMotion();
     behavior.send({
@@ -261,7 +289,7 @@ async function start() {
     );
   };
   const routePointer = () => {
-    if (pet.isDestroyed() || visibility !== "visible") return;
+    if (pet.isDestroyed() || visibility !== "visible" || bodyMenu) return;
     const pointer = screen.getCursorScreenPoint();
     const bounds = pet.getBounds();
     const next = !gesture && !hit(pointer.x - bounds.x, pointer.y - bounds.y);
@@ -291,7 +319,8 @@ async function start() {
           : behavior.getSnapshot().value,
       direction: behavior.getSnapshot().context.direction,
       actionId: behavior.getSnapshot().context.actionId,
-      startedAt: behavior.getSnapshot().context.startedAt,
+      startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
+      frozenAt: timeline.pausedAt,
       visibility: suspended ? "hidden" : visibility,
     });
   const authorized = (
@@ -309,6 +338,44 @@ async function start() {
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
+    if (input.type === "context") {
+      if (
+        bodyMenu ||
+        gesture ||
+        !hit(input.x, input.y) ||
+        (input.actionId !== behavior.getSnapshot().context.actionId &&
+          input.actionId !== displayed?.actionId)
+      ) {
+        publish();
+        return;
+      }
+      timeline.pause();
+      publish();
+      const menu = Menu.buildFromTemplate([
+        { label: "Hide Mosey", click: () => setVisibility("hidden") },
+        { label: "Quit Mosey", click: quit },
+      ]);
+      bodyMenu = menu;
+      app.focus({ steal: true });
+      menu.once("menu-will-show", () => {
+        if (bodyMenu !== menu || visibility !== "visible" || suspended)
+          menu.closePopup(pet);
+      });
+      try {
+        menu.popup({
+          window: pet,
+          frame: pet.webContents.mainFrame,
+          x: Math.round(input.x),
+          y: Math.round(input.y),
+          callback: () => finishBodyMenu(menu),
+        });
+      } catch (error) {
+        log.error("Unable to open pet context menu", error);
+        finishBodyMenu(menu);
+      }
+      return;
+    }
+    if (bodyMenu) return;
     if (input.type === "move") {
       if (
         !gesture ||
@@ -427,8 +494,9 @@ async function start() {
           area.x + Math.max(0, area.width - origin.width),
         ),
       );
-      const started = performance.now();
+      const started = timeline.now();
       motion = setInterval(() => {
+        if (timeline.pausedAt !== undefined) return;
         if (
           pet.isDestroyed() ||
           gesture ||
@@ -438,7 +506,7 @@ async function start() {
           return stopMotion();
         const progress = Math.min(
           1,
-          (performance.now() - started) / autonomy.walkMs,
+          (timeline.now() - started) / autonomy.walkMs,
         );
         constrain(origin.x + (destination - origin.x) * progress, origin.y);
       }, 16);
@@ -452,9 +520,10 @@ async function start() {
       const id = snapshot.context.actionId;
       motionAction = id;
       const origin = pet.getBounds();
-      const started = performance.now();
+      const started = timeline.now();
       // Initial velocity and acceleration in desktop points, adjustable here.
       motion = setInterval(() => {
+        if (timeline.pausedAt !== undefined) return;
         if (
           pet.isDestroyed() ||
           gesture ||
@@ -463,7 +532,7 @@ async function start() {
           stopMotion();
           return;
         }
-        const seconds = (performance.now() - started) / 1000;
+        const seconds = (timeline.now() - started) / 1000;
         const y = origin.y + 180 * seconds + 1800 * seconds * seconds;
         const area = screen.getPrimaryDisplay().workArea;
         const ground = area.y + area.height - pet.getBounds().height;
@@ -477,6 +546,7 @@ async function start() {
     publish();
   });
   const pause = () => {
+    dismissBodyMenu();
     suspended = true;
     stopPointerPolling();
     cancelInteraction();
@@ -513,6 +583,7 @@ async function start() {
   });
   pet.webContents.on("did-start-loading", cancelInteraction);
   pet.webContents.on("render-process-gone", cancelInteraction);
+  app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   pet.on("show", () => {
     if (preferences.visibility === "hidden") {
