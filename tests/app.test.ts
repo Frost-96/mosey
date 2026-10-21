@@ -7,6 +7,8 @@ import os from "node:os";
 import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+// Keep the 1x reload regression reproducible on Retina development machines.
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test.runIf(packaged)(
   "packaged app starts a renderer without an inspector bootstrap",
   async () => {
@@ -123,12 +125,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       packaged
         ? {
             timeout: 20000,
+            args: [scaleArgument],
             executablePath: path.join(
               packagedRoot!,
               "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
-        : { args: ["."], timeout: 20000 },
+        : { args: [".", scaleArgument], timeout: 20000 },
     );
     const window = await app.firstWindow({ timeout: 15000 });
     window.on("pageerror", (error) => {
@@ -276,6 +279,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     const pixels = () =>
       window.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
+        // Earlier silhouette assertions read the original canvas. Observe each
+        // replacement through the same readback path: at 1x, differing readback
+        // histories round interpolated edge alpha differently after reload.
+        // Keep exact image equality; do not hide a changed pose with tolerance.
+        canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height);
         return canvas.toDataURL();
       });
     const idleFrames = new Set<string>();
