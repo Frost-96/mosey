@@ -6,7 +6,7 @@ export default defineConfig({
     projects: ["development", "packaged"].map((name) => ({
       test: {
         name,
-        include: ["tests/app.test.ts"],
+        include: ["tests/*.test.ts"],
         env: { MOSEY_TEST_MODE: name },
         testTimeout: 90000,
         hookTimeout: 90000,

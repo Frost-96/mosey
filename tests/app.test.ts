@@ -21,7 +21,7 @@ test.runIf(packaged)(
     const child = spawn(
       process.env.MOSEY_STARTUP_EXECUTABLE ??
         path.join(bundle, "Contents/MacOS/Mosey"),
-      [],
+      [`--user-data-dir=${path.join(relocated, "profile")}`],
       {
         env: {
           HOME: os.homedir(),
@@ -79,6 +79,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
   let shim: string | undefined;
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
+  const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-profile-"));
   try {
     if (!packaged) {
       shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
@@ -125,15 +126,38 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       packaged
         ? {
             timeout: 20000,
-            args: [scaleArgument],
+            args: [scaleArgument, `--user-data-dir=${profile}`],
             executablePath: path.join(
               packagedRoot!,
               "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
-        : { args: [".", scaleArgument], timeout: 20000 },
+        : {
+            args: [".", scaleArgument, `--user-data-dir=${profile}`],
+            timeout: 20000,
+          },
     );
     const window = await app.firstWindow({ timeout: 15000 });
+    const loginMenu = await app.evaluate(({ Menu, app }) => {
+      const item = Menu.getApplicationMenu()
+        ?.items.find((entry) => entry.label === "Mosey")
+        ?.submenu?.items.find((entry) => entry.label === "Launch at Login");
+      return {
+        exists: !!item,
+        checked: item?.checked,
+        enabled: item?.enabled,
+        actual:
+          app.getLoginItemSettings().status === "enabled" &&
+          app.getLoginItemSettings().openAtLogin,
+        packaged: app.isPackaged,
+      };
+    });
+    expect(loginMenu.exists).toBe(true);
+    expect(loginMenu.checked).toBe(loginMenu.actual);
+    expect(loginMenu.enabled).toBe(
+      loginMenu.packaged && process.platform === "darwin",
+    );
+
     window.on("pageerror", (error) => {
       errors.push(error.message);
       console.error(error.message);
@@ -225,10 +249,14 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(await opaquePixelCount()).toBeGreaterThan(5000);
     }
     // A second launch must exit without adding a pet or terminating the first.
-    const duplicate = spawn(app.process().spawnfile, packaged ? [] : ["."], {
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
-      stdio: "ignore",
-    });
+    const duplicate = spawn(
+      app.process().spawnfile,
+      [...(packaged ? [] : ["."]), `--user-data-dir=${profile}`],
+      {
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+        stdio: "ignore",
+      },
+    );
     try {
       await expect.poll(() => duplicate.exitCode, { timeout: 10000 }).toBe(0);
       expect(app.windows()).toHaveLength(1);
@@ -767,6 +795,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         server!.once("exit", () => resolve());
       });
     }
+    await rm(profile, { recursive: true, force: true });
     if (shim) await rm(shim, { recursive: true, force: true });
     if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
   }
