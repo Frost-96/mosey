@@ -1,7 +1,8 @@
+import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { spawn, execFileSync, type ChildProcess } from "node:child_process";
-import { mkdir, mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
+import { spawn, execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, writeFile, rm, realpath } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
@@ -14,9 +15,6 @@ test.runIf(packaged)(
   async () => {
     const relocated = await mkdtemp(path.join(os.tmpdir(), "mosey-relocated-"));
     const bundle = path.join(relocated, "Mosey.app");
-    const startupProfile = await mkdtemp(
-      path.join(os.tmpdir(), "mosey-startup-profile-"),
-    );
     execFileSync("/usr/bin/ditto", [
       path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
       bundle,
@@ -24,7 +22,7 @@ test.runIf(packaged)(
     const child = spawn(
       process.env.MOSEY_STARTUP_EXECUTABLE ??
         path.join(bundle, "Contents/MacOS/Mosey"),
-      [`--user-data-dir=${startupProfile}`],
+      [`--user-data-dir=${path.join(relocated, "profile")}`],
       {
         env: {
           HOME: os.homedir(),
@@ -71,55 +69,21 @@ test.runIf(packaged)(
         })
         .toBe(true);
       await rm(relocated, { recursive: true, force: true });
-      await rm(startupProfile, { recursive: true, force: true });
     }
   },
 );
 
 test("a real app displays one animated corgi and quits from its menu", async () => {
+  const profile = await realpath(
+    await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
+  );
   let app: ElectronApplication | undefined;
-  let server: ChildProcess | undefined;
+  let stopForge: (() => Promise<void>) | undefined;
   const errors: string[] = [];
-  let shim: string | undefined;
   let packagedRoot: string | undefined;
-  const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-display-test-"));
-  const profileArgument = `--user-data-dir=${profile}`;
   const ownedNativeChildren = new Set<number>();
   try {
-    if (!packaged) {
-      shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
-      const executable = path.join(
-        shim,
-        "Electron.app/Contents/MacOS/Electron",
-      );
-      await mkdir(path.dirname(executable), { recursive: true });
-      await writeFile(
-        executable,
-        "#!/bin/sh\necho MOSEY_TEST_READY\nexec /bin/cat\n",
-      );
-      await chmod(executable, 0o755);
-      server = spawn("pnpm", ["start"], {
-        env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
-        stdio: "pipe",
-        detached: true,
-      });
-      let output = "";
-      server.stdout?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      server.stderr?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      await expect
-        .poll(
-          () => {
-            if (server?.exitCode !== null) throw new Error(output);
-            return output;
-          },
-          { timeout: 60000 },
-        )
-        .toContain("MOSEY_TEST_READY");
-    }
+    if (!packaged) stopForge = await startForge();
     if (packaged) {
       packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
       execFileSync("/usr/bin/ditto", [
@@ -131,13 +95,19 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       packaged
         ? {
             timeout: 20000,
-            args: [scaleArgument, profileArgument],
+            args: [scaleArgument, `--user-data-dir=${profile}`],
             executablePath: path.join(
               packagedRoot!,
               "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
-        : { args: [".", scaleArgument, profileArgument], timeout: 20000 },
+        : {
+            args: [".", scaleArgument, `--user-data-dir=${profile}`],
+            timeout: 20000,
+          },
+    );
+    expect(await app.evaluate(({ app }) => app.getPath("userData"))).toBe(
+      profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
     window.on("pageerror", (error) => {
@@ -267,7 +237,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(
       app.process().spawnfile,
-      packaged ? [profileArgument] : [".", profileArgument],
+      [...(packaged ? [] : ["."]), `--user-data-dir=${profile}`],
       {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
         stdio: "ignore",
@@ -715,6 +685,15 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       ["flutter", "display-added"],
       ["falling", "display-removed"],
     ]) {
+      if (phase === "pressed") {
+        // Landing ends with idle pixels before it becomes ordinary resting.
+        // Establish the same sustained idle condition as the earlier click
+        // interruption test before exercising the drag threshold.
+        for (let sample = 0; sample < 3; sample++) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          expect(idleFrames.has(await pixels())).toBe(true);
+        }
+      }
       await placeAwayFromPhysicalCursor();
       const before = await petBounds();
       if (phase !== "idle") {
@@ -790,20 +769,30 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     }
-    // No user-facing hide menu exists yet. Preserve an existing system-hidden
-    // window across topology recovery; this does not claim persisted user intent.
-    await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0]!.hide(),
-    );
+    // Preserve the actual manual hide choice while the display topology changes.
+    const invokeVisibility = (label: string) =>
+      app!.evaluate(({ Menu }, label) => {
+        const item = Menu.getApplicationMenu()
+          ?.items.find((entry) => entry.label === "Mosey")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+        item.click();
+      }, label);
+    await invokeVisibility("Hide Mosey");
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
     );
-    await app.evaluate(({ BrowserWindow, screen }) => {
+    await app.evaluate(({ screen }) => {
       screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
         "workArea",
       ]);
-      BrowserWindow.getAllWindows()[0]!.showInactive();
     });
+    expect(
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]!.isVisible(),
+      ),
+    ).toBe(false);
+    await invokeVisibility("Show Mosey");
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
@@ -985,20 +974,8 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       }
     }
     await app?.close().catch(() => {});
-    if (server?.pid) {
-      try {
-        process.kill(-server.pid, "SIGTERM");
-      } catch {
-        /* already exited */
-      }
-      await new Promise<void>((resolve) => {
-        if (server!.exitCode !== null || server!.signalCode !== null)
-          return resolve();
-        server!.once("exit", () => resolve());
-      });
-    }
-    await rm(profile, { recursive: true, force: true });
-    if (shim) await rm(shim, { recursive: true, force: true });
+    await stopForge?.();
     if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
+    await rm(profile, { recursive: true, force: true });
   }
 });
