@@ -79,7 +79,56 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         sample("setPosition-after", { x, y });
       };
     });
+    await pet.waitForLoadState("load");
+    await expect
+      .poll(
+        () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            return Array.from(
+              canvas
+                .getContext("2d")!
+                .getImageData(0, 0, canvas.width, canvas.height).data,
+            ).filter((value, i) => i % 4 === 3 && value > 127).length;
+          }),
+        { timeout: 10000 },
+      )
+      .toBeGreaterThan(5000);
+    await expect
+      .poll(() =>
+        app!.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()[0]!.isVisible(),
+        ),
+      )
+      .toBe(true);
     const initial = await bounds();
+    const initialArea = await app.evaluate(
+      ({ screen }) => screen.getPrimaryDisplay().workArea,
+    );
+    if (initial.y + initial.height !== initialArea.y + initialArea.height) {
+      const probe = await app.evaluate(({ BrowserWindow, screen }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const before = pet.getBounds();
+        const area = screen.getPrimaryDisplay().workArea;
+        const requested = {
+          x: before.x,
+          y: area.y + area.height - before.height,
+        };
+        pet.setPosition(requested.x, requested.y, false);
+        return { before, area, requested, immediate: pet.getBounds() };
+      });
+      const nextTurn = await bounds();
+      console.error(
+        "[DEBUG-startup-ground]",
+        JSON.stringify({ ...probe, nextTurn }),
+      );
+      await mkdir("test-results", { recursive: true });
+      await writeFile(
+        `test-results/${packaged ? "packaged" : "development"}-startup-ground.json`,
+        JSON.stringify({ ...probe, nextTurn }, null, 2),
+      );
+    }
+    expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
     const choose = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()

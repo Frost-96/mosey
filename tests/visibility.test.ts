@@ -99,6 +99,23 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         if (!item) throw new Error(`Missing menu item: ${label}`);
         item.click();
       }, label);
+    // Native visibility can precede the initial renderer document commit.
+    // Wait for that document, then its actual drawing, before sampling frames.
+    await pet.waitForLoadState("load");
+    await expect
+      .poll(
+        () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            return Array.from(
+              canvas
+                .getContext("2d")!
+                .getImageData(0, 0, canvas.width, canvas.height).data,
+            ).filter((value, i) => i % 4 === 3 && value > 127).length;
+          }),
+        { timeout: 10000 },
+      )
+      .toBeGreaterThan(5000);
     await expect.poll(visible).toBe(true);
     navigationEvidence.push(
       await app.evaluate(({ BrowserWindow }) => {
