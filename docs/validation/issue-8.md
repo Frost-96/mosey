@@ -101,3 +101,13 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 修复提交1dbee6a已合并到集成代码92fca85；Standards与Spec对此修改复审均无新增代码发现，既有真实桌面P1仍待验收。新包按确切测试字节复制到集成worktree的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名通过，未重建或重签。当前asar为989fab98…，完整哈希、分次测试边界见 `issue-8/frozen-acceptance-provenance.json`。此前Finder启动尝试仅对应失效的5fa938dc包；没有把那次尝试移植为新包的启动或权限证据。
 
 远端运行39582318548的完整开发套件通过，打包与静态检查通过；打包套件8/9通过，唯一失败为自主活动测试在模拟suspend/resume后查找Hide Mosey项不存在（tests/autonomy.test.ts:166），显示恢复与Dock测试通过。该新失败尚待定位，不把本轮CI写成全绿。
+
+## 后续 CI 菜单失败：未确认根因的诊断交接
+
+CI39582318548（源码92fca85）的完整开发套件8通过、1跳过（369.16秒），完整打包套件8/9通过（224.65秒）；主app显示恢复和Dock测试通过。唯一失败为自主活动情景在模拟resume250ms后调用Hide菜单时，原有精确label查找返回undefined（`ci-39582318548-packaged-failed.log`，PNG为 `ci-39582318548-autonomy.png`）。当时未保存实际菜单树、持久可见性偏好及窗口事件链，不能据此确认菜单变成Show、系统hide事件改变了用户偏好，或将其归因为权限。
+
+本机使用不变的asar989fab98候选执行原自主活动文件（只给失败查找补公共菜单／窗口诊断）时，成功越过原CI菜单位置和后续stretch/play菜单；但后段抓取保持断言发生y416→716，x0（`menu-autonomy-local-repro.log`），属于另一个尚未确立原因的失败，不能冒充原CI红测试。
+
+为隔离菜单边界，临时完整应用复现器先执行30次suspend/resume，每次严格断言实际窗口可见及原选择位置存在Hide：通过11.73秒，90次setApplicationMenu，未见hide/show事件。随后执行8次包含Hide→Show、加速休息时钟、行走后点击、600ms等待、suspend1350ms、resume250ms的组合：通过29.64秒，公共菜单／窗口／power事件记录在 `menu-bodyclick-public-trace.json`。两次范围日志为 `menu-power-only-repro.log` 与 `menu-bodyclick-repro.log`；额外夹具源码只保留在 `/tmp/mosey-issue-8/menu-lifecycle-repro.ts`，不加入常规套件。没有稳定复现原CI症状，未凭代码猜测修改产品或放松断言。
+
+常规自主活动测试只增加有界失败证据：最近128项公共Menu.setApplicationMenu、窗口show/hide/blur/focus及power事件，当前应用hidden、菜单树、窗口可见性／bounds，以及该测试自有profile的preferences文件。发生失败时写入 `test-results/failure-{development|packaged}-autonomy-state.json`，用于下一次远端复现；菜单选择和行为断言保持原样。新候选字节未因诊断改变；没有重建或重签。`pnpm check`通过。当前状态为待远端诊断，不能宣称CI菜单缺陷已修复或整套已通过。归档日志仅规范化行尾空白，`/tmp`采集原件保留。

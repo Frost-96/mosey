@@ -1,0 +1,89 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"walking-screenshot-complete","at":6924.853375}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"walking-bounds-complete","at":6926.098}
+[autonomy-progress] {"stage":"walking-click-start","at":6926.48925}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"walking-click-complete","at":6930.050792}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"draw-observer-start","at":7534.840875}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"suspend-start","at":7537.108334}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"suspend-complete","at":7542.974875}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"resume-start","at":8911.049459}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"resume-complete","at":8921.70225}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"stretching-start","at":9174.719167}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"stretching-menu-complete","at":9208.895375}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"stretching-pixels-complete","at":10249.784709}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"stretching-screenshot-complete","at":10770.546959}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"playing-start","at":12161.351459}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"playing-menu-complete","at":12194.664709}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"playing-pixels-complete","at":13270.561375}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"playing-screenshot-complete","at":13821.578792}
+
+stdout | tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+[autonomy-progress] {"stage":"failure","at":17975.622167}
+
+ ❯ |packaged| tests/autonomy.test.ts (1 test | 1 failed) 18046ms
+   × autonomous activities stay grounded, yield to interaction and pause without catch-up 18045ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |packaged| tests/autonomy.test.ts > autonomous activities stay grounded, yield to interaction and pause without catch-up
+AssertionError: expected { x: +0, y: 716, width: 240, …(1) } to deeply equal { x: +0, y: 416, width: 240, …(1) }
+
+- Expected
++ Received
+
+  {
+    "height": 240,
+    "width": 240,
+    "x": 0,
+-   "y": 416,
++   "y": 716,
+  }
+
+ ❯ tests/autonomy.test.ts:243:28
+    241|     const grabbed = await bounds();
+    242|     await new Promise((resolve) => setTimeout(resolve, 1800));
+    243|     expect(await bounds()).toEqual(grabbed);
+       |                            ^
+    244|     await pet.mouse.up();
+    245|     await expect
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  18:22:34
+   Duration  18.25s (tests 99%, import 1%)

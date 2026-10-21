@@ -1,7 +1,7 @@
 import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import os from "node:os";
@@ -36,19 +36,80 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         : { args: [".", `--user-data-dir=${root}/profile`] },
     );
     const pet = await app.firstWindow();
+    // Bounded public-boundary diagnostics only. These do not change menu
+    // selection, timing expectations or the asserted visibility intent.
+    await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app }) => {
+      const trace: unknown[] = [];
+      const snapshot = (event: string) => {
+        trace.push({
+          event,
+          at: performance.now(),
+          applicationHidden: app.isHidden(),
+          menus: Menu.getApplicationMenu()?.items.map((item) => ({
+            label: item.label,
+            role: item.role,
+            items: item.submenu?.items.map((child) => ({
+              label: child.label,
+              role: child.role,
+            })),
+          })),
+          windows: BrowserWindow.getAllWindows().map((window) => ({
+            id: window.id,
+            visible: window.isVisible(),
+            bounds: window.getBounds(),
+          })),
+        });
+        if (trace.length > 128) trace.shift();
+      };
+      const setMenu = Menu.setApplicationMenu.bind(Menu);
+      Menu.setApplicationMenu = (menu) => {
+        setMenu(menu);
+        snapshot("setApplicationMenu");
+      };
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.on("show", () => snapshot("show"));
+        window.on("hide", () => snapshot("hide"));
+        window.on("blur", () => snapshot("blur"));
+        window.on("focus", () => snapshot("focus"));
+      }
+      powerMonitor.on("suspend", () => snapshot("suspend"));
+      powerMonitor.on("resume", () => snapshot("resume"));
+      powerMonitor.on("lock-screen", () => snapshot("lock-screen"));
+      powerMonitor.on("unlock-screen", () => snapshot("unlock-screen"));
+      Object.assign(globalThis, { autonomyMenuTrace: trace });
+      snapshot("observe");
+    });
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const invoke = (label: string) =>
-      app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
-      );
+      app!.evaluate(({ Menu, BrowserWindow, app }, label) => {
+        const menu = Menu.getApplicationMenu();
+        const item = menu?.items
+          .find((entry) => entry.label === "Mosey")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item)
+          throw new Error(
+            JSON.stringify({
+              requested: label,
+              menus: menu?.items.map((entry) => ({
+                label: entry.label,
+                role: entry.role,
+                items: entry.submenu?.items.map((child) => ({
+                  label: child.label,
+                  role: child.role,
+                })),
+              })),
+              hidden: app.isHidden(),
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                visible: window.isVisible(),
+                bounds: window.getBounds(),
+              })),
+            }),
+          );
+        item.click();
+      }, label);
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     const pixels = () =>
@@ -294,6 +355,33 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
   } catch (error) {
     checkpoint("failure");
     await mkdir("test-results", { recursive: true });
+    const externalState = await app
+      ?.evaluate(({ Menu, BrowserWindow, app }) => ({
+        applicationHidden: app.isHidden(),
+        menus: Menu.getApplicationMenu()?.items.map((item) => ({
+          label: item.label,
+          role: item.role,
+          items: item.submenu?.items.map((child) => ({
+            label: child.label,
+            role: child.role,
+          })),
+        })),
+        windows: BrowserWindow.getAllWindows().map((window) => ({
+          id: window.id,
+          visible: window.isVisible(),
+          bounds: window.getBounds(),
+        })),
+        trace: Reflect.get(globalThis, "autonomyMenuTrace"),
+      }))
+      .catch((failure: unknown) => ({ unavailable: String(failure) }));
+    const preferences = await readFile(
+      path.join(root, "profile/preferences.json"),
+      "utf8",
+    ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
+    await writeFile(
+      `test-results/failure-${packaged ? "packaged" : "development"}-autonomy-state.json`,
+      JSON.stringify({ externalState, preferences }, null, 2),
+    );
     await app
       ?.windows()[0]
       ?.screenshot({
