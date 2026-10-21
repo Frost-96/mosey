@@ -11,7 +11,9 @@ export const autonomy = {
 };
 export const petBehavior = setup({
   types: {
+    input: {} as { now: () => number },
     context: {} as {
+      now: () => number;
       actionId: number;
       startedAt: number;
       lastClickAt: number;
@@ -36,7 +38,7 @@ export const petBehavior = setup({
   },
   guards: {
     freshClick: ({ context }) =>
-      Date.now() - context.lastClickAt >= clickMergeIntervalMs,
+      context.now() - context.lastClickAt >= clickMergeIntervalMs,
     currentAction: ({ context, event }) =>
       (event.type === "DONE" || event.type === "LANDED") &&
       event.actionId === context.actionId,
@@ -44,24 +46,25 @@ export const petBehavior = setup({
   actions: {
     begin: assign(({ context }) => ({
       actionId: context.actionId + 1,
-      startedAt: Date.now(),
-      lastClickAt: Date.now(),
+      startedAt: context.now(),
+      lastClickAt: context.now(),
     })),
     rest: assign(({ context }) => ({
       lastClickAt: 0,
       actionId: context.actionId + 1,
-      startedAt: Date.now(),
+      startedAt: context.now(),
     })),
   },
 }).createMachine({
   id: "pet",
-  context: {
+  context: ({ input }) => ({
+    now: input.now,
     actionId: 0,
-    startedAt: Date.now(),
+    startedAt: input.now(),
     lastClickAt: 0,
     choice: 0,
     direction: "right",
-  },
+  }),
   initial: "paused",
   on: {
     FACE: { actions: assign(({ event }) => ({ direction: event.direction })) },

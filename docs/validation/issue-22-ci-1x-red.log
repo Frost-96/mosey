@@ -1,0 +1,43 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/issue-22-review-fixes/mosey
+
+stdout | tests/context-menu.test.ts > body secondary clicks open a native menu and cancel without changing the pet
+Native menu events [
+  [ 'show', 1792567849527 ],
+  [ 'close', 1792567849556 ],
+  [ 'callback', 1792567849557 ]
+]
+
+ ❯ |development| tests/context-menu.test.ts (1 test | 1 failed) 13939ms
+   × body secondary clicks open a native menu and cancel without changing the pet 13938ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |development| tests/context-menu.test.ts > body secondary clicks open a native menu and cancel without changing the pet
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/context-menu.test.ts:198:67
+    196|     await openMenu(true);
+    197|     await closeMenu();
+    198|     await expect.poll(async () => idleFrames.has(await pixels())).toBe…
+       |                                                                   ^
+    199|     await pet.mouse.click(120, 180);
+    200|     await expect
+
+Caused by: Error: Matcher did not succeed in time.
+ ❯ tests/context-menu.test.ts:198:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  15:30:40
+   Duration  14.15s (tests 99%, import 1%)
+
