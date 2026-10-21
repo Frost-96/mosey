@@ -152,6 +152,58 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       idleFrames.add(await pixels());
       await new Promise((resolve) => setTimeout(resolve, 60));
     }
+    const children = () =>
+      execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/))
+        .filter(
+          (parts) => parts && Number(parts[2]) === applicationProcess!.pid,
+        )
+        .map((parts) => ({ pid: Number(parts![1]), command: parts![3]! }));
+    const invokeDiagnostic = (label: string) =>
+      app!.evaluate(
+        ({ Menu }, label) =>
+          Menu.getApplicationMenu()!
+            .items.find((i) => i.label === "Dock validation")!
+            .submenu!.items.find((i) => i.label === label)!
+            .click(),
+        label,
+      );
+    // Keep the owned product helper alive but stopped while the user selects
+    // diagnostics then rapidly hides/shows. Capture ownership must be reserved
+    // before its SIGKILL cleanup deadline, not after diagnostic startup.
+    const productChild = children().find((item) =>
+      item.command.endsWith("/dock-runtime"),
+    );
+    expect(productChild).toBeDefined();
+    process.kill(productChild!.pid, "SIGSTOP");
+    const diagnosticWindow = app.waitForEvent("window");
+    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    await invoke("Hide Mosey");
+    await invoke("Show Mosey");
+    const diagnostic = await diagnosticWindow;
+    await diagnostic
+      .getByRole("heading", { name: "Dock validation" })
+      .waitFor();
+    await expect
+      .poll(() => diagnostic.locator("body").innerText(), { timeout: 15000 })
+      .toMatch(
+        /Capturing diagnostic statistics|Blocked: native screen-recording permission unavailable/,
+      );
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+    expect(
+      children().filter((item) => item.command.endsWith("/dock-runtime")),
+    ).toEqual([]);
+    await invokeDiagnostic("Stop Dock validation");
+    await invoke("Retry Dock interaction");
+    await expect
+      .poll(
+        () => children().some((item) => item.command.endsWith("/dock-runtime")),
+        { timeout: 4000 },
+      )
+      .toBe(true);
     const origin = await bounds();
     await setDock(
       "bottom",
@@ -350,8 +402,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
     expect(
-      await app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.isVisible(),
+      await app.evaluate(
+        ({ BrowserWindow }, id) => BrowserWindow.fromId(id)!.isVisible(),
+        petWindowID,
       ),
     ).toBe(false);
     expect(await bounds()).toEqual(hidden);
@@ -372,58 +425,6 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         timeout: 5000,
       })
       .toBe(floor);
-    const children = () =>
-      execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
-        encoding: "utf8",
-      })
-        .split("\n")
-        .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/))
-        .filter(
-          (parts) => parts && Number(parts[2]) === applicationProcess!.pid,
-        )
-        .map((parts) => ({ pid: Number(parts![1]), command: parts![3]! }));
-    const invokeDiagnostic = (label: string) =>
-      app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Dock validation")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
-      );
-    // Keep the owned product helper alive but stopped while the user selects
-    // diagnostics then rapidly hides/shows. Capture ownership must be reserved
-    // before its SIGKILL cleanup deadline, not after diagnostic startup.
-    const productChild = children().find((item) =>
-      item.command.endsWith("/dock-runtime"),
-    );
-    expect(productChild).toBeDefined();
-    process.kill(productChild!.pid, "SIGSTOP");
-    const diagnosticWindow = app.waitForEvent("window");
-    await invokeDiagnostic("Start Dock validation (120 seconds)");
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
-    const diagnostic = await diagnosticWindow;
-    await diagnostic
-      .getByRole("heading", { name: "Dock validation" })
-      .waitFor();
-    await expect
-      .poll(() => diagnostic.locator("body").innerText(), { timeout: 15000 })
-      .toMatch(
-        /Capturing diagnostic statistics|Blocked: native screen-recording permission unavailable/,
-      );
-    await new Promise((resolve) => setTimeout(resolve, 1300));
-    expect(
-      children().filter((item) => item.command.endsWith("/dock-runtime")),
-    ).toEqual([]);
-    await invokeDiagnostic("Stop Dock validation");
-    await invoke("Retry Dock interaction");
-    await expect
-      .poll(
-        () => children().some((item) => item.command.endsWith("/dock-runtime")),
-        { timeout: 4000 },
-      )
-      .toBe(true);
     // Accelerate only the known long rest deadline; movement clocks retain real
     // duration and the native cleanup/diagnostic deadlines remain untouched.
     await app.evaluate(() => {
@@ -481,6 +482,21 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     for (const orientation of ["left", "right"] as const) {
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
+      // Establish a fresh rendered pose after show, and keep this directed
+      // drag out of the physical cursor's column. Real buttons=0 events from
+      // that cursor otherwise cancel synthetic capture while the window moves.
+      await app.evaluate(({ BrowserWindow, screen }, id) => {
+        const pet = BrowserWindow.fromId(id)!;
+        const area = screen.getPrimaryDisplay().workArea;
+        const pointer = screen.getCursorScreenPoint();
+        const margin = Math.min(200, (area.width - pet.getBounds().width) / 4);
+        const x =
+          pointer.x > area.x + area.width / 2
+            ? area.x + margin
+            : area.x + area.width - pet.getBounds().width - margin;
+        pet.setPosition(Math.round(x), pet.getBounds().y, false);
+      }, petWindowID);
+      await new Promise((resolve) => setTimeout(resolve, 70));
       const point = await bodyPoint();
       await pet.mouse.move(point.x, point.y);
       await pet.mouse.down();
@@ -532,6 +548,29 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       ),
     );
   } catch (error) {
+    console.log("Owned app at failure", {
+      pid: applicationProcess?.pid,
+      exitCode: applicationProcess?.exitCode,
+      signalCode: applicationProcess?.signalCode,
+      os: applicationProcess?.pid
+        ? (() => {
+            try {
+              return execFileSync(
+                "/bin/ps",
+                [
+                  "-p",
+                  String(applicationProcess!.pid),
+                  "-o",
+                  "state=,command=",
+                ],
+                { encoding: "utf8" },
+              ).trim();
+            } catch {
+              return "exited";
+            }
+          })()
+        : "not launched",
+    });
     console.log(
       "Dock menu at failure",
       await app

@@ -71,4 +71,3 @@ AssertionError: idle: expected { x: 40, y: 716, width: 240, …(1) } to deeply e
       Tests  1 failed | 2 passed | 1 skipped (4)
    Start at  16:48:06
    Duration  75.96s (tests 100%)
-
