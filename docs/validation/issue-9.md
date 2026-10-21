@@ -64,7 +64,7 @@ The temporary observation app was shut down normally after the feedback so furth
 
 ## CI diagnosis and corrected acceptance readiness
 
-Remote runs exposed two acceptance-fixture defects without identifying a product sizing defect. Run `39549360533` reported a one-DIP foot difference (707 versus 706); its original snapshot lacked the work-area context needed to identify the cause. Run `39549650877` reached the active-resize scenario, where interpolated client-coordinate moves compounded as the native window moved. On the smaller CI display this reached the top; the 300-DIP pet correctly clamped to a reachable foot at 325 rather than preserving an impossible 265. The fixture now uses one move for the intended screen displacement and retains exact anchor assertions.
+Remote runs exposed acceptance-fixture defects without identifying a product sizing defect. Run `39549360533` reported a one-DIP foot difference (707 versus 706); its original snapshot lacked the work-area context needed to identify the cause. Run `39549650877` reached the active-resize scenario, where interpolated client-coordinate moves compounded as the native window moved. On the smaller CI display this reached the top; the 300-DIP pet correctly clamped to a reachable foot at 325 rather than preserving an impossible 265. The fixture now uses one move for the intended screen displacement and retains exact anchor assertions.
 
 The visibility sampling failure was reproduced locally twice in a minimized cold-start loop, each failing in about five seconds with `Execution context was destroyed`. Remote chronology showed native visibility was already true while `webContents.isLoading()` was still true; the document had not completed its initial load. This supports an initial-document readiness race; the earlier concurrent-build/HMR explanation was not established. Changing only the sampling boundary to await the actual page load lifecycle made 20 cold launches pass in 24.42 seconds. Tests now wait for every relaunched document and for actual opaque pixels before taking visible geometry/frame samples. They do not catch and ignore evaluation errors or loosen anchor tolerances.
 
@@ -78,11 +78,11 @@ All temporary native-method wrappers, navigation logs, debug tags, diagnostic te
 
 Final full remote CI is still pending at this record; local matrix and human desktop acceptance are not a substitute for it.
 
-After removing diagnostic scaffolding, `pnpm check` passed and the focused size/visibility suites passed at forced 2x:
+After correcting current-floor and first-heartbeat expectations, `pnpm check` passed. The latest forced-2x regression results are:
 
 | Mode        | Result                  | Duration |
 | ----------- | ----------------------- | -------- |
 | Development | 2 files, 2 tests passed | 45.83 s  |
 | Packaged    | 2 files, 2 tests passed | 40.16 s  |
 
-Commands used `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project development` or `--project packaged` with `tests/size.test.ts tests/visibility.test.ts`. The packaged check used the unchanged user-reviewed bundle; its `app.asar` hash was rechecked as `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`.
+Commands used `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project development tests/size.test.ts tests/app.test.ts tests/visibility.test.ts` and `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project packaged tests/size.test.ts tests/visibility.test.ts`. The packaged check used the unchanged user-reviewed bundle; its `app.asar` hash was rechecked as `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`.
