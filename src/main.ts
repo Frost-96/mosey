@@ -224,7 +224,12 @@ async function start() {
     constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
   };
   const cancelInteraction = () => {
+    const cancelledGesture = gesture;
     gesture = undefined;
+    if (cancelledGesture && !pet.isDestroyed())
+      pet.webContents.send(channels.gestureCancellation, {
+        gestureId: cancelledGesture.id,
+      });
     stopMotion();
     behavior.send({
       type: visibility === "visible" && !suspended ? "CANCEL" : "PAUSE",

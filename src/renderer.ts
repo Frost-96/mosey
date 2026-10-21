@@ -80,6 +80,20 @@ try {
     frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
     const geometry = petGeometry(presentation.size);
+    // A new primary display can change backing scale without changing CSS size.
+    // Check every visible draw, including the first draw after hiding.
+    const ratio = window.devicePixelRatio;
+    if (
+      canvas!.width !== Math.round(geometry.side * ratio) ||
+      canvas!.height !== Math.round(geometry.side * ratio)
+    ) {
+      canvas!.width = Math.round(geometry.side * ratio);
+      canvas!.height = Math.round(geometry.side * ratio);
+      canvas!.style.width = `${geometry.side}px`;
+      canvas!.style.height = `${geometry.side}px`;
+      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
+      previous = "";
+    }
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
     )!;
@@ -188,28 +202,17 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
-    if (
-      value.visibility === "hidden" ||
-      value.geometryRevision !== presentation.geometryRevision
-    )
+    if (value.geometryRevision !== presentation.geometryRevision)
       finish("cancel");
-    const { side } = petGeometry(value.size);
-    const ratio = window.devicePixelRatio;
-    if (
-      canvas!.width !== Math.round(side * ratio) ||
-      canvas!.height !== Math.round(side * ratio)
-    ) {
-      canvas!.width = Math.round(side * ratio);
-      canvas!.height = Math.round(side * ratio);
-      canvas!.style.width = `${side}px`;
-      canvas!.style.height = `${side}px`;
-      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
-      previous = "";
-    }
     presentation = value;
     cancelDrawing();
     requestDraw();
   }
+  // A queued cancellation belongs to one captured gesture, never to a newer
+  // press that happened before its main-process messages reached this renderer.
+  const unsubscribeCancellation = window.mosey.onGestureCancellation((id) => {
+    if (gesture?.id === id) finish("cancel");
+  });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
   window.addEventListener("resize", () => synchronize(presentation));
@@ -221,6 +224,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
+      unsubscribeCancellation();
       cancelDrawing();
     },
     { once: true },

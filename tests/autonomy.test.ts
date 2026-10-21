@@ -172,6 +172,19 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
+    // Directed Playwright input does not move the physical OS cursor. Keep
+    // this vertical drag away from it so native buttons=0/capture-loss events
+    // do not cancel the simulated held pointer when the window moves beneath it.
+    await app.evaluate(({ BrowserWindow, screen }) => {
+      const pet = BrowserWindow.getAllWindows()[0]!;
+      const area = screen.getPrimaryDisplay().workArea;
+      const pointer = screen.getCursorScreenPoint();
+      const x =
+        pointer.x >= area.x + area.width / 2
+          ? area.x
+          : area.x + area.width - pet.getBounds().width;
+      pet.setPosition(x, pet.getBounds().y, false);
+    });
     const ground = await bounds();
     await expect
       .poll(async () => idleFrames.has(await pixels()), {
