@@ -73,7 +73,16 @@ test.runIf(packaged)(
   },
 );
 
-test("a real app displays one animated corgi and quits from its menu", async () => {
+// Development owns Forge's existing 60s startup allowance as well as the 90s
+// application scenario budget. Each behavior still has its own bounded poll.
+const appTestTimeout = packaged ? 90000 : 150000;
+test(
+  "a real app displays one animated corgi and quits from its menu",
+  exercisePet,
+  appTestTimeout,
+);
+
+async function exercisePet() {
   const profile = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
   );
@@ -978,4 +987,4 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
     await rm(profile, { recursive: true, force: true });
   }
-});
+}
