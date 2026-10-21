@@ -29,7 +29,7 @@
   },
   "integrationCodeCommit": "92fca85a7ae4508a10c72a1dccb8fd6d025c2b23",
   "copiedFrom": "/Users/frost/.codex/worktrees/ticket-8-dock/mosey/out/Mosey-darwin-arm64/Mosey.app",
-  "independentLaunch": "not attempted for this candidate; earlier LaunchServices attempt concerns obsolete5fa938dc bundle only",
+  "independentLaunch": "Parent observed exact frozen candidate via Finder/LaunchServices, mainPID63694 parentPID1. Detailed clean-record permission/revocation and restoration receipt remains pending; do not inherit prior#14 authorization.",
   "supersedes": "obsolete-5fa938dc-frozen-provenance.json",
   "ciRun": "https://github.com/Frost-96/mosey/actions/runs/39584805811",
   "ciStatusAtFreeze": "completed: development passed; packaged8passed1failed (autonomy Hide Mosey menu lookup after suspend/resume)",
@@ -58,5 +58,14 @@
     },
     "log": "ci-39584805811-validation-green.log",
     "scope": "Full CI suites on same production source plus diagnostic-only fixture change. CI builds its own artifact; it does not establish hash identity with this frozen local candidate or prove independent permission/physical desktop acceptance."
+  },
+  "physicalEvidencePartial": {
+    "summary": "physical-partial-summary.json",
+    "numericPetPositions": "physical-partial-pet-positions.jsonl",
+    "localOnlyImageAndToolManifest": "physical-local-artifact-manifest.json",
+    "candidateBytesUnchanged": true,
+    "observedMainPID": 63694,
+    "launchParentPID": 1,
+    "scope": "Parent-controlled actual CGEvent/native tray, Dock hover and one built-in display2x/1x scenarios through29. Independent permission history/revocation/restoration and final acceptance receipt pending. Physical images are local-only by explicit user instruction."
   }
 }
