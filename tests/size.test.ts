@@ -38,49 +38,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
-    // Temporary native-boundary diagnostics for the CI-only one-DIP drift.
-    const observeNative = () =>
-      app!.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
-        const samples: unknown[] = [];
-        const sample = (event: string, requested?: unknown) => {
-          const display = screen.getPrimaryDisplay();
-          samples.push({
-            event,
-            requested,
-            at: Date.now(),
-            bounds: pet.getBounds(),
-            visible: pet.isVisible(),
-            loading: pet.webContents.isLoading(),
-            url: pet.webContents.getURL(),
-            workArea: display.workArea,
-            displayBounds: display.bounds,
-            scaleFactor: display.scaleFactor,
-          });
-        };
-        Reflect.set(globalThis, "sizeNativeEvidence", samples);
-        sample("initial");
-        pet.on("show", () => sample("show"));
-        pet.on("resize", () => sample("resize"));
-        pet.on("move", () => sample("move"));
-        pet.on("ready-to-show", () => sample("ready-to-show"));
-        screen.on("display-metrics-changed", () =>
-          sample("display-metrics-changed"),
-        );
-        const setBounds = pet.setBounds.bind(pet);
-        pet.setBounds = (bounds, animate) => {
-          sample("setBounds-before", bounds);
-          setBounds(bounds, animate);
-          sample("setBounds-after", bounds);
-        };
-        const setPosition = pet.setPosition.bind(pet);
-        pet.setPosition = (x, y, animate) => {
-          sample("setPosition-before", { x, y });
-          setPosition(x, y, animate);
-          sample("setPosition-after", { x, y });
-        };
-      });
-    await observeNative();
     await pet.waitForLoadState("load");
     await expect
       .poll(
@@ -107,29 +64,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     const initialArea = await app.evaluate(
       ({ screen }) => screen.getPrimaryDisplay().workArea,
     );
-    if (initial.y + initial.height !== initialArea.y + initialArea.height) {
-      const probe = await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
-        const before = pet.getBounds();
-        const area = screen.getPrimaryDisplay().workArea;
-        const requested = {
-          x: before.x,
-          y: area.y + area.height - before.height,
-        };
-        pet.setPosition(requested.x, requested.y, false);
-        return { before, area, requested, immediate: pet.getBounds() };
-      });
-      const nextTurn = await bounds();
-      console.error(
-        "[DEBUG-startup-ground]",
-        JSON.stringify({ ...probe, nextTurn }),
-      );
-      await mkdir("test-results", { recursive: true });
-      await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-startup-ground.json`,
-        JSON.stringify({ ...probe, nextTurn }, null, 2),
-      );
-    }
     expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
     const choose = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -337,7 +271,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await app.close();
     app = await launch();
     pet = await app.firstWindow();
-    await observeNative();
     await pet.waitForLoadState("load");
     expect((await bounds()).width).toBe(300);
     expect(
@@ -370,7 +303,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1');
     app = await launch();
     pet = await app.firstWindow();
-    await observeNative();
     await pet.waitForLoadState("load");
     expect((await bounds()).width).toBe(300);
     expect(
@@ -385,7 +317,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await mkdir(path.join(profile, "preferences.json"));
     app = await launch();
     pet = await app.firstWindow();
-    await observeNative();
     await pet.waitForLoadState("load");
     await choose("Small");
     expect((await bounds()).width).toBe(300);
@@ -408,16 +339,6 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
-    const evidence = await app
-      ?.evaluate(() => Reflect.get(globalThis, "sizeNativeEvidence"))
-      .catch(() => undefined);
-    if (evidence) {
-      console.error("[DEBUG-size-native]", JSON.stringify(evidence));
-      await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-size-native.json`,
-        JSON.stringify(evidence, null, 2),
-      );
-    }
     await app
       ?.windows()[0]
       ?.screenshot({
