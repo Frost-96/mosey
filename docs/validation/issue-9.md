@@ -51,3 +51,19 @@ Directed Playwright events and screenshots prove application coordinate handling
 Forced 1x/2x Chromium scale factors test rendering/coordinate paths on this machine; they do not establish coverage of multiple physical display models, every macOS scaling setting, or other macOS versions. The screenshot proportions preserve the existing character and grounded paws at all three pixel sizes, but actual desktop presence and final dimension tuning require the parent task's real-desktop review. Keep unverified acceptance open instead of describing directed events as physical-input evidence.
 
 Tracked 1x Canvas samples: [small](issue-9-small.png), [medium](issue-9-medium.png), [large](issue-9-large.png). These are rendered-window samples, not full desktop input-routing evidence.
+
+## Real desktop acceptance — 2026-10-21
+
+After the four local automated matrix rows passed, the integration bundle built at `f6ef13e` was launched with a fresh temporary profile and native Retina scale (2x). Its `app.asar` SHA-256 was `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`. This is the same bundle tested by the implementation agent; subsequent changes at this point affect tests and documentation only.
+
+The user used the actual mouse and reported **“全部正常”** for the requested checks at Small, Medium and Large: desktop dimensions and complete action appearance/grounding; fast entry followed by the first body click and body-edge clicks; transparent-corner clicks reaching the application below; lifting and dragging outside the original window, release/return and catching again during return. The 180/240/300 DIP values are accepted for this local desktop review. This feedback supplies the physical-input and desktop tuning evidence left pending in the initial implementation section above; it does not establish other displays, macOS versions or every possible input timing.
+
+A separate read-only observer injected no inputs. It recorded all three window sizes, 111 distinct window rectangles, five press/release and capture/loss pairs, and 199 held pointer movements. Its sampled gestures were at Small; three crossed the initial window rectangle and two began while the window was above the ground. These observations supplement the user's full three-size feedback; they do not independently prove each requested click or action in every size. The observer recorded only pet-window geometry and DOM pointer events, not other applications' content. See [desktop observation summary](issue-9-desktop-summary.json). The raw local `/tmp/mosey-issue-9/native-input.jsonl` is not published.
+
+The temporary observation app was shut down normally after the feedback so further automated diagnostics could run in isolation. Keyboard-focus preservation remains outside the accepted scope, as recorded in the final #4 scope clarification.
+
+## CI follow-up in progress
+
+The initial remote run `39549360533` failed the first resized-foot assertion by one DIP (707 observed, 706 expected). The same-code follow-up `39549650877` reached the active-resize fixture but failed because its interpolated client-coordinate moves accumulated as the window moved: on the smaller CI desktop the pet reached the top, and increasing to 300 DIP correctly clamped its foot to 325 rather than retaining an impossible 265. The fixture now uses one move to produce the intended lift while retaining exact anchor assertions. The second run also failed in visibility-frame sampling with a destroyed execution context during navigation; the earlier concurrent-build explanation is unconfirmed and insufficient to explain this isolated CI occurrence.
+
+Temporary failure-only native-boundary and navigation diagnostics have been added without relaxing assertions or changing product code. Remote diagnosis and final CI verification remain pending; local matrix and user desktop acceptance are not presented as a passing remote CI result.
