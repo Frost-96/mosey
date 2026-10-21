@@ -14,7 +14,7 @@
     "displayFrequency": 60.00239944458008,
     "id": 1,
     "internal": true,
-    "label": "内建视网膜显示器",
+    "label": "\u5185\u5efa\u89c6\u7f51\u819c\u663e\u793a\u5668",
     "maximumCursorSize": {
       "width": 0,
       "height": 0
@@ -49,7 +49,7 @@
     "height": 240
   },
   "final": {
-    "x": 615,
+    "x": 951,
     "y": 716,
     "width": 240,
     "height": 240
