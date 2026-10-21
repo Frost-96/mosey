@@ -114,6 +114,7 @@ async function start() {
       label: "Retry Dock interaction",
       click: () => {
         const revision = reserveCapture("product");
+        dockRuntime.resetRecoveryBudget();
         void Promise.all([
           dockRuntime.stop(),
           dockValidation.stop("product Dock interaction requested"),
