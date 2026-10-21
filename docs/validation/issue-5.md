@@ -65,3 +65,9 @@
 最终检查与产物：`pnpm check` 通过；开发sleep与visibility两项通过（60.73秒）；重新打包成功；打包sleep、visibility与login-items三项通过（56.65秒），登录启动测试恢复not-registered且cleanupErrors为空；最后原生context-menu打包回归通过（27.16秒）。对应记录为 `issue-5-final-development.log`、`issue-5-final-packaged.log`、`issue-5-final-menu.log`。四张最终打包截图及development／packaged睡眠JSON同步为这一最终产物的结果。
 
 前节完整套件与size-autonomy定向运行发生在这一显示修正前；最终变更后只重跑直接相关的睡眠、隐藏／恢复、登录菜单与本体菜单场景，未把旧完整运行描述为新提交的一次全绿。PR首次CI另在旧autonomy测试最后长按的精确待机像素集合断言失败，窗口位置保持；根代理正按实际截图与初始帧采集边界核对，尚不声称远程CI通过。
+
+## CI待机像素基线的采集前置
+
+PR首次CI的旧autonomy用例最后长按保持了窗口位置，却在精确待机像素集合断言失败。失败截图是不透明身体高201px的右朝向站立姿态，初始app截图为197px；二者分别对应原待机呼吸的不同高度。原CI没有保存被比较的Canvas基线，不能据此确认是漏采高呼吸帧，亦不能把“看起来像待机”替代精确像素断言。
+
+采样现在先在真实Canvas观察到足量不透明身体（>5000像素、CSS身体高度>180），再开始原本完整的2200ms参考周期；networkidle不再被当作图片解码与首帧绘制完成。仍要求实际待机有像素变化，并保留原长按位置相等和精确待机集合匹配。每个原始及镜像参考Canvas输出保存为PNG，另存尺寸、非透明像素数与上下界；最终长按用于比较的原始Canvas也保存，便于下次CI区分漏帧、插值差异及真正错误姿态。默认强制1x以在本机覆盖CI栅格路径，可用MOSEY_TEST_SCALE_FACTOR=2验证Retina路径。没有新增或放宽产品动作逻辑。
