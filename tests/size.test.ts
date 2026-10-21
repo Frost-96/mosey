@@ -38,6 +38,15 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
+    const desktop = () =>
+      app!.evaluate(({ BrowserWindow, screen }) => ({
+        bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
+        area: screen.getPrimaryDisplay().workArea,
+      }));
+    const groundDistance = async () => {
+      const { bounds, area } = await desktop();
+      return bounds.y + bounds.height - area.y - area.height;
+    };
     await pet.waitForLoadState("load");
     await expect
       .poll(
@@ -60,10 +69,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         ),
       )
       .toBe(true);
-    const initial = await bounds();
-    const initialArea = await app.evaluate(
-      ({ screen }) => screen.getPrimaryDisplay().workArea,
-    );
+    const { bounds: initial, area: initialArea } = await desktop();
     expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
     const choose = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -95,12 +101,21 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       ["Large", 300],
       ["Medium", 240],
     ] as const) {
+      const before = await desktop();
       await choose(label);
       await expect.poll(async () => (await bounds()).width).toBe(side);
-      const resized = await bounds();
+      const after = await desktop();
+      const resized = after.bounds;
       expect(resized.height).toBe(side);
-      expect(resized.x + side / 2).toBe(initial.x + initial.width / 2);
-      expect(resized.y + side).toBe(initial.y + initial.height);
+      // A display-metrics change legitimately re-grounds the pet. Preserve
+      // its physical foot on size-only changes; always use the current floor.
+      if (JSON.stringify(before.area) === JSON.stringify(after.area)) {
+        expect(resized.x + side / 2).toBe(
+          before.bounds.x + before.bounds.width / 2,
+        );
+        expect(resized.y + side).toBe(before.bounds.y + before.bounds.height);
+      }
+      expect(resized.y + side).toBe(after.area.y + after.area.height);
       await expect
         .poll(() =>
           pet.evaluate(() => {
@@ -208,26 +223,25 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       await new Promise((resolve) => setTimeout(resolve, 250));
       expect(await bounds()).toEqual(caught);
       await pet.mouse.up();
-      await expect.poll(async () => (await bounds()).y).toBe(ground.y);
+      await expect.poll(groundDistance).toBe(0);
       await expect
         .poll(async () => idle.has(await pixels()), { timeout: 5000 })
         .toBe(true);
-      // Restore center for the next size's anchor assertion.
-      await app.evaluate(
-        ({ BrowserWindow }, initial) =>
-          BrowserWindow.getAllWindows()[0]!.setPosition(
-            initial.x +
-              (initial.width -
-                BrowserWindow.getAllWindows()[0]!.getBounds().width) /
-                2,
-            BrowserWindow.getAllWindows()[0]!.getBounds().y,
-            false,
-          ),
-        initial,
-      );
+      // Place the next size fixture at the current primary work-area center.
+      await app.evaluate(({ BrowserWindow, screen }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const bounds = pet.getBounds();
+        const area = screen.getPrimaryDisplay().workArea;
+        pet.setPosition(
+          area.x + Math.round((area.width - bounds.width) / 2),
+          bounds.y,
+          false,
+        );
+      });
     }
     // Resize a captured pet in the air: preserve the physical foot, release the
     // old capture, and let the return finish with the new ground geometry.
+    const beforeLift = await bounds();
     await pet.mouse.move(120, 180);
     await pet.mouse.down();
     // One client-space move makes one 150-DIP screen-space displacement.
@@ -236,7 +250,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await pet.mouse.move(120, 30);
     await expect
       .poll(async () => (await bounds()).y)
-      .toBeLessThan(initial.y - 100);
+      .toBeLessThan(beforeLift.y - 100);
     const held = await bounds();
     await choose("Large");
     const resizedHeld = await bounds();
@@ -260,11 +274,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         resizedFalling.y + resizedFalling.height - falling.y - falling.height,
       ),
     ).toBeLessThan(30);
-    await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
-        timeout: 4000,
-      })
-      .toBe(initial.y + initial.height);
+    await expect.poll(groundDistance, { timeout: 4000 }).toBe(0);
     // A size write while hidden must retain hidden intent across restart.
     await invoke("Hide Mosey");
     await choose("Large");
@@ -293,8 +303,10 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         { timeout: 10000 },
       )
       .toBeGreaterThan(5000);
-    const stable = await bounds();
-    expect(stable.y + stable.height).toBe(initial.y + initial.height);
+    // Restart must recompute the current primary floor; its work area may
+    // legitimately differ from the previous process by even one desktop point.
+    const { bounds: stable, area: restoredArea } = await desktop();
+    expect(stable.y + stable.height).toBe(restoredArea.y + restoredArea.height);
     await app.close();
     app = undefined;
     const profile = path.join(root, "profile");
