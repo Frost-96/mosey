@@ -22,6 +22,7 @@ type Runtime = {
   publish: (value: unknown) => Promise<void>;
   footY: () => Promise<number>;
   children: () => number[];
+  status: () => Promise<string>;
   spawnedPIDs: () => Promise<number[]>;
   floor: number;
   observation: unknown;
@@ -171,6 +172,13 @@ setInterval(()=>{
     };
     const spawnedPIDs = async () =>
       (await readFile(pids, "utf8")).trim().split("\n").map(Number);
+    const status = () =>
+      app!.evaluate(
+        ({ Menu }) =>
+          Menu.getApplicationMenu()!
+            .items.find((i) => i.label === "Mosey")!
+            .submenu!.items.find((i) => !i.enabled)!.label,
+      );
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         Menu.getApplicationMenu()!
@@ -182,6 +190,7 @@ setInterval(()=>{
       publish,
       footY,
       children,
+      status,
       spawnedPIDs,
       floor,
       observation,
@@ -258,14 +267,7 @@ test("Dock capture rebuilds a continuously silent stream and restores support wi
 
 test("Sparse fresh reports do not replenish the bounded silent-stream recovery budget", async () => {
   await withRuntime(
-    async ({ children, spawnedPIDs, invoke, app }) => {
-      const status = () =>
-        app.evaluate(
-          ({ Menu }) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => !i.enabled)!.label,
-        );
+    async ({ children, spawnedPIDs, invoke, status }) => {
       // Each owned producer sends seven seconds of isolated fresh records a second
       // apart, then timely silence JSON. Their uncovered gaps exceed frame freshness.
       await expect
@@ -294,14 +296,8 @@ test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works 
       footY,
       floor,
       app,
+      status,
     }) => {
-      const status = () =>
-        app.evaluate(
-          ({ Menu }) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => !i.enabled)!.label,
-        );
       await expect
         .poll(status, { timeout: 30000, interval: 100 })
         .toBe("Dock capture unavailable; Retry Dock interaction");
@@ -415,68 +411,60 @@ test("Startup silence recovers while healthy idle, empty frames, brief silence a
 });
 
 test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without replenishing the budget", async () => {
-  await withRuntime(async ({ publish, children, spawnedPIDs, invoke, app }) => {
-    const status = () =>
-      app.evaluate(
-        ({ Menu }) =>
+  await withRuntime(
+    async ({ publish, children, spawnedPIDs, invoke, app, status }) => {
+      const diagnostic = (label: string) =>
+        app.evaluate(({ Menu }, label) => {
           Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => !i.enabled)!.label,
-      );
-    const diagnostic = (label: string) =>
-      app.evaluate(({ Menu }, label) => {
-        Menu.getApplicationMenu()!
-          .items.find((i) => i.label === "Dock validation")!
-          .submenu!.items.find((i) => i.label === label)!
-          .click();
-      }, label);
-    const pauses = ["hidden", "suspended", "diagnostic"] as const;
-    await publish({ reason: "callback_silence", ignoreTerm: true });
-    for (const [index, pause] of pauses.entries()) {
-      // SIGTERM is ignored only by this owned producer, exposing the real
-      // application's 1.5s kill fallback and the pending restart race.
-      await expect
-        .poll(status, { timeout: 8000, interval: 25 })
-        .toBe("Dock capture callbacks unavailable; restarting");
-      if (pause === "hidden") await invoke("Hide Mosey");
-      else if (pause === "suspended")
-        await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
-      else {
-        const opened = app.waitForEvent("window");
-        await diagnostic("Start Dock validation (120 seconds)");
-        const panel = await opened;
-        await panel.getByRole("heading", { name: "Dock validation" }).waitFor();
+            .items.find((i) => i.label === "Dock validation")!
+            .submenu!.items.find((i) => i.label === label)!
+            .click();
+        }, label);
+      const pauses = ["hidden", "suspended", "diagnostic"] as const;
+      await publish({ reason: "callback_silence", ignoreTerm: true });
+      for (const [index, pause] of pauses.entries()) {
+        // SIGTERM is ignored only by this owned producer, exposing the real
+        // application's 1.5s kill fallback and the pending restart race.
+        await expect
+          .poll(status, { timeout: 8000, interval: 25 })
+          .toBe("Dock capture callbacks unavailable; restarting");
+        if (pause === "hidden") await invoke("Hide Mosey");
+        else if (pause === "suspended")
+          await app.evaluate(({ powerMonitor }) =>
+            powerMonitor.emit("suspend"),
+          );
+        else {
+          const opened = app.waitForEvent("window");
+          await diagnostic("Start Dock validation (120 seconds)");
+          const panel = await opened;
+          await panel
+            .getByRole("heading", { name: "Dock validation" })
+            .waitFor();
+        }
+        await expect.poll(children, { timeout: 4000 }).toEqual([]);
+        await new Promise((resolve) => setTimeout(resolve, 1300));
+        expect(children()).toEqual([]);
+        expect(await spawnedPIDs()).toHaveLength(index + 1);
+        if (pause === "hidden") await invoke("Show Mosey");
+        else if (pause === "suspended")
+          await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
+        else await diagnostic("Stop Dock validation");
+        await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
       }
+      // All three attempted recoveries were cancelled by ownership changes.
+      // Those ordinary stop/start boundaries must not create another allowance.
+      await expect
+        .poll(status, { timeout: 8000, interval: 100 })
+        .toBe("Dock capture unavailable; Retry Dock interaction");
       await expect.poll(children, { timeout: 4000 }).toEqual([]);
-      await new Promise((resolve) => setTimeout(resolve, 1300));
-      expect(children()).toEqual([]);
-      expect(await spawnedPIDs()).toHaveLength(index + 1);
-      if (pause === "hidden") await invoke("Show Mosey");
-      else if (pause === "suspended")
-        await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
-      else await diagnostic("Stop Dock validation");
-      await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
-    }
-    // All three attempted recoveries were cancelled by ownership changes.
-    // Those ordinary stop/start boundaries must not create another allowance.
-    await expect
-      .poll(status, { timeout: 8000, interval: 100 })
-      .toBe("Dock capture unavailable; Retry Dock interaction");
-    await expect.poll(children, { timeout: 4000 }).toEqual([]);
-    expect(await spawnedPIDs()).toHaveLength(4);
-  });
+      expect(await spawnedPIDs()).toHaveLength(4);
+    },
+  );
 });
 
 test("Sustained fresh callbacks replenish recovery, but non-silent reports with no callback age do not", async () => {
   await withRuntime(
-    async ({ publish, children, spawnedPIDs, app }) => {
-      const status = () =>
-        app.evaluate(
-          ({ Menu }) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => !i.enabled)!.label,
-        );
+    async ({ publish, children, spawnedPIDs, status }) => {
       await expect
         .poll(async () => (await spawnedPIDs()).length, { timeout: 25000 })
         .toBe(4);
