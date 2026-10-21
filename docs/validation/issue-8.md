@@ -31,7 +31,7 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 ## 已取得的证据
 
 - 初始整应用红测试：底部重叠边缘目标 foot881，旧产品仍 foot956；实现后可见支撑通过。随后真实 Canvas 像素检查发现 pending 期间闪为 falling 姿态，修复为暂停原姿态，红/绿均实跑。
-- 开发测试的确定性生产者情景通过：底部重叠/不重叠/失效回落、pending暂存及超时、三档缩放、在边缘下方释放不向上瞬移、回程再抓取、侧边避让、隐藏及快速再显示。此情景运行真实 Electron、行为、Renderer、素材、协议消费与窗口，只替换 OS 捕获生产者，明确不证明真实 Dock 像素、实际跨应用输入或物理权限通过。最终开发/打包完整结果待下文补齐。
+- 开发测试的确定性生产者情景通过：底部重叠/不重叠/失效回落、pending暂存及超时、三档缩放、在边缘下方释放不向上瞬移、回程再抓取、侧边避让、隐藏及快速再显示。此情景运行真实 Electron、行为、Renderer、素材、协议消费与窗口，只替换 OS 捕获生产者，明确不证明真实 Dock 像素、实际跨应用输入或物理权限通过。开发与打包结果范围见下文。
 - 独立 native 实验数字流 `issue-8/native-observation.jsonl` 与 `native-initial-summary.json`：本机 macOS27.0.1(26A434)/arm64、Swift6.4，由 Codex 宿主启动复制 helper，继承权限。1145个观测中24个非null，均bottom，例如elapsed69.886附近真实完整帧轮廓1120点、bbox x175.5 y872 w1119 h79；其余包括incomplete/callback silence/alpha empty。没有受控指针或Dock设置操作，同期外部用户/UI活动未知，不作为同步地面真值、应用攀爬或独立LaunchServices获权验收。源码/构建字节关联见 `native-initial-receipt.json`。
 - `issue-8/native-resource-sample.json`：单独helper在Dock隐藏/不完整场景7秒内，ps报告lifetime CPU0.1–0.7%、RSS28848–28912KiB。不是整应用、活动/放大、长时或耗电测量；未确认资源预算，不据此宣称低功耗。
 
@@ -62,4 +62,6 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 
 新增深拖动情景在真实物理光标所在列受到buttons0事件干扰，或显示后尚未确认新姿态时，不能据此判产品回弹；夹具沿用既有自主活动测试的策略，将实际窗口放到远离物理光标的列，并等待70ms输入/绘制消息后再抓取，仍保留完整抓取、450ms位置保持、精确地面和逐采样回弹断言。诊断状态窗建立后始终使用最初宠物窗口ID，避免Electron窗口列表顺序把状态窗误认成宠物。失败时仍保留菜单、OS进程状态与截图诊断；临时quit包装、DEBUG及调试env分支已移除。
 
-最终新打包结果待下文补齐；初版通过不代替最终二进制结果。
+最终修复源码重新执行 `pnpm package:mac` 及 `codesign --verify --deep --strict` 通过；实际候选及哈希见 `issue-8/packaged-review-receipt.json`。最终包完整套件为5文件通过、2文件失败（7/9，201.08秒），见 `packaged-review-full.log`：新增Dock情景2/2通过，大小、自主活动大小组合、显示恢复和可见性通过。原有自主活动测试在抓取保持期间从y416回落到y716；菜单测试拖动未离开y716地面。两者当时实际横坐标均为居中x615，尽管夹具尝试远离物理光标放置，缺少完整事件链，根因未确认，不能据此标为夹具或产品已确认缺陷。
+
+不改源码、夹具、构建或签名，随后仅复跑这两个失败文件，2/2通过（53.12秒，`packaged-review-input-rerun.log`）。这是同一最终二进制的分次覆盖，不宣称一次完整最终套件全绿，也不宣称输入稳定性或物理桌面验收通过。归档的 `packaged-autonomy.json`、`packaged-menu.json` 为这次定向复跑的成功输出；完整运行的原始失败保留在前一日志，未用复跑覆盖。未为未确定根因增加推测性的产品启动或输入修复。

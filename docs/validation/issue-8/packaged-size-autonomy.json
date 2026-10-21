@@ -1,0 +1,293 @@
+{
+  "evidence": [
+    {
+      "side": 300,
+      "resize": {
+        "before": {
+          "x": 628,
+          "y": 776,
+          "width": 180,
+          "height": 180
+        },
+        "after": {
+          "x": 568,
+          "y": 656,
+          "width": 300,
+          "height": 300
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 8105.800791
+      },
+      "next": {
+        "bounds": {
+          "x": 562,
+          "y": 656,
+          "width": 300,
+          "height": 300
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 8183.174958
+      },
+      "finished": {
+        "bounds": {
+          "x": 436,
+          "y": 656,
+          "width": 300,
+          "height": 300
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 10237.574791
+      },
+      "points": {
+        "body": {
+          "x": 62.25,
+          "y": 74.25
+        },
+        "transparent": {
+          "x": 237.75,
+          "y": 74.25
+        }
+      },
+      "clicked": {
+        "bounds": {
+          "x": 557,
+          "y": 656,
+          "width": 300,
+          "height": 300
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 11467.711041
+      },
+      "changedRaster": {
+        "ratio": 2,
+        "width": 600,
+        "height": 600,
+        "cssWidth": 300,
+        "cssHeight": 300,
+        "opaque": 144636
+      },
+      "restoredRaster": {
+        "ratio": 1,
+        "width": 300,
+        "height": 300,
+        "cssWidth": 300,
+        "cssHeight": 300,
+        "opaque": 35269
+      },
+      "actions": ["walking", "stretching", "playing"]
+    },
+    {
+      "side": 240,
+      "resize": {
+        "before": {
+          "x": 569,
+          "y": 656,
+          "width": 300,
+          "height": 300
+        },
+        "after": {
+          "x": 599,
+          "y": 716,
+          "width": 240,
+          "height": 240
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 21257.925666
+      },
+      "next": {
+        "bounds": {
+          "x": 593,
+          "y": 716,
+          "width": 240,
+          "height": 240
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 21337.295916
+      },
+      "finished": {
+        "bounds": {
+          "x": 465,
+          "y": 716,
+          "width": 240,
+          "height": 240
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 23406.020458
+      },
+      "points": {
+        "body": {
+          "x": 104.25,
+          "y": 60.25
+        },
+        "transparent": {
+          "x": 135.75,
+          "y": 60.25
+        }
+      },
+      "clicked": {
+        "bounds": {
+          "x": 588,
+          "y": 716,
+          "width": 240,
+          "height": 240
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 24626.96225
+      },
+      "changedRaster": {
+        "ratio": 2,
+        "width": 480,
+        "height": 480,
+        "cssWidth": 240,
+        "cssHeight": 240,
+        "opaque": 92569
+      },
+      "restoredRaster": {
+        "ratio": 1,
+        "width": 240,
+        "height": 240,
+        "cssWidth": 240,
+        "cssHeight": 240,
+        "opaque": 22569
+      },
+      "actions": ["walking", "stretching", "playing"]
+    },
+    {
+      "side": 180,
+      "resize": {
+        "before": {
+          "x": 599,
+          "y": 716,
+          "width": 240,
+          "height": 240
+        },
+        "after": {
+          "x": 629,
+          "y": 776,
+          "width": 180,
+          "height": 180
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 34457.689125
+      },
+      "next": {
+        "bounds": {
+          "x": 623,
+          "y": 776,
+          "width": 180,
+          "height": 180
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 34529.53
+      },
+      "finished": {
+        "bounds": {
+          "x": 496,
+          "y": 776,
+          "width": 180,
+          "height": 180
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 36602.667333
+      },
+      "points": {
+        "body": {
+          "x": 77.25,
+          "y": 47.25
+        },
+        "transparent": {
+          "x": 102.75,
+          "y": 47.25
+        }
+      },
+      "clicked": {
+        "bounds": {
+          "x": 616,
+          "y": 776,
+          "width": 180,
+          "height": 180
+        },
+        "area": {
+          "x": 0,
+          "y": 33,
+          "width": 1470,
+          "height": 923
+        },
+        "at": 37826.254291
+      },
+      "changedRaster": {
+        "ratio": 2,
+        "width": 360,
+        "height": 360,
+        "cssWidth": 180,
+        "cssHeight": 180,
+        "opaque": 52035
+      },
+      "restoredRaster": {
+        "ratio": 1,
+        "width": 180,
+        "height": 180,
+        "cssWidth": 180,
+        "cssHeight": 180,
+        "opaque": 12707
+      },
+      "actions": ["walking", "stretching", "playing"]
+    }
+  ],
+  "boundary": "real Electron rendered pixels/window bounds/menu; directed input; random/long-rest time controlled externally"
+}
