@@ -76,7 +76,7 @@ That run also exposed a Dock diagnostic fixture budget mismatch: the helper emit
 
 All temporary native-method wrappers, navigation logs, debug tags, diagnostic test files and extra workflow runs were removed after the targeted diagnosis. Original failure screenshots and process cleanup remain in the acceptance tests. The exact startup and resized-foot assertions, rendered-pixel checks, one-move active-resize fixture and relaunch readiness remain as regression coverage.
 
-Final full remote CI is still pending at this record; local matrix and human desktop acceptance are not a substitute for it.
+Final full remote CI passed for implementation/test commit `224a734b85d2f63f6ada2c91e05a223b4f0ff8ad`: [run 39552868869](https://github.com/Frost-96/mosey/actions/runs/39552868869). Checks, full development tests (3 passed / 1 packaged-only skipped, 115.07 s), Apple Silicon packaging, full packaged tests (4 passed, 76.88 s), and artifact upload all succeeded. Subsequent commits update validation documentation only; their runtime, test, dependency and workflow content matches that tested commit. The final documentation commit skips a duplicate CI run after checking this exact content equality.
 
 After correcting current-floor and first-heartbeat expectations, `pnpm check` passed. The latest forced-2x regression results are:
 
@@ -86,3 +86,7 @@ After correcting current-floor and first-heartbeat expectations, `pnpm check` pa
 | Packaged    | Focused size/visibility: 2 files, 2 tests passed           | 39.72 s  |
 
 Commands used `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project development tests/size.test.ts tests/app.test.ts tests/visibility.test.ts` and `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project packaged tests/size.test.ts tests/visibility.test.ts`. The packaged check used the unchanged user-reviewed bundle; its `app.asar` hash was rechecked as `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`.
+
+## Final review and disposition
+
+The final Standards and Spec reviews each reported zero unresolved findings. The user confirmed all requested three-size physical desktop checks; automated size/persistence/recovery coverage and the complete remote pipeline passed. Issue #9 is complete within this recorded local desktop and automated matrix. The parent specification and other feature tickets remain independent; this work is delivered on `integration/issue-9-size`. The implementation worktree was submitted for archival after its final evidence was copied to the integration worktree.
