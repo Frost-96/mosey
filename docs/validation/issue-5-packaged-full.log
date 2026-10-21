@@ -1,0 +1,40 @@
+$ vitest run --project packaged
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/issue-5-implementation/mosey
+
+ ❯ |packaged| tests/size-autonomy.test.ts (1 test | 1 failed) 18285ms
+   × three sizes preserve left-facing interaction and autonomous movement across resizing 18285ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |packaged| tests/size-autonomy.test.ts > three sizes preserve left-facing interaction and autonomous movement across resizing
+AssertionError: expected { x: +0, y: 656, width: 300, …(1) } to deeply equal { x: +0, y: 536, width: 300, …(1) }
+
+- Expected
++ Received
+
+  {
+    "height": 300,
+    "width": 300,
+    "x": 0,
+-   "y": 536,
++   "y": 656,
+  }
+
+ ❯ tests/size-autonomy.test.ts:488:44
+    486|           const held = await desktop();
+    487|           await new Promise((resolve) => setTimeout(resolve, 1600));
+    488|           expect((await desktop()).bounds).toEqual(held.bounds);
+       |                                            ^
+    489|           await pet.mouse.up();
+    490|           await expect
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 7 passed (8)
+   Start at  16:48:24
+   Duration  203.85s (tests 100%)
+
+[ELIFECYCLE] Command failed with exit code 1.

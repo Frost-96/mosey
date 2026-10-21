@@ -72,13 +72,16 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     const { bounds: initial, area: initialArea } = await desktop();
     expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
     const choose = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
+      app!.evaluate(({ BrowserWindow, Menu }, label) => {
         const item = Menu.getApplicationMenu()
           ?.items.find((item) => item.label === "Mosey")
           ?.submenu?.items.find((item) => item.label === "Size")
           ?.submenu?.items.find((item) => item.label === label);
         if (!item) throw new Error(`Missing size menu item: ${label}`);
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const before = pet.getBounds();
         item.click();
+        return { before, after: pet.getBounds() };
       }, label);
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -263,9 +266,12 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await expect
       .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
       .toBeGreaterThan(resizedHeld.y + 10);
-    const falling = await bounds();
-    await choose("Small");
-    const resizedFalling = await bounds();
+    // Include driver delay without counting ongoing falling as a resize jump.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Measure the resize itself in one main-process turn. Separate driver
+    // round trips include legitimate falling motion under scheduler load.
+    const { before: falling, after: resizedFalling } = await choose("Small");
+    expect(resizedFalling.width).toBe(180);
     expect(resizedFalling.x + resizedFalling.width / 2).toBe(
       falling.x + falling.width / 2,
     );
