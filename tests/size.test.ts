@@ -38,6 +38,45 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
+    // Temporary native-boundary diagnostics for the CI-only one-DIP drift.
+    await app.evaluate(({ BrowserWindow, screen }) => {
+      const pet = BrowserWindow.getAllWindows()[0]!;
+      const samples: unknown[] = [];
+      const sample = (event: string, requested?: unknown) => {
+        const display = screen.getPrimaryDisplay();
+        samples.push({
+          event,
+          requested,
+          at: Date.now(),
+          bounds: pet.getBounds(),
+          visible: pet.isVisible(),
+          workArea: display.workArea,
+          displayBounds: display.bounds,
+          scaleFactor: display.scaleFactor,
+        });
+      };
+      Reflect.set(globalThis, "sizeNativeEvidence", samples);
+      sample("initial");
+      pet.on("show", () => sample("show"));
+      pet.on("resize", () => sample("resize"));
+      pet.on("move", () => sample("move"));
+      pet.on("ready-to-show", () => sample("ready-to-show"));
+      screen.on("display-metrics-changed", () =>
+        sample("display-metrics-changed"),
+      );
+      const setBounds = pet.setBounds.bind(pet);
+      pet.setBounds = (bounds, animate) => {
+        sample("setBounds-before", bounds);
+        setBounds(bounds, animate);
+        sample("setBounds-after", bounds);
+      };
+      const setPosition = pet.setPosition.bind(pet);
+      pet.setPosition = (x, y, animate) => {
+        sample("setPosition-before", { x, y });
+        setPosition(x, y, animate);
+        sample("setPosition-after", { x, y });
+      };
+    });
     const initial = await bounds();
     const choose = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -293,6 +332,16 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
+    const evidence = await app
+      ?.evaluate(() => Reflect.get(globalThis, "sizeNativeEvidence"))
+      .catch(() => undefined);
+    if (evidence) {
+      console.error("[DEBUG-size-native]", JSON.stringify(evidence));
+      await writeFile(
+        `test-results/${packaged ? "packaged" : "development"}-size-native.json`,
+        JSON.stringify(evidence, null, 2),
+      );
+    }
     await app
       ?.windows()[0]
       ?.screenshot({
