@@ -25,12 +25,26 @@ export class DockRuntime {
   private active = false;
   private generation = 0;
   private stopping = false;
+  // Keep the recovery budget across ordinary hide/show, suspend and diagnostic
+  // ownership changes. Only an explicit Retry or sustained fresh callbacks reset it.
+  private silenceRestarts = 0;
+  private silenceRecoveryExhausted = false;
   constructor(
     private readonly changed: (observation: DockObservation | null) => void,
   ) {}
 
+  resetRecoveryBudget() {
+    this.silenceRestarts = 0;
+    this.silenceRecoveryExhausted = false;
+  }
+
   start() {
     this.active = true;
+    if (this.silenceRecoveryExhausted) {
+      this.status = "Dock capture unavailable; Retry Dock interaction";
+      this.changed(null);
+      return;
+    }
     if (this.child) return;
     if (this.restartTimer) return;
     const directory = app.isPackaged
@@ -53,6 +67,9 @@ export class DockRuntime {
     let buffer = "";
     let stderrBytes = 0;
     let permissionBlocked = false;
+    let silentSince: number | undefined;
+    let freshSince: number | undefined;
+    let freshUntil: number | undefined;
     const decoder = new StringDecoder("utf8");
     const primary = screen.getPrimaryDisplay();
     const signature = () => {
@@ -148,6 +165,31 @@ export class DockRuntime {
           permissionBlocked =
             record.reason === "permission_unavailable" ||
             record.reason === "permission_lost";
+          if (record.reason === "callback_silence") {
+            silentSince ??= now;
+            freshSince = undefined;
+            freshUntil = undefined;
+          } else {
+            silentSince = undefined;
+            if (
+              !permissionBlocked &&
+              record.callbackAgeSeconds !== null &&
+              record.callbackAgeSeconds + addedTransportAge <= 0.75
+            ) {
+              // A sparse report cannot cover an unseen gap beyond the previous
+              // callback's freshness deadline, even when each report is fresh.
+              if (freshUntil === undefined || now > freshUntil)
+                freshSince = now;
+              freshUntil =
+                now +
+                (0.75 - record.callbackAgeSeconds - addedTransportAge) * 1000;
+              if (freshSince !== undefined && now - freshSince >= 5000)
+                this.silenceRestarts = 0;
+            } else {
+              freshSince = undefined;
+              freshUntil = undefined;
+            }
+          }
           this.status = observation
             ? "Dock interaction active"
             : permissionBlocked
@@ -192,7 +234,11 @@ export class DockRuntime {
         this.reason = "";
         this.changed(null);
         resolve();
-        if (this.active && (!permissionBlocked || this.stopping)) {
+        if (
+          this.active &&
+          !this.silenceRecoveryExhausted &&
+          (!permissionBlocked || this.stopping)
+        ) {
           const generation = this.generation;
           this.restartTimer = setTimeout(() => {
             this.restartTimer = undefined;
@@ -202,7 +248,7 @@ export class DockRuntime {
       }),
     );
     this.timer = setInterval(() => {
-      if (!this.active || failed) return;
+      if (!this.active || failed || this.stopping) return;
       if (signature() !== initialDisplay) {
         fail("Dock display changed");
       } else if (
@@ -210,6 +256,18 @@ export class DockRuntime {
         (receivedEnvironment ? 1500 : 10000)
       )
         fail("Dock capture heartbeat unavailable");
+      else if (
+        silentSince !== undefined &&
+        performance.now() - silentSince >= 5000
+      ) {
+        if (this.silenceRestarts < 3) {
+          this.silenceRestarts += 1;
+          fail("Dock capture callbacks unavailable; restarting");
+        } else {
+          this.silenceRecoveryExhausted = true;
+          fail("Dock capture unavailable; Retry Dock interaction");
+        }
+      }
     }, 250);
   }
 
