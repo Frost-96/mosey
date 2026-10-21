@@ -6,8 +6,10 @@ import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("autonomous activities stay grounded, yield to interaction and pause without catch-up", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-autonomy-"));
   let app: ElectronApplication | undefined;
@@ -31,9 +33,9 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
     );
     const pet = await app.firstWindow();
     const bounds = () =>
@@ -59,10 +61,38 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
           .getImageData(0, 0, canvas.width, canvas.height);
         return canvas.toDataURL();
       });
+    // networkidle can precede image decode and the first Canvas paint. Start
+    // the full reference cycle only once a substantial upright corgi is visible.
+    await expect
+      .poll(
+        () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            const data = canvas
+              .getContext("2d")!
+              .getImageData(0, 0, canvas.width, canvas.height).data;
+            let opaque = 0,
+              top = canvas.height,
+              bottom = -1;
+            for (let y = 0; y < canvas.height; y++)
+              for (let x = 0; x < canvas.width; x++)
+                if (data[(y * canvas.width + x) * 4 + 3]! >= 128) {
+                  opaque++;
+                  top = Math.min(top, y);
+                  bottom = Math.max(bottom, y);
+                }
+            return opaque > 5000 && (bottom - top + 1) / devicePixelRatio > 180;
+          }),
+        { timeout: 5000, interval: 50 },
+      )
+      .toBe(true);
     const idleFrames = new Set<string>();
+    const observedIdle = new Set<string>();
     const idleUntil = Date.now() + 2200;
     while (Date.now() < idleUntil) {
-      idleFrames.add(await pixels());
+      const painted = await pixels();
+      observedIdle.add(painted);
+      idleFrames.add(painted);
       idleFrames.add(
         await pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -79,6 +109,42 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       );
       await new Promise((resolve) => setTimeout(resolve, 80));
     }
+    expect(observedIdle.size).toBeGreaterThan(1);
+    const references = [];
+    for (const [index, url] of [...idleFrames].entries()) {
+      const buffer = Buffer.from(url.split(",")[1]!, "base64");
+      await writeFile(
+        `test-results/${packaged ? "packaged" : "development"}-autonomy-idle-${index}.png`,
+        buffer,
+      );
+      const image = PNG.sync.read(buffer);
+      let opaque = 0,
+        top = image.height,
+        bottom = -1;
+      for (let y = 0; y < image.height; y++)
+        for (let x = 0; x < image.width; x++)
+          if (image.data[(y * image.width + x) * 4 + 3]! >= 128) {
+            opaque++;
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y);
+          }
+      references.push({
+        index,
+        width: image.width,
+        height: image.height,
+        opaque,
+        top,
+        bottom,
+      });
+    }
+    await writeFile(
+      `test-results/${packaged ? "packaged" : "development"}-autonomy-baseline.json`,
+      JSON.stringify(
+        { observedFrames: observedIdle.size, references },
+        null,
+        2,
+      ),
+    );
     await mkdir("test-results", { recursive: true });
     await app.evaluate(() => {
       Math.random = () => 0.1;
@@ -268,7 +334,12 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     await pet.mouse.down();
     await new Promise((resolve) => setTimeout(resolve, 1400));
     expect(await bounds()).toEqual(held);
-    expect(idleFrames.has(await pixels())).toBe(true);
+    const heldPixels = await pixels();
+    await writeFile(
+      `test-results/${packaged ? "packaged" : "development"}-autonomy-held-canvas.png`,
+      Buffer.from(heldPixels.split(",")[1]!, "base64"),
+    );
+    expect(idleFrames.has(heldPixels)).toBe(true);
     await pet.mouse.up();
     await writeFile(
       `test-results/${packaged ? "packaged" : "development"}-autonomy.json`,
