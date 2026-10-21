@@ -16,8 +16,21 @@ const frame = z.strictObject({
 export const atlasSchema = z
   .strictObject({
     version: z.literal(1),
-    action: z.enum(["resting", "tilt", "paw", "belly"]),
-    image: z.string().regex(/^(idle|tilt|paw|belly)-atlas\.png$/),
+    action: z.enum([
+      "resting",
+      "tilt",
+      "paw",
+      "belly",
+      "dragging",
+      "flutter",
+      "falling",
+      "landing",
+    ]),
+    image: z
+      .string()
+      .regex(
+        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing)-atlas\.png$/,
+      ),
     width: integer.positive(),
     height: integer.positive(),
     pixelRatio: z.literal(2),

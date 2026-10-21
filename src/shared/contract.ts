@@ -1,16 +1,38 @@
 import { z } from "zod";
 export const presentationSchema = z.strictObject({
-  posture: z.enum(["resting", "tilt", "paw", "belly"]),
+  posture: z.enum([
+    "resting",
+    "tilt",
+    "paw",
+    "belly",
+    "dragging",
+    "flutter",
+    "falling",
+    "landing",
+  ]),
   actionId: z.number().int().nonnegative(),
   startedAt: z.number().nonnegative(),
   visibility: z.enum(["visible", "hidden"]),
 });
 export const inputSchema = z.discriminatedUnion("type", [
   z.strictObject({
-    type: z.literal("click"),
+    type: z.literal("press"),
     x: z.number().finite(),
     y: z.number().finite(),
+    screenX: z.number().finite(),
+    screenY: z.number().finite(),
+    gestureId: z.number().int().nonnegative(),
     actionId: z.number().int().nonnegative(),
+  }),
+  z.strictObject({
+    type: z.literal("move"),
+    screenX: z.number().finite(),
+    screenY: z.number().finite(),
+    gestureId: z.number().int().nonnegative(),
+  }),
+  z.strictObject({
+    type: z.enum(["release", "cancel"]),
+    gestureId: z.number().int().nonnegative(),
   }),
   z.strictObject({
     type: z.literal("frame"),
