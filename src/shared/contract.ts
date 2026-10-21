@@ -15,6 +15,7 @@ export const presentationSchema = z.strictObject({
     "flutter",
     "falling",
     "landing",
+    "climbing",
   ]),
   direction: z.enum(["left", "right"]),
   actionId: z.number().int().nonnegative(),

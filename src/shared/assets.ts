@@ -28,11 +28,12 @@ export const atlasSchema = z
       "flutter",
       "falling",
       "landing",
+      "climbing",
     ]),
     image: z
       .string()
       .regex(
-        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing|walking|stretching|playing)-atlas\.png$/,
+        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing|walking|stretching|playing|climbing)-atlas\.png$/,
       ),
     width: integer.positive(),
     height: integer.positive(),
