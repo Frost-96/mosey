@@ -76,7 +76,11 @@ try {
   }
   function requestDraw() {
     frameTimer = 0;
-    if (presentation.visibility === "visible" && !document.hidden)
+    if (
+      presentation.visibility === "visible" &&
+      presentation.frozenAt === undefined &&
+      !document.hidden
+    )
       frameRequest = requestAnimationFrame(draw);
   }
   function draw() {
@@ -89,9 +93,15 @@ try {
       (sum, frame) => sum + frame.durationMs,
       0,
     );
-    const elapsed = Math.max(0, Date.now() - presentation.startedAt);
+    const elapsed = Math.max(
+      0,
+      (presentation.frozenAt ?? Date.now()) - presentation.startedAt,
+    );
     if (atlas.loop === "once" && elapsed >= total) {
-      if (completed !== presentation.actionId) {
+      if (
+        presentation.frozenAt === undefined &&
+        completed !== presentation.actionId
+      ) {
         completed = presentation.actionId;
         window.mosey.input({ type: "done", actionId: completed });
       }
@@ -132,7 +142,11 @@ try {
         previous = key;
       }
     }
-    if (atlas.loop === "once" && elapsed >= total) return;
+    if (
+      presentation.frozenAt !== undefined ||
+      (atlas.loop === "once" && elapsed >= total)
+    )
+      return;
     let boundary = 0;
     for (const frame of atlas.frames) {
       boundary += frame.durationMs;
@@ -155,7 +169,7 @@ try {
       canvas!.releasePointerCapture(current.pointerId);
   }
   canvas.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || gesture) return;
+    if (event.button !== 0 || event.ctrlKey || gesture) return;
     const rect = canvas.getBoundingClientRect();
     gesture = { pointerId: event.pointerId, id: ++nextGesture };
     canvas.setPointerCapture(event.pointerId);
@@ -168,6 +182,18 @@ try {
       y: event.clientY - rect.top,
       screenX: event.screenX,
       screenY: event.screenY,
+    });
+  });
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    if (gesture) return;
+    cancelDrawing();
+    const rect = canvas.getBoundingClientRect();
+    window.mosey.input({
+      type: "context",
+      actionId: presentation.actionId,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
     });
   });
   canvas.addEventListener("pointermove", (event) => {
@@ -189,6 +215,7 @@ try {
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
     if (value.visibility === "hidden") finish("cancel");
+    if (value.frozenAt !== undefined) completed = -1;
     presentation = value;
     cancelDrawing();
     requestDraw();

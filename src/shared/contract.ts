@@ -17,8 +17,15 @@ export const presentationSchema = z.strictObject({
   actionId: z.number().int().nonnegative(),
   startedAt: z.number().nonnegative(),
   visibility: z.enum(["visible", "hidden"]),
+  frozenAt: z.number().nonnegative().optional(),
 });
 export const inputSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("context"),
+    x: z.number().finite(),
+    y: z.number().finite(),
+    actionId: z.number().int().nonnegative(),
+  }),
   z.strictObject({
     type: z.literal("press"),
     x: z.number().finite(),
