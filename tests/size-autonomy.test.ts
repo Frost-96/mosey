@@ -95,6 +95,9 @@ test(
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("load");
+      const displaySession = await pet.context().newCDPSession(pet);
+      const baseRatio = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+      const changedRatio = baseRatio === 2 ? 1 : 2;
       const desktop = () =>
         app!.evaluate(({ BrowserWindow, screen }) => ({
           bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
@@ -139,6 +142,24 @@ test(
           return {
             width: canvas.getBoundingClientRect().width,
             bottom: Math.round((bottom + 1) / devicePixelRatio),
+          };
+        });
+      const raster = () =>
+        pet.evaluate(() => {
+          const canvas = document.querySelector("canvas")!;
+          const data = canvas
+            .getContext("2d")!
+            .getImageData(0, 0, canvas.width, canvas.height).data;
+          let opaque = 0;
+          for (let i = 3; i < data.length; i += 4) if (data[i] > 127) opaque++;
+          const rect = canvas.getBoundingClientRect();
+          return {
+            ratio: devicePixelRatio,
+            width: canvas.width,
+            height: canvas.height,
+            cssWidth: rect.width,
+            cssHeight: rect.height,
+            opaque,
           };
         });
       const grounded = async () => {
@@ -311,6 +332,30 @@ test(
         expect(distance).toBeGreaterThan(140);
         expect(distance).toBeLessThanOrEqual(151);
         await grounded();
+        // A primary-display DPR change can occur while hidden. The first visible
+        // draw must rebuild the backing store without changing CSS/desktop size.
+        await menu("Hide Mosey");
+        await displaySession.send("Emulation.setDeviceMetricsOverride", {
+          width: side,
+          height: side,
+          deviceScaleFactor: changedRatio,
+          mobile: false,
+        });
+        await menu("Show Mosey");
+        await expect.poll(raster, { timeout: 2500 }).toMatchObject({
+          ratio: changedRatio,
+          width: side * changedRatio,
+          height: side * changedRatio,
+          cssWidth: side,
+          cssHeight: side,
+        });
+        const changedRaster = await raster();
+        expect(changedRaster.opaque).toBeGreaterThan(
+          2000 * changedRatio * changedRatio,
+        );
+        await expect.poll(footprint).toEqual({ width: side, bottom: side });
+        await grounded();
+        // The left-facing body/transparent input below runs at the changed DPR.
         // A second left-facing walk distinguishes a mirrored visible-body target
         // from its transparent reflected location, rather than using a symmetric torso.
         await activity(0.1);
@@ -366,6 +411,18 @@ test(
         const clicked = await desktop();
         await new Promise((resolve) => setTimeout(resolve, 500));
         expect((await desktop()).bounds).toEqual(clicked.bounds);
+        await displaySession.send("Emulation.clearDeviceMetricsOverride");
+        await expect.poll(raster, { timeout: 2500 }).toMatchObject({
+          ratio: baseRatio,
+          width: side * baseRatio,
+          height: side * baseRatio,
+          cssWidth: side,
+          cssHeight: side,
+        });
+        const restoredRaster = await raster();
+        expect(restoredRaster.opaque).toBeGreaterThan(
+          2000 * baseRatio * baseRatio,
+        );
         await expect
           .poll(async () => matches(await pixels(), idle.left), {
             timeout: 3000,
@@ -443,6 +500,8 @@ test(
           finished,
           points,
           clicked,
+          changedRaster,
+          restoredRaster,
           actions: ["walking", "stretching", "playing"],
         });
       }
