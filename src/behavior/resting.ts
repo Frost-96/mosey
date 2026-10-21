@@ -32,6 +32,7 @@ export const petBehavior = setup({
       lastClickAt: Date.now(),
     })),
     rest: assign(({ context }) => ({
+      lastClickAt: 0,
       actionId: context.actionId + 1,
       startedAt: Date.now(),
     })),
