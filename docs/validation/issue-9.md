@@ -72,4 +72,13 @@ The native-boundary probes also observed a one-DIP pre-load/first-show adjustmen
 
 All temporary native-method wrappers, navigation logs, debug tags, diagnostic test files and extra workflow runs were removed after the targeted diagnosis. Original failure screenshots and process cleanup remain in the acceptance tests. The exact startup and resized-foot assertions, rendered-pixel checks, one-move active-resize fixture and relaunch readiness remain as regression coverage.
 
-Final full remote CI is still pending at this record; local matrix and human desktop acceptance are not a substitute for it. Final cleaned-test 2x checks are recorded below after execution.
+Final full remote CI is still pending at this record; local matrix and human desktop acceptance are not a substitute for it.
+
+After removing diagnostic scaffolding, `pnpm check` passed and the focused size/visibility suites passed at forced 2x:
+
+| Mode        | Result                  | Duration |
+| ----------- | ----------------------- | -------- |
+| Development | 2 files, 2 tests passed | 45.83 s  |
+| Packaged    | 2 files, 2 tests passed | 40.16 s  |
+
+Commands used `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project development` or `--project packaged` with `tests/size.test.ts tests/visibility.test.ts`. The packaged check used the unchanged user-reviewed bundle; its `app.asar` hash was rechecked as `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`.
