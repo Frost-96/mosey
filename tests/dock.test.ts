@@ -23,6 +23,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
   let stopForge: (() => Promise<void>) | undefined;
   let original: Buffer | undefined;
   let helper = "";
+  let applicationProcess:
+    ReturnType<ElectronApplication["process"]> | undefined;
   const input = path.join(root, "observation.json");
   const publishObservation = async (value: string) => {
     await writeFile(`${input}.next`, value);
@@ -54,12 +56,31 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
           }
         : { args: [".", `--user-data-dir=${root}/profile`] },
     );
+    applicationProcess = app.process();
     const pet = await app.firstWindow();
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
+    await expect
+      .poll(
+        () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            return Array.from(
+              canvas
+                .getContext("2d")!
+                .getImageData(0, 0, canvas.width, canvas.height).data,
+            ).filter((value, index) => index % 4 === 3 && value >= 128).length;
+          }),
+        { timeout: 15000 },
+      )
+      .toBeGreaterThan(5000);
+    const petWindowID = await app.evaluate(
+      ({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.id,
+    );
     const bounds = () =>
-      app!.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.getBounds(),
+      app!.evaluate(
+        ({ BrowserWindow }, id) => BrowserWindow.fromId(id)!.getBounds(),
+        petWindowID,
       );
     const display = await app.evaluate(({ screen }) =>
       screen.getPrimaryDisplay(),
@@ -249,18 +270,35 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         const pixels = canvas
           .getContext("2d")!
           .getImageData(0, 0, canvas.width, canvas.height).data;
-        for (let y = Math.floor(canvas.height * 0.75); y >= 0; y--)
+        let best: { x: number; y: number; distance: number } | undefined;
+        for (
+          let y = Math.floor(canvas.height * 0.4);
+          y < canvas.height * 0.85;
+          y++
+        )
           for (
             let x = Math.floor(canvas.width * 0.35);
             x < canvas.width * 0.65;
             x++
           ) {
-            if (pixels[(y * canvas.width + x) * 4 + 3]! >= 128)
-              return {
-                x: (x / canvas.width) * rect.width,
-                y: (y / canvas.height) * rect.height,
-              };
+            if (
+              ![-6, 0, 6].every((dy) =>
+                [-6, 0, 6].every(
+                  (dx) =>
+                    pixels[((y + dy) * canvas.width + x + dx) * 4 + 3]! >= 200,
+                ),
+              )
+            )
+              continue;
+            const distance =
+              (x - canvas.width * 0.5) ** 2 + (y - canvas.height * 0.65) ** 2;
+            if (!best || distance < best.distance) best = { x, y, distance };
           }
+        if (best)
+          return {
+            x: (best.x / canvas.width) * rect.width,
+            y: (best.y / canvas.height) * rect.height,
+          };
         throw new Error("No opaque body pixel");
       });
     const grab = await bodyPoint();
@@ -280,6 +318,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     const regrab = await bodyPoint();
     await pet.mouse.move(regrab.x, regrab.y);
     await pet.mouse.down();
+    await new Promise((resolve) => setTimeout(resolve, 70));
     const held = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 450));
     expect(await bounds()).toEqual(held);
@@ -333,6 +372,150 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         timeout: 5000,
       })
       .toBe(floor);
+    const children = () =>
+      execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/))
+        .filter(
+          (parts) => parts && Number(parts[2]) === applicationProcess!.pid,
+        )
+        .map((parts) => ({ pid: Number(parts![1]), command: parts![3]! }));
+    const invokeDiagnostic = (label: string) =>
+      app!.evaluate(
+        ({ Menu }, label) =>
+          Menu.getApplicationMenu()!
+            .items.find((i) => i.label === "Dock validation")!
+            .submenu!.items.find((i) => i.label === label)!
+            .click(),
+        label,
+      );
+    // Keep the owned product helper alive but stopped while the user selects
+    // diagnostics then rapidly hides/shows. Capture ownership must be reserved
+    // before its SIGKILL cleanup deadline, not after diagnostic startup.
+    const productChild = children().find((item) =>
+      item.command.endsWith("/dock-runtime"),
+    );
+    expect(productChild).toBeDefined();
+    process.kill(productChild!.pid, "SIGSTOP");
+    const diagnosticWindow = app.waitForEvent("window");
+    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    await invoke("Hide Mosey");
+    await invoke("Show Mosey");
+    const diagnostic = await diagnosticWindow;
+    await diagnostic
+      .getByRole("heading", { name: "Dock validation" })
+      .waitFor();
+    await expect
+      .poll(() => diagnostic.locator("body").innerText(), { timeout: 15000 })
+      .toMatch(
+        /Capturing diagnostic statistics|Blocked: native screen-recording permission unavailable/,
+      );
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+    expect(
+      children().filter((item) => item.command.endsWith("/dock-runtime")),
+    ).toEqual([]);
+    await invokeDiagnostic("Stop Dock validation");
+    await invoke("Retry Dock interaction");
+    await expect
+      .poll(
+        () => children().some((item) => item.command.endsWith("/dock-runtime")),
+        { timeout: 4000 },
+      )
+      .toBe(true);
+    // Accelerate only the known long rest deadline; movement clocks retain real
+    // duration and the native cleanup/diagnostic deadlines remain untouched.
+    await app.evaluate(() => {
+      Math.random = () => 0.1;
+      const original = globalThis.setTimeout;
+      globalThis.setTimeout = ((
+        callback: (...args: unknown[]) => void,
+        delay?: number,
+        ...args: unknown[]
+      ) =>
+        original(
+          callback,
+          delay && delay >= 18000 && delay <= 32000 ? 1000 : delay,
+          ...args,
+        )) as typeof setTimeout;
+    });
+    const noSnapback = async () => {
+      let prior = await bounds();
+      await publishObservation("null");
+      for (let sample = 0; sample < 16; sample++) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        const next = await bounds();
+        expect(Math.abs(next.x - prior.x)).toBeLessThan(20);
+        prior = next;
+      }
+    };
+    for (const orientation of ["left", "right"] as const) {
+      await invoke("Hide Mosey");
+      await invoke("Show Mosey");
+      const start = await bounds();
+      await expect
+        .poll(async () => Math.abs((await bounds()).x - start.x), {
+          timeout: 4000,
+          interval: 20,
+        })
+        .toBeGreaterThan(8);
+      const moving = await bounds();
+      await setDock(
+        orientation,
+        display.bounds.y,
+        display.bounds.y + display.bounds.height,
+        orientation === "left" ? moving.x + 100 : moving.x + moving.width - 100,
+      );
+      await expect
+        .poll(
+          async () =>
+            orientation === "left"
+              ? (await bounds()).x - moving.x
+              : moving.x - (await bounds()).x,
+          { timeout: 1500, interval: 20 },
+        )
+        .toBeGreaterThan(50);
+      await noSnapback();
+    }
+    for (const orientation of ["left", "right"] as const) {
+      await invoke("Hide Mosey");
+      await invoke("Show Mosey");
+      const point = await bodyPoint();
+      await pet.mouse.move(point.x, point.y);
+      await pet.mouse.down();
+      await pet.mouse.move(point.x, point.y - 300);
+      await expect
+        .poll(async () => (await bounds()).y + (await bounds()).height)
+        .toBeLessThan(floor - 250);
+      const elevated = await bounds();
+      await pet.mouse.up();
+      await expect
+        .poll(async () => (await bounds()).y, { interval: 10 })
+        .toBeGreaterThan(elevated.y + 10);
+      const moving = await bounds();
+      await setDock(
+        orientation,
+        display.bounds.y,
+        display.bounds.y + display.bounds.height,
+        orientation === "left" ? moving.x + 100 : moving.x + moving.width - 100,
+      );
+      await expect
+        .poll(
+          async () =>
+            orientation === "left"
+              ? (await bounds()).x - moving.x
+              : moving.x - (await bounds()).x,
+          { timeout: 1000, interval: 10 },
+        )
+        .toBeGreaterThan(50);
+      await noSnapback();
+      await expect
+        .poll(async () => (await bounds()).y + (await bounds()).height, {
+          timeout: 3000,
+        })
+        .toBe(floor);
+    }
     await mkdir("test-results", { recursive: true });
     await writeFile(
       `test-results/${packaged ? "packaged" : "development"}-dock.json`,

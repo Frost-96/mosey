@@ -1,0 +1,74 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+warning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connecting...
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connected.
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connecting...
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connected.
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+warning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connecting...
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connected.
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+warning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connecting...
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+debug [vite] connected.
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+warning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
+ ❯ |development| tests/app.test.ts (2 tests | 1 failed | 1 skipped) 43681ms
+   × a real app displays one animated corgi and quits from its menu 43680ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |development| tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+AssertionError: idle: expected { x: 40, y: 716, width: 240, …(1) } to deeply equal { x: 40, y: 676, width: 240, …(1) }
+
+- Expected
++ Received
+
+  {
+    "height": 240,
+    "width": 240,
+    "x": 40,
+-   "y": 676,
++   "y": 716,
+  }
+
+ ❯ exercisePet tests/app.test.ts:777:40
+    775|       await window.mouse.up();
+    776|       await new Promise((resolve) => setTimeout(resolve, 500));
+    777|       expect(await petBounds(), phase).toEqual(recovered.bounds);
+       |                                        ^
+    778|       expect(idleFrames.has(await pixels()), phase).toBe(true);
+    779|       // New input must still grab the freshly drawn body at its new p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 2 passed | 1 skipped (4)
+   Start at  16:48:06
+   Duration  75.96s (tests 100%)
+

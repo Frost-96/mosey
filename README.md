@@ -72,7 +72,7 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 #14 的独立诊断入口仍保留。#8 现在在宠物可见且系统未暂停时启动单独的产品捕获 helper：已授权则本地分析 Dock 像素，未授权则在 preflight 阻断，不主动弹出权限申请。隐藏、锁屏、休眠和退出停止捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
 
-此诊断入口与 #8 产品捕获独立；启动诊断会先停止产品捕获，避免同时占用捕获资源。诊断结束后可用 **Retry Dock interaction** 恢复产品捕获，也可隐藏后重新显示宠物。产品捕获不可用时清除支撑边缘，不使用固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
+此诊断入口与 #8 产品捕获独立；启动诊断会先停止产品捕获，避免同时占用捕获资源。诊断期间隐藏再显示仍保留诊断捕获的独占意图；**Stop Dock validation** 等待诊断退出后恢复产品捕获，或用 **Retry Dock interaction** 明确切回产品。自然到时结束后可用 Retry 恢复。产品捕获不可用时清除支撑边缘，不使用固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
 
 ## Dock 交互（#8）
 
