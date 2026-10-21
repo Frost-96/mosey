@@ -1,0 +1,20 @@
+{
+  "idleRendererWorkOver1200Ms": {
+    "draws": 3
+  },
+  "hiddenRendererWorkBefore": {
+    "draws": 4
+  },
+  "hiddenRendererWorkAfter": {
+    "draws": 4
+  },
+  "visibilityRestoredInactive": true,
+  "launches": 5,
+  "recovery": [
+    "corrupt-primary",
+    "interrupted-temp",
+    "failed-commit",
+    "both-invalid"
+  ],
+  "preservedSize": "large"
+}
