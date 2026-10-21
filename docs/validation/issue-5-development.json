@@ -1,5 +1,5 @@
 {
-  "rapidGapMs": 50,
+  "rapidGapMs": 49,
   "sleepingFrameCount": 2,
   "menuFrozenForMs": 1200,
   "dragSources": ["sleep", "ear", "waking"],
