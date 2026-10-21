@@ -65,3 +65,19 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 最终修复源码重新执行 `pnpm package:mac` 及 `codesign --verify --deep --strict` 通过；实际候选及哈希见 `issue-8/packaged-review-receipt.json`。最终包完整套件为5文件通过、2文件失败（7/9，201.08秒），见 `packaged-review-full.log`：新增Dock情景2/2通过，大小、自主活动大小组合、显示恢复和可见性通过。原有自主活动测试在抓取保持期间从y416回落到y716；菜单测试拖动未离开y716地面。两者当时实际横坐标均为居中x615，尽管夹具尝试远离物理光标放置，缺少完整事件链，根因未确认，不能据此标为夹具或产品已确认缺陷。
 
 不改源码、夹具、构建或签名，随后仅复跑这两个失败文件，2/2通过（53.12秒，`packaged-review-input-rerun.log`）。这是同一最终二进制的分次覆盖，不宣称一次完整最终套件全绿，也不宣称输入稳定性或物理桌面验收通过。归档的 `packaged-autonomy.json`、`packaged-menu.json` 为这次定向复跑的成功输出；完整运行的原始失败保留在前一日志，未用复跑覆盖。未为未确定根因增加推测性的产品启动或输入修复。
+
+## 集成保留与独立启动交接
+
+最终代码及记录合并到 `integration/issue-8-dock`。同一已测试应用已复制到集成 worktree 的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名验证通过，未重建或重签。实际 asar SHA256为 `5fa938dcdfedac6ceb2672a5ab9f155c49bb3a015d7c2a8204312eacdd0b6efb`，runtime为 `77d78ab0cb47d271f34c13870ec47e6a096d03ea18999290d40fd80f9ebfc640`；详见 `issue-8/frozen-acceptance-provenance.json`。未跟踪测试结果另保留在集成 worktree 的 `test-results/issue-8-implementation/`，不随实现 worktree 归档丢失。
+
+通过 CUA 从 Finder 精确目录选择并打开候选，未观察到新候选进程。只读进程检查发现另一项 #5 工作的独立 Mosey 正在运行，PID47162、父PID1、路径为 `/Users/frost/code/mosey/out/issue-5/Mosey.app`，无自定义 profile 参数。结合两份应用使用默认 Mosey profile 及既有单实例守卫，这是新候选未出现的合理解释；未采集新候选锁返回值，不将其写成启动缺陷或独立权限拒绝的证据。此前直接 CUA 路径绑定超时也只代表工具失败。保留另一项工作的实例，没有停止它或改变系统权限。
+
+继续独立验收需要用户结束旧实例、打开这里保留的候选，并明确授权屏幕录制及必要的临时 Dock／显示设置测试。当前未证明新候选独立授权、拒绝或运行中撤权，不把宿主继承捕获移植为本应用权限。#8 保持 OPEN。
+
+### Standards
+
+复审确认捕获模式交接竞态和重复构建流程已解决，0项未解决代码标准发现；这不代表所有自动化运行无失败。
+
+### Spec
+
+复审确认旧横向原点回弹 P2 已修复，无新增确认的代码问题。真实桌面／独立权限验收 P1 仍待完成。最终完整打包7/9与同产物失败两项复测2/2分别保留；偶发输入失败原因未确认，不宣称最终一次完整全绿。
