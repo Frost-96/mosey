@@ -5,6 +5,10 @@ export const presentationSchema = z.strictObject({
   geometryRevision: z.number().int().nonnegative(),
   posture: z.enum([
     "resting",
+    "sleeping",
+    "ear",
+    "waking",
+    "settling",
     "walking",
     "stretching",
     "playing",
