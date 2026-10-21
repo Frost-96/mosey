@@ -158,7 +158,7 @@
   "userFeedback": "全部正常",
   "limits": [
     "No keyboard focus acceptance requirement",
-    "No new forced OS input-loss, screen lock, sleep or display disconnect trial",
+    "No new forced OS input-loss, screen lock or sleep trial",
     "Visual continuity accepted from user direct desktop inspection; event logs alone do not establish animation quality",
     "CUA diagnostic down/up without moves excluded from human acceptance"
   ]

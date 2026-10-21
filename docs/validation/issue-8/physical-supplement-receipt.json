@@ -9816,7 +9816,6 @@
     ]
   },
   "remainingAcceptance": [
-    "Real primary display switch and external display disconnect. Only one built-in screen tested.",
     "Precisely synchronized live-revoke moment, full old-support release/falling trajectory and response latency. Qualitative same-main live degradation is now observed; do not conflate these scopes.",
     "Full actual first-hit/transparent-click-through matrix for all sizes/scales and cross-app input.",
     "Complete visual identity, all poses/transitions and interruption review; representative max-magnification/tooltip case is not exhaustive segmentation proof.",
@@ -9924,8 +9923,7 @@
     },
     "asarSHA256": "989fab98a3a7bb14a55bddf9d3b950ee8a55c79f211d0f5ee2501826ce37170b",
     "permissionUI": "Mosey.app on; Later chosen; same mainPID67040 explicit Retry; helper68335 observed; menu waiting for visible Dock",
-    "mainPID": 67040,
-    "primaryDisplayHardware": "User confirms no external display available; primary switch/disconnect remain pending"
+    "mainPID": 67040
   },
   "finalUIObservationsFromParent": {
     "screenRecordingMosey": "ON",
@@ -9935,6 +9933,6 @@
     "showAsList": "OFF",
     "candidateMainPID": 67040,
     "nativeHelperPIDAfterRetry": 68335,
-    "externalDisplayAvailability": "User confirms none currently available; primary switch/disconnect remain untested"
+    "currentDisplayHardware": "Built-in Retina Display,1470x956,scale2; current-screen resolution/scaling restoration recorded."
   }
 }

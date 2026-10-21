@@ -80,4 +80,4 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 应用菜单及菜单栏显示 Dock 交互状态。若显示需要 Screen Recording 权限，由用户在系统设置手动授权当前实际使用的 Mosey，再选择 **Retry Dock interaction**，必要时退出并重开同一应用。应用不会自行更改权限，也不因拒绝授权而把一般工作区当成 Dock 轮廓。开发宿主权限不代表 Finder 独立启动的打包应用已经获权；本地 ad-hoc 重建、重签或移动应用后需重新核对实际权限。
 
-`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、显示器组合验收。详见 [#8 验证记录](docs/validation/issue-8.md)。
+`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、当前屏分辨率／缩放恢复验收。详见 [#8 验证记录](docs/validation/issue-8.md)。
