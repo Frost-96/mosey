@@ -1,0 +1,10 @@
+$ vitest run --project packaged
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+
+ Test Files  7 passed (7)
+      Tests  9 passed (9)
+   Start at  16:52:27
+   Duration  213.56s (tests 100%)
+

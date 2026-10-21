@@ -73,6 +73,12 @@ async function start() {
   const quit = () => app.quit();
   let drained = false;
   let quitting = false;
+  let requestedCaptureMode: "product" | "diagnostic" = "product";
+  let captureRevision = 0;
+  const reserveCapture = (mode: "product" | "diagnostic") => {
+    requestedCaptureMode = mode;
+    return ++captureRevision;
+  };
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
     dismissBodyMenu();
@@ -107,11 +113,12 @@ async function start() {
     {
       label: "Retry Dock interaction",
       click: () => {
+        const revision = reserveCapture("product");
         void Promise.all([
           dockRuntime.stop(),
           dockValidation.stop("product Dock interaction requested"),
         ]).then(() => {
-          startDock();
+          if (revision === captureRevision) startDock();
         });
       },
     },
@@ -124,12 +131,28 @@ async function start() {
           ? {
               ...item,
               click: () => {
+                const revision = reserveCapture("diagnostic");
                 void dockRuntime.stop().then(() => {
-                  if (!quitting) return dockValidation.start();
+                  if (
+                    !quitting &&
+                    requestedCaptureMode === "diagnostic" &&
+                    revision === captureRevision
+                  )
+                    return dockValidation.start();
                 });
               },
             }
-          : item,
+          : item.label === "Stop Dock validation"
+            ? {
+                ...item,
+                click: () => {
+                  const revision = reserveCapture("product");
+                  void dockValidation.stop("user stop").then(() => {
+                    if (revision === captureRevision) startDock();
+                  });
+                },
+              }
+            : item,
       ),
     };
     Menu.setApplicationMenu(
@@ -387,6 +410,7 @@ async function start() {
   const startDock = () => {
     if (
       !quitting &&
+      requestedCaptureMode === "product" &&
       visibility === "visible" &&
       !suspended &&
       !dockValidation.running
@@ -715,6 +739,9 @@ async function start() {
         ),
       );
       const started = movementNow();
+      const originFootX = origin.x + origin.width / 2;
+      let previousFootX = originFootX;
+      let avoidanceOffset = 0;
       motion = setInterval(() => {
         if (timeline.pausedAt !== undefined || dockPendingAt !== undefined)
           return;
@@ -731,13 +758,20 @@ async function start() {
         );
         const bounds = pet.getBounds();
         // A size change preserves the moving foot, not the old window corner.
+        // Preserve both corrections applied by this tick and any newer native
+        // contour that moved the window between ticks. Keep the fractional
+        // original path so integer window rounding cannot accumulate drift.
+        avoidanceOffset += bounds.x + bounds.width / 2 - previousFootX;
         const x =
-          origin.x +
-          origin.width / 2 +
+          originFootX +
           (destination - origin.x) * progress -
-          bounds.width / 2;
+          bounds.width / 2 +
+          avoidanceOffset;
         const support = supportAt(x, bounds.y);
         constrain(x + support.shiftX, bounds.y);
+        const moved = pet.getBounds();
+        avoidanceOffset += moved.x - Math.round(x);
+        previousFootX = moved.x + moved.width / 2;
         reconcileDock();
       }, 16);
     } else if (
@@ -797,7 +831,6 @@ async function start() {
       motionAction = id;
       const origin = pet.getBounds();
       const footY = origin.y + origin.height;
-      const footX = origin.x + origin.width / 2;
       const started = movementNow();
       // Initial velocity and acceleration in desktop points, adjustable here.
       motion = setInterval(() => {
@@ -815,17 +848,13 @@ async function start() {
         const bounds = pet.getBounds();
         const y =
           footY - bounds.height + 180 * seconds + 1800 * seconds * seconds;
-        const ground =
-          supportAt(footX - bounds.width / 2, y).footY - bounds.height;
+        const ground = supportAt(bounds.x, y).footY - bounds.height;
         if (ground < bounds.y - 1) {
           behavior.send({ type: "CLIMB" });
           return;
         }
-        const support = supportAt(footX - bounds.width / 2, y);
-        constrain(
-          footX - bounds.width / 2 + support.shiftX,
-          Math.min(y, ground),
-        );
+        const support = supportAt(bounds.x, y);
+        constrain(bounds.x + support.shiftX, Math.min(y, ground));
         if (y >= ground) {
           stopMotion();
           behavior.send({ type: "LANDED", actionId: id });
