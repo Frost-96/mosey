@@ -58,6 +58,8 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         item.click();
       }, label);
     await expect.poll(visible).toBe(true);
+    // Initial Vite dependency optimization may reload the development document.
+    await pet.waitForLoadState("networkidle");
     const pixels = () =>
       pet.evaluate(() => document.querySelector("canvas")!.toDataURL());
     const idleFrames = new Set<string>();
