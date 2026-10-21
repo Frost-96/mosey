@@ -1,0 +1,620 @@
+{
+  "recordedAtUTC": "2026-10-21T11:45:16.255250+00:00",
+  "priorManifest": "physical-local-artifact-manifest.json",
+  "priorManifestSHA256": "5f61c7d813bc714e6ce4348d0de354acc645d5348fb16a58e783ea93e188aa81",
+  "policy": "Supplement only; prior\u226429 image hashes unchanged. No PNG pixels copied or uploaded. Local filenames, sizes and SHA256 only. Sources through48;43/44 desktop cleanup images stay local/integrationout and are not part of this manifest.",
+  "images": [
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/00.png",
+      "bytes": 2173680,
+      "sha256": "caa957c965eb6a8e56d54df2a9cf82a2cd26622f7300f1d4169705c8eabaab38"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/01.png",
+      "bytes": 2174940,
+      "sha256": "2870a803385e837e81814da04fde4168fe0eebb07aade85362809d74c7431ad8"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/02.png",
+      "bytes": 2174985,
+      "sha256": "bdf67493dd6906624c920b05e8f82840958651bbc03b585bcab1283f9397dde9"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/03.png",
+      "bytes": 2238748,
+      "sha256": "918b0640cb19ef354e77caa21d8675e98a5a9318baad4c707f5b5d175b26ff51"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/04.png",
+      "bytes": 2237979,
+      "sha256": "19992acd1dce8b628e94dbe58265debf792c3e22f0439b55fbb78e2beab6ece8"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/05.png",
+      "bytes": 2238875,
+      "sha256": "0fe80fac7eeae5fb96dd2de18973b8adfa32ea3356a6e1a864dc78534db57c46"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/06.png",
+      "bytes": 2240740,
+      "sha256": "96de823bf3e292c292108949acf1f1d1fc69996982dda78ea2c07c7d646e09bb"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/07.png",
+      "bytes": 2241093,
+      "sha256": "22623e07cfe2e4d46cbcee6c1982eb345765a8e87001fc628effdb1df58a2f84"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/08.png",
+      "bytes": 2239811,
+      "sha256": "7bd64ca2a8850f463dbdfa84c6e176cccb2fcf99ed4146b8d72b3523544d70a4"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/09.png",
+      "bytes": 2239370,
+      "sha256": "3164ada9dad646bcc9f8965de877f7367640d87abf54cf7b22b77b02db90ef53"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/10.png",
+      "bytes": 2239889,
+      "sha256": "0cb9596a8b1a2d165b18c7b30b8f0ad51ffae10abb21f17d3cc0d8866ece17be"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/11.png",
+      "bytes": 2240999,
+      "sha256": "f47285f885d1f3056bfb8fac92a21d4d14daa9de0494d1fccfea92ac9d9d92ff"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/12.png",
+      "bytes": 2240095,
+      "sha256": "97d80322e9d7b0e7028b34f357580b10d5086e995528d3c0e9ae8c75d47dea61"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/13.png",
+      "bytes": 2240089,
+      "sha256": "946670121aa55757ea2272b4310597ac66f47290a7f8e9f4d5fb9c228dfe4433"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/14.png",
+      "bytes": 2239250,
+      "sha256": "4826eb7670b37242f1f7caafd08f08a81c3269242f28c97e4dcf7d5bc24d837d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/15.png",
+      "bytes": 2240101,
+      "sha256": "3efe54cedeaa1aae9d346f962277b700d2e1719d980024f5c13591060b8f5391"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/16.png",
+      "bytes": 2241013,
+      "sha256": "a7a3b75cf0c21381abaa9091b134731e0bd83f1a894ab6b674a133b68a66aa87"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/17.png",
+      "bytes": 2240170,
+      "sha256": "16727c92c781ae00ec31dbb16c1b638b0f911011bc4edfac27d7c96f373f7424"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/18.png",
+      "bytes": 2176274,
+      "sha256": "8b756de0170660e1431019459fed10335ef6d85695dbc3e5e49c23b62499632b"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/19.png",
+      "bytes": 2176877,
+      "sha256": "627447dc187be20724dbf1a62c81de9f1c58652e6f7d893a7f75c3986126b9c8"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/20.png",
+      "bytes": 2177998,
+      "sha256": "227a40d8010fe67f06136e722dae684f74dd2ee4a6315acc0abe6b67c8e81501"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/21.png",
+      "bytes": 2177047,
+      "sha256": "331245e51f59ed3bbd74ceb43f1d5a4c1aa3b6990daa4e1336087679fa61a31e"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/22.png",
+      "bytes": 2176279,
+      "sha256": "1da3bfcc707f12ce958b5e52df9f62bcba6a6b2791d653672ba224a63c57b43c"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/23.png",
+      "bytes": 2176930,
+      "sha256": "69c2122c6bf74b00a3713bd5788e79a61d0c3f3554aaa6ed606d142b00596c6f"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/00.png",
+      "bytes": 1215409,
+      "sha256": "9b0d15ac2cafd61a84cadc2c1a4ff99ca2d2701f5b257ee6d78d11ab89c56938"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/01.png",
+      "bytes": 1218771,
+      "sha256": "df45ab821b1f92fb3fd80563520c1b507f7ab851d003d9978d2e5a07d1e30678"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/02.png",
+      "bytes": 1222881,
+      "sha256": "8dd6864f6b0efea0d041652d109a4c4ccc29e2348a74422ae0914b12d277a910"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/03.png",
+      "bytes": 1428274,
+      "sha256": "9697e6737492ee264c71d6a91b41e2574b763a9273b9279cc366835e4baf85fc"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/04.png",
+      "bytes": 1454391,
+      "sha256": "da9eb4aa02aa9ae1b140d7b9b43ccada7ef24e8b116771626480a07764b0d622"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/05.png",
+      "bytes": 1478214,
+      "sha256": "4abfdd30cb486d99dc734d736e80280ad3be4aa27d273ecedfa6c4c429c39fd9"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/06.png",
+      "bytes": 1524813,
+      "sha256": "bc1afdf67742e36c0857c9e96039fa5bc6462523cdde8317cea5334be77315f2"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/07.png",
+      "bytes": 1528334,
+      "sha256": "52c132cd7feea8335daedf2d551de13ae4fd6ab501c16643fccf3da22afc4a20"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/08.png",
+      "bytes": 1515265,
+      "sha256": "9e8ff55dc8a1684a0025c8fef54eabe740f4ecb51f4bd11fd3317383322d86f0"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/09.png",
+      "bytes": 1532724,
+      "sha256": "9a24d35a28d0a0a6b4bf821724397f06d86c753ae0fead0844bfc8dd63c4c40b"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/10.png",
+      "bytes": 1515229,
+      "sha256": "8992102c445df8643aa5db69cc99e414c0c3e232451fc62e7ce86ba778f4fc0f"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/11.png",
+      "bytes": 1525145,
+      "sha256": "f43fa245cb455e93d93554b4443fb3fe9f034c166581f2065ae47f0c592c586e"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/12.png",
+      "bytes": 1515103,
+      "sha256": "34663e84f4ce7aa877f7cf6e7f98ac5860d1d7bc5ddd703fcf6d5c222c932176"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/13.png",
+      "bytes": 1519608,
+      "sha256": "7892f192ec01d7835833144f5431ecc0ef8aee5fe9075e7b134b410ee4ba7058"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/14.png",
+      "bytes": 1515503,
+      "sha256": "a5d910ffe4c11e907cb905792ac613f7e36de918f99a087dc0ab4bafb5618066"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/15.png",
+      "bytes": 1528237,
+      "sha256": "d27a7026f9f8e4515b06adfc448a82e6e57e79580c38f4edc2d8e226fa80f579"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/16.png",
+      "bytes": 1524632,
+      "sha256": "fd810f2fea80bae3ca1fe9513ebd9767955822ed6daf4d0ab88c6518fadfbd1d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/17.png",
+      "bytes": 1528336,
+      "sha256": "913a8231a222c45483559359236e949c5dbd7d53375093c56b09bcd454d12426"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/18.png",
+      "bytes": 1187675,
+      "sha256": "2491edc519bb4bc8c299a1ea567638b23579f6d981ef16aad99de8a551c8b504"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/19.png",
+      "bytes": 1216815,
+      "sha256": "a93b55f86b37e473779d187f985aa87982cc0cd297557f1de84874ddef75bc4d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/20.png",
+      "bytes": 1207081,
+      "sha256": "083f9a9286331542789c2d1ee4bb9eb220cd866eb87fb9c2b4fbf4b0ce07aaff"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/21.png",
+      "bytes": 1207325,
+      "sha256": "1c197bfdd0ec67427a3fbec56606fbbf4302cd14958bba39dfdab5d59a5dcdeb"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/22.png",
+      "bytes": 1212199,
+      "sha256": "82af3e92fdc53bc600d097f6ab14d910ba4e3ea6bcb94266b85af1e1007d9912"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/23.png",
+      "bytes": 1219813,
+      "sha256": "d7ed3d592f16b5d9b13b2e3d1650474ad194b55f4aaa52e8184c7a35584b1472"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/36-restored-desktop.png",
+      "bytes": 1219955,
+      "sha256": "f2343120d4aa23b452fd9881ae466c6165dafc53f2b00ee28b0c7565003480a5"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/37-menu-expanded.png",
+      "bytes": 1342832,
+      "sha256": "137de99878b5d7eb7f3dfb4e4f30e53276720ff5ff51427ad6ae978c102aee89"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/00.png",
+      "bytes": 1262717,
+      "sha256": "c8e722bf84bab9c4b3eddfe6b85d1dda0f16965f5e154e81d9c80ed013f3daba"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/01.png",
+      "bytes": 1279874,
+      "sha256": "80e3a691f13360356c527bb7ab90d4c759ee7d467e065a1bffdbe4101345c951"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/02.png",
+      "bytes": 1263157,
+      "sha256": "1a946c737773cdbdafa24ec4681dad9e3510f886769c1a78a41c8f850db6fd39"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/03.png",
+      "bytes": 1469163,
+      "sha256": "47d7babdc354d60376e17d649e297e2995d478df83035fc51e0e2ab8b84e87f0"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/04.png",
+      "bytes": 1516959,
+      "sha256": "879107a1cb6bd9db93b19a544bab866fc346edc39b620a0508afb61fc568b0b7"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/05.png",
+      "bytes": 1556053,
+      "sha256": "28c247627719394ed605b122a79a27af1eaab04c8154bc87937b9d9bb3fa2bc0"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/06.png",
+      "bytes": 1572183,
+      "sha256": "871ebf939479199b3ac06a43e07001be8d7de8891d076b7d7d2dc94bac063b72"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/07.png",
+      "bytes": 1563238,
+      "sha256": "5015c0a7d38c52fa67d871c4d9e34edfd83ca0004cd167b68d1cb01efcd04170"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/08.png",
+      "bytes": 1566676,
+      "sha256": "ac3c691d86429f44af44647321e31daee8c373082d94389f724cedf795a000ac"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/09.png",
+      "bytes": 1563408,
+      "sha256": "84146bfe0637133e003eaaa410778292fa3be5d12e2d2948733289e64ea33d95"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/10.png",
+      "bytes": 1561046,
+      "sha256": "4dd6b9e64b276024b251929b594db387f1f010a1949fa3b2a67fcb686362ffe2"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/11.png",
+      "bytes": 1560428,
+      "sha256": "09c119f12f5adb15176fd06e1d875b259b1040e63f78d7ea425919efb19da86e"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/12.png",
+      "bytes": 1576132,
+      "sha256": "705ca0b3425a2c4d9a13a08e38a212f8c56ad31f8894e63f2c71a8dcbf11f897"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/13.png",
+      "bytes": 1566415,
+      "sha256": "545e7854a784532e01bed25a30abc6ef78f075c85b427ad73cef97cc7455b3be"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/14.png",
+      "bytes": 1563540,
+      "sha256": "9718919b784d3d854e7964d23cf3c6c1f14a4cc75c42d815b5bdc3c45c2a6ec4"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/15.png",
+      "bytes": 1543344,
+      "sha256": "ba95fb85e4be707c9da40e8de445160340c2e33717ef988721c4f5f8b25993b1"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/16.png",
+      "bytes": 1546621,
+      "sha256": "61f4fff9b77cd8d07ea05b08d523fe922799d38f71eff1eae6136c3709319155"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/17.png",
+      "bytes": 1563615,
+      "sha256": "b705aad2d1aa2470586374399caeb633c90e208440056b02d7feac08356beb0a"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/18.png",
+      "bytes": 1225459,
+      "sha256": "38d687c0af5b7e0458cc727ebdfce1a52c01902c24d90e4993426e764b052020"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/19.png",
+      "bytes": 1253440,
+      "sha256": "629e4ffc8d13ee3d6c676650785a3575ce776988c1d451ed22433104bd26311c"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/20.png",
+      "bytes": 1253539,
+      "sha256": "c8091e8d61457973accb1d2aa32d3bb5c1590c69a4b2ece4f0e7052a595fd1b7"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/21.png",
+      "bytes": 1243817,
+      "sha256": "5301c0f17e04e3923ac6774ec0a7f20af93724759da76ae100aa2f84cdb614d5"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/22.png",
+      "bytes": 1261537,
+      "sha256": "2d973b82e76f34eaafef753a002d884fb0bc8f3ecefdfa3d37f7298549b26fd8"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/23.png",
+      "bytes": 1257494,
+      "sha256": "69834b07c8cf6930b188a9ccaec8e66b19a1719047acbce61c48a87110347c8f"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/00.png",
+      "bytes": 1182507,
+      "sha256": "2e6b618382bb8f30d32db12e89c9532818b3f2dc12d3a7e2f74f4dfe38374ed4"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/01.png",
+      "bytes": 1201003,
+      "sha256": "ee0138bd1e80ae164a4af6779769606ecafc6fbd5347f10752aeaff77c3588ab"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/02.png",
+      "bytes": 1188821,
+      "sha256": "4f4f6374a5a89ac03c2d5980d357c58d5ef5ea2b78e8d79701ef15cf630c86d3"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/03.png",
+      "bytes": 1526542,
+      "sha256": "31feeecfa0f8953d60c9f3934c1d1511fbf717964c6445ac88928030caebfbb2"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/04.png",
+      "bytes": 1571193,
+      "sha256": "ad2d9a6fe3d69a240042ef81f74aa4c856e9a6802c39221e0604ee3cdb1d6e96"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/05.png",
+      "bytes": 1613621,
+      "sha256": "ea8b60c7d42b67229471d40cf09d9c7fdef96b779bc880ab4ecac81bbab58599"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/06.png",
+      "bytes": 1655866,
+      "sha256": "5b183560f3be67084edfe485f98d588182ae90268a6e502ff00048d072798420"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/07.png",
+      "bytes": 1669360,
+      "sha256": "0b3eb7b75cc5190e0315aab0e57e9ef5a0a38730081250bb5cbb53b8375c0923"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/08.png",
+      "bytes": 1672162,
+      "sha256": "48258eee3cb1d13cb7a0e14ab13c4f50a320ae2b82942e2017cfa9d524212b17"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/09.png",
+      "bytes": 1663038,
+      "sha256": "d964dcfbac982748efdf9915311b39354620e9d28462ad37269196f2703abe81"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/10.png",
+      "bytes": 1659323,
+      "sha256": "4fa15e2c6b14d0765491d3c2e0a3295aa1544cb711b7f5c95875db30f1eaff50"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/11.png",
+      "bytes": 1655833,
+      "sha256": "80a54fc0b7c63865d0bd688ef74b71862bfd4304873dee626556cc25fd07994d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/12.png",
+      "bytes": 1672020,
+      "sha256": "fddc024c7017d7db414a58b2b38c5556a108d92c3e86bd07403da57fdacc2939"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/13.png",
+      "bytes": 1674965,
+      "sha256": "593ceca3a99df757ff4fc73ad55b255d24cacf4da7395b98f09dc777adc116b3"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/14.png",
+      "bytes": 1659105,
+      "sha256": "edf189b5579932c76ddb4db48df89cf8b8d2c46e35f1607ce58c49ca154cfeaa"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/15.png",
+      "bytes": 1672519,
+      "sha256": "2826f94a4c90c3a539701f1752cd487145a420f85c756172b9a9e146b993a2fb"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/16.png",
+      "bytes": 1669684,
+      "sha256": "3070448b784dea77e61365dc304a44682d1853fabc409784367384ad184e918d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/17.png",
+      "bytes": 1672006,
+      "sha256": "95b21bc9abef7eed7cd7b8cd14df35698da6120449d9c8d8962c88324962ffc9"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/18.png",
+      "bytes": 1163989,
+      "sha256": "847b3d7f267597406f60c179b7d1fc0393743a57ab4cedbca72d92d9c9b1df60"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/19.png",
+      "bytes": 1197305,
+      "sha256": "e3cf691cf1a29a167c18e0cdbf2afec65e789dba064af83fa2922ab25faa923f"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/20.png",
+      "bytes": 1182241,
+      "sha256": "78f1188928a23efa3443baf02233e9b3b1a1643de3354a7ade15d48968d4e949"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/21.png",
+      "bytes": 1186088,
+      "sha256": "9604b05f78eb731067b116ec559c0b8f9faf57c1aa6060b49966cf7cd680c5f2"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/22.png",
+      "bytes": 1190948,
+      "sha256": "3ac9dfe73c532892643de3d7feac48d88fba431894e8534886e941b8526d183e"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/23.png",
+      "bytes": 1200239,
+      "sha256": "fd6157d3ee4997f920e2ee16d77eefdb78e70e2b8a57fbd8d383b6f09e2aa3f3"
+    }
+  ],
+  "newNumericAndProcessSources": [
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/events.json",
+      "bytes": 311,
+      "sha256": "1edaed2bf4b61b8a1b1d8a677a675021efe9d7305e8cbd767d35ac1c6632d847"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/30-right-1x-nonoverlap/positions.jsonl",
+      "bytes": 55344,
+      "sha256": "7c062157f3cb0354c5e13dea0477b3c109e6658ab1db236daa46399f9448cf74"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/31-before-revoke.jsonl",
+      "bytes": 551,
+      "sha256": "c0804036b816e877d3a7b3f540beaad5334fd23ace29d465bdeb07b5d6fec21f"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/32-after-revoke.jsonl",
+      "bytes": 353,
+      "sha256": "0e233e8fb99949e9408093ad11d12b40a4e5b0b88e77b4d142274283152518c0"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/33-denied-processes.txt",
+      "bytes": 115,
+      "sha256": "63bca0c3b66a64d8e0598f8419004cd1917cc6e7f4356b1532b5abc9c21d468a"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/33-denied-relaunch.jsonl",
+      "bytes": 353,
+      "sha256": "a8095a489aae2ee7be799c0170ac8869881c36a418a17cca50805a8ab031257e"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/34-regrant-retry.jsonl",
+      "bytes": 353,
+      "sha256": "fdb312ca81be6ef5b64b3026f88febac1ec55562cb06c5e00a30e62b89659d17"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/events.json",
+      "bytes": 307,
+      "sha256": "61cd77776c8524246780959c20e4bd94568b8be662e0ae0ae725f9a049f80d68"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/35-regrant-bottom-2x/positions.jsonl",
+      "bytes": 35462,
+      "sha256": "19894369728d026884dc73e1a68a03c81383228195c6253b05bb87933523645c"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/events.json",
+      "bytes": 305,
+      "sha256": "217e05d6c917073e45499c40d7a9d1919550cda2849d5959ac8b824b96fe1a7d"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/38-regrant-medium-2x/positions.jsonl",
+      "bytes": 35444,
+      "sha256": "0bf7b246f5b02d221339dcf8b106a9ee271404b3a884676c8d6e9a670138649a"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/39-live-revoke.jsonl",
+      "bytes": 70921,
+      "sha256": "c123c3cd01fc4bca885862ae5fc7d5916d6f7a3060ce51176cf062f74ef58be9"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/events.json",
+      "bytes": 308,
+      "sha256": "058d9ddaedb192f77e562cacbfbd3ae635608b4e6bafb303b93d53e6adc26751"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/40-max-magnification-medium/positions.jsonl",
+      "bytes": 35468,
+      "sha256": "26a572e6c400ba75913a1c8be665e070a10e48259dd2b1b40e189c41b5997622"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/41-process-resource-sample.jsonl",
+      "bytes": 34869,
+      "sha256": "ad0abddc13276c4ed41fb0ff8a39dacd2ef23a835934f68497798c41b9a6f911"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/42-final-restoration.json",
+      "bytes": 971,
+      "sha256": "62e86cd879e0e03e050b2fc1c03f21fd250b4650d618e751fdbde28cfc2fa4fc"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/42-final-state.jsonl",
+      "bytes": 351,
+      "sha256": "2694512f57cd4e511ec230611872dbd1312133e3edf3b2fd20aafdb2ee9ca047"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/45-before-live-revoke.jsonl",
+      "bytes": 10629,
+      "sha256": "0474c3aeb9bfd2c6ffa5ccbee3dea2d64bf917063aa529af3f9bebccd19dcb96"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/46-live-off-later.jsonl",
+      "bytes": 14226,
+      "sha256": "7c05dd025615d28592a8d1d4c4739d9ba4ba9c72c0a0a7dcd46561082c3fd0e2"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/46-live-off-processes.txt",
+      "bytes": 115,
+      "sha256": "63bca0c3b66a64d8e0598f8419004cd1917cc6e7f4356b1532b5abc9c21d468a"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/47-recovered-processes.txt",
+      "bytes": 248,
+      "sha256": "2791fa93987640a8cde2af71787249f0228da688d34c1b7a3d1ee79f452eaa01"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/47-recovered.jsonl",
+      "bytes": 356,
+      "sha256": "1aee6a3f5d96282da1c16078bc9751947a1cd2244e7d552e921b1a4df243c354"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/48-final-restoration.json",
+      "bytes": 1244,
+      "sha256": "93917e803d20866298c989d5020574068935b78225ae6784f5cea5f812969872"
+    },
+    {
+      "path": "/tmp/mosey-issue-8/physical/48-final-state.jsonl",
+      "bytes": 352,
+      "sha256": "26e4bffb5db426158213ed330b4da9b79d449417fd6707467ebb75152dde2bdc"
+    }
+  ]
+}

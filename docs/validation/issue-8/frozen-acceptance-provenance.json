@@ -29,7 +29,7 @@
   },
   "integrationCodeCommit": "92fca85a7ae4508a10c72a1dccb8fd6d025c2b23",
   "copiedFrom": "/Users/frost/.codex/worktrees/ticket-8-dock/mosey/out/Mosey-darwin-arm64/Mosey.app",
-  "independentLaunch": "Parent observed exact frozen candidate via Finder/LaunchServices, mainPID63694 parentPID1. Detailed clean-record permission/revocation and restoration receipt remains pending; do not inherit prior#14 authorization.",
+  "independentLaunch": "Exact candidate Finder/LaunchServices63694 parent1 captured after authorized scoped record reset/manual grant. Exact relaunch67040 denied while OFF; regrant+Later+Retry recovered. Later same main67040 continued through authenticated live OFF+Later with helper gone/menu needing permission and ground fallback observed; precise revocation timing/trajectory unmeasured. Final ON+Later+Retry helper68335 and restoration48 recorded. See physical-supplement-receipt.json.",
   "supersedes": "obsolete-5fa938dc-frozen-provenance.json",
   "ciRun": "https://github.com/Frost-96/mosey/actions/runs/39584805811",
   "ciStatusAtFreeze": "completed: development passed; packaged8passed1failed (autonomy Hide Mosey menu lookup after suspend/resume)",
@@ -67,5 +67,19 @@
     "observedMainPID": 63694,
     "launchParentPID": 1,
     "scope": "Parent-controlled actual CGEvent/native tray, Dock hover and one built-in display2x/1x scenarios through29. Independent permission history/revocation/restoration and final acceptance receipt pending. Physical images are local-only by explicit user instruction."
+  },
+  "physicalEvidenceSupplement": {
+    "receipt": "physical-supplement-receipt.json",
+    "numericPetPositions": "physical-supplement-pet-positions.jsonl",
+    "localImageHashSupplement": "physical-local-artifact-manifest-supplement.json",
+    "candidateBytesUnchanged": true,
+    "issueStatus": "OPEN",
+    "limitations": "Issue OPEN: external/primary display changes unavailable; precise live revoke trajectory/latency, complete hit/transparent input matrix, full visual review and long-run resource budgets remain pending.",
+    "lastDocumentedMainPID": 67040,
+    "screenRecordingSettingAt42": "ON",
+    "restorationSnapshotAt42Recorded": true,
+    "finalScreenRecordingSetting": "ON",
+    "finalRestorationRecorded": "48-final-restoration.json",
+    "sameMainLiveRevokeQualitativeObserved": true
   }
 }
