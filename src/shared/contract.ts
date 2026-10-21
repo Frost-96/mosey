@@ -1,5 +1,8 @@
 import { z } from "zod";
+import { petSizeSchema } from "./size";
 export const presentationSchema = z.strictObject({
+  size: petSizeSchema,
+  geometryRevision: z.number().int().nonnegative(),
   posture: z.enum([
     "resting",
     "tilt",
@@ -17,6 +20,7 @@ export const presentationSchema = z.strictObject({
 export const inputSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("press"),
+    geometryRevision: z.number().int().nonnegative(),
     x: z.number().finite(),
     y: z.number().finite(),
     screenX: z.number().finite(),
@@ -36,6 +40,7 @@ export const inputSchema = z.discriminatedUnion("type", [
   }),
   z.strictObject({
     type: z.literal("frame"),
+    geometryRevision: z.number().int().nonnegative(),
     frame: z.number().int().nonnegative(),
     actionId: z.number().int().nonnegative(),
   }),
