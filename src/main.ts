@@ -1,3 +1,6 @@
+import walking from "./assets/generated/walking-atlas.json";
+import stretching from "./assets/generated/stretching-atlas.json";
+import playing from "./assets/generated/playing-atlas.json";
 import {
   app,
   BrowserWindow,
@@ -13,7 +16,7 @@ import { PreferencesStore } from "./platform/preferences";
 import { DockValidation } from "./platform/dock-validation";
 import log from "electron-log/main";
 import { createActor } from "xstate";
-import { petBehavior } from "./behavior/resting";
+import { petBehavior, autonomy } from "./behavior/resting";
 import {
   assetErrorSchema,
   channels,
@@ -42,6 +45,7 @@ async function start() {
   // Retain the native tray for the entire application lifetime.
   const behavior = createActor(petBehavior).start();
   let visibility: Presentation["visibility"] = "hidden";
+  let suspended = false;
   log.transports.file.maxSize = 1024 * 1024;
   log.transports.console.level = false;
   log.transports.ipc.level = false;
@@ -167,6 +171,9 @@ async function start() {
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
     idle,
+    walking,
+    stretching,
+    playing,
     tilt,
     paw,
     belly,
@@ -219,7 +226,9 @@ async function start() {
   const cancelInteraction = () => {
     gesture = undefined;
     stopMotion();
-    behavior.send({ type: "CANCEL" });
+    behavior.send({
+      type: visibility === "visible" && !suspended ? "CANCEL" : "PAUSE",
+    });
     if (!pet.isDestroyed()) alignGround();
   };
   const release = (cancelled: boolean) => {
@@ -227,13 +236,22 @@ async function start() {
     const dragged = gesture.dragged;
     gesture = undefined;
     if (dragged) behavior.send({ type: "RELEASE" });
-    else if (!cancelled) behavior.send({ type: "CLICK" });
+    else {
+      if (
+        behavior.getSnapshot().value === "paused" &&
+        visibility === "visible" &&
+        !suspended
+      )
+        behavior.send({ type: "RESUME" });
+      if (!cancelled) behavior.send({ type: "CLICK" });
+    }
   };
   let displayed:
     | {
         actionId: number;
         frame: number;
         posture: Presentation["posture"];
+        direction: Presentation["direction"];
       }
     | undefined;
   let ignoring = true;
@@ -247,7 +265,10 @@ async function start() {
     if (!frame || !atlas) return false;
     const geometry = petGeometry(preferences.size);
     const localX = Math.floor(
-      ((x - geometry.foot.x) / geometry.assetScale) * atlas.pixelRatio +
+      (((visible.direction === "left" ? geometry.side - x : x) -
+        geometry.foot.x) /
+        geometry.assetScale) *
+        atlas.pixelRatio +
         frame.foot.x,
     );
     const localY = Math.floor(
@@ -285,10 +306,14 @@ async function start() {
   pet.on("closed", stopPointerPolling);
   const presentation = () =>
     presentationSchema.parse({
-      posture: behavior.getSnapshot().value,
+      posture:
+        behavior.getSnapshot().value === "paused"
+          ? "resting"
+          : behavior.getSnapshot().value,
+      direction: behavior.getSnapshot().context.direction,
       actionId: behavior.getSnapshot().context.actionId,
       startedAt: behavior.getSnapshot().context.startedAt,
-      visibility,
+      visibility: suspended ? "hidden" : visibility,
       size: preferences.size,
       geometryRevision,
     });
@@ -303,7 +328,7 @@ async function start() {
     return presentation();
   });
   ipcMain.on(channels.input, (event, value: unknown) => {
-    if (!authorized(event) || visibility !== "visible") return;
+    if (!authorized(event) || visibility !== "visible" || suspended) return;
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
@@ -350,10 +375,19 @@ async function start() {
         actionId: input.actionId,
         frame: input.frame,
         posture: atlas.action,
+        direction: behavior.getSnapshot().context.direction,
       };
       routePointer();
     } else if (input.type === "press") {
       if (gesture || !hit(input.x, input.y)) return;
+      if (
+        ["walking", "stretching", "playing"].includes(
+          String(behavior.getSnapshot().value),
+        )
+      ) {
+        stopMotion();
+        behavior.send({ type: "CANCEL" });
+      }
       const bounds = pet.getBounds();
       const returning = ["flutter", "falling", "landing"].includes(
         String(behavior.getSnapshot().value),
@@ -369,6 +403,8 @@ async function start() {
       if (returning) {
         stopMotion();
         behavior.send({ type: "DRAG_START" });
+      } else if (behavior.getSnapshot().value === "resting") {
+        behavior.send({ type: "PAUSE" });
       }
       routePointer();
     } else behavior.send({ type: "DONE", actionId: input.actionId });
@@ -409,9 +445,72 @@ async function start() {
     refreshMenus();
   };
   behavior.subscribe((snapshot) => {
+    if (snapshot.value === "resting" && gesture) {
+      behavior.send({ type: "PAUSE" });
+      return;
+    }
     // Rendering chooses poses by time. Only the main process moves the window.
-    if (snapshot.value !== "falling") stopMotion();
-    else if (motionAction !== snapshot.context.actionId) {
+    if (
+      snapshot.value === "walking" &&
+      motionAction !== snapshot.context.actionId
+    ) {
+      stopMotion();
+      const id = snapshot.context.actionId;
+      motionAction = id;
+      alignGround();
+      const origin = pet.getBounds();
+      const area = screen.getPrimaryDisplay().workArea;
+      let direction = snapshot.context.direction === "left" ? -1 : 1;
+      // At an edge, use the available direction instead of walking in place.
+      if (
+        origin.x + direction * autonomy.walkDistance < area.x ||
+        origin.x + direction * autonomy.walkDistance >
+          area.x + area.width - origin.width
+      )
+        direction *= -1;
+      if ((direction < 0 ? "left" : "right") !== snapshot.context.direction) {
+        behavior.send({
+          type: "FACE",
+          direction: direction < 0 ? "left" : "right",
+        });
+      }
+      const destination = Math.max(
+        area.x,
+        Math.min(
+          origin.x + direction * autonomy.walkDistance,
+          area.x + Math.max(0, area.width - origin.width),
+        ),
+      );
+      const started = performance.now();
+      motion = setInterval(() => {
+        if (
+          pet.isDestroyed() ||
+          gesture ||
+          visibility !== "visible" ||
+          behavior.getSnapshot().context.actionId !== id
+        )
+          return stopMotion();
+        const progress = Math.min(
+          1,
+          (performance.now() - started) / autonomy.walkMs,
+        );
+        const bounds = pet.getBounds();
+        const area = screen.getPrimaryDisplay().workArea;
+        // A size change preserves the moving foot, not the old window corner.
+        constrain(
+          origin.x +
+            origin.width / 2 +
+            (destination - origin.x) * progress -
+            bounds.width / 2,
+          area.y + area.height - bounds.height,
+        );
+      }, 16);
+    } else if (snapshot.value !== "falling" && snapshot.value !== "walking")
+      stopMotion();
+    else if (
+      snapshot.value === "falling" &&
+      motionAction !== snapshot.context.actionId
+    ) {
       stopMotion();
       const id = snapshot.context.actionId;
       motionAction = id;
@@ -444,8 +543,22 @@ async function start() {
     }
     publish();
   });
-  powerMonitor.on("suspend", cancelInteraction);
-  powerMonitor.on("lock-screen", cancelInteraction);
+  const pause = () => {
+    suspended = true;
+    stopPointerPolling();
+    cancelInteraction();
+    behavior.send({ type: "PAUSE" });
+  };
+  const resume = () => {
+    suspended = false;
+    alignGround();
+    startPointerPolling();
+    if (visibility === "visible") behavior.send({ type: "RESUME" });
+  };
+  powerMonitor.on("suspend", pause);
+  powerMonitor.on("lock-screen", pause);
+  powerMonitor.on("resume", resume);
+  powerMonitor.on("unlock-screen", resume);
   screen.on("display-metrics-changed", cancelInteraction);
   screen.on("display-added", cancelInteraction);
   screen.on("display-removed", cancelInteraction);
@@ -457,8 +570,10 @@ async function start() {
   pet.on("closed", () => {
     gesture = undefined;
     stopMotion();
-    powerMonitor.off("suspend", cancelInteraction);
-    powerMonitor.off("lock-screen", cancelInteraction);
+    powerMonitor.off("suspend", pause);
+    powerMonitor.off("resume", resume);
+    powerMonitor.off("unlock-screen", resume);
+    powerMonitor.off("lock-screen", pause);
     screen.off("display-metrics-changed", cancelInteraction);
     screen.off("display-added", cancelInteraction);
     screen.off("display-removed", cancelInteraction);
@@ -472,7 +587,8 @@ async function start() {
       return;
     }
     visibility = "visible";
-    startPointerPolling();
+    behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
+    if (!suspended) startPointerPolling();
     publish();
   });
   pet.on("hide", () => {
@@ -483,6 +599,7 @@ async function start() {
     ignoring = true;
     displayed = undefined;
     cancelInteraction();
+    behavior.send({ type: "PAUSE" });
     publish();
   });
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL

@@ -79,6 +79,47 @@ await writeFile(
 // Pose -1 uses the exact idle pixels for a seamless return to rest.
 const actionConfigs = [
   {
+    action: "walking",
+    source: "walk",
+    loop: "repeat",
+    sequence: [
+      [0, 150],
+      [1, 150],
+      [2, 150],
+      [3, 150],
+    ],
+  },
+  {
+    action: "stretching",
+    source: "stretch",
+    loop: "once",
+    sequence: [
+      [-1, 180],
+      [0, 180],
+      [1, 240],
+      [2, 700],
+      [3, 240],
+      [0, 180],
+      [-1, 180],
+    ],
+  },
+  {
+    action: "playing",
+    source: "play",
+    loop: "once",
+    sequence: [
+      [-1, 160],
+      [0, 180],
+      [1, 180],
+      [2, 240],
+      [3, 300],
+      [2, 180],
+      [1, 180],
+      [0, 180],
+      [-1, 160],
+    ],
+  },
+  {
     action: "tilt",
     source: "tilt",
     loop: "once",

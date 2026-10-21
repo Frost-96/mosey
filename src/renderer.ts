@@ -1,3 +1,9 @@
+import walkingUrl from "./assets/generated/walking-atlas.png";
+import walking from "./assets/generated/walking-atlas.json";
+import stretchingUrl from "./assets/generated/stretching-atlas.png";
+import stretching from "./assets/generated/stretching-atlas.json";
+import playingUrl from "./assets/generated/playing-atlas.png";
+import playing from "./assets/generated/playing-atlas.json";
 import idleUrl from "./assets/generated/idle-atlas.png";
 import tiltUrl from "./assets/generated/tilt-atlas.png";
 import pawUrl from "./assets/generated/paw-atlas.png";
@@ -22,6 +28,9 @@ try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [walking, walkingUrl],
+      [stretching, stretchingUrl],
+      [playing, playingUrl],
       [tilt, tiltUrl],
       [paw, pawUrl],
       [belly, bellyUrl],
@@ -44,18 +53,31 @@ try {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
   let previous = "",
-    scheduled = 0,
+    frameRequest = 0,
+    frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
     size: "medium",
     geometryRevision: 0,
     posture: "resting",
+    direction: "right",
     visibility: "hidden",
     actionId: 0,
     startedAt: Date.now(),
   };
+  function cancelDrawing() {
+    clearTimeout(frameTimer);
+    cancelAnimationFrame(frameRequest);
+    frameTimer = 0;
+    frameRequest = 0;
+  }
+  function requestDraw() {
+    frameTimer = 0;
+    if (presentation.visibility === "visible" && !document.hidden)
+      frameRequest = requestAnimationFrame(draw);
+  }
   function draw() {
-    scheduled = 0;
+    frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
     const geometry = petGeometry(presentation.size);
     const { atlas, image } = assets.find(
@@ -79,10 +101,15 @@ try {
         remaining -= frame.durationMs;
         index++;
       }
-      const key = `${presentation.geometryRevision}:${presentation.actionId}:${index}`;
+      const key = `${presentation.geometryRevision}:${presentation.actionId}:${presentation.direction}:${index}`;
       if (key !== previous) {
         const { region, foot } = atlas.frames[index]!;
         context!.clearRect(0, 0, geometry.side, geometry.side);
+        context!.save();
+        if (presentation.direction === "left") {
+          context!.translate(geometry.side, 0);
+          context!.scale(-1, 1);
+        }
         context!.drawImage(
           image,
           region.x,
@@ -94,6 +121,7 @@ try {
           (region.width / atlas.pixelRatio) * geometry.assetScale,
           (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
+        context!.restore();
         window.mosey.input({
           type: "frame",
           geometryRevision: presentation.geometryRevision,
@@ -103,7 +131,17 @@ try {
         previous = key;
       }
     }
-    scheduled = requestAnimationFrame(draw);
+    if (atlas.loop === "once" && elapsed >= total) return;
+    let boundary = 0;
+    for (const frame of atlas.frames) {
+      boundary += frame.durationMs;
+      if (boundary > elapsed % total) break;
+    }
+    // Sleep until the next pose, then align the actual Canvas work with refresh.
+    frameTimer = window.setTimeout(
+      requestDraw,
+      Math.max(1, boundary - (elapsed % total)),
+    );
   }
   let gesture: { pointerId: number; id: number } | undefined;
   let nextGesture = 0;
@@ -169,10 +207,8 @@ try {
       previous = "";
     }
     presentation = value;
-    if (scheduled) cancelAnimationFrame(scheduled);
-    scheduled = 0;
-    if (value.visibility === "visible" && !document.hidden)
-      scheduled = requestAnimationFrame(draw);
+    cancelDrawing();
+    requestDraw();
   }
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
@@ -185,7 +221,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
-      cancelAnimationFrame(scheduled);
+      cancelDrawing();
     },
     { once: true },
   );
