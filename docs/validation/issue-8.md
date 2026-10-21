@@ -66,7 +66,7 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 
 不改源码、夹具、构建或签名，随后仅复跑这两个失败文件，2/2通过（53.12秒，`packaged-review-input-rerun.log`）。这是同一最终二进制的分次覆盖，不宣称一次完整最终套件全绿，也不宣称输入稳定性或物理桌面验收通过。归档的 `packaged-autonomy.json`、`packaged-menu.json` 为这次定向复跑的成功输出；完整运行的原始失败保留在前一日志，未用复跑覆盖。未为未确定根因增加推测性的产品启动或输入修复。
 
-## 集成保留与独立启动交接
+## 前一候选的集成保留与独立启动交接
 
 最终代码及记录合并到 `integration/issue-8-dock`。同一已测试应用已复制到集成 worktree 的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名验证通过，未重建或重签。实际 asar SHA256为 `5fa938dcdfedac6ceb2672a5ab9f155c49bb3a015d7c2a8204312eacdd0b6efb`，runtime为 `77d78ab0cb47d271f34c13870ec47e6a096d03ea18999290d40fd80f9ebfc640`；详见 `issue-8/frozen-acceptance-provenance.json`。未跟踪测试结果另保留在集成 worktree 的 `test-results/issue-8-implementation/`，不随实现 worktree 归档丢失。
 
@@ -81,3 +81,17 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 ### Spec
 
 复审确认旧横向原点回弹 P2 已修复，无新增确认的代码问题。真实桌面／独立权限验收 P1 仍待完成。最终完整打包7/9与同产物失败两项复测2/2分别保留；偶发输入失败原因未确认，不宣称最终一次完整全绿。
+
+## 远端 CI 显示恢复回归与后续修复
+
+远端CI运行39580428529在开发套件中原有 `tests/app.test.ts:777` 的idle显示恢复保持断言失败：预期 `{x:744,y:426,width:240,height:240}`，实际y462，其余6文件通过（7测试通过、1跳过）；保留 `issue-8/ci-39580428529-development-failed.log`（仅规范化行尾空白，原件仍在 `/tmp/mosey-issue-8/ci-failed.log`）。此结果推翻前一候选已充分覆盖显示恢复的判断，asar `5fa938dc…` 及其旧冻结副本不再是最终验收候选。历史receipt和日志保留原记录，不改写为后续结果。
+
+新回归仅替换既有OS捕获生产者，在真实Electron中先发主屏重配边界，再持续发送pending、最后null，整个情景从未提供非null Dock边缘。旧代码确定性地把恢复后的y676移动到y716（`display-pending-red.log`）。临时公共 `BrowserWindow.setPosition` 调用栈记录（`display-pending-public-geometry-red.log`）显示先由displayChanged→cancelInteraction→alignGround定位y676，约408ms后由下落定时器逐帧移动到716；不是权限状态或未解释的外部原生移动。此情景重现了异步pending结束仍把普通地面差异解释为Dock支撑丢失的代码路径；不据此推断全部先前输入失败均为同一原因。
+
+修复提交 `1dbee6a` 限制垂直Dock动作的发起：必须有当前真实重叠底边支撑，或先前已经观察到的该支撑刚丢失。单独pending/null不拥有其他桌面位置；侧边修正继续独立应用。主屏重配、隐藏和暂停同时清除支撑所有权、pending期限及计时器。真实生命周期仍通过已有对齐逻辑处理。无生产测试钩子、无放松位置断言、无原生协议变化；临时DEBUG包装已移除。
+
+`pnpm check`通过。原有 `tests/app.test.ts` 和新增回归所在的完整 `tests/dock.test.ts` 开发定向运行通过：2文件、3通过、1跳过，95.85秒（`display-pending-development-green.log`）。新 `pnpm package:mac` 及严格递归签名验证通过，候选receipt为 `display-pending-package-receipt.json`，asar SHA256 `989fab98a3a7bb14a55bddf9d3b950ee8a55c79f211d0f5ee2501826ce37170b`，runtime仍为 `77d78ab0…`；此前5fa938dc候选不再用于后续验收。
+
+新包相同两文件定向运行3通过、1失败（71.23秒，`display-pending-packaged-focused-failed.log`）：Dock2/2和独立Renderer启动通过；主app情景在显示重配注入前的line670未返回已收集idle图像集合，前一行地面坐标断言通过。失败PNG保留在 `display-pending-packaged-failure.png`。静态alpha差异比较发现其最接近攀爬末帧3、右向（误差11602，次近landing为1203817；sharp插值与Chromium不同，不能算精确相等或已确认运行状态）。没有同次presentation／原生帧事件链，不能确认动作启动及保持原因，也不标为普通idle方向差异或已修复代码缺陷。
+
+随后不改源码、夹具、包或签名，仅复跑原app文件，2/2通过（51.15秒，`display-pending-packaged-app-rerun.log`）。这是同产物分次通过覆盖，不声称一次完整打包全绿，不掩盖首跑像素失败。新回归与原显示恢复的开发验证已通过，物理桌面／独立权限验收仍未完成。

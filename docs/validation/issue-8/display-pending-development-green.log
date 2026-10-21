@@ -1,0 +1,8 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+
+ Test Files  2 passed (2)
+      Tests  3 passed | 1 skipped (4)
+   Start at  18:05:40
+   Duration  95.85s (tests 100%)

@@ -1,0 +1,38 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+stdout | tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+warning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
+ ❯ |packaged| tests/app.test.ts (2 tests | 1 failed) 39761ms
+   × a real app displays one animated corgi and quits from its menu 37462ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |packaged| tests/app.test.ts > a real app displays one animated corgi and quits from its menu
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ exercisePet tests/app.test.ts:670:67
+    668|     await window.mouse.up();
+    669|     await expect.poll(async () => (await petBounds()).y).toBe(ground.y…
+    670|     await expect.poll(async () => idleFrames.has(await pixels())).toBe…
+       |                                                                   ^
+    671|     // Inject only Electron's external display boundary. Actual render…
+    672|     // pointer capture, drawing and native window placement remain in …
+
+Caused by: Error: Matcher did not succeed in time.
+ ❯ exercisePet tests/app.test.ts:670:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 3 passed (4)
+   Start at  18:07:54
+   Duration  71.23s (tests 100%)
