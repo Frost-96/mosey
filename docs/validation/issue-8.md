@@ -68,7 +68,7 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 
 ## 前一候选的集成保留与独立启动交接
 
-最终代码及记录合并到 `integration/issue-8-dock`。同一已测试应用已复制到集成 worktree 的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名验证通过，未重建或重签。实际 asar SHA256为 `5fa938dcdfedac6ceb2672a5ab9f155c49bb3a015d7c2a8204312eacdd0b6efb`，runtime为 `77d78ab0cb47d271f34c13870ec47e6a096d03ea18999290d40fd80f9ebfc640`；详见 `issue-8/frozen-acceptance-provenance.json`。未跟踪测试结果另保留在集成 worktree 的 `test-results/issue-8-implementation/`，不随实现 worktree 归档丢失。
+最终代码及记录合并到 `integration/issue-8-dock`。同一已测试应用已复制到集成 worktree 的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名验证通过，未重建或重签。实际 asar SHA256为 `5fa938dcdfedac6ceb2672a5ab9f155c49bb3a015d7c2a8204312eacdd0b6efb`，runtime为 `77d78ab0cb47d271f34c13870ec47e6a096d03ea18999290d40fd80f9ebfc640`；历史详情见 `issue-8/obsolete-5fa938dc-frozen-provenance.json`。未跟踪测试结果另保留在集成 worktree 的 `test-results/issue-8-implementation/`，不随实现 worktree 归档丢失。
 
 通过 CUA 从 Finder 精确目录选择并打开候选，未观察到新候选进程。只读进程检查发现另一项 #5 工作的独立 Mosey 正在运行，PID47162、父PID1、路径为 `/Users/frost/code/mosey/out/issue-5/Mosey.app`，无自定义 profile 参数。结合两份应用使用默认 Mosey profile 及既有单实例守卫，这是新候选未出现的合理解释；未采集新候选锁返回值，不将其写成启动缺陷或独立权限拒绝的证据。此前直接 CUA 路径绑定超时也只代表工具失败。保留另一项工作的实例，没有停止它或改变系统权限。
 
@@ -95,3 +95,9 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 新包相同两文件定向运行3通过、1失败（71.23秒，`display-pending-packaged-focused-failed.log`）：Dock2/2和独立Renderer启动通过；主app情景在显示重配注入前的line670未返回已收集idle图像集合，前一行地面坐标断言通过。失败PNG保留在 `display-pending-packaged-failure.png`。静态alpha差异比较发现其最接近攀爬末帧3、右向（误差11602，次近landing为1203817；sharp插值与Chromium不同，不能算精确相等或已确认运行状态）。没有同次presentation／原生帧事件链，不能确认动作启动及保持原因，也不标为普通idle方向差异或已修复代码缺陷。
 
 随后不改源码、夹具、包或签名，仅复跑原app文件，2/2通过（51.15秒，`display-pending-packaged-app-rerun.log`）。这是同产物分次通过覆盖，不声称一次完整打包全绿，不掩盖首跑像素失败。新回归与原显示恢复的开发验证已通过，物理桌面／独立权限验收仍未完成。
+
+## 当前集成候选
+
+修复提交1dbee6a已合并到集成代码92fca85；Standards与Spec对此修改复审均无新增代码发现，既有真实桌面P1仍待验收。新包按确切测试字节复制到集成worktree的 `out/issue-8-acceptance/Mosey.app`，复制后严格递归签名通过，未重建或重签。当前asar为989fab98…，完整哈希、分次测试边界见 `issue-8/frozen-acceptance-provenance.json`。此前Finder启动尝试仅对应失效的5fa938dc包；没有把那次尝试移植为新包的启动或权限证据。
+
+远端运行39582318548的完整开发套件通过，打包与静态检查通过；打包套件8/9通过，唯一失败为自主活动测试在模拟suspend/resume后查找Hide Mosey项不存在（tests/autonomy.test.ts:166），显示恢复与Dock测试通过。该新失败尚待定位，不把本轮CI写成全绿。

@@ -1,0 +1,34 @@
+{
+  "recordedAtUTC": "2026-10-21T09:52:30.925136+00:00",
+  "integrationCodeCommit": "975840cb4aeabe5f6b1c5f6bdaf22c55d627b71b",
+  "reviewedRuntimeCommit": "3af4ddb579da4a4d59c6500725f95acc6e9c0199",
+  "appPath": "/Users/frost/.codex/worktrees/issue-8-dock/mosey/out/issue-8-acceptance/Mosey.app",
+  "copiedFrom": "/Users/frost/.codex/worktrees/ticket-8-dock/mosey/out/Mosey-darwin-arm64/Mosey.app",
+  "sha256": {
+    "executable": "b5367aeabbdc13be1b0311bca85fb1c4ae965c7a9866515a7f191b41e992f3ab",
+    "asar": "5fa938dcdfedac6ceb2672a5ab9f155c49bb3a015d7c2a8204312eacdd0b6efb",
+    "runtime": "77d78ab0cb47d271f34c13870ec47e6a096d03ea18999290d40fd80f9ebfc640"
+  },
+  "signatureVerification": "codesign --verify --deep --strict passed on integration copy; no signing after copy",
+  "runtimeBuildReceipt": {
+    "sourceSHA256": "64ccef1d058268e1ebcfc2e7f5baa31d91057567fa1ffd51a9eac5d3f18d4c4c",
+    "buildHelperSHA256": "5075880d9392d8f31732bcff252312a76ab4c2ce3617f5050e444147ded42e12",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
+    "flags": ["-O", "-target", "arm64-apple-macos15.0", "-parse-as-library"],
+    "signature": "Executable=/Users/frost/.codex/worktrees/ticket-8-dock/mosey/build/native/dock-runtime\nIdentifier=dev.frost.mosey.dock-runtime\nFormat=Mach-O thin (arm64)\nCodeDirectory v=20400 size=501 flags=0x2(adhoc) hashes=10+2 location=embedded\nHash type=sha256 size=32\nCandidateCDHash sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nCandidateCDHashFull sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nHash choices=sha256\nCMSDigest=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nCMSDigestType=2\nCDHash=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nSignature=adhoc\nInfo.plist=not bound\nTeamIdentifier=not set\nSealed Resources=none\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\n"
+  },
+  "launchAttempt": {
+    "method": "CUA Finder Go to Folder exact directory, select Mosey.app, open",
+    "candidateProcessObserved": false,
+    "existingInstance": {
+      "pid": 47162,
+      "ppid": 1,
+      "executable": "/Users/frost/code/mosey/out/issue-5/Mosey.app/Contents/MacOS/Mosey",
+      "arguments": []
+    },
+    "interpretation": "Existing default-profile Mosey plus candidate single-instance guard explains absent new candidate; no direct lock-return trace collected. Existing instance was not stopped.",
+    "permissionChanges": false,
+    "independentCandidatePermission": "not established"
+  },
+  "validation": "final packaged full7/9, unchanged targeted failures rerun2/2; intermittent input failures unresolved; real physical Dock/permission matrix pending"
+}
