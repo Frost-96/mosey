@@ -1,0 +1,166 @@
+macos	Run pnpm test:dev	﻿2026-10-21T09:54:03.3966200Z ##[group]Run pnpm test:dev
+macos	Run pnpm test:dev	2026-10-21T09:54:03.3967770Z ^[[36;1mpnpm test:dev^[[0m
+macos	Run pnpm test:dev	2026-10-21T09:54:03.4041110Z shell: /bin/bash -e {0}
+macos	Run pnpm test:dev	2026-10-21T09:54:03.4041440Z env:
+macos	Run pnpm test:dev	2026-10-21T09:54:03.4041810Z   PNPM_HOME: /Users/runner/setup-pnpm/node_modules/.bin
+macos	Run pnpm test:dev	2026-10-21T09:54:03.4042320Z ##[endgroup]
+macos	Run pnpm test:dev	2026-10-21T09:54:03.5179760Z $ vitest run --project development
+macos	Run pnpm test:dev	2026-10-21T09:54:03.9741120Z
+macos	Run pnpm test:dev	2026-10-21T09:54:03.9744950Z ^[[1m^[[30m^[[46m RUN ^[[49m^[[39m^[[22m ^[[36mv5.0.5 ^[[39m^[[90m/Users/runner/work/mosey/mosey^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:54:03.9746560Z
+macos	Run pnpm test:dev	2026-10-21T09:54:42.1814560Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:42.1910490Z ^[[22m^[[39mwarning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+macos	Run pnpm test:dev	2026-10-21T09:54:42.2013700Z
+macos	Run pnpm test:dev	2026-10-21T09:54:42.7002660Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:42.7104220Z ^[[22m^[[39mdebug [vite] connecting...
+macos	Run pnpm test:dev	2026-10-21T09:54:42.7204610Z
+macos	Run pnpm test:dev	2026-10-21T09:54:42.8364230Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:42.8499870Z ^[[22m^[[39mdebug [vite] connected.
+macos	Run pnpm test:dev	2026-10-21T09:54:42.8605170Z
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1005400Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1105810Z ^[[22m^[[39mdebug [vite] connecting...
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1208690Z
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1312170Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1414780Z ^[[22m^[[39mwarning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1518320Z
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1775340Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1792890Z ^[[22m^[[39mdebug [vite] connected.
+macos	Run pnpm test:dev	2026-10-21T09:54:43.1793450Z
+macos	Run pnpm test:dev	2026-10-21T09:54:44.6882610Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:44.7014690Z ^[[22m^[[39mdebug [vite] connecting...
+macos	Run pnpm test:dev	2026-10-21T09:54:44.7121070Z
+macos	Run pnpm test:dev	2026-10-21T09:54:44.7198030Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:44.7203100Z ^[[22m^[[39mdebug [vite] connected.
+macos	Run pnpm test:dev	2026-10-21T09:54:44.7203680Z
+macos	Run pnpm test:dev	2026-10-21T09:54:44.9422850Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:54:44.9427350Z ^[[22m^[[39mwarning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+macos	Run pnpm test:dev	2026-10-21T09:54:44.9430440Z
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0637470Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0653990Z ^[[22m^[[39mwarning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0676330Z
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0707870Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0709280Z ^[[22m^[[39mdebug [vite] connecting...
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0709660Z
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0765630Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0790000Z ^[[22m^[[39mdebug [vite] connected.
+macos	Run pnpm test:dev	2026-10-21T09:55:19.0794210Z
+macos	Run pnpm test:dev	2026-10-21T09:55:23.8962010Z  ^[[31m❯^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/app.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m | ^[[22m^[[31m1 failed^[[39m^[[2m | ^[[22m^[[33m1 skipped^[[39m^[[2m)^[[22m^[[33m 79343^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:55:23.8968270Z    ^[[2m^[[90m↓^[[39m^[[22m packaged app starts a renderer without an inspector bootstrap
+macos	Run pnpm test:dev	2026-10-21T09:55:23.8970870Z ^[[31m   ^[[31m×^[[31m a real app displays one animated corgi and quits from its menu^[[39m^[[33m 79342^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:56:42.8688570Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/dock.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 78271^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:56:42.8795710Z    ^[[33m^[[2m✓^[[22m^[[39m Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent^[[33m 51142^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:56:42.8924230Z    ^[[33m^[[2m✓^[[22m^[[39m real Dock helper clears its capability and exits when transport stops or the pet hides^[[33m 27128^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:57:56.1507710Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/size-autonomy.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 72577^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:57:56.1513180Z    ^[[33m^[[2m✓^[[22m^[[39m three sizes preserve left-facing interaction and autonomous movement across resizing^[[33m 72575^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:58:45.0386090Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/context-menu.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 48088^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:58:45.0494950Z    ^[[33m^[[2m✓^[[22m^[[39m body secondary clicks open a native menu and cancel without changing the pet^[[33m 48087^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:59:40.7003770Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/size.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 54980^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T09:59:40.7015750Z    ^[[33m^[[2m✓^[[22m^[[39m size menu scales the visible corgi and keeps its feet on the same ground^[[33m 54977^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4414970Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4514250Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-screenshot-complete","at":29693.358917}
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4639700Z
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4688400Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4800850Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-bounds-complete","at":29707.257375}
+macos	Run pnpm test:dev	2026-10-21T10:00:10.4934480Z [autonomy-progress] {"stage":"walking-click-start","at":29708.084542}
+macos	Run pnpm test:dev	2026-10-21T10:00:10.5063660Z
+macos	Run pnpm test:dev	2026-10-21T10:00:10.5167360Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:10.5264040Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-click-complete","at":29729.763459}
+macos	Run pnpm test:dev	2026-10-21T10:00:10.5275970Z
+macos	Run pnpm test:dev	2026-10-21T10:00:11.0743540Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:11.0846920Z ^[[22m^[[39m[autonomy-progress] {"stage":"draw-observer-start","at":30345.896625}
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1123260Z
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1255040Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1378390Z ^[[22m^[[39m[autonomy-progress] {"stage":"suspend-start","at":30348.720459}
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1481490Z
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1588670Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1701650Z ^[[22m^[[39m[autonomy-progress] {"stage":"suspend-complete","at":30404.51275}
+macos	Run pnpm test:dev	2026-10-21T10:00:11.1804200Z
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5077900Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5103350Z ^[[22m^[[39m[autonomy-progress] {"stage":"resume-start","at":31777.804334}
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5104030Z
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5183090Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5184780Z ^[[22m^[[39m[autonomy-progress] {"stage":"resume-complete","at":31789.851209}
+macos	Run pnpm test:dev	2026-10-21T10:00:12.5185300Z
+macos	Run pnpm test:dev	2026-10-21T10:00:12.7776840Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:12.7780210Z ^[[22m^[[39m[autonomy-progress] {"stage":"stretching-start","at":32046.888167}
+macos	Run pnpm test:dev	2026-10-21T10:00:12.7781310Z
+macos	Run pnpm test:dev	2026-10-21T10:00:12.8499930Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:12.8656980Z ^[[22m^[[39m[autonomy-progress] {"stage":"stretching-menu-complete","at":32111.895542}
+macos	Run pnpm test:dev	2026-10-21T10:00:12.8844410Z
+macos	Run pnpm test:dev	2026-10-21T10:00:14.0973270Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:14.0974890Z ^[[22m^[[39m[autonomy-progress] {"stage":"stretching-pixels-complete","at":33366.584834}
+macos	Run pnpm test:dev	2026-10-21T10:00:14.0975360Z
+macos	Run pnpm test:dev	2026-10-21T10:00:14.6333980Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:14.6391620Z ^[[22m^[[39m[autonomy-progress] {"stage":"stretching-screenshot-complete","at":33904.582334}
+macos	Run pnpm test:dev	2026-10-21T10:00:14.6406530Z
+macos	Run pnpm test:dev	2026-10-21T10:00:15.6550370Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:15.6554630Z ^[[22m^[[39m[autonomy-progress] {"stage":"playing-start","at":34923.130125}
+macos	Run pnpm test:dev	2026-10-21T10:00:15.6555240Z
+macos	Run pnpm test:dev	2026-10-21T10:00:15.7442340Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:15.7697960Z ^[[22m^[[39m[autonomy-progress] {"stage":"playing-menu-complete","at":35012.971292}
+macos	Run pnpm test:dev	2026-10-21T10:00:15.7885850Z
+macos	Run pnpm test:dev	2026-10-21T10:00:17.0082010Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:17.0083710Z ^[[22m^[[39m[autonomy-progress] {"stage":"playing-pixels-complete","at":36279.945709}
+macos	Run pnpm test:dev	2026-10-21T10:00:17.0084350Z
+macos	Run pnpm test:dev	2026-10-21T10:00:17.5008280Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:17.5027710Z ^[[22m^[[39m[autonomy-progress] {"stage":"playing-screenshot-complete","at":36771.848584}
+macos	Run pnpm test:dev	2026-10-21T10:00:17.5028570Z
+macos	Run pnpm test:dev	2026-10-21T10:00:29.7900110Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:dev	2026-10-21T10:00:29.8034310Z ^[[22m^[[39m[autonomy-progress] {"stage":"complete","at":49049.646}
+macos	Run pnpm test:dev	2026-10-21T10:00:29.8142960Z
+macos	Run pnpm test:dev	2026-10-21T10:00:30.3818570Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/autonomy.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 48808^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:00:30.3944430Z    ^[[33m^[[2m✓^[[22m^[[39m autonomous activities stay grounded, yield to interaction and pause without catch-up^[[33m 48806^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.3519700Z  ^[[32m✓^[[39m ^[[30m^[[42m development ^[[49m^[[39m tests/visibility.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 38061^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.3618430Z    ^[[33m^[[2m✓^[[22m^[[39m manual visibility survives restart, duplicate launches and damaged preferences^[[33m 38059^[[2mms^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.3724630Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.3852520Z ^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m^[[1m^[[41m Failed Tests 1 ^[[49m^[[22m^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.3936650Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4072560Z ^[[41m^[[1m FAIL ^[[22m^[[49m ^[[30m^[[42m development ^[[49m^[[39m tests/app.test.ts^[[2m > ^[[22ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4073110Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4177580Z ^[[31m^[[1mAssertionError^[[22m: idle: expected { x: 744, y: 462, width: 240, …(1) } to deeply equal { x: 744, y: 426, width: 240, …(1) }^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4181450Z ^[[2m Test Files ^[[22m ^[[1m^[[31m1 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m6 passed^[[39m^[[22m^[[90m (7)^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4230630Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4231720Z ^[[2m      Tests ^[[22m ^[[1m^[[31m1 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m7 passed^[[39m^[[22m^[[2m | ^[[22m^[[33m1 skipped^[[39m^[[90m (9)^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4234350Z ^[[32m- Expected^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4235410Z ^[[31m+ Received^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4235910Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4236390Z ^[[2m  {^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4237280Z ^[[2m    "height": 240,^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4238760Z ^[[2m    "width": 240,^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4262120Z ^[[2m    "x": 744,^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4262680Z ^[[32m-   "y": 426,^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4263570Z ^[[31m+   "y": 462,^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4264380Z ^[[2m  }^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4264620Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4265500Z ^[[36m ^[[2m❯^[[22m exercisePet tests/app.test.ts:^[[2m777:40^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4266220Z     ^[[90m775|^[[39m       await window.mouse.up();
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4267940Z     ^[[90m776|^[[39m       await new Promise((resolve) => setTimeout(resolve, 500));
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4268630Z     ^[[90m777|^[[39m       expect(await petBounds(), phase).toEqual(recovered.bounds);
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4269250Z     ^[[90m   |^[[39m                                        ^[[31m^^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4276440Z     ^[[90m778|^[[39m       expect(idleFrames.has(await pixels()), phase).toBe(true);
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4277810Z     ^[[90m779|^[[39m       // New input must still grab the freshly drawn body at its new p…
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4278410Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4278900Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯^[[22m^[[39m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4279520Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4279790Z ^[[2m   Start at ^[[22m 09:54:03
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4281460Z ^[[2m   Duration ^[[22m 425.24s^[[2m (tests 99%, import 1%)^[[22m
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4281740Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4281750Z
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4474740Z ##[error]AssertionError: idle: expected { x: 744, y: 462, width: 240, …(1) } to deeply equal { x: 744, y: 426, width: 240, …(1) }
+macos	Run pnpm test:dev
+macos	Run pnpm test:dev	- Expected
+macos	Run pnpm test:dev	+ Received
+macos	Run pnpm test:dev
+macos	Run pnpm test:dev	  {
+macos	Run pnpm test:dev	    "height": 240,
+macos	Run pnpm test:dev	    "width": 240,
+macos	Run pnpm test:dev	    "x": 744,
+macos	Run pnpm test:dev	-   "y": 426,
+macos	Run pnpm test:dev	+   "y": 462,
+macos	Run pnpm test:dev	  }
+macos	Run pnpm test:dev
+macos	Run pnpm test:dev	 ❯ exercisePet tests/app.test.ts:777:40
+macos	Run pnpm test:dev
+macos	Run pnpm test:dev
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4633020Z [ELIFECYCLE] Command failed with exit code 1.
+macos	Run pnpm test:dev	2026-10-21T10:01:09.4709360Z ##[error]Process completed with exit code 1.

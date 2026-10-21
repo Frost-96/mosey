@@ -1,0 +1,164 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/ticket-8-dock/mosey
+
+stdout | tests/dock.test.ts > Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent
+[DEBUG-dock-recovery] [
+  {
+    at: 1120.135416,
+    args: [ 615, 676, false ],
+    before: { x: 615, y: 716, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at alignGround (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59791:3)\n' +
+      '    at cancelInteraction (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59799:27)\n' +
+      '    at Screen.displayChanged (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60130:3)\n' +
+      '    at Screen.emit (node:events:514:28)\n' +
+      '    at eval (eval at evaluate (:370:30), <anonymous>:29:12)\n' +
+      '    at UtilityScript.evaluate (<anonymous>:372:16)\n' +
+      '    at UtilityScript.<anonymous> (<anonymous>:1:44)'
+  },
+  {
+    at: 1528.271541,
+    args: [ 615, 680, false ],
+    before: { x: 615, y: 676, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1544.020833,
+    args: [ 615, 684, false ],
+    before: { x: 615, y: 680, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1560.790208,
+    args: [ 615, 690, false ],
+    before: { x: 615, y: 684, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1577.620291,
+    args: [ 615, 696, false ],
+    before: { x: 615, y: 690, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1594.044,
+    args: [ 615, 704, false ],
+    before: { x: 615, y: 696, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1610.185666,
+    args: [ 615, 712, false ],
+    before: { x: 615, y: 704, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  },
+  {
+    at: 1627.529041,
+    args: [ 615, 716, false ],
+    before: { x: 615, y: 712, width: 240, height: 240 },
+    stack: 'Error\n' +
+      '    at pet.setPosition (eval at evaluate (:370:30), <anonymous>:12:13)\n' +
+      '    at constrain (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:59705:7)\n' +
+      '    at Timeout._onTimeout (file:///Users/frost/.codex/worktrees/ticket-8-dock/mosey/.vite/build/main.mjs:60092:5)\n' +
+      '    at listOnTimeout (node:internal/timers:685:17)\n' +
+      '    at process.processTimers (node:internal/timers:618:7)'
+  }
+]
+
+stdout | tests/dock.test.ts > Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent
+Owned app at failure {
+  pid: 55563,
+  exitCode: null,
+  signalCode: null,
+  os: 'Ss   /Users/frost/.codex/worktrees/ticket-8-dock/mosey/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron -r /Users/frost/.codex/worktrees/ticket-8-dock/mosey/node_modules/playwright-core/lib/server/electron/loader.js --inspect=0 --remote-debugging-port=0 . --user-data-dir=/var/folders/x3/hmr83x655h5d_2whhyklj2x00000gn/T/mosey-dock-0m5QbL/profile'
+}
+
+stdout | tests/dock.test.ts > Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent
+Dock menu at failure [
+  {
+    label: 'Mosey',
+    submenu: [
+      'Hide Mosey',
+      'Size',
+      'Updating Dock edge',
+      'Retry Dock interaction',
+      'Quit Mosey'
+    ]
+  },
+  {
+    label: 'Dock validation',
+    submenu: [
+      'Start Dock validation (120 seconds)',
+      'Stop Dock validation',
+      'Show Dock validation status',
+      'Operator Dock orientation'
+    ]
+  }
+]
+
+ ❯ |development| tests/dock.test.ts (2 tests | 1 failed | 1 skipped) 8238ms
+   × Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent 8237ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |development| tests/dock.test.ts > Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent
+AssertionError: pending without previous Dock support preserves display recovery: expected { x: 615, y: 716, width: 240, …(1) } to deeply equal { x: 615, y: 676, width: 240, …(1) }
+
+- Expected
++ Received
+
+  {
+    "height": 240,
+    "width": 240,
+    "x": 615,
+-   "y": 676,
++   "y": 716,
+  }
+
+ ❯ tests/dock.test.ts:194:7
+    192|       await bounds(),
+    193|       "pending without previous Dock support preserves display recover…
+    194|     ).toEqual(displayRecovery);
+       |       ^
+    195|     await publishObservation("null");
+    196|     await new Promise((resolve) => setTimeout(resolve, 250));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  18:05:02
+   Duration  8.43s (tests 98%, import 1%)
