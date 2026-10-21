@@ -272,6 +272,71 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       electron: process.versions.electron,
     }));
     expect(runtime).toEqual({ node: "24.22.0", electron: "44.9.1" });
+    // Whole-app targeted-input evidence only: this does not prove OS routing.
+    const pixels = () =>
+      window.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        return canvas.toDataURL();
+      });
+    const idleFrames = new Set<string>();
+    const until = Date.now() + 2200;
+    while (Date.now() < until) {
+      idleFrames.add(await pixels());
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    await window.mouse.click(0, 0);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    expect(idleFrames.has(await pixels())).toBe(true);
+    const responses = new Set<string>();
+    for (const random of [0.01, 0.4, 0.9]) {
+      await app.evaluate((_electron, value) => {
+        Math.random = () => value;
+      }, random);
+      await window.mouse.click(120, 180);
+      await expect
+        .poll(async () => idleFrames.has(await pixels()), {
+          timeout: 1500,
+          interval: 30,
+        })
+        .toBe(false);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      responses.add(await pixels());
+      await window.screenshot({
+        path: `test-results/${packaged ? "packaged" : "development"}-response-${random}.png`,
+        omitBackground: true,
+      });
+      // A burst during a response must not leave queued actions playing later.
+      for (let click = 0; click < 5; click++)
+        await window.mouse.click(120, 180);
+      await expect
+        .poll(async () => idleFrames.has(await pixels()), {
+          timeout: 5000,
+          interval: 50,
+        })
+        .toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(idleFrames.has(await pixels())).toBe(true);
+    }
+    expect(responses.size).toBe(3);
+    // A system visibility change cancels the reaction; showing resumes interaction.
+    await window.mouse.click(120, 180);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.hide(),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.showInactive(),
+    );
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
+      .toBe(true);
+    await window.mouse.click(120, 180);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(idleFrames.has(await pixels())).toBe(false);
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
+      .toBe(true);
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
