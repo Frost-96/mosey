@@ -243,7 +243,10 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     // old capture, and let the return finish with the new ground geometry.
     await pet.mouse.move(120, 180);
     await pet.mouse.down();
-    await pet.mouse.move(120, 30, { steps: 5 });
+    // One client-space move makes one 150-DIP screen-space displacement.
+    // Interpolated client moves would compound as the native window follows,
+    // reaching the work-area ceiling on smaller CI displays.
+    await pet.mouse.move(120, 30);
     await expect
       .poll(async () => (await bounds()).y)
       .toBeLessThan(initial.y - 100);
