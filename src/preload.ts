@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import {
   assetErrorSchema,
   inputSchema,
+  gestureCancellationSchema,
   channels,
   presentationSchema,
   type PetBridge,
@@ -22,6 +23,15 @@ const bridge: PetBridge = {
     };
     ipcRenderer.on(channels.presentation, receive);
     return () => ipcRenderer.removeListener(channels.presentation, receive);
+  },
+  onGestureCancellation(listener) {
+    const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {
+      const parsed = gestureCancellationSchema.safeParse(value);
+      if (parsed.success) listener(parsed.data.gestureId);
+    };
+    ipcRenderer.on(channels.gestureCancellation, receive);
+    return () =>
+      ipcRenderer.removeListener(channels.gestureCancellation, receive);
   },
   reportAssetError(message) {
     ipcRenderer.send(channels.assetError, assetErrorSchema.parse(message));

@@ -51,12 +51,9 @@ try {
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  const scale = window.devicePixelRatio;
-  canvas.width = Math.round(240 * scale);
-  canvas.height = Math.round(240 * scale);
+  let scale = 0;
   canvas.style.width = "240px";
   canvas.style.height = "240px";
-  context.scale(scale, scale);
   let previous = "",
     frameRequest = 0,
     frameTimer = 0,
@@ -82,6 +79,15 @@ try {
   function draw() {
     frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
+    // A new primary display can have a different backing scale without a CSS
+    // size change. Resize on the next visible draw, including after hiding.
+    if (scale !== window.devicePixelRatio) {
+      scale = window.devicePixelRatio;
+      canvas!.width = Math.round(240 * scale);
+      canvas!.height = Math.round(240 * scale);
+      context!.setTransform(scale, 0, 0, scale, 0, 0);
+      previous = "";
+    }
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
     )!;
@@ -188,11 +194,15 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
-    if (value.visibility === "hidden") finish("cancel");
     presentation = value;
     cancelDrawing();
     requestDraw();
   }
+  // A queued cancellation belongs to one captured gesture, never to a newer
+  // press that happened before its main-process messages reached this renderer.
+  const unsubscribeCancellation = window.mosey.onGestureCancellation((id) => {
+    if (gesture?.id === id) finish("cancel");
+  });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
   document.addEventListener("visibilitychange", () =>
@@ -203,6 +213,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
+      unsubscribeCancellation();
       cancelDrawing();
     },
     { once: true },
