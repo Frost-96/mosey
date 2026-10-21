@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { petSizeSchema, type PetSize } from "../shared/size";
 import {
   closeSync,
   fsyncSync,
@@ -14,7 +15,7 @@ import log from "electron-log/main";
 const schema = z.strictObject({
   version: z.literal(1),
   visibility: z.enum(["visible", "hidden"]),
-  size: z.enum(["small", "medium", "large"]).default("medium"),
+  size: petSizeSchema.default("medium"),
 });
 type Preferences = z.infer<typeof schema>;
 
@@ -34,6 +35,12 @@ export class PreferencesStore {
   }
   get visibility() {
     return this.value.visibility;
+  }
+  get size() {
+    return this.value.size;
+  }
+  setSize(size: PetSize): boolean {
+    return this.save({ ...this.value, size }, "size");
   }
   private read(file: string): Preferences | undefined {
     try {
@@ -66,7 +73,10 @@ export class PreferencesStore {
     renameSync(temporary, file);
   }
   setVisibility(visibility: Preferences["visibility"]): boolean {
-    const next = schema.parse({ ...this.value, visibility });
+    return this.save({ ...this.value, visibility }, "visibility");
+  }
+  private save(value: Preferences, choice: string): boolean {
+    const next = schema.parse(value);
     try {
       mkdirSync(this.directory, { recursive: true });
       // Never replace the known-good backup with a damaged primary. The
@@ -75,7 +85,7 @@ export class PreferencesStore {
       this.replace(this.file, next);
     } catch (error) {
       log.error(
-        "Unable to save pet visibility; keeping current choice",
+        `Unable to save pet ${choice}; keeping current choice`,
         String(error),
       );
       return false;
