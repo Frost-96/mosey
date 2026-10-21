@@ -19,9 +19,30 @@ TDD record:
 - RED: development size acceptance failed with `Missing size menu item: Small` before implementation.
 - GREEN: menu/window/Canvas/footer geometry passed at 1x after the first implementation.
 - Extended interactions initially used Vitest's default poll timeout for an animation lasting longer; increasing the external idle-return observation timeout to match the existing response suite passed without a product change.
+- Active-resize acceptance first exercised an intentional top-work-area clamp. The fixture was moved lower so both sizes fit and exact foot preservation applies; the product correctly retains the clamp when a larger pet would extend beyond the screen.
+- GREEN: active held/falling resize acceptance passed at 1x in 32.31 seconds.
 - GREEN: development 1x size interactions, body and edge clicks, transparent corner rejection, dragging, catching during return, hidden size persistence and preference recovery passed in 30.62 seconds before adding active-resize acceptance.
 
-Final matrix and commands are recorded below after execution.
+Regression host: macOS 27.0.1 (26A434), arm64; development Node 24.18.0, Electron 44.9.1.
+
+Development regression matrix, source `f150574` (integration merge `f6ef13e`):
+
+| Mode        | Forced scale | Result                                                       | Duration |
+| ----------- | ------------ | ------------------------------------------------------------ | -------- |
+| Development | 1x           | 3 files passed; 3 tests passed, 1 packaged-only test skipped | 85.30 s  |
+| Development | 2x           | 3 files passed; 3 tests passed, 1 packaged-only test skipped | 89.23 s  |
+
+Commands use `MOSEY_TEST_SCALE_FACTOR=1` or `2` with `pnpm exec vitest run --project development tests/size.test.ts tests/visibility.test.ts tests/app.test.ts`. This jointly regresses #4's existing drag/return suite and #6's existing visibility suite. `pnpm check` passes.
+
+The parent built the integration merge with `pnpm package:mac`; the packaged matrix tests a copy of that exact deliverable, rather than a separate build.
+
+| Mode     | Forced scale | Result                         | Duration |
+| -------- | ------------ | ------------------------------ | -------- |
+| Packaged | 1x           | 3 files passed; 4 tests passed | 78.48 s  |
+
+Packaged 2x also passed all 3 files and all 4 tests in 81.29 seconds. Both forced-scale runs use the same integration deliverable.
+
+The packaged command uses the same file list with `--project packaged`. The additional packaged-only test starts a relocated app with a minimal shell environment and no inspector bootstrap.
 
 ## Evidence limits and remaining desktop acceptance
 
