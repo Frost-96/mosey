@@ -15,6 +15,7 @@ import falling from "./assets/generated/falling-atlas.json";
 import landingUrl from "./assets/generated/landing-atlas.png";
 import landing from "./assets/generated/landing-atlas.json";
 import { atlasSchema } from "./shared/assets";
+import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
 try {
@@ -42,16 +43,12 @@ try {
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  const scale = window.devicePixelRatio;
-  canvas.width = Math.round(240 * scale);
-  canvas.height = Math.round(240 * scale);
-  canvas.style.width = "240px";
-  canvas.style.height = "240px";
-  context.scale(scale, scale);
   let previous = "",
     scheduled = 0,
     completed = -1;
   let presentation: Presentation = {
+    size: "medium",
+    geometryRevision: 0,
     posture: "resting",
     visibility: "hidden",
     actionId: 0,
@@ -60,6 +57,7 @@ try {
   function draw() {
     scheduled = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
+    const geometry = petGeometry(presentation.size);
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
     )!;
@@ -81,23 +79,24 @@ try {
         remaining -= frame.durationMs;
         index++;
       }
-      const key = `${presentation.actionId}:${index}`;
+      const key = `${presentation.geometryRevision}:${presentation.actionId}:${index}`;
       if (key !== previous) {
         const { region, foot } = atlas.frames[index]!;
-        context!.clearRect(0, 0, 240, 240);
+        context!.clearRect(0, 0, geometry.side, geometry.side);
         context!.drawImage(
           image,
           region.x,
           region.y,
           region.width,
           region.height,
-          120 - foot.x / atlas.pixelRatio,
-          240 - foot.y / atlas.pixelRatio,
-          region.width / atlas.pixelRatio,
-          region.height / atlas.pixelRatio,
+          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale,
+          geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
+          (region.width / atlas.pixelRatio) * geometry.assetScale,
+          (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
         window.mosey.input({
           type: "frame",
+          geometryRevision: presentation.geometryRevision,
           actionId: presentation.actionId,
           frame: index,
         });
@@ -124,6 +123,7 @@ try {
     event.preventDefault();
     window.mosey.input({
       type: "press",
+      geometryRevision: presentation.geometryRevision,
       actionId: presentation.actionId,
       gestureId: gesture.id,
       x: event.clientX - rect.left,
@@ -150,7 +150,24 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
-    if (value.visibility === "hidden") finish("cancel");
+    if (
+      value.visibility === "hidden" ||
+      value.geometryRevision !== presentation.geometryRevision
+    )
+      finish("cancel");
+    const { side } = petGeometry(value.size);
+    const ratio = window.devicePixelRatio;
+    if (
+      canvas!.width !== Math.round(side * ratio) ||
+      canvas!.height !== Math.round(side * ratio)
+    ) {
+      canvas!.width = Math.round(side * ratio);
+      canvas!.height = Math.round(side * ratio);
+      canvas!.style.width = `${side}px`;
+      canvas!.style.height = `${side}px`;
+      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
+      previous = "";
+    }
     presentation = value;
     if (scheduled) cancelAnimationFrame(scheduled);
     scheduled = 0;
@@ -159,6 +176,7 @@ try {
   }
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
+  window.addEventListener("resize", () => synchronize(presentation));
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
   );
