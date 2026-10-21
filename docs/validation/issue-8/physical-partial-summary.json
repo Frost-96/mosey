@@ -12,7 +12,6 @@
   "limits": [
     "CGWindow samples establish application geometry, not pixel contour truth. Local screenshots remain private; hashes locate evidence but do not replace visual review.",
     "No claim of frame-perfect synchronization or input latency; sample uptime and input wall time are different clock representations.",
-    "Only one built-in display; primary-screen switch and external disconnect remain untested.",
     "Permission revoke/grant/restart and final display/Dock restoration receipts are still being collected by parent.",
     "No whole-application resource/energy budget, long-run growth or other macOS hardware acceptance inferred."
   ],

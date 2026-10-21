@@ -74,7 +74,7 @@
     "localImageHashSupplement": "physical-local-artifact-manifest-supplement.json",
     "candidateBytesUnchanged": true,
     "issueStatus": "OPEN",
-    "limitations": "Issue OPEN: external/primary display changes unavailable; precise live revoke trajectory/latency, complete hit/transparent input matrix, full visual review and long-run resource budgets remain pending.",
+    "limitations": "Issue OPEN: precise live revoke trajectory/latency, complete hit/transparent input matrix, full visual review and long-run resource budgets remain pending.",
     "lastDocumentedMainPID": 67040,
     "screenRecordingSettingAt42": "ON",
     "restorationSnapshotAt42Recorded": true,
