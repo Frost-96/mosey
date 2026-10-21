@@ -56,6 +56,10 @@ XState 新增 climbing、CLIMB/DROP 及带 actionId 的落地完成。拖动、�
 - 原生编译、签名、哈希和 receipt 生成提取为同一函数，历史探针与产品源、输出名、签名标识及 receipt 文件继续分别指定，未覆盖历史身份。
 - 开发显示恢复中曾在旧位置发布 resting 后误启动新 CLIMB；红/绿在 `development-display-recovery-{red,green}.log`，修复为先稳定位置再转换行为，并让重复 null 无能力变化报告不触发新运动。
 
-开发调试曾观察初始 Vite 导航 ERR_ABORTED，以及另有 alpha0/菜单状态Stopped的 readiness 失败，见 `development-startup-readiness-unresolved.log`；未保留零像素同次的 isVisible/ready-to-show 完整事件链，根因尚未确立，不声称修复或进程崩溃。测试明确等待实际 alpha 像素，不以 Hide/Show 作为启动回避。后续有完整渲染并进入预期回归断言的实跑。未通过的 readiness 尝试不写成代码缺陷的红证据，也不虚构稳定性结论。临时 DEBUG 代码已从测试源清除；归档的原始失败日志保留当时观测上下文。
+开发调试曾观察初始 Vite 导航 ERR_ABORTED，以及另有 alpha0/菜单状态Stopped的 readiness 失败，见 `development-startup-readiness-unresolved.log`；未保留零像素同次的 isVisible/ready-to-show 完整事件链，根因尚未确立，不声称修复或进程崩溃。测试明确等待实际 alpha 像素，不以 Hide/Show 作为启动回避。后续有完整渲染并进入预期回归断言的实跑。未通过的 readiness 尝试不写成代码缺陷的红证据，也不虚构稳定性结论。临时 DEBUG 代码已从测试源清除；归档的失败日志保留当时观测上下文，仅将EOF空白规范化为一个末尾换行，`/tmp/mosey-issue-8/`中的采集原件保持原样。
 
-修复后最终源的类型/lint/格式、受影响开发与新打包验证结果另行补齐；此前初版通过不代替最终二进制结果。
+修复后的 `pnpm check` 通过。Dock开发文件2/2通过（39.60秒，`development-review-dock-green.log`），保留初始完整情景并新增capture handoff、左右两侧在行走/下落期间消失后的无回弹验证；同一修复运行源码的自主活动与大小组合两文件各1/1通过。结果来自两次有明确范围的运行，不伪称一次完整开发套件全部通过。
+
+新增深拖动情景在真实物理光标所在列受到buttons0事件干扰，或显示后尚未确认新姿态时，不能据此判产品回弹；夹具沿用既有自主活动测试的策略，将实际窗口放到远离物理光标的列，并等待70ms输入/绘制消息后再抓取，仍保留完整抓取、450ms位置保持、精确地面和逐采样回弹断言。诊断状态窗建立后始终使用最初宠物窗口ID，避免Electron窗口列表顺序把状态窗误认成宠物。失败时仍保留菜单、OS进程状态与截图诊断；临时quit包装、DEBUG及调试env分支已移除。
+
+最终新打包结果待下文补齐；初版通过不代替最终二进制结果。
