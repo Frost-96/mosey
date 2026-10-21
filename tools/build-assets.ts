@@ -77,8 +77,19 @@ await writeFile(
 
 // Generated response sheets are 2x2. Normalize each cell to one 2x canvas,
 // preserving its complete silhouette and anchoring the lowest opaque pixel.
-for (const action of ["tilt", "paw", "belly"] as const) {
-  const input = `src/assets/corgi-${action}.png`;
+for (const action of [
+  "tilt",
+  "paw",
+  "belly",
+  "dragging",
+  "flutter",
+  "falling",
+  "landing",
+] as const) {
+  const returning = ["dragging", "flutter", "falling", "landing"].includes(
+    action,
+  );
+  const input = `src/assets/corgi-${returning ? "return" : action}.png`;
   const size = await sharp(input).metadata();
   const cellWidth = Math.floor(size.width! / 2);
   const cellHeight = Math.floor(size.height! / 2);
@@ -135,9 +146,17 @@ for (const action of ["tilt", "paw", "belly"] as const) {
   const responseLayers = [];
   // Return through anticipation and the exact idle pixels, avoiding a cut at rest.
   const sequence =
-    action === "belly"
-      ? [-1, 0, 1, 2, 3, 3, 2, 1, 0, -1]
-      : [-1, 0, 1, 2, 2, 3, 1, 0, -1];
+    action === "dragging"
+      ? [0, 0, 0, 0, 1, 2, 1, 0]
+      : action === "flutter"
+        ? [1, 2, 1, 2]
+        : action === "falling"
+          ? [0, 1]
+          : action === "landing"
+            ? [3, 3, -1]
+            : action === "belly"
+              ? [-1, 0, 1, 2, 3, 3, 2, 1, 0, -1]
+              : [-1, 0, 1, 2, 2, 3, 1, 0, -1];
   for (const [index, pose] of sequence.entries()) {
     let raster: Buffer;
     if (pose === -1)
@@ -187,7 +206,14 @@ for (const action of ["tilt", "paw", "belly"] as const) {
     }
     responseFrames.push({
       region: { x: index * 480, y: 0, width: 480, height: 480 },
-      durationMs: index === (action === "belly" ? 5 : 4) ? 350 : 140,
+      durationMs:
+        action === "flutter"
+          ? 90
+          : action === "dragging"
+            ? 200
+            : index === (action === "belly" ? 5 : 4)
+              ? 350
+              : 140,
       foot: { x: 240, y: 480 },
       hitRows,
     });
@@ -200,7 +226,7 @@ for (const action of ["tilt", "paw", "belly"] as const) {
     width: sequence.length * 480,
     height: 480,
     pixelRatio: 2,
-    loop: "once",
+    loop: action === "dragging" || action === "falling" ? "repeat" : "once",
     hitAlphaThreshold: 128,
     frames: responseFrames,
   });
