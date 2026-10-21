@@ -80,9 +80,9 @@ Final full remote CI is still pending at this record; local matrix and human des
 
 After correcting current-floor and first-heartbeat expectations, `pnpm check` passed. The latest forced-2x regression results are:
 
-| Mode        | Result                  | Duration |
-| ----------- | ----------------------- | -------- |
-| Development | 2 files, 2 tests passed | 45.83 s  |
-| Packaged    | 2 files, 2 tests passed | 40.16 s  |
+| Mode        | Result                                                     | Duration |
+| ----------- | ---------------------------------------------------------- | -------- |
+| Development | Full 3 files; 3 tests passed, 1 packaged-only test skipped | 90.33 s  |
+| Packaged    | Focused size/visibility: 2 files, 2 tests passed           | 39.72 s  |
 
 Commands used `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project development tests/size.test.ts tests/app.test.ts tests/visibility.test.ts` and `MOSEY_TEST_SCALE_FACTOR=2 pnpm exec vitest run --project packaged tests/size.test.ts tests/visibility.test.ts`. The packaged check used the unchanged user-reviewed bundle; its `app.asar` hash was rechecked as `d6443b7f7ccbe50fa786952737202fde72190d9b96dcdb942b04c3f3a8c39f58`.
