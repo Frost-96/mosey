@@ -349,6 +349,22 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       .toBe(true);
     // Public whole-application seam: directed pointer input, rendered pixels,
     // and the actual desktop window bounds (not behavior context).
+    // Playwright directs events without moving the physical OS cursor. Keep
+    // ordinary drag paths away from that cursor, so its real buttons=0 events
+    // do not cancel a synthetic held pointer when the window moves beneath it.
+    const placeAwayFromPhysicalCursor = () =>
+      app!.evaluate(({ BrowserWindow, screen }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const area = screen.getPrimaryDisplay().workArea;
+        const bounds = pet.getBounds();
+        const pointer = screen.getCursorScreenPoint();
+        const x =
+          pointer.x >= area.x + area.width / 2
+            ? area.x
+            : area.x + area.width - bounds.width;
+        pet.setPosition(x, bounds.y, false);
+      });
+    await placeAwayFromPhysicalCursor();
     const petBounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
@@ -367,13 +383,25 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
       .toBe(true);
-    // Grabbing interrupts a click response. Hold longer than that old response:
-    // its eventual completion must not release or move the held pet.
+    // Landing ends with idle pixels before its final completion. Establish
+    // sustained visible idle, then observe the click response before grabbing.
+    for (let sample = 0; sample < 3; sample++) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(idleFrames.has(await pixels())).toBe(true);
+    }
+    // Hold longer than the interrupted click response: its eventual completion
+    // must not release or move the held pet.
     await window.mouse.click(120, 180);
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), {
+        timeout: 1500,
+        interval: 20,
+      })
+      .toBe(false);
     await new Promise((resolve) => setTimeout(resolve, 300));
     await window.mouse.move(120, 180);
     await window.mouse.down();
-    await window.mouse.move(160, -100, { steps: 6 });
+    await window.mouse.move(120, -100, { steps: 6 });
     await expect
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 200);
@@ -467,7 +495,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     // directed mouse movement must not keep moving the pet or trigger a click.
     await window.mouse.move(120, 180);
     await window.mouse.down();
-    await window.mouse.move(150, -120, { steps: 5 });
+    await window.mouse.move(120, -120, { steps: 5 });
     await expect
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 200);
@@ -483,7 +511,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         { once: true },
       );
     });
-    await window.mouse.move(151, -120);
+    await window.mouse.move(121, -120);
     await new Promise((resolve) => setTimeout(resolve, 50));
     await window.mouse.move(500, -300);
     await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
@@ -497,7 +525,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     // Hiding during capture cancels immediately; old pointerup cannot restart it.
     await window.mouse.move(120, 180);
     await window.mouse.down();
-    await window.mouse.move(150, 0, { steps: 4 });
+    await window.mouse.move(120, 0, { steps: 4 });
     await expect
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 100);
@@ -528,6 +556,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       .toBe(ground.y);
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     if (!packaged) {
+      await placeAwayFromPhysicalCursor();
       await window.mouse.move(120, 180);
       await window.mouse.down();
       await window.mouse.move(120, 0, { steps: 4 });
