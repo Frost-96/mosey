@@ -53,3 +53,52 @@ await writeFile(
     2,
   ),
 );
+
+// Product capture uses a separate binary and receipt; historical #14 probe identity
+// and evidence remain reproducible from their original source.
+const runtimeSource = path.resolve("native/dock-runtime.swift");
+const runtimeBinary = path.join(directory, "dock-runtime");
+execFileSync(
+  "/usr/bin/xcrun",
+  [
+    "swiftc",
+    ...flags,
+    "-module-cache-path",
+    path.resolve("build/swift-module-cache"),
+    runtimeSource,
+    "-o",
+    runtimeBinary,
+  ],
+  { stdio: "inherit" },
+);
+execFileSync(
+  "/usr/bin/codesign",
+  [
+    "--force",
+    "--sign",
+    "-",
+    "--identifier",
+    "dev.frost.mosey.dock-runtime",
+    runtimeBinary,
+  ],
+  { stdio: "inherit" },
+);
+await writeFile(
+  path.join(directory, "runtime-receipt.json"),
+  JSON.stringify(
+    {
+      sourceSHA256: sha(await readFile(runtimeSource)),
+      buildHelperSHA256: sha(await readFile(runtimeBinary)),
+      swiftVersion: execFileSync("/usr/bin/xcrun", ["swiftc", "--version"], {
+        encoding: "utf8",
+      }).trim(),
+      flags,
+      signature: spawnSync("/usr/bin/codesign", ["-dvvv", runtimeBinary], {
+        encoding: "utf8",
+        timeout: 5000,
+      }).stderr,
+    },
+    null,
+    2,
+  ),
+);

@@ -19,7 +19,7 @@ const config: ForgeConfig = {
     extraResource: [path.resolve("build/native")],
     extendInfo: {
       NSScreenCaptureUsageDescription:
-        "Optional bounded local Dock geometry validation. No pixel files or uploads.",
+        "Local Dock edge detection for pet climbing. Screen pixels stay in the native helper; no image files or uploads.",
     },
     osxSign: {
       identity: "-",
@@ -29,12 +29,14 @@ const config: ForgeConfig = {
       optionsForFile: (filePath) => ({
         hardenedRuntime: false,
         timestamp: "none",
-        ...(filePath.endsWith("/native/dock-live")
+        ...(/\/native\/dock-(live|runtime)$/.test(filePath)
           ? {
               entitlements: [],
               additionalArguments: [
                 "--identifier",
-                "dev.frost.mosey.dock-helper",
+                filePath.endsWith("dock-runtime")
+                  ? "dev.frost.mosey.dock-runtime"
+                  : "dev.frost.mosey.dock-helper",
               ],
             }
           : {}),

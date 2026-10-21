@@ -79,6 +79,17 @@ await writeFile(
 // Pose -1 uses the exact idle pixels for a seamless return to rest.
 const actionConfigs = [
   {
+    action: "climbing",
+    source: "climb",
+    loop: "once",
+    sequence: [
+      [0, 200],
+      [1, 240],
+      [2, 280],
+      [3, 280],
+    ],
+  },
+  {
     action: "walking",
     source: "walk",
     loop: "repeat",
@@ -226,9 +237,14 @@ for (const { action, source, sequence, loop } of actionConfigs) {
   for (let index = 0; index < 4; index++) {
     const cell = await sharp(input)
       .extract({
-        left: (index % 2) * cellWidth,
+        left: source === "climb" && index === 3 ? 680 : (index % 2) * cellWidth,
         top: Math.floor(index / 2) * cellHeight,
-        width: cellWidth,
+        width:
+          source === "climb" && index >= 2
+            ? index === 2
+              ? 680
+              : 574
+            : cellWidth,
         height: cellHeight,
       })
       .ensureAlpha()
@@ -238,9 +254,9 @@ for (const { action, source, sequence, loop } of actionConfigs) {
       top = cellHeight,
       right = 0,
       bottom = 0;
-    for (let y = 0; y < cellHeight; y++)
-      for (let x = 0; x < cellWidth; x++) {
-        const offset = (y * cellWidth + x) * 4 + 3;
+    for (let y = 0; y < cell.info.height; y++)
+      for (let x = 0; x < cell.info.width; x++) {
+        const offset = (y * cell.info.width + x) * 4 + 3;
         if (cell.data[offset]! < 128) cell.data[offset] = 0;
         else {
           left = Math.min(left, x);

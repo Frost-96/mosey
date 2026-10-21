@@ -1,3 +1,5 @@
+import climbingUrl from "./assets/generated/climbing-atlas.png";
+import climbing from "./assets/generated/climbing-atlas.json";
 import walkingUrl from "./assets/generated/walking-atlas.png";
 import walking from "./assets/generated/walking-atlas.json";
 import stretchingUrl from "./assets/generated/stretching-atlas.png";
@@ -28,6 +30,7 @@ try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [climbing, climbingUrl],
       [walking, walkingUrl],
       [stretching, stretchingUrl],
       [playing, playingUrl],

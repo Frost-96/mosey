@@ -1,0 +1,68 @@
+{
+  "tool": "built-in image_gen",
+  "reference_images": [
+    "src/assets/corgi-walk.png",
+    "src/assets/corgi-return.png"
+  ],
+  "source_sha256": "59678abecf3a355c750f821a1dbf6a10843efcf2c20f2af79e391487950ed039",
+  "transparent_background": true,
+  "prompt": "Use case: identity-preserve. Asset type: sprite sheet for an offline desktop corgi animation. Use the reference corgi's exact orange/white markings, dark brown outline, big upright ears, small short fluffy tail, cute eyes and flat shaded cartoon finish. Produce one transparent 2x2 sprite sheet, four equally sized 640x640 cells, full character in each cell with generous transparent gutters, no text, no ground or platform, no shadows. All four frames show the SAME corgi in right facing three-quarter side view progressively climbing onto an invisible ledge to the right, camera/scale constant. Reading order: (top left) crouched on hind paws preparing a climb, forepaws reaching up forward; (top right) body stretched slightly upward, both forepaws hooked at chest level in front, hind paws pushing; (bottom left) front half pulled over the invisible ledge, belly forward and hind paws tucked following, determined gentle expression; (bottom right) all four paws gathered into a low stable landing crouch, ready to transition to ordinary standing. No ledge drawn. Four limbs anatomically coherent, same muzzle, face, ear shapes and proportions. Each sprite entirely inside its cell. Transparent background required.",
+  "actual_dimensions": [1254, 1254],
+  "alpha128_components": [
+    {
+      "count": 133326,
+      "x0": 722,
+      "y0": 45,
+      "x1": 1199,
+      "y1": 620
+    },
+    {
+      "count": 144475,
+      "x0": 75,
+      "y0": 70,
+      "x1": 613,
+      "y1": 614
+    },
+    {
+      "count": 139284,
+      "x0": 81,
+      "y0": 634,
+      "x1": 649,
+      "y1": 1166
+    },
+    {
+      "count": 138830,
+      "x0": 716,
+      "y0": 728,
+      "x1": 1245,
+      "y1": 1169
+    }
+  ],
+  "extraction_regions": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 627,
+      "height": 627
+    },
+    {
+      "left": 627,
+      "top": 0,
+      "width": 627,
+      "height": 627
+    },
+    {
+      "left": 0,
+      "top": 627,
+      "width": 680,
+      "height": 627
+    },
+    {
+      "left": 680,
+      "top": 627,
+      "width": 574,
+      "height": 627
+    }
+  ],
+  "inspection": "Source visually inspected. Four distinct ascending/landing poses matching existing orange/white corgi. Generator did not honor exact cell dimensions, so extraction uses measured transparent gutters. Runtime desktop visual and transitions still require verification."
+}

@@ -2,7 +2,7 @@
 
 > 状态（2026-10-21）：保留 #3 已实现的点击互动，仅取消“点击宠物后保持原输入框键盘焦点”的验收要求；点击后可能需要重新点击输入框恢复输入。不采用私有 AppKit 焦点适配，其余功能和验收标准保留。
 
-单只柯基的本地 macOS 应用（#13 工程基线、#2 正式待机、#3 清醒点击实现）。Canvas 2D 播放呼吸循环，点击可见身体时随机歪头、伸爪或翻肚，动作期间连点合并、不排队。240 × 240 点透明窗口放在主屏可用区域底部，菜单栏 🐾 提供 **Quit Mosey**。透明区域使用当前帧同源 alpha 切换鼠标穿透；8ms 光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录。见 [#3 证据与限制](docs/validation/issue-3.md)。拖动、自主活动与 Dock 交互尚未实现。
+单只柯基的本地 macOS 应用。已接入点击、拖放、回到底部、自由活动、隐藏、主屏恢复、小中大三档缩放及本体右键菜单。#8 在这些能力上增加实际 Dock 像素边缘捕获、攀爬、落回与侧边避让；代码与整应用自动化并不等于全部真实桌面验收通过，当前范围和缺口见 [#8 验证记录](docs/validation/issue-8.md)。点击后可能需要重新点击工作应用的输入框恢复输入；8ms 光标轮询的首次进入竞态仍需真实输入证据。
 
 ## 运行与验证
 
@@ -70,6 +70,14 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 ## 可选 Dock 验证（#14）
 
-默认启动仍只显示待机柯基和菜单栏，不进行屏幕捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
+#14 的独立诊断入口仍保留。#8 现在在宠物可见且系统未暂停时启动单独的产品捕获 helper：已授权则本地分析 Dock 像素，未授权则在 preflight 阻断，不主动弹出权限申请。隐藏、锁屏、休眠和退出停止捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
 
-此入口是实际 Forge/Vite 应用中的独立实验，尚未提供宠物碰撞、攀爬或固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
+此诊断入口与 #8 产品捕获独立；启动诊断会先停止产品捕获，避免同时占用捕获资源。诊断结束后可用 **Retry Dock interaction** 恢复产品捕获，也可隐藏后重新显示宠物。产品捕获不可用时清除支撑边缘，不使用固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
+
+## Dock 交互（#8）
+
+宠物可见时，已授权的本地 ScreenCaptureKit helper 从独立 Dock 窗口提取真实透明轮廓，仅向主进程发送受限数字边缘。底部轮廓与当前已绘制的身体横向重叠才攀爬；隐藏、失效或不重叠时回原地面；左右轮廓仅横向避让。角色和命中沿用同一大小、脚底与实际帧的 alpha 坐标约定。攀爬可再次抓起，菜单打开冻结运动；手动隐藏不会因 Dock 变化而恢复显示。
+
+应用菜单及菜单栏显示 Dock 交互状态。若显示需要 Screen Recording 权限，由用户在系统设置手动授权当前实际使用的 Mosey，再选择 **Retry Dock interaction**，必要时退出并重开同一应用。应用不会自行更改权限，也不因拒绝授权而把一般工作区当成 Dock 轮廓。开发宿主权限不代表 Finder 独立启动的打包应用已经获权；本地 ad-hoc 重建、重签或移动应用后需重新核对实际权限。
+
+`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、显示器组合验收。详见 [#8 验证记录](docs/validation/issue-8.md)。
