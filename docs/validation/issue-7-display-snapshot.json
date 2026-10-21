@@ -1,0 +1,100 @@
+{
+  "capturedAt": "2026-10-21T05:18:05.612Z",
+  "electron": "44.9.1",
+  "platform": "darwin",
+  "arch": "arm64",
+  "primary": {
+    "accelerometerSupport": "unknown",
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "width": 1470,
+      "height": 956
+    },
+    "colorDepth": 30,
+    "colorSpace": "{primaries:P3, transfer:{0.0777*x + 0.0000 if abs(x) < 0.0450 else sign(x)*((0.9495*abs(x) + 0.0495)**2.3955 + 0.0003)}, matrix:RGB, range:FULL}",
+    "depthPerComponent": 10,
+    "detected": true,
+    "displayFrequency": 60.00239944458008,
+    "id": 1,
+    "internal": true,
+    "label": "内建视网膜显示器",
+    "maximumCursorSize": {
+      "width": 0,
+      "height": 0
+    },
+    "monochrome": false,
+    "nativeOrigin": {
+      "x": 0,
+      "y": 0
+    },
+    "rotation": 0,
+    "scaleFactor": 2,
+    "size": {
+      "width": 1470,
+      "height": 956
+    },
+    "workArea": {
+      "x": 0,
+      "y": 33,
+      "width": 1470,
+      "height": 923
+    },
+    "workAreaSize": {
+      "width": 1470,
+      "height": 923
+    },
+    "touchSupport": "unknown"
+  },
+  "displays": [
+    {
+      "accelerometerSupport": "unknown",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1470,
+        "height": 956
+      },
+      "colorDepth": 30,
+      "colorSpace": "{primaries:P3, transfer:{0.0777*x + 0.0000 if abs(x) < 0.0450 else sign(x)*((0.9495*abs(x) + 0.0495)**2.3955 + 0.0003)}, matrix:RGB, range:FULL}",
+      "depthPerComponent": 10,
+      "detected": true,
+      "displayFrequency": 60.00239944458008,
+      "id": 1,
+      "internal": true,
+      "label": "内建视网膜显示器",
+      "maximumCursorSize": {
+        "width": 0,
+        "height": 0
+      },
+      "monochrome": false,
+      "nativeOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "scaleFactor": 2,
+      "size": {
+        "width": 1470,
+        "height": 956
+      },
+      "workArea": {
+        "x": 0,
+        "y": 33,
+        "width": 1470,
+        "height": 923
+      },
+      "workAreaSize": {
+        "width": 1470,
+        "height": 923
+      },
+      "touchSupport": "unknown"
+    }
+  ],
+  "petBounds": {
+    "x": 615,
+    "y": 716,
+    "width": 240,
+    "height": 240
+  }
+}
