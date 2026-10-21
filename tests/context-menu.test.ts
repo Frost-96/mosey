@@ -7,6 +7,8 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+// Exercise the CI 1x raster path on Retina developer machines too.
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("body secondary clicks open a native menu and cancel without changing the pet", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-menu-"));
   let app: ElectronApplication | undefined;
@@ -22,9 +24,9 @@ test("body secondary clicks open a native menu and cancel without changing the p
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
     );
     const pet = await app.firstWindow();
     await pet.waitForLoadState("networkidle");
@@ -59,7 +61,16 @@ test("body secondary clicks open a native menu and cancel without changing the p
     const menuCount = () =>
       app!.evaluate(() => Reflect.get(globalThis, "menus").length);
     const pixels = () =>
-      pet.evaluate(() => document.querySelector("canvas")!.toDataURL());
+      pet.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        // Body selection reads Canvas pixels too. Keep the reference and later
+        // observations on the same readback path: at 1x, changing readback
+        // history changes interpolated color/alpha rounding after idle draws.
+        canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL();
+      });
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
@@ -150,6 +161,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
           context.drawImage(canvas, 0, 0);
+          context.getImageData(0, 0, mirror.width, mirror.height);
           return mirror.toDataURL();
         }),
       );
