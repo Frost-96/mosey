@@ -21,8 +21,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm exec vitest run --project development tests/show-ground-diagnostic.test.ts
-      # Temporary narrow feedback for measured startup visibility/ground races.
-      - run: pnpm exec vitest run --project development tests/size.test.ts tests/visibility.test.ts
       - run: pnpm test:dev
       - run: pnpm package:mac
       - run: pnpm test:packaged
