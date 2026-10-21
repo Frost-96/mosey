@@ -3,6 +3,7 @@ import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { appendFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -11,6 +12,14 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-autonomy-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  await mkdir("test-results", { recursive: true });
+  const tracePath = `test-results/${packaged ? "packaged" : "development"}-autonomy-progress.jsonl`;
+  await writeFile(tracePath, "");
+  const checkpoint = (stage: string) => {
+    const entry = JSON.stringify({ stage, at: performance.now() });
+    appendFileSync(tracePath, `${entry}\n`);
+    console.log(`[autonomy-progress] ${entry}`);
+  };
   try {
     if (!packaged) stopForge = await startForge();
     else
@@ -99,13 +108,18 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       path: `test-results/${packaged ? "packaged" : "development"}-walking.png`,
       omitBackground: true,
     });
+    checkpoint("walking-screenshot-complete");
     const moving = await bounds();
+    checkpoint("walking-bounds-complete");
     expect(moving.y).toBe(origin.y);
     expect(Math.abs(moving.x - origin.x)).toBeLessThan(181);
+    checkpoint("walking-click-start");
     await pet.mouse.click(120, 180);
+    checkpoint("walking-click-complete");
     const interrupted = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 600));
     expect(await bounds()).toEqual(interrupted);
+    checkpoint("draw-observer-start");
     await pet.evaluate(() => {
       Reflect.set(window, "draws", 0);
       const draw = CanvasRenderingContext2D.prototype.drawImage;
@@ -122,36 +136,43 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         },
       );
     });
+    checkpoint("suspend-start");
     await app.evaluate(({ powerMonitor }) => {
       powerMonitor.emit("suspend");
     });
+    checkpoint("suspend-complete");
     await new Promise((resolve) => setTimeout(resolve, 150));
     const work = await pet.evaluate(() => Reflect.get(window, "draws"));
     const paused = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect(await pet.evaluate(() => Reflect.get(window, "draws"))).toBe(work);
     expect(await bounds()).toEqual(paused);
+    checkpoint("resume-start");
     await app.evaluate(({ powerMonitor }) => {
       powerMonitor.emit("resume");
     });
+    checkpoint("resume-complete");
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(await bounds()).toEqual(paused);
     for (const [choice, action] of [
       [0.6, "stretching"],
       [0.9, "playing"],
     ] as const) {
+      checkpoint(`${action}-start`);
       await app.evaluate((_electron, choice) => {
         Math.random = () => choice;
       }, choice);
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
       const stationary = await bounds();
+      checkpoint(`${action}-menu-complete`);
       await expect
         .poll(async () => idleFrames.has(await pixels()), {
           timeout: 2500,
           interval: 30,
         })
         .toBe(false);
+      checkpoint(`${action}-pixels-complete`);
       // Skip the initial transition pose and capture the held bow/pounce.
       await new Promise((resolve) => setTimeout(resolve, 450));
       expect(idleFrames.has(await pixels())).toBe(false);
@@ -159,6 +180,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         path: `test-results/${packaged ? "packaged" : "development"}-${action}.png`,
         omitBackground: true,
       });
+      checkpoint(`${action}-screenshot-complete`);
       expect(await bounds()).toEqual(stationary);
       await expect
         .poll(async () => idleFrames.has(await pixels()), {
@@ -268,12 +290,15 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         2,
       ),
     );
+    checkpoint("complete");
   } catch (error) {
+    checkpoint("failure");
     await mkdir("test-results", { recursive: true });
     await app
       ?.windows()[0]
       ?.screenshot({
         path: `test-results/failure-${packaged ? "packaged" : "development"}-autonomy.png`,
+        timeout: 3000,
       })
       .catch(() => {});
     throw error;
