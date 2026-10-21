@@ -111,3 +111,9 @@ CI39582318548（源码92fca85）的完整开发套件8通过、1跳过（369.16�
 为隔离菜单边界，临时完整应用复现器先执行30次suspend/resume，每次严格断言实际窗口可见及原选择位置存在Hide：通过11.73秒，90次setApplicationMenu，未见hide/show事件。随后执行8次包含Hide→Show、加速休息时钟、行走后点击、600ms等待、suspend1350ms、resume250ms的组合：通过29.64秒，公共菜单／窗口／power事件记录在 `menu-bodyclick-public-trace.json`。两次范围日志为 `menu-power-only-repro.log` 与 `menu-bodyclick-repro.log`；额外夹具源码只保留在 `/tmp/mosey-issue-8/menu-lifecycle-repro.ts`，不加入常规套件。没有稳定复现原CI症状，未凭代码猜测修改产品或放松断言。
 
 常规自主活动测试只增加有界失败证据：最近128项公共Menu.setApplicationMenu、窗口show/hide/blur/focus及power事件，当前应用hidden、菜单树、窗口可见性／bounds，以及该测试自有profile的preferences文件。发生失败时写入 `test-results/failure-{development|packaged}-autonomy-state.json`，用于下一次远端复现；菜单选择和行为断言保持原样。新候选字节未因诊断改变；没有重建或重签。`pnpm check`通过。当前状态为待远端诊断，不能宣称CI菜单缺陷已修复或整套已通过。归档日志仅规范化行尾空白，`/tmp`采集原件保留。
+
+## 最新完整远端 CI：39584805811
+
+源码 `60d4f0ae7c09320a780155cdccdd6a8db0d890b0` 的CI完整通过：静态检查、打包构建通过；开发7文件通过，8测试通过、1跳过（396.12秒）；打包7文件、9/9测试通过（243.60秒）。记录见 `issue-8/ci-39584805811-validation-green.log`，仅摘录完整check／开发／构建／打包测试步骤并去除ANSI及行尾空白，原始全日志仍在 `/tmp/mosey-issue-8/ci-39584805811-full.log`，摘录首部记录原件SHA256。冻结provenance的latestCI已更新，先前失败CI保留为历史。
+
+该次仅增加自主活动失败证据，产品源码未改变。现有本地验收候选asar仍为989fab98…，未重建、重签或移动。本轮CI在runner自行构建产物，不声称其字节与本地冻结候选相同。完整绿结果证明该次CI情景通过，不能倒推先前菜单查找或像素／抓取偶发失败已经定位或被代码修复；未放松断言，旧失败日志和未知根因仍保留。此处只更新自动化记录，独立权限与真实桌面验收证据另记，不提交本地物理截图。

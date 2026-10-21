@@ -16,7 +16,7 @@
     "flags": ["-O", "-target", "arm64-apple-macos15.0", "-parse-as-library"],
     "signature": "Executable=/Users/frost/.codex/worktrees/ticket-8-dock/mosey/build/native/dock-runtime\nIdentifier=dev.frost.mosey.dock-runtime\nFormat=Mach-O thin (arm64)\nCodeDirectory v=20400 size=501 flags=0x2(adhoc) hashes=10+2 location=embedded\nHash type=sha256 size=32\nCandidateCDHash sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nCandidateCDHashFull sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nHash choices=sha256\nCMSDigest=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nCMSDigestType=2\nCDHash=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nSignature=adhoc\nInfo.plist=not bound\nTeamIdentifier=not set\nSealed Resources=none\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\n"
   },
-  "qualification": "Replaces obsolete asar5fa938dc candidate. Split passing coverage does not claim a single all-green packaged run. Idle pixel failure remains unexplained. Independent LaunchServices permission and physical Dock acceptance remain pending.",
+  "qualification": "Replaces obsolete asar5fa938dc candidate. Local split-run failures and prior remote menu failure remain unexplained. Later remote full development/package suites passed on production-equivalent source plus diagnostic-only fixture changes; CI artifact bytes are not asserted equal to this frozen candidate. Physical/independent permission evidence is recorded separately.",
   "validation": {
     "development": "Original app + complete Dock files: 3passed/1skipped,95.85s.",
     "packagedFocused": "3passed/1failed,71.23s; Dock2/2 and plain renderer launch passed; app idle pixel membership failed at line670 before display injection.",
@@ -31,6 +31,32 @@
   "copiedFrom": "/Users/frost/.codex/worktrees/ticket-8-dock/mosey/out/Mosey-darwin-arm64/Mosey.app",
   "independentLaunch": "not attempted for this candidate; earlier LaunchServices attempt concerns obsolete5fa938dc bundle only",
   "supersedes": "obsolete-5fa938dc-frozen-provenance.json",
-  "ciRun": "https://github.com/Frost-96/mosey/actions/runs/39582318548",
-  "ciStatusAtFreeze": "completed: development passed; packaged8passed1failed (autonomy Hide Mosey menu lookup after suspend/resume)"
+  "ciRun": "https://github.com/Frost-96/mosey/actions/runs/39584805811",
+  "ciStatusAtFreeze": "completed: development passed; packaged8passed1failed (autonomy Hide Mosey menu lookup after suspend/resume)",
+  "ciHistory": [
+    {
+      "run": "https://github.com/Frost-96/mosey/actions/runs/39582318548",
+      "status": "completed: development passed; packaged8passed1failed (autonomy Hide Mosey menu lookup after suspend/resume)",
+      "sourceCommit": "92fca85"
+    }
+  ],
+  "latestCI": {
+    "sourceCommit": "60d4f0ae7c09320a780155cdccdd6a8db0d890b0",
+    "status": "completed/success",
+    "staticChecks": "passed",
+    "packageBuild": "passed",
+    "development": {
+      "filesPassed": 7,
+      "testsPassed": 8,
+      "testsSkipped": 1,
+      "durationSeconds": 396.12
+    },
+    "packaged": {
+      "filesPassed": 7,
+      "testsPassed": 9,
+      "durationSeconds": 243.6
+    },
+    "log": "ci-39584805811-validation-green.log",
+    "scope": "Full CI suites on same production source plus diagnostic-only fixture change. CI builds its own artifact; it does not establish hash identity with this frozen local candidate or prove independent permission/physical desktop acceptance."
+  }
 }
