@@ -306,6 +306,9 @@ async function start() {
     );
   };
   let dockObservation: DockObservation | null = null;
+  // Only an observed overlapping bottom edge owns vertical support. A null or
+  // pending capture report cannot turn an unrelated desktop position into a drop.
+  let dockSupported = false;
   let dockPendingAt: number | undefined;
   let dockPendingSince: number | undefined;
   let dockMovementDelay = 0;
@@ -370,6 +373,11 @@ async function start() {
     const bounds = pet.getBounds();
     const support = supportAt(bounds.x, bounds.y);
     if (support.shiftX) constrain(bounds.x + support.shiftX, bounds.y);
+    const area = screen.getPrimaryDisplay().workArea;
+    const supported = support.footY < area.y + area.height - 1;
+    const lostSupport = dockSupported && !supported;
+    dockSupported = supported;
+    if (!supported && !lostSupport) return;
     const footY = bounds.y + bounds.height;
     if (support.footY < footY - 1) behavior.send({ type: "CLIMB" });
     else if (support.footY > footY + 1) behavior.send({ type: "DROP" });
@@ -867,6 +875,9 @@ async function start() {
   const pause = () => {
     dismissBodyMenu();
     suspended = true;
+    dockSupported = false;
+    dockPendingSince = undefined;
+    finishDockPending();
     void dockRuntime.stop();
     dockObservation = null;
     stopPointerPolling();
@@ -887,6 +898,8 @@ async function start() {
   powerMonitor.on("resume", resume);
   powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
+    dockSupported = false;
+    dockPendingSince = undefined;
     dockObservation = null;
     finishDockPending();
     cancelInteraction();
@@ -934,6 +947,9 @@ async function start() {
   });
   pet.on("hide", () => {
     visibility = "hidden";
+    dockSupported = false;
+    dockPendingSince = undefined;
+    finishDockPending();
     void dockRuntime.stop();
     dockObservation = null;
     stopPointerPolling();

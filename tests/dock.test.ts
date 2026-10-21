@@ -138,6 +138,55 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     await expect
       .poll(async () => (await bounds()).y + (await bounds()).height)
       .toBe(floor);
+    // Pending/null capture reports have never established Dock support. They
+    // cannot undo placement recovered at an external display boundary.
+    const displayRecovery = await app.evaluate(
+      ({ screen, BrowserWindow }, id) => {
+        const pet = BrowserWindow.fromId(id)!;
+        const original = screen.getPrimaryDisplay;
+        const display = original();
+        screen.getPrimaryDisplay = () => ({
+          ...display,
+          id: display.id + 1,
+          workArea: {
+            ...display.workArea,
+            x: display.workArea.x + 40,
+            y: display.workArea.y + 40,
+            width: display.workArea.width - 80,
+            height: display.workArea.height - 80,
+          },
+        });
+        try {
+          screen.emit(
+            "display-metrics-changed",
+            {},
+            screen.getPrimaryDisplay(),
+            ["workArea"],
+          );
+          return pet.getBounds();
+        } finally {
+          screen.getPrimaryDisplay = original;
+        }
+      },
+      petWindowID,
+    );
+    await publishObservation(JSON.stringify({ testPending: true }));
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    expect(
+      await bounds(),
+      "pending without previous Dock support preserves display recovery",
+    ).toEqual(displayRecovery);
+    await publishObservation("null");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(
+      await bounds(),
+      "null completion without previous Dock support preserves display recovery",
+    ).toEqual(displayRecovery);
+    await app.evaluate(({ screen }) =>
+      screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+        "workArea",
+      ]),
+    );
     const pixels = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
