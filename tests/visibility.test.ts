@@ -21,6 +21,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
   let stopForge: (() => Promise<void>) | undefined;
   let duplicate: ChildProcess | undefined;
   let app: ElectronApplication | undefined;
+  const navigationEvidence: unknown[] = [];
   try {
     if (!packaged) stopForge = await startForge();
     if (packaged) {
@@ -45,6 +46,47 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     );
     app = await launch();
     const pet = await app.firstWindow();
+    navigationEvidence.push({
+      event: "firstWindow",
+      at: Date.now(),
+      url: pet.url(),
+    });
+    pet.on("framenavigated", (frame) => {
+      if (frame === pet.mainFrame())
+        navigationEvidence.push({
+          event: "framenavigated",
+          at: Date.now(),
+          url: frame.url(),
+        });
+    });
+    pet.on("load", () =>
+      navigationEvidence.push({
+        event: "load",
+        at: Date.now(),
+        url: pet.url(),
+      }),
+    );
+    pet.on("console", (message) => {
+      if (message.text().includes("[vite]"))
+        navigationEvidence.push({
+          event: "vite-console",
+          at: Date.now(),
+          message: message.text(),
+        });
+    });
+    navigationEvidence.push(
+      await app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        return {
+          event: "initial-native",
+          at: Date.now(),
+          visible: pet.isVisible(),
+          loading: pet.webContents.isLoading(),
+          url: pet.webContents.getURL(),
+          bounds: pet.getBounds(),
+        };
+      }),
+    );
     const visible = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),
@@ -58,6 +100,19 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         item.click();
       }, label);
     await expect.poll(visible).toBe(true);
+    navigationEvidence.push(
+      await app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        return {
+          event: "visible-native",
+          at: Date.now(),
+          visible: pet.isVisible(),
+          loading: pet.webContents.isLoading(),
+          url: pet.webContents.getURL(),
+          bounds: pet.getBounds(),
+        };
+      }),
+    );
     const pixels = () =>
       pet.evaluate(() => document.querySelector("canvas")!.toDataURL());
     const idleFrames = new Set<string>();
@@ -224,6 +279,14 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
+    console.error(
+      "[DEBUG-visibility-navigation]",
+      JSON.stringify(navigationEvidence),
+    );
+    await writeFile(
+      `test-results/${packaged ? "packaged" : "development"}-visibility-navigation.json`,
+      JSON.stringify(navigationEvidence, null, 2),
+    );
     for (const [index, window] of (app?.windows() ?? []).entries()) {
       await window
         .screenshot({
