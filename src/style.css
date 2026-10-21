@@ -8,4 +8,6 @@ body {
 }
 canvas {
   display: block;
+  touch-action: none;
+  user-select: none;
 }
