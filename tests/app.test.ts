@@ -1,17 +1,82 @@
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { mkdir, mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+test.runIf(packaged)(
+  "packaged app starts a renderer without an inspector bootstrap",
+  async () => {
+    const relocated = await mkdtemp(path.join(os.tmpdir(), "mosey-relocated-"));
+    const bundle = path.join(relocated, "Mosey.app");
+    execFileSync("/usr/bin/ditto", [
+      path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+      bundle,
+    ]);
+    const child = spawn(
+      process.env.MOSEY_STARTUP_EXECUTABLE ??
+        path.join(bundle, "Contents/MacOS/Mosey"),
+      [],
+      {
+        env: {
+          HOME: os.homedir(),
+          PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+          TMPDIR: os.tmpdir(),
+        },
+        cwd: "/",
+        stdio: "pipe",
+      },
+    );
+    let output = "";
+    child.stdout.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    child.stderr.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    const descendants = () =>
+      execFileSync("/bin/ps", ["-axo", "pid=,ppid=,args="], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line))
+        .filter((match) => match && Number(match[2]) === child.pid);
+    try {
+      await expect
+        .poll(
+          () => {
+            if (child.exitCode !== null)
+              throw new Error(`App exited before renderer startup: ${output}`);
+            return descendants().some((match) =>
+              match![3].includes("--type=renderer"),
+            );
+          },
+          { timeout: 8000 },
+        )
+        .toBe(true);
+      expect(output).not.toMatch(/Uncaught Exception|Error launching app/);
+    } finally {
+      child.kill("SIGTERM");
+      await expect
+        .poll(() => child.exitCode !== null || child.signalCode !== null, {
+          timeout: 3000,
+        })
+        .toBe(true);
+      await rm(relocated, { recursive: true, force: true });
+    }
+  },
+);
+
 test("a real app displays one animated corgi and quits from its menu", async () => {
   let app: ElectronApplication | undefined;
   let server: ChildProcess | undefined;
   const errors: string[] = [];
   let shim: string | undefined;
+  let packagedRoot: string | undefined;
+  const ownedNativeChildren = new Set<number>();
   try {
     if (!packaged) {
       shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
@@ -47,12 +112,20 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         )
         .toContain("MOSEY_TEST_READY");
     }
+    if (packaged) {
+      packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
+      execFileSync("/usr/bin/ditto", [
+        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+        path.join(packagedRoot, "Mosey.app"),
+      ]);
+    }
     app = await electron.launch(
       packaged
         ? {
             timeout: 20000,
-            executablePath: path.resolve(
-              "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
+            executablePath: path.join(
+              packagedRoot!,
+              "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
         : { args: ["."], timeout: 20000 },
@@ -66,22 +139,88 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       console.log(message.type(), message.text()),
     );
     expect(app.windows()).toHaveLength(1);
+    const opaquePixelCount = () =>
+      window.evaluate(() => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) return 0;
+        const pixels = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        return Array.from(pixels).filter(
+          (value, i) => i % 4 === 3 && value > 127,
+        ).length;
+      });
     await expect
-      .poll(
-        async () =>
-          window.evaluate(() => {
-            const canvas = document.querySelector("canvas");
-            if (!canvas) return 0;
-            const pixels = canvas
-              .getContext("2d")!
-              .getImageData(0, 0, canvas.width, canvas.height).data;
-            return Array.from(pixels).filter(
-              (value, i) => i % 4 === 3 && value > 127,
-            ).length;
-          }),
-        { timeout: 10000 },
-      )
+      .poll(opaquePixelCount, { timeout: 10000 })
       .toBeGreaterThan(5000);
+    if (!packaged) {
+      // Renderer-originated navigation exercises will-navigate; page.reload()
+      // uses a browser API that can bypass the application's navigation guard.
+      await window.evaluate(() => {
+        document.documentElement.dataset.reloadIdentity = "original-document";
+        location.reload();
+      });
+      await expect
+        .poll(
+          () =>
+            window.evaluate(
+              () => document.documentElement.dataset.reloadIdentity ?? null,
+            ),
+          { timeout: 10000 },
+        )
+        .toBe(null);
+      await expect
+        .poll(opaquePixelCount, { timeout: 10000 })
+        .toBeGreaterThan(5000);
+    }
+    // Renderer-originated navigation to another path must be stopped by the
+    // navigation guard itself, including packaged navigation back to its own URL.
+    const originalURL = window.url();
+    const deniedURLs = [new URL("unexpected-navigation", originalURL).href];
+    if (packaged) deniedURLs.push(originalURL);
+    for (const destination of deniedURLs) {
+      await window.evaluate(() => {
+        document.documentElement.dataset.navigationIdentity = "same-document";
+      });
+      const prevented = await app.evaluate(
+        async ({ BrowserWindow }, destination) => {
+          const contents = BrowserWindow.getAllWindows()[0]!.webContents;
+          return new Promise<boolean>((resolve, reject) => {
+            const listener = (event: Electron.Event, url: string) => {
+              if (url !== destination) return;
+              clearTimeout(timer);
+              contents.off("will-navigate", listener);
+              resolve(event.defaultPrevented);
+            };
+            const timer = setTimeout(() => {
+              contents.off("will-navigate", listener);
+              reject(
+                new Error("Renderer navigation did not reach will-navigate"),
+              );
+            }, 5000);
+            contents.on("will-navigate", listener);
+            void contents
+              .executeJavaScript(
+                `location.href = ${JSON.stringify(destination)}`,
+              )
+              .catch((error: unknown) => {
+                clearTimeout(timer);
+                contents.off("will-navigate", listener);
+                reject(error);
+              });
+          });
+        },
+        destination,
+      );
+      expect(prevented).toBe(true);
+      expect(window.url()).toBe(originalURL);
+      expect(
+        await window.evaluate(
+          () => document.documentElement.dataset.navigationIdentity,
+        ),
+      ).toBe("same-document");
+      expect(await opaquePixelCount()).toBeGreaterThan(5000);
+    }
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(app.process().spawnfile, packaged ? [] : ["."], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
@@ -199,6 +338,135 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
       .toBe(true);
     expect(errors).toEqual([]);
+    // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
+    const invokeDiagnostic = async (label: string) =>
+      app!.evaluate(({ Menu }, label) => {
+        const item = Menu.getApplicationMenu()
+          ?.items.find((entry) => entry.label === "Dock validation")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item || !item.enabled)
+          throw new Error(`Diagnostic menu item unavailable: ${label}`);
+        item.click();
+      }, label);
+    const diagnosticWindow = app.waitForEvent("window").catch(() => undefined);
+    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    const diagnostic = await diagnosticWindow;
+    if (!diagnostic) throw new Error("Diagnostic window did not open");
+    await diagnostic
+      .getByRole("heading", { name: "Dock validation" })
+      .waitFor();
+    const { readFile, stat } = await import("node:fs/promises");
+    const runs: {
+      localLog: string;
+      nativePID: number;
+      capturing: boolean;
+      faultInjection: string;
+    }[] = [];
+    const inspectRun = async () => {
+      await expect
+        .poll(() => diagnostic.locator("body").innerText(), { timeout: 15000 })
+        .toMatch(
+          /Capturing diagnostic statistics|Blocked: native screen-recording permission unavailable/,
+        );
+      const body = await diagnostic.locator("body").innerText();
+      expect(body).not.toContain("Failed:");
+      const localLog = await diagnostic.getByLabel("Local log").inputValue();
+      expect(path.isAbsolute(localLog)).toBe(true);
+      const contents = await readFile(localLog, "utf8");
+      expect((await stat(localLog)).size).toBeLessThanOrEqual(8 * 1024 * 1024);
+      const records = contents
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line));
+      expect(records[0].type).toBe("electron-host");
+      const native = records
+        .filter((record) => record.type === "native")
+        .map((record) => record.record);
+      const environment = native.find(
+        (record) => record.type === "environment",
+      );
+      expect(environment.appStatus).toBe(false);
+      const capturing = body.includes("Capturing diagnostic statistics");
+      if (!capturing) {
+        expect(
+          native.some(
+            (record) =>
+              record.type === "unavailable" &&
+              record.status === "permission_unavailable" &&
+              record.shareableContentQueryAttempted === false,
+          ),
+        ).toBe(true);
+        expect(
+          native.some((record) => record.type === "stream_configuration"),
+        ).toBe(false);
+      } else
+        expect(
+          native.some((record) => record.type === "stream_configuration"),
+        ).toBe(true);
+      const result = {
+        localLog,
+        nativePID: environment.processID as number,
+        capturing,
+        faultInjection: capturing
+          ? "SIGSTOP owned helper"
+          : "Skipped live fault: explicit native preflight blocked",
+      };
+      if (capturing) ownedNativeChildren.add(result.nativePID);
+      runs.push(result);
+      return result;
+    };
+    const waitGone = async (pid: number) => {
+      await expect
+        .poll(
+          () => {
+            try {
+              process.kill(pid, 0);
+              return false;
+            } catch {
+              return true;
+            }
+          },
+          { timeout: 6000 },
+        )
+        .toBe(true);
+      ownedNativeChildren.delete(pid);
+    };
+    const firstRun = await inspectRun();
+    if (firstRun.capturing) {
+      await expect
+        .poll(async () =>
+          (await readFile(firstRun.localLog, "utf8")).includes(
+            '"type":"heartbeat"',
+          ),
+        )
+        .toBe(true);
+      process.kill(firstRun.nativePID, "SIGSTOP");
+      await expect
+        .poll(() => diagnostic.locator("body").innerText(), { timeout: 6000 })
+        .toContain("Failed: native output heartbeat unavailable");
+      await expect
+        .poll(() => diagnostic.locator("body").innerText())
+        .toContain("Latest validated native currentness: Unavailable");
+      await waitGone(firstRun.nativePID);
+    }
+    await invokeDiagnostic("Stop Dock validation");
+    await expect
+      .poll(() => diagnostic.locator("body").innerText())
+      .toContain("Stopped");
+    await waitGone(firstRun.nativePID);
+    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    const secondRun = await inspectRun();
+    expect(secondRun.localLog).not.toBe(firstRun.localLog);
+    if (secondRun.capturing) process.kill(secondRun.nativePID, "SIGSTOP");
+    await invokeDiagnostic("Stop Dock validation");
+    await expect
+      .poll(() => diagnostic.locator("body").innerText(), { timeout: 6000 })
+      .toContain("Stopped");
+    await waitGone(secondRun.nativePID);
+    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    const quitRun = await inspectRun();
+    expect(quitRun.localLog).not.toBe(secondRun.localLog);
+    if (quitRun.capturing) process.kill(quitRun.nativePID, "SIGSTOP");
     await mkdir("test-results", { recursive: true });
     await window.screenshot({
       path: `test-results/${packaged ? "packaged" : "development"}-corgi.png`,
@@ -217,6 +485,16 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     });
     await closed;
     await expect.poll(() => child.exitCode).toBe(0);
+    await waitGone(quitRun.nativePID);
+    for (const [index, run] of runs.entries())
+      await writeFile(
+        `test-results/${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+        await readFile(run.localLog),
+      );
+    await writeFile(
+      `test-results/${packaged ? "packaged" : "development"}-dock-lifecycle.json`,
+      JSON.stringify(runs, null, 2),
+    );
     await writeFile(
       `test-results/${packaged ? "packaged" : "development"}-runtime.json`,
       JSON.stringify(runtime, null, 2),
@@ -231,6 +509,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         .catch(() => {});
     throw error;
   } finally {
+    for (const pid of ownedNativeChildren) {
+      try {
+        process.kill(pid, "SIGCONT");
+      } catch {
+        /* exited */
+      }
+    }
     await app?.close().catch(() => {});
     if (server?.pid) {
       try {
@@ -245,5 +530,6 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       });
     }
     if (shim) await rm(shim, { recursive: true, force: true });
+    if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
   }
 });

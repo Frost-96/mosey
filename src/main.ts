@@ -8,6 +8,7 @@ import {
   ipcMain,
 } from "electron";
 import path from "node:path";
+import { DockValidation } from "./platform/dock-validation";
 import log from "electron-log/main";
 import { createActor } from "xstate";
 import { petBehavior } from "./behavior/resting";
@@ -49,29 +50,51 @@ async function start() {
     arch: process.arch,
   });
   const quit = () => app.quit();
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: "Mosey",
-        submenu: [
-          {
-            label: "Quit Mosey",
-            accelerator: "CommandOrControl+Q",
-            click: quit,
-          },
-        ],
-      },
-    ]),
-  );
+  let drained = false;
+  const refreshMenus = () => {
+    const diagnostic: Electron.MenuItemConstructorOptions = {
+      label: "Dock validation",
+      submenu: dockValidation.menu(),
+    };
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: "Mosey",
+          submenu: [
+            {
+              label: "Quit Mosey",
+              accelerator: "CommandOrControl+Q",
+              click: quit,
+            },
+          ],
+        },
+        diagnostic,
+      ]),
+    );
+    tray.setContextMenu(
+      Menu.buildFromTemplate([
+        diagnostic,
+        { label: "Quit Mosey", click: quit },
+      ]),
+    );
+  };
+  app.on("before-quit", (event) => {
+    if (!drained) {
+      event.preventDefault();
+      void dockValidation.stop("application quit").finally(() => {
+        drained = true;
+        app.quit();
+      });
+    }
+  });
   const icon = nativeImage.createFromDataURL(
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==",
   );
   const tray = new Tray(icon);
   tray.setTitle("🐾");
   tray.setToolTip("Mosey");
-  tray.setContextMenu(
-    Menu.buildFromTemplate([{ label: "Quit Mosey", click: quit }]),
-  );
+  const dockValidation = new DockValidation(refreshMenus);
+  refreshMenus();
   const area = screen.getPrimaryDisplay().workArea;
   const pet = new BrowserWindow({
     width: 240,
@@ -200,17 +223,22 @@ async function start() {
     behavior.send({ type: "CANCEL" });
     publish();
   });
+  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
+    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
+    : undefined;
+  const devOrigin = devURL ? new URL(devURL).origin : undefined;
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-  pet.webContents.on("will-navigate", (event) => event.preventDefault());
+  pet.webContents.on("will-navigate", (event, url) => {
+    // Allow reload of only the exact configured development entry.
+    // Keep every other navigation, and every packaged navigation, blocked.
+    if (!devURL || url !== devURL) event.preventDefault();
+  });
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
   pet.webContents.on("render-process-gone", (_event, details) =>
     log.error("Pet renderer exited", details.reason),
   );
-  const devOrigin = MAIN_WINDOW_VITE_DEV_SERVER_URL
-    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).origin
-    : undefined;
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
@@ -222,8 +250,7 @@ async function start() {
     callback({ cancel: !allowed });
   });
   pet.once("ready-to-show", () => pet?.showInactive());
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL)
-    await pet.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  if (devURL) await pet.loadURL(devURL);
   else
     await pet.loadFile(
       path.join(
