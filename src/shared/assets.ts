@@ -18,6 +18,9 @@ export const atlasSchema = z
     version: z.literal(1),
     action: z.enum([
       "resting",
+      "walking",
+      "stretching",
+      "playing",
       "tilt",
       "paw",
       "belly",
@@ -29,7 +32,7 @@ export const atlasSchema = z
     image: z
       .string()
       .regex(
-        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing)-atlas\.png$/,
+        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing|walking|stretching|playing)-atlas\.png$/,
       ),
     width: integer.positive(),
     height: integer.positive(),
