@@ -58,7 +58,8 @@ try {
   canvas.style.height = "240px";
   context.scale(scale, scale);
   let previous = "",
-    scheduled = 0,
+    frameRequest = 0,
+    frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
     posture: "resting",
@@ -67,8 +68,19 @@ try {
     actionId: 0,
     startedAt: Date.now(),
   };
+  function cancelDrawing() {
+    clearTimeout(frameTimer);
+    cancelAnimationFrame(frameRequest);
+    frameTimer = 0;
+    frameRequest = 0;
+  }
+  function requestDraw() {
+    frameTimer = 0;
+    if (presentation.visibility === "visible" && !document.hidden)
+      frameRequest = requestAnimationFrame(draw);
+  }
   function draw() {
-    scheduled = 0;
+    frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
@@ -126,8 +138,9 @@ try {
       boundary += frame.durationMs;
       if (boundary > elapsed % total) break;
     }
-    scheduled = window.setTimeout(
-      draw,
+    // Sleep until the next pose, then align the actual Canvas work with refresh.
+    frameTimer = window.setTimeout(
+      requestDraw,
       Math.max(1, boundary - (elapsed % total)),
     );
   }
@@ -177,10 +190,8 @@ try {
   function synchronize(value: Presentation) {
     if (value.visibility === "hidden") finish("cancel");
     presentation = value;
-    if (scheduled) clearTimeout(scheduled);
-    scheduled = 0;
-    if (value.visibility === "visible" && !document.hidden)
-      scheduled = window.setTimeout(draw, 0);
+    cancelDrawing();
+    requestDraw();
   }
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
@@ -192,7 +203,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
-      clearTimeout(scheduled);
+      cancelDrawing();
     },
     { once: true },
   );
