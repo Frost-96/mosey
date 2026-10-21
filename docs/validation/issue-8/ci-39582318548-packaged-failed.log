@@ -1,0 +1,98 @@
+macos	Run pnpm test:packaged	﻿2026-10-21T10:15:15.1331490Z ##[group]Run pnpm test:packaged
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.1332100Z ^[[36;1mpnpm test:packaged^[[0m
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.1383160Z shell: /bin/bash -e {0}
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.1383540Z env:
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.1383800Z   PNPM_HOME: /Users/runner/setup-pnpm/node_modules/.bin
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.1384210Z ##[endgroup]
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.2235250Z $ vitest run --project packaged
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.4837650Z
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.4840270Z ^[[1m^[[30m^[[46m RUN ^[[49m^[[39m^[[22m ^[[36mv5.0.5 ^[[39m^[[90m/Users/runner/work/mosey/mosey^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:15:15.4841070Z
+macos	Run pnpm test:packaged	2026-10-21T10:15:19.8137230Z ^[[90mstdout^[[2m | tests/app.test.ts^[[2m > ^[[22m^[[2ma real app displays one animated corgi and quits from its menu
+macos	Run pnpm test:packaged	2026-10-21T10:15:19.8227680Z ^[[22m^[[39mwarning Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+macos	Run pnpm test:packaged	2026-10-21T10:15:19.8353830Z
+macos	Run pnpm test:packaged	2026-10-21T10:16:11.2030530Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/app.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 55202^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:16:11.2065830Z    ^[[33m^[[2m✓^[[22m^[[39m packaged app starts a renderer without an inspector bootstrap^[[33m 2087^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:16:11.2074730Z    ^[[33m^[[2m✓^[[22m^[[39m a real app displays one animated corgi and quits from its menu^[[33m 53110^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:16:44.3804790Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/dock.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[33m 32764^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:16:44.3806380Z    ^[[33m^[[2m✓^[[22m^[[39m Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent^[[33m 27083^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:16:44.3807610Z    ^[[33m^[[2m✓^[[22m^[[39m real Dock helper clears its capability and exits when transport stops or the pet hides^[[33m 5679^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:17:34.9963130Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/size-autonomy.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 50280^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:17:34.9990620Z    ^[[33m^[[2m✓^[[22m^[[39m three sizes preserve left-facing interaction and autonomous movement across resizing^[[33m 50279^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:01.8267030Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/context-menu.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 26319^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:01.8380510Z    ^[[33m^[[2m✓^[[22m^[[39m body secondary clicks open a native menu and cancel without changing the pet^[[33m 26317^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:34.5548200Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/size.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 32115^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:34.5641790Z    ^[[33m^[[2m✓^[[22m^[[39m size menu scales the visible corgi and keeps its feet on the same ground^[[33m 32114^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0173580Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0280780Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-screenshot-complete","at":7432.85075}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0383500Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0485970Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0511850Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-bounds-complete","at":7440.237292}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0518920Z [autonomy-progress] {"stage":"walking-click-start","at":7440.853542}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0521360Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0600350Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0618040Z ^[[22m^[[39m[autonomy-progress] {"stage":"walking-click-complete","at":7479.73675}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.0619120Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.6690900Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.6846770Z ^[[22m^[[39m[autonomy-progress] {"stage":"draw-observer-start","at":8088.606459}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.6949640Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7066000Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7176910Z ^[[22m^[[39m[autonomy-progress] {"stage":"suspend-start","at":8092.400875}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7289200Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7394050Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7499570Z ^[[22m^[[39m[autonomy-progress] {"stage":"suspend-complete","at":8112.398625}
+macos	Run pnpm test:packaged	2026-10-21T10:18:42.7611680Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0555780Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0557560Z ^[[22m^[[39m[autonomy-progress] {"stage":"resume-start","at":9471.197417}
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0557890Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0603480Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0605080Z ^[[22m^[[39m[autonomy-progress] {"stage":"resume-complete","at":9478.15825}
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.0605400Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3130340Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3137510Z ^[[22m^[[39m[autonomy-progress] {"stage":"stretching-start","at":9732.501542}
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3138010Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3713010Z ^[[90mstdout^[[2m | tests/autonomy.test.ts^[[2m > ^[[22m^[[2mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3826940Z ^[[22m^[[39m[autonomy-progress] {"stage":"failure","at":9778.569167}
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.3922420Z
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.7021970Z  ^[[31m❯^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/autonomy.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m | ^[[22m^[[31m1 failed^[[39m^[[2m)^[[22m^[[33m 9577^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:18:44.7023200Z ^[[31m   ^[[31m×^[[31m autonomous activities stay grounded, yield to interaction and pause without catch-up^[[39m^[[33m 9575^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1220420Z  ^[[32m✓^[[39m ^[[30m^[[43m packaged ^[[49m^[[39m tests/visibility.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[33m 14994^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1319470Z    ^[[33m^[[2m✓^[[22m^[[39m manual visibility survives restart, duplicate launches and damaged preferences^[[33m 14993^[[2mms^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1421860Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1524760Z ^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m^[[1m^[[41m Failed Tests 1 ^[[49m^[[22m^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1626800Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1626870Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1712360Z ^[[41m^[[1m FAIL ^[[22m^[[49m ^[[30m^[[43m packaged ^[[49m^[[39m tests/autonomy.test.ts^[[2m > ^[[22mautonomous activities stay grounded, yield to interaction and pause without catch-up
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1718020Z ^[[2m Test Files ^[[22m ^[[1m^[[31m1 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m6 passed^[[39m^[[22m^[[90m (7)^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1732510Z ^[[31m^[[1mError^[[22m: electronApplication.evaluate: TypeError: Cannot read properties of undefined (reading 'click')
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1733460Z     at eval (eval at evaluate (:370:30), <anonymous>:1:131)
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1733920Z     at UtilityScript.evaluate (<anonymous>:372:16)
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1735090Z     at UtilityScript.<anonymous> (<anonymous>:1:44)^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1735950Z ^[[36m ^[[2m❯^[[22m invoke tests/autonomy.test.ts:^[[2m44:12^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1736640Z     ^[[90m 42|^[[39m       );
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1737160Z     ^[[90m 43|^[[39m     const invoke = (label: string) =>
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1737620Z     ^[[90m 44|^[[39m       app!.evaluate(
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1738230Z     ^[[90m   |^[[39m            ^[[31m^^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1738940Z     ^[[90m 45|^[[39m         ({ Menu }, label) =>
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1739480Z     ^[[90m 46|^[[39m           Menu.getApplicationMenu()!
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1747080Z ^[[90m ^[[2m❯^[[22m tests/autonomy.test.ts:^[[2m166:13^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1747380Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1747740Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯^[[22m^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1748000Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1748480Z ^[[2m      Tests ^[[22m ^[[1m^[[31m1 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m8 passed^[[39m^[[22m^[[90m (9)^[[39m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1810510Z ^[[2m   Start at ^[[22m 10:15:15
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1914680Z [ELIFECYCLE] Command failed with exit code 1.
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1915840Z ^[[2m   Duration ^[[22m 224.65s^[[2m (tests 99%, import 1%)^[[22m
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1922730Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.1995980Z
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.2100780Z ##[error]Error: electronApplication.evaluate: TypeError: Cannot read properties of undefined (reading 'click')
+macos	Run pnpm test:packaged	    at eval (eval at evaluate (:370:30), <anonymous>:1:131)
+macos	Run pnpm test:packaged	    at UtilityScript.evaluate (<anonymous>:372:16)
+macos	Run pnpm test:packaged	    at UtilityScript.<anonymous> (<anonymous>:1:44)
+macos	Run pnpm test:packaged	 ❯ invoke tests/autonomy.test.ts:44:12
+macos	Run pnpm test:packaged	 ❯ tests/autonomy.test.ts:166:13
+macos	Run pnpm test:packaged
+macos	Run pnpm test:packaged	⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+macos	Run pnpm test:packaged	Serialized Error: { log: [] }
+macos	Run pnpm test:packaged
+macos	Run pnpm test:packaged	2026-10-21T10:19:00.2219260Z ##[error]Process completed with exit code 1.
