@@ -1,3 +1,4 @@
+import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
@@ -5,7 +6,6 @@ import {
   mkdir,
   mkdtemp,
   writeFile,
-  chmod,
   rm,
   readFile,
   stat,
@@ -18,44 +18,12 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("manual visibility survives restart, duplicate launches and damaged preferences", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-visibility-"));
   const profile = path.join(root, "profile");
-  let server: ChildProcess | undefined;
+  let stopForge: (() => Promise<void>) | undefined;
   let duplicate: ChildProcess | undefined;
   let app: ElectronApplication | undefined;
   try {
-    if (!packaged) {
-      const shim = path.join(root, "shim");
-      const executable = path.join(
-        shim,
-        "Electron.app/Contents/MacOS/Electron",
-      );
-      await mkdir(path.dirname(executable), { recursive: true });
-      await writeFile(
-        executable,
-        "#!/bin/sh\necho MOSEY_TEST_READY\nexec /bin/cat\n",
-      );
-      await chmod(executable, 0o755);
-      server = spawn("pnpm", ["start"], {
-        env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
-        stdio: "pipe",
-        detached: true,
-      });
-      let output = "";
-      server.stdout?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      server.stderr?.on("data", (data: Buffer) => {
-        output += data.toString();
-      });
-      await expect
-        .poll(
-          () => {
-            if (server?.exitCode !== null) throw new Error(output);
-            return output;
-          },
-          { timeout: 60000 },
-        )
-        .toContain("MOSEY_TEST_READY");
-    } else {
+    if (!packaged) stopForge = await startForge();
+    if (packaged) {
       execFileSync("/usr/bin/ditto", [
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
@@ -268,17 +236,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
   } finally {
     if (duplicate?.exitCode === null) duplicate.kill();
     await app?.close().catch(() => {});
-    if (server?.pid) {
-      try {
-        process.kill(-server.pid, "SIGTERM");
-      } catch {
-        /* exited */
-      }
-      if (server.exitCode === null && server.signalCode === null)
-        await new Promise<void>((resolve) =>
-          server!.once("exit", () => resolve()),
-        );
-    }
+    await stopForge?.();
     await rm(root, { recursive: true, force: true });
   }
 });
