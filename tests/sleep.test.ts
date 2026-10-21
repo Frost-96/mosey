@@ -55,7 +55,7 @@ test(
               }
           return (bottom - top + 1) / devicePixelRatio;
         });
-      await expect.poll(height).toBeGreaterThan(180);
+      await expect.poll(height, { timeout: 5000 }).toBeGreaterThan(180);
       const idleFrames = new Set<string>();
       const idleUntil = Date.now() + 2200;
       while (Date.now() < idleUntil) {

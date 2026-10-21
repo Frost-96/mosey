@@ -1,0 +1,10 @@
+
+ RUN  v5.0.5 /Users/frost/.codex/worktrees/issue-5-implementation/mosey
+
+/Users/frost/.codex/worktrees/issue-5-implementation/mosey/test-results/mosey-login-k6BKE9/Mosey.app: replacing existing signature
+
+ Test Files  3 passed (3)
+      Tests  3 passed (3)
+   Start at  17:07:06
+   Duration  56.65s (tests 99%, import 1%)
+
