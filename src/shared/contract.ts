@@ -2,6 +2,9 @@ import { z } from "zod";
 export const presentationSchema = z.strictObject({
   posture: z.enum([
     "resting",
+    "walking",
+    "stretching",
+    "playing",
     "tilt",
     "paw",
     "belly",
@@ -10,6 +13,7 @@ export const presentationSchema = z.strictObject({
     "falling",
     "landing",
   ]),
+  direction: z.enum(["left", "right"]),
   actionId: z.number().int().nonnegative(),
   startedAt: z.number().nonnegative(),
   visibility: z.enum(["visible", "hidden"]),
