@@ -1,3 +1,11 @@
+import settlingUrl from "./assets/generated/settling-atlas.png";
+import settling from "./assets/generated/settling-atlas.json";
+import wakingUrl from "./assets/generated/waking-atlas.png";
+import waking from "./assets/generated/waking-atlas.json";
+import earUrl from "./assets/generated/ear-atlas.png";
+import ear from "./assets/generated/ear-atlas.json";
+import sleepingUrl from "./assets/generated/sleeping-atlas.png";
+import sleeping from "./assets/generated/sleeping-atlas.json";
 import walkingUrl from "./assets/generated/walking-atlas.png";
 import walking from "./assets/generated/walking-atlas.json";
 import stretchingUrl from "./assets/generated/stretching-atlas.png";
@@ -28,6 +36,10 @@ try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [sleeping, sleepingUrl],
+      [settling, settlingUrl],
+      [waking, wakingUrl],
+      [ear, earUrl],
       [walking, walkingUrl],
       [stretching, stretchingUrl],
       [playing, playingUrl],

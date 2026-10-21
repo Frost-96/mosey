@@ -1,3 +1,7 @@
+import settling from "./assets/generated/settling-atlas.json";
+import waking from "./assets/generated/waking-atlas.json";
+import ear from "./assets/generated/ear-atlas.json";
+import sleeping from "./assets/generated/sleeping-atlas.json";
 import walking from "./assets/generated/walking-atlas.json";
 import stretching from "./assets/generated/stretching-atlas.json";
 import playing from "./assets/generated/playing-atlas.json";
@@ -76,7 +80,7 @@ async function start() {
     else {
       behavior.send({ type: "CANCEL" });
       displayed = undefined;
-      positionOnGround();
+      alignGround();
       pet.showInactive();
     }
     refreshMenus();
@@ -187,16 +191,12 @@ async function start() {
     // tracking loop and therefore does not deliver a popup completion callback.
     finishBodyMenu(menu);
   };
-  const positionOnGround = () => {
-    const ground = screen.getPrimaryDisplay().workArea;
-    const { width, height } = pet.getBounds();
-    pet.setPosition(
-      ground.x + Math.round((ground.width - width) / 2),
-      ground.y + ground.height - height,
-    );
-  };
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
+    settling,
+    waking,
+    ear,
+    sleeping,
     idle,
     walking,
     stretching,
