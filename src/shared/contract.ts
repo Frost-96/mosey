@@ -44,6 +44,9 @@ export const inputSchema = z.discriminatedUnion("type", [
     actionId: z.number().int().nonnegative(),
   }),
 ]);
+export const gestureCancellationSchema = z.strictObject({
+  gestureId: z.number().int().nonnegative(),
+});
 export type PetInput = z.infer<typeof inputSchema>;
 export const assetErrorSchema = z.string().min(1).max(500);
 export const emptyRequestSchema = z.undefined();
@@ -51,12 +54,14 @@ export type Presentation = z.infer<typeof presentationSchema>;
 export interface PetBridge {
   getPresentation(): Promise<Presentation>;
   onPresentation(listener: (presentation: Presentation) => void): () => void;
+  onGestureCancellation(listener: (gestureId: number) => void): () => void;
   reportAssetError(message: string): void;
   input(event: PetInput): void;
 }
 export const channels = {
   getPresentation: "pet:get-presentation",
   presentation: "pet:presentation",
+  gestureCancellation: "pet:gesture-cancellation",
   assetError: "pet:asset-error",
   input: "pet:input",
 } as const;

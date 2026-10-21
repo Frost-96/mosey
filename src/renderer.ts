@@ -156,17 +156,17 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
-    if (
-      value.visibility === "hidden" ||
-      (presentation.posture === "dragging" && value.posture !== "dragging")
-    )
-      finish("cancel");
     presentation = value;
     if (scheduled) cancelAnimationFrame(scheduled);
     scheduled = 0;
     if (value.visibility === "visible" && !document.hidden)
       scheduled = requestAnimationFrame(draw);
   }
+  // A queued cancellation belongs to one captured gesture, never to a newer
+  // press that happened before its main-process messages reached this renderer.
+  const unsubscribeCancellation = window.mosey.onGestureCancellation((id) => {
+    if (gesture?.id === id) finish("cancel");
+  });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
   document.addEventListener("visibilitychange", () =>
@@ -177,6 +177,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
+      unsubscribeCancellation();
       cancelAnimationFrame(scheduled);
     },
     { once: true },

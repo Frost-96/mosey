@@ -619,6 +619,67 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(await petBounds()).toEqual(reloaded);
       expect(idleFrames.has(await pixels())).toBe(true);
     }
+    // A busy renderer can queue release and immediate re-grab before either
+    // main-process presentation returns. Use public DOM pointer input in one
+    // renderer task to preserve that ordering, with a real active mouse pointer.
+    await placeAwayFromPhysicalCursor();
+    await window.evaluate(() => {
+      document.querySelector("canvas")!.addEventListener(
+        "pointerdown",
+        (event) => {
+          document.documentElement.dataset.rapidPointer = String(
+            (event as PointerEvent).pointerId,
+          );
+        },
+        { once: true },
+      );
+    });
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, -120, { steps: 5 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 200);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const rapidHeld = await petBounds();
+    await window.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      const pointerId = Number(document.documentElement.dataset.rapidPointer);
+      const options = {
+        pointerId,
+        pointerType: "mouse",
+        button: 0,
+        clientX: 120,
+        clientY: 180,
+        screenX: globalThis.screenX + 120,
+        screenY: globalThis.screenY + 180,
+        bubbles: true,
+      };
+      canvas.dispatchEvent(
+        new PointerEvent("pointerup", { ...options, buttons: 0 }),
+      );
+      canvas.dispatchEvent(
+        new PointerEvent("pointerdown", { ...options, buttons: 1 }),
+      );
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(
+      await window.evaluate(() =>
+        document
+          .querySelector("canvas")!
+          .hasPointerCapture(
+            Number(document.documentElement.dataset.rapidPointer),
+          ),
+      ),
+    ).toBe(true);
+    expect(await petBounds()).toEqual(rapidHeld);
+    await window.mouse.move(120, 260, { steps: 3 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeGreaterThan(rapidHeld.y + 40);
+    await window.mouse.up();
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Inject only Electron's external display boundary. Actual renderer, IPC,
     // pointer capture, drawing and native window placement remain in use.
     const recoverOnDisplayChange = (event: string) =>
@@ -649,6 +710,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       }, event);
     for (const [phase, event] of [
       ["idle", "display-metrics-changed"],
+      ["pressed", "display-metrics-changed"],
       ["dragging", "display-metrics-changed"],
       ["flutter", "display-added"],
       ["falling", "display-removed"],
@@ -669,18 +731,25 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         });
         await window.mouse.move(120, 180);
         await window.mouse.down();
-        await window.mouse.move(120, -120, { steps: 5 });
-        await expect
-          .poll(async () => (await petBounds()).y)
-          .toBeLessThan(ground.y - 200);
-        const elevated = await petBounds();
-        if (phase !== "dragging") await window.mouse.up();
-        if (phase === "flutter")
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        if (phase === "falling")
+        if (phase === "pressed") {
+          // Stay below the drag threshold: resting→resting still invalidates
+          // this accepted press and must release its browser capture.
+          await window.mouse.move(121, 180);
+          expect(await petBounds()).toEqual(before);
+        } else {
+          await window.mouse.move(120, -120, { steps: 5 });
           await expect
-            .poll(async () => (await petBounds()).y, { interval: 10 })
-            .toBeGreaterThan(elevated.y + 20);
+            .poll(async () => (await petBounds()).y)
+            .toBeLessThan(ground.y - 200);
+          const elevated = await petBounds();
+          if (phase !== "dragging") await window.mouse.up();
+          if (phase === "flutter")
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          if (phase === "falling")
+            await expect
+              .poll(async () => (await petBounds()).y, { interval: 10 })
+              .toBeGreaterThan(elevated.y + 20);
+        }
       }
       const recovered = await recoverOnDisplayChange(event!);
       expect(recovered.visible, phase).toBe(true);
@@ -690,7 +759,7 @@ test("a real app displays one animated corgi and quits from its menu", async () 
         width: 240,
         height: 240,
       });
-      if (phase === "dragging") {
+      if (phase === "dragging" || phase === "pressed") {
         await expect
           .poll(() =>
             window.evaluate(() =>
