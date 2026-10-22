@@ -1,0 +1,98 @@
+html,
+body {
+  overflow: auto;
+}
+body {
+  margin: 0;
+  background: #f6f5f2;
+  color: #282723;
+  font:
+    14px -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+main {
+  padding: 28px 32px;
+}
+h1 {
+  font-size: 24px;
+  margin: 0 0 28px;
+}
+h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+section {
+  margin-bottom: 26px;
+}
+p {
+  line-height: 1.5;
+  margin: 6px 0 12px;
+}
+.pet-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  background: white;
+  border: 1px solid #dedbd4;
+  border-radius: 12px;
+}
+.pet-card p {
+  margin: 4px 0 0;
+  color: #77736b;
+  font-size: 12px;
+}
+.pet-mark {
+  font-size: 26px;
+}
+.selected {
+  margin-left: auto;
+  font-size: 12px;
+  color: #466847;
+}
+.presets {
+  display: flex;
+  gap: 8px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #cfcac0;
+  border-radius: 7px;
+  padding: 8px 14px;
+  background: white;
+  color: inherit;
+}
+.presets button {
+  flex: 1;
+}
+button[aria-pressed="true"] {
+  background: #404b3d;
+  color: white;
+  border-color: #404b3d;
+}
+button:focus-visible {
+  outline: 3px solid #a2b895;
+  outline-offset: 2px;
+}
+.hint {
+  color: #77736b;
+  font-size: 12px;
+}
+.hidden-notice,
+.error {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.hidden-notice button,
+.error button {
+  padding: 4px 8px;
+  margin-left: 8px;
+}
+.error {
+  color: #9c3c29;
+}
+[hidden] {
+  display: none !important;
+}

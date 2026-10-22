@@ -13,9 +13,9 @@ import path from "node:path";
 import log from "electron-log/main";
 
 const schema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   visibility: z.enum(["visible", "hidden"]),
-  size: petSizeSchema.default("medium"),
+  size: petSizeSchema.default(160),
 });
 type Preferences = z.infer<typeof schema>;
 
@@ -24,14 +24,16 @@ type Preferences = z.infer<typeof schema>;
 export class PreferencesStore {
   private readonly file: string;
   private value: Preferences;
+  private migrationNeeded = false;
   constructor(private readonly directory: string) {
     this.file = path.join(directory, "preferences.json");
     this.value = this.read(this.file) ??
       this.read(`${this.file}.bak`) ?? {
-        version: 1,
+        version: 2,
         visibility: "visible",
-        size: "medium",
+        size: 160,
       };
+    if (this.migrationNeeded) this.save(this.value, "migration");
   }
   get visibility() {
     return this.value.visibility;
@@ -44,7 +46,23 @@ export class PreferencesStore {
   }
   private read(file: string): Preferences | undefined {
     try {
-      return schema.parse(JSON.parse(readFileSync(file, "utf8")));
+      const raw: unknown = JSON.parse(readFileSync(file, "utf8"));
+      const legacy = z
+        .strictObject({
+          version: z.literal(1),
+          visibility: z.enum(["visible", "hidden"]),
+          size: z.enum(["small", "medium", "large"]).default("medium"),
+        })
+        .safeParse(raw);
+      if (legacy.success) {
+        this.migrationNeeded = true;
+        return {
+          version: 2,
+          visibility: legacy.data.visibility,
+          size: { small: 70, medium: 160, large: 240 }[legacy.data.size],
+        };
+      }
+      return schema.parse(raw);
     } catch (error) {
       if (
         error &&
