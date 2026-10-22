@@ -128,7 +128,24 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .toContain("保存失败");
     expect((await petState()).bounds.width).toBe(70);
     await mkdir("docs/validation", { recursive: true });
+    expect(
+      await settings
+        .locator("body")
+        .evaluate((element) => getComputedStyle(element).overflowY),
+    ).toBe("auto");
+    const loginNote = settings.getByText(
+      "请通过菜单中的 Launch at Login 管理。",
+      { exact: true },
+    );
+    await loginNote.scrollIntoViewIfNeeded();
+    expect(
+      await loginNote.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.top >= 0 && bounds.bottom <= innerHeight;
+      }),
+    ).toBe(true);
     await settings.screenshot({
+      fullPage: true,
       path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-save-error.png`,
     });
     await rm(file, { recursive: true });
@@ -159,6 +176,16 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await settings.getByRole("button", { name: "中（默认）" }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
     await mkdir("docs/validation", { recursive: true });
+    expect(
+      await settings
+        .locator("body")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).toBe("rgb(246, 245, 242)");
+    expect(
+      await settings
+        .locator("body")
+        .evaluate((element) => getComputedStyle(element).overflowY),
+    ).toBe("auto");
     expect(
       await settings
         .locator("main")

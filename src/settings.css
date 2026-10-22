@@ -1,8 +1,8 @@
-html,
-body {
+html[data-page="settings"],
+html[data-page="settings"] body {
   overflow: auto;
 }
-body {
+html[data-page="settings"] body {
   margin: 0;
   background: #f6f5f2;
   color: #282723;
@@ -11,25 +11,25 @@ body {
     BlinkMacSystemFont,
     sans-serif;
 }
-main {
+html[data-page="settings"] main {
   padding: 28px 32px;
 }
-h1 {
+html[data-page="settings"] h1 {
   font-size: 24px;
   margin: 0 0 28px;
 }
-h2 {
+html[data-page="settings"] h2 {
   font-size: 15px;
   margin: 0 0 12px;
 }
-section {
+html[data-page="settings"] section {
   margin-bottom: 26px;
 }
-p {
+html[data-page="settings"] p {
   line-height: 1.5;
   margin: 6px 0 12px;
 }
-.pet-card {
+html[data-page="settings"] .pet-card {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -38,24 +38,24 @@ p {
   border: 1px solid #dedbd4;
   border-radius: 12px;
 }
-.pet-card p {
+html[data-page="settings"] .pet-card p {
   margin: 4px 0 0;
   color: #77736b;
   font-size: 12px;
 }
-.pet-mark {
+html[data-page="settings"] .pet-mark {
   font-size: 26px;
 }
-.selected {
+html[data-page="settings"] .selected {
   margin-left: auto;
   font-size: 12px;
   color: #466847;
 }
-.presets {
+html[data-page="settings"] .presets {
   display: flex;
   gap: 8px;
 }
-button {
+html[data-page="settings"] button {
   font: inherit;
   cursor: pointer;
   border: 1px solid #cfcac0;
@@ -64,35 +64,35 @@ button {
   background: white;
   color: inherit;
 }
-.presets button {
+html[data-page="settings"] .presets button {
   flex: 1;
 }
-button[aria-pressed="true"] {
+html[data-page="settings"] button[aria-pressed="true"] {
   background: #404b3d;
   color: white;
   border-color: #404b3d;
 }
-button:focus-visible {
+html[data-page="settings"] button:focus-visible {
   outline: 3px solid #a2b895;
   outline-offset: 2px;
 }
-.hint {
+html[data-page="settings"] .hint {
   color: #77736b;
   font-size: 12px;
 }
-.hidden-notice,
-.error {
+html[data-page="settings"] .hidden-notice,
+html[data-page="settings"] .error {
   margin-top: 12px;
   font-size: 12px;
 }
-.hidden-notice button,
-.error button {
+html[data-page="settings"] .hidden-notice button,
+html[data-page="settings"] .error button {
   padding: 4px 8px;
   margin-left: 8px;
 }
-.error {
+html[data-page="settings"] .error {
   color: #9c3c29;
 }
-[hidden] {
+html[data-page="settings"] [hidden] {
   display: none !important;
 }
