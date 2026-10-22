@@ -69,7 +69,7 @@ try {
     frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
-    size: "medium",
+    size: 160,
     geometryRevision: 0,
     posture: "resting",
     direction: "right",

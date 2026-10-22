@@ -4,6 +4,7 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
+import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
 
@@ -100,7 +101,9 @@ test(
       const changedRatio = baseRatio === 2 ? 1 : 2;
       const desktop = () =>
         app!.evaluate(({ BrowserWindow, screen }) => ({
-          bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
+          bounds: BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .getBounds(),
           area: screen.getPrimaryDisplay().workArea,
           at: performance.now(),
         }));
@@ -112,15 +115,7 @@ test(
           if (!item) throw new Error(`Missing menu ${label}`);
           item.click();
         }, label);
-      const choose = (label: string) =>
-        app!.evaluate(({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find((item) => item.label === "Size")
-            ?.submenu?.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing size ${label}`);
-          item.click();
-        }, label);
+      const choose = (label: string) => chooseSize(app!, label);
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -169,9 +164,9 @@ test(
       // Calibrate only visible pixels before the first seeded activity; all three
       // initial idle silhouettes face right. Their mirrors are external references.
       for (const [label, side] of [
-        ["Small", 180],
-        ["Medium", 240],
-        ["Large", 300],
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
       ] as const) {
         await choose(label);
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
@@ -231,7 +226,9 @@ test(
         // Restoring visibility preserves position. Arrange room for the
         // deliberately left-facing walk instead of relying on old recentering.
         await app!.evaluate(({ BrowserWindow, screen }) => {
-          const pet = BrowserWindow.getAllWindows()[0]!;
+          const pet = BrowserWindow.getAllWindows().find(
+            (w) => w.getTitle() === "Mosey",
+          )!;
           const area = screen.getPrimaryDisplay().workArea;
           const bounds = pet.getBounds();
           pet.setPosition(
@@ -272,9 +269,9 @@ test(
           return point;
         });
       for (const [startLabel, endLabel, side] of [
-        ["Small", "Large", 300],
-        ["Large", "Medium", 240],
-        ["Medium", "Small", 180],
+        ["Small", "Large", 240],
+        ["Large", "Medium", 160],
+        ["Medium", "Small", 70],
       ] as const) {
         await choose(startLabel);
         await activity(0.1);
@@ -286,25 +283,13 @@ test(
           })
           .toBeLessThan(origin.bounds.x - 15);
         await restClock(60000);
-        const resize = await app.evaluate(
-          ({ Menu, BrowserWindow, screen }, label) => {
-            const pet = BrowserWindow.getAllWindows()[0]!;
-            const before = pet.getBounds(),
-              area = screen.getPrimaryDisplay().workArea;
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === "Size")!
-              .submenu!.items.find((item) => item.label === label)!
-              .click();
-            return {
-              before,
-              after: pet.getBounds(),
-              area,
-              at: performance.now(),
-            };
-          },
-          endLabel,
-        );
+        const resize = {
+          ...(await choose(endLabel)),
+          ...(await app.evaluate(({ screen }) => ({
+            area: screen.getPrimaryDisplay().workArea,
+            at: performance.now(),
+          }))),
+        };
         expect(resize.after.x + resize.after.width / 2).toBe(
           resize.before.x + resize.before.width / 2,
         );
@@ -363,7 +348,7 @@ test(
         });
         const changedRaster = await raster();
         expect(changedRaster.opaque).toBeGreaterThan(
-          2000 * changedRatio * changedRatio,
+          side * side * 0.2 * changedRatio * changedRatio,
         );
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
         await grounded();
@@ -433,7 +418,7 @@ test(
         });
         const restoredRaster = await raster();
         expect(restoredRaster.opaque).toBeGreaterThan(
-          2000 * baseRatio * baseRatio,
+          side * side * 0.2 * baseRatio * baseRatio,
         );
         await expect
           .poll(async () => matches(await pixels(), idle.left), {
@@ -463,7 +448,9 @@ test(
           });
           // Keep synthetic capture away from the real OS cursor, as #4 does.
           await app.evaluate(({ BrowserWindow, screen }) => {
-            const pet = BrowserWindow.getAllWindows()[0]!,
+            const pet = BrowserWindow.getAllWindows().find(
+                (w) => w.getTitle() === "Mosey",
+              )!,
               area = screen.getPrimaryDisplay().workArea,
               b = pet.getBounds(),
               pointer = screen.getCursorScreenPoint();
