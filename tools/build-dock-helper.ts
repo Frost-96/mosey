@@ -5,7 +5,7 @@ import path from "node:path";
 const directory = path.resolve("build/native");
 await mkdir(directory, { recursive: true });
 const binary = path.join(directory, "dock-live");
-const source = path.resolve("probes/dock-live.swift");
+const source = path.resolve("src/platform/native/dock-live.swift");
 const flags = ["-O", "-target", "arm64-apple-macos15.0", "-parse-as-library"];
 execFileSync(
   "/usr/bin/xcrun",
