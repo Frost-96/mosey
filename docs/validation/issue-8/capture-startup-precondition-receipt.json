@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-23",
+  "basePublicCommit": "481a9868c9366e6afe4a3efe97fb060350746680",
+  "scope": "Capture-startup test precondition only; no product fix or retrospective root-cause claim",
+  "CI": {
+    "runID": 39920098952,
+    "developmentPassed": 16,
+    "developmentFailed": 1,
+    "developmentSkipped": 1,
+    "durationSeconds": 823.54,
+    "StopRetryCase": "passed this run; earlier intermittent failure remains unexplained",
+    "packageAndPackagedTests": "skipped after development failure"
+  },
+  "failedStartupEvidence": {
+    "firstPID": 11112,
+    "spawnToTERMmilliseconds": 39.594959,
+    "firstPIDInputCount": 0,
+    "nonemptyWorkAreaEventBeforeTERMapproxMilliseconds": 7,
+    "nextPID": 11113,
+    "limit": "Second PID receives startupSilence true but fixture binds silence to first PID; it is not an accepted five-second recovery sample. Display-event temporal association alone does not prove call origin."
+  },
+  "precondition": {
+    "persistedVisibility": "hidden, isolated fixture profile, startupSilence scene only",
+    "beforeShow": [
+      "public window hidden",
+      "no owned source child",
+      "no producer spawn",
+      "public primary geometry and nonempty display events stable for1000ms within5000ms fixed setup budget"
+    ],
+    "showCount": 1,
+    "afterShow": "Original first PID, exactly one input, at least5000ms beforeTERM and no replacing lifecycle event remain required; no re-selection, retries, timer reset or second Show",
+    "renamedTest": "Capture startup silence recovers while healthy idle, empty frames, brief silence and permission refusal keep their boundaries",
+    "coldAppStartup": "Not claimed by this isolated capture-startup test; existing focused human startup report retained"
+  },
+  "AST": {
+    "base": "481a9868c9366e6afe4a3efe97fb060350746680",
+    "originalSHA256": "5659f2185131f3ed56369b0abcc4ad8a10ec17f9f724ea87070da317fc9c19a7",
+    "newSHA256": "1e6416d2697456b00f4633fe9fa70e268f9d133a76af1b9cde8b1934cc130d24",
+    "comparisons": {
+      "assertionCalls": {
+        "originalRetained": true,
+        "oldCount": 208,
+        "newCount": 220
+      },
+      "mouseActions": {
+        "originalRetained": true,
+        "oldCount": 0,
+        "newCount": 0
+      },
+      "menuActions": {
+        "originalRetained": true,
+        "oldCount": 13,
+        "newCount": 13
+      },
+      "timeouts": {
+        "originalRetained": true,
+        "oldCount": 40,
+        "newCount": 41
+      }
+    }
+  },
+  "checks": "pnpm check exit0; original asserts/actions/timeouts retained, additional preparation expressly listed; no local application run",
+  "limits": [
+    "Next CI outcome pending",
+    "No product/native or frozen App change",
+    "Stop/Retry earlier intermittent cause not established",
+    "Historical independent1DIP and real-native-84 causes remain unknown",
+    "Resource explicitly skipped, zero samples, no caffeinate",
+    "Raw evidence remains local"
+  ],
+  "localSources": [
+    {
+      "basename": "job.log",
+      "sha256": "a85504083f9d122870ec9df001bd52ec70aad66edeb631fbb546c846a3ff76fd"
+    },
+    {
+      "basename": "failure-development-startup-silence-recovers-while-healthy-idle-empty-frames-brief-silence-and-permission-refusal-keep-their-boundaries.json",
+      "sha256": "66b4cea1c7846bcff46fe833b89f13bd94de0f9375790d0054b7cea5dce014bd"
+    },
+    {
+      "basename": "development-dock.json",
+      "sha256": "9a146e7dd6b4b52787c8d6900df4618ed95ba888b631628d065eb5fa51235cef"
+    }
+  ]
+}

@@ -131,6 +131,15 @@ setInterval(()=>{
         : scriptedProducer,
     );
     await chmod(helper, 0o755);
+    if (initial.startupSilence) {
+      // Exercise the first capture startup after the desktop preparation phase.
+      // A cold app launch can legitimately change the virtual Dock workArea.
+      await mkdir(path.join(root, "profile"), { recursive: true });
+      await writeFile(
+        path.join(root, "profile/preferences.json"),
+        JSON.stringify({ version: 1, visibility: "hidden", size: "medium" }),
+      );
+    }
     app = await electron.launch(
       packaged
         ? {
@@ -173,7 +182,88 @@ setInterval(()=>{
         return events;
       },
     );
+    const mainPID = app.process().pid;
+    const children = () =>
+      execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/))
+        .filter(
+          (parts) =>
+            parts &&
+            Number(parts[2]) === mainPID &&
+            parts[3]!.endsWith("/dock-runtime"),
+        )
+        .map((parts) => Number(parts![1]));
     const pet = await app.firstWindow();
+    if (initial.startupSilence) {
+      expect(
+        await app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()[0]!.isVisible(),
+        ),
+      ).toBe(false);
+      expect(children()).toEqual([]);
+      expect((await ledger()).filter((row) => row.event === "spawn")).toEqual(
+        [],
+      );
+      let signature = "";
+      let stableSince = performance.now();
+      // Fixed setup budget, independent of source lifetime or recovery outcome.
+      await expect
+        .poll(
+          async () => {
+            const geometry = await app!.evaluate(({ screen }) => {
+              const display = screen.getPrimaryDisplay();
+              return {
+                id: display.id,
+                bounds: display.bounds,
+                workArea: display.workArea,
+                scaleFactor: display.scaleFactor,
+              };
+            });
+            const replacements = await publicEvents!.evaluate(
+              (events) =>
+                events.filter((event) => {
+                  if (event.event === "display-metrics-changed") {
+                    const detail = event.detail;
+                    return (
+                      detail !== null &&
+                      typeof detail === "object" &&
+                      "changed" in detail &&
+                      Array.isArray(detail.changed) &&
+                      detail.changed.length > 0
+                    );
+                  }
+                  return ["display-added", "display-removed"].includes(
+                    event.event,
+                  );
+                }).length,
+            );
+            const next = JSON.stringify({ geometry, replacements });
+            const now = performance.now();
+            if (next !== signature) {
+              signature = next;
+              stableSince = now;
+            }
+            return now - stableSince >= 1000;
+          },
+          { timeout: 5000, interval: 100 },
+        )
+        .toBe(true);
+      expect(children()).toEqual([]);
+      expect((await ledger()).filter((row) => row.event === "spawn")).toEqual(
+        [],
+      );
+      // Exactly one public Show; a later display interruption still fails the
+      // original first-PID, five-second and uninterrupted-lifecycle assertions.
+      await app.evaluate(({ Menu }) => {
+        Menu.getApplicationMenu()!
+          .items.find((item) => item.label === "Mosey")!
+          .submenu!.items.find((item) => item.label === "Show Mosey")!
+          .click();
+      });
+    }
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     await expect
@@ -220,20 +310,6 @@ setInterval(()=>{
       const value = await bounds();
       return value.y + value.height;
     };
-    const mainPID = app.process().pid;
-    const children = () =>
-      execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
-        encoding: "utf8",
-      })
-        .split("\n")
-        .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/))
-        .filter(
-          (parts) =>
-            parts &&
-            Number(parts[2]) === mainPID &&
-            parts[3]!.endsWith("/dock-runtime"),
-        )
-        .map((parts) => Number(parts![1]));
     await expect.poll(children).toHaveLength(1);
     const observation = {
       orientation: "bottom",
@@ -742,7 +818,7 @@ test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works 
   );
 });
 
-test("Startup silence recovers while healthy idle, empty frames, brief silence and permission refusal keep their boundaries", async () => {
+test("Capture startup silence recovers while healthy idle, empty frames, brief silence and permission refusal keep their boundaries", async () => {
   await withRuntime(
     async ({
       children,
