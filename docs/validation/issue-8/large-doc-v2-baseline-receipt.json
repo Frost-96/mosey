@@ -1,0 +1,125 @@
+{
+  "type": "audited_no_RAF_current_document_drag_failure",
+  "runLabel": "20261022T185216",
+  "sourceSHA256": "1d0d29e2866759fea987d93a279dec14e97ded2cdc43894c8de9e493c975347d",
+  "parentSourceSHA256": "ca332823301c077883bcea5d195fae881d31bb027955d62be71e0e93a48ea05c",
+  "mode": "development",
+  "controllerDurationSeconds": 12.44469820800441,
+  "returnCode": 1,
+  "timedOut": false,
+  "completedGreenCycles": 2,
+  "failedCycleZeroBased": 2,
+  "failureMessage": "AssertionError: expected 656 to be less than 506",
+  "actualAwayPlacements": 3,
+  "failureGeometry": {
+    "groundY": 656,
+    "requiredStrictlyLessThanY": 506,
+    "firstObservedRaisedY": 587,
+    "finalY": 656,
+    "widthDIP": 300,
+    "heightDIP": 300
+  },
+  "opaqueDown": {
+    "clientX": 150,
+    "clientY": 225,
+    "screenX": 1320,
+    "screenY": 881,
+    "alpha": 253,
+    "wall": 1792666346224,
+    "buttons": 1
+  },
+  "captureLoss": {
+    "wall": 1792666346231,
+    "buttons": 0,
+    "screenX": 689.11328125,
+    "screenY": 664.78125,
+    "targetHasCapture": false,
+    "firstMoveBeforeLossButtons": 1,
+    "firstMoveBeforeLossHadCapture": true,
+    "laterButtons1MovesWithoutCapture": 2,
+    "explicitReleaseCallsFromCurrentDownThroughLoss": 0
+  },
+  "publicIgnoreCallsNearLoss": [
+    {
+      "ignore": false,
+      "wall": 1792666346225,
+      "wallDeltaFromDownMs": 1
+    },
+    {
+      "ignore": true,
+      "wall": 1792666346231,
+      "wallDeltaFromDownMs": 7
+    }
+  ],
+  "coverage": {
+    "snapshotsChecked": 3,
+    "oneDocumentNonceAcrossSnapshots": true,
+    "oneTimeOriginAcrossSnapshots": true,
+    "allSnapshotsInstalledComplete": true,
+    "globalAndDocumentMarkerNoncesMatch": true,
+    "allFailureRendererEventNoncesMatch": true,
+    "mainDropped": 0,
+    "rendererDropped": 0,
+    "powerDropped": 0,
+    "pageDropped": 0,
+    "retainedMainEvents": 104,
+    "retainedRendererEvents": 29,
+    "pageTimelineEventNames": ["page-observer-attached"],
+    "powerEventNames": ["power:observer-attached"],
+    "newDocumentAutoInstallRuntimeExercised": false
+  },
+  "cleanupAsControllerRecords": {
+    "ownedStillAlive": [],
+    "temporaryTestRemoved": true,
+    "isolatedRootRemoved": true
+  },
+  "conclusion": "One no-RAF run retained two green cycles then reproduced the original Large height/capture-loss signature with valid alpha253 down. Explicit renderer release was not observed between this down and loss.",
+  "limits": [
+    "Ignore-true and capture loss share a wall-millisecond across processes; this cannot order cause/consequence. Physical-cursor coordinates differ from CDP point but that association does not prove product or fixture cause.",
+    "Current-document observer identity/complete installation is verified. No observed navigation after observer attach; earlier navigation and future-document addInitScript execution are not proven.",
+    "Page close during cleanup occurs after result serialization and is outside the persisted pre-cleanup timeline.",
+    "No product private state assumed, original height/cancel/routing assertions remain. This is a red diagnostic, not product fix/pass or realOS input/Dock/resource acceptance.",
+    "The newly executing matched-routing A is deliberately excluded from this audit."
+  ],
+  "sources": [
+    {
+      "localBasename": "controller-receipt.json",
+      "sha256": "87884143895f200266d947ca5d3acb5e9517a6ea72ee7a383ec8794eff983551"
+    },
+    {
+      "localBasename": "audit.json",
+      "sha256": "4ed965bdd47cec0eb145e41a6147603bf568fc4038ea8c46fee7738f913780f0"
+    },
+    {
+      "localBasename": "result.json",
+      "sha256": "105dd0148cb0d69b6a746193f22ff50d08661f911d3f8f06fcb1deb246c02303"
+    },
+    {
+      "localBasename": "cycles.json",
+      "sha256": "105149e0ac210eb3f4dea9bfb2df2663cf14b04017db19fc054b93c9351f75a9"
+    },
+    {
+      "localBasename": "failure.json",
+      "sha256": "0fd2c59cf4c5f1ad729aef8d45eeea16798bb4760ee6c67602ba9b8ec2e3305c"
+    },
+    {
+      "localBasename": "analysis.md",
+      "sha256": "d3db1397b97b64662fe1ae00fd7ded409acd713ea50f41dd2e1dbe029d9708e0"
+    },
+    {
+      "localBasename": "durable-results-copy.json",
+      "sha256": "c95fd56de732574fddaa4aea847acc27fed697d03eec9a33653b02e7c0d1c23e"
+    },
+    {
+      "localBasename": "source-manifest.json",
+      "sha256": "2ef8599cd412d4fe9a2e15c07f3a06bcdaae734d64bd6eedbd6030a4ed805541"
+    },
+    {
+      "localBasename": "large-short-loop.test.ts",
+      "sha256": "1d0d29e2866759fea987d93a279dec14e97ded2cdc43894c8de9e493c975347d"
+    }
+  ],
+  "schemaVersion": 1,
+  "auditedAtUTC": "2026-10-22T11:17:27.030967+00:00",
+  "auditMethod": "Read existing source/receipts only; no UI, SCK, tests, network or new agents."
+}

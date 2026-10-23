@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUTC": "2026-10-22T07:08:06.127447+00:00",
+  "scope": "Exactly one packaged probe, existing1000ms assertion retained; on failure would keep app alive5s with read-only publicDOM observations and no new actions.",
+  "result": {
+    "testsPassed": 1,
+    "durationSeconds": 9.87,
+    "failureObservationPerformed": false,
+    "maxUnsettled": 1,
+    "lastStatus": "Stopped: product Dock interaction requested",
+    "statusNavigationStartWall": 1792652765104,
+    "statusNavigationSettledWall": 1792652765159
+  },
+  "candidateAsarSHA256": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "qualifications": [
+    "This run passed before the failure path. No failureWall or5s post-failure observation exists.",
+    "Cannot confirm or falsify whether prior1000ms failures eventually recover without action; no timeout/behavior assertion changed and no root cause/fix claimed.",
+    "Earlier development and packaged reds retained in diagnosis-receipt.json.",
+    "Temporary test moved out of tests; worktree clean; process audit found no testElectron/runner residue; root UI exclusive returned."
+  ],
+  "sources": [
+    {
+      "localBasename": "postfailure-packaged.log",
+      "sha256": "07ecc792a5851c3a308ae667992d737129bdbf7280c723bde101bc9d88d031d0"
+    },
+    {
+      "localBasename": "postfailure-round-0.json",
+      "sha256": "60fdf7353f8abf44999ae06702a25724c9015e71f8b5d2cf2464ef37da55d5e7"
+    },
+    {
+      "localBasename": "postfailure-probe-executed.test.ts",
+      "sha256": "8ebf8c86cafc70f8b9b1458419c510a93f31f8aad11a71898bc9e32182d705c8"
+    }
+  ]
+}

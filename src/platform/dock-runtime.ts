@@ -194,16 +194,18 @@ export class DockRuntime {
             ? "Dock interaction active"
             : permissionBlocked
               ? "Dock interaction needs Screen Recording permission"
-              : record.reason === "new_complete_pending"
-                ? "Updating Dock edge"
-                : [
-                      "alpha_empty",
-                      "callback_silence",
-                      "incomplete_frame",
-                      "waiting_for_complete_frame",
-                    ].includes(record.reason)
-                  ? "Dock interaction waiting for visible Dock"
-                  : "Dock interaction unavailable";
+              : record.reason === "source_suspended"
+                ? "Dock source suspended; waiting for updates"
+                : record.reason === "new_complete_pending"
+                  ? "Updating Dock edge"
+                  : [
+                        "alpha_empty",
+                        "callback_silence",
+                        "incomplete_frame",
+                        "waiting_for_complete_frame",
+                      ].includes(record.reason)
+                    ? "Dock interaction waiting for visible Dock"
+                    : "Dock interaction unavailable";
           this.changed(observation);
         }
       } catch {

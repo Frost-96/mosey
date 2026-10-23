@@ -1,0 +1,44 @@
+{
+  "rawNumericStateLocalPath": "final-development-lock-startup-state.json",
+  "rawNumericStateSHA256": "0edb3ddbddd8bf1abe692eb2ddecd58083919e20e75a46de648bef4b3600bceb",
+  "firstStartupActorPID": 21267,
+  "firstInputMonotonicMs": 115.005083,
+  "terminationMonotonicMs": 5192.998666,
+  "startupSilenceObservedMs": 5077.993583,
+  "publicLifecycle": [
+    {
+      "event": "attached",
+      "at": 1792635349764
+    },
+    {
+      "event": "show",
+      "at": 1792635349972
+    },
+    {
+      "event": "lock-screen",
+      "at": 1792635367243
+    }
+  ],
+  "finalPublicMenu": [
+    {
+      "label": "Mosey",
+      "submenu": [
+        "Hide Mosey",
+        "Size",
+        "Stopped",
+        "Retry Dock interaction",
+        "Quit Mosey"
+      ]
+    },
+    {
+      "label": "Dock validation",
+      "submenu": [
+        "Start Dock validation (120 seconds)",
+        "Stop Dock validation",
+        "Show Dock validation status",
+        "Operator Dock orientation"
+      ]
+    }
+  ],
+  "disposition": "Run later encountered public lock-screen and controller independently confirmed Mac locked. Whole development run was intentionally interrupted withSIGINT130; no complete final development result or new product RED, packaged full not started. Startup first actor itself exceeded5s; later control phase was interrupted."
+}

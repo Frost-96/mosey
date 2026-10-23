@@ -1,0 +1,53 @@
+{
+  "receiptVersion": 1,
+  "evidenceClass": "offline_numeric_record_audit",
+  "sourceSHA256": "7b7a0fed3043431eb9c10b2195df3fb20be32fa5d8b08cd10a59b9feee382833",
+  "sourceBytes": 1169498,
+  "lineCount": 1077,
+  "nativeRecordCount": 1075,
+  "newlineTerminated": true,
+  "identity": {
+    "hostPID": 15120,
+    "nativePID": 17194,
+    "nativeParentPID": 15120,
+    "diagnosticHelperSHA256": "204164ebcb615f7c0501ba31330100565fbd0f888a9b1a9cf0f076f2d76c86fa",
+    "diagnosticHelperKind": "dock-live",
+    "productHelperKind": "dock-runtime",
+    "sameHelperAsProduct": false
+  },
+  "numericObservations": {
+    "heartbeatCount": 1047,
+    "firstHeartbeatElapsedSeconds": 0.21329954166666665,
+    "lastHeartbeatElapsedSeconds": 120.12519016666667,
+    "callbackCount": 792,
+    "statusCounts": {
+      "0": 24,
+      "1": 766,
+      "3": 2
+    },
+    "completeReceived": 24,
+    "processedComplete": 24,
+    "acceptedComplete": 24,
+    "allLoggedCompleteMappingValid": true,
+    "firstLoggedAcceptedCompleteElapsedSeconds": 35.54353616666666,
+    "firstLoggedCompleteSourceAgeAtProcessingEndSeconds": 0.02094675,
+    "maxObservedCallbackGapSeconds": 35.425595333333334,
+    "nativeSummaryElapsedSeconds": 120.13323141666667,
+    "streamErrorsObserved": 0,
+    "summaryFinalAcceptedSequence": null,
+    "hostExitCode": 0,
+    "hostStopReason": "native completion"
+  },
+  "conclusion": "One unchanged diagnostic stream accepted complete frames after a long initial gap.",
+  "limits": [
+    "Requested Dock hidden/shown phases are not measured or independently established.",
+    "User completion reply does not prove operator Stop; record shows native duration completion at approximately 120 seconds.",
+    "This diagnostic helper differs from the product helper; no product recovery cause or parameter effect is established.",
+    "No live OS process absence is inferred from offline exit receipt.",
+    "Status code 3 is retained numerically; physical source visibility is not inferred from it.",
+    "No continuous resource acceptance or overall functional acceptance follows."
+  ],
+  "rawDesktopMediaIncluded": false,
+  "sourceBasename": "completed-run-75e2dfc2.jsonl",
+  "sourceLocationPolicy": "Original remains local; basename and SHA256 identify the source without publishing the local path."
+}

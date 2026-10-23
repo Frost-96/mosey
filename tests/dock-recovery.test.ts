@@ -1,5 +1,9 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
+import {
+  _electron as electron,
+  type ElectronApplication,
+  type JSHandle,
+} from "playwright";
 import { execFileSync } from "node:child_process";
 import {
   chmod,
@@ -13,13 +17,34 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { nativeRuntimeFixture } from "./support/native-runtime";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
 // The external OS producer is the only substitution. Public Electron window
 // geometry, menu actions and owned OS processes observe the entire real app.
+type LifecycleEvent = {
+  event: string;
+  at: number;
+  monotonic: number;
+  detail?: unknown;
+};
+type ProducerScene = {
+  sourceStatus?: number;
+  observation?: unknown;
+  reason?: string;
+  silencePID?: number;
+  startupSilence?: boolean;
+  sparseFreshSeconds?: number;
+  shortFreshSeconds?: number;
+  ignoreTerm?: boolean;
+  sourceAgeSeconds?: number;
+  callbackAgeSeconds?: number | null;
+  idle?: boolean;
+};
 type Runtime = {
-  publish: (value: unknown) => Promise<void>;
+  publish: (value: ProducerScene) => Promise<void>;
+  beginScene: () => Promise<void>;
   footY: () => Promise<number>;
   children: () => number[];
   status: () => Promise<string>;
@@ -31,20 +56,33 @@ type Runtime = {
 };
 async function withRuntime(
   run: (runtime: Runtime) => Promise<void>,
-  initial: unknown = { observation: null },
+  initial: ProducerScene = { observation: null },
+  source: "script" | "native-status" = "script",
 ) {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-dock-recovery-"));
   const input = path.join(root, "input.json");
   const pids = path.join(root, "pids.jsonl");
-  const publish = async (value: unknown) => {
-    await writeFile(`${input}.next`, JSON.stringify(value));
+  let revision = 0;
+  let sceneEpoch = Date.now();
+  const publish = async (value: ProducerScene) => {
+    await writeFile(
+      `${input}.next`,
+      JSON.stringify({ ...value, revision: ++revision, sceneEpoch }),
+    );
     await rename(`${input}.next`, input);
   };
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   let helper = "";
   let original: Buffer | undefined;
-  await publish(initial);
+  const ledger = async () =>
+    (await readFile(pids, "utf8").catch(() => ""))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  let publicEvents: JSHandle<LifecycleEvent[]> | undefined;
+  await publish(initial.startupSilence ? initial : { observation: null });
   try {
     if (!packaged) stopForge = await startForge();
     else
@@ -57,30 +95,40 @@ async function withRuntime(
       : path.resolve("build/native/dock-runtime");
     original = await readFile(helper).catch(() => undefined);
     await mkdir(path.dirname(helper), { recursive: true });
-    await writeFile(
-      helper,
-      `#!${process.execPath}
+    const scriptedProducer = `#!${process.execPath}
 import fs from 'node:fs';
-const start=performance.now(); let sequence=0;
-fs.appendFileSync(${JSON.stringify(pids)},process.pid+'\\n');
-const ordinal=fs.readFileSync(${JSON.stringify(pids)},'utf8').trim().split('\\n').length;
+const start=performance.now(), birth=Date.now(); let sequence=0;
+let scene={};
+const record=(event,detail={})=>fs.appendFileSync(${JSON.stringify(pids)},JSON.stringify({event,pid:process.pid,ppid:process.ppid,at:Date.now(),monotonic:performance.now(),revision:scene.revision,sceneEpoch:scene.sceneEpoch,targetPID:scene.silencePID,...detail})+'\\n');
+record('spawn');
+const startupTarget=${JSON.stringify(path.join(root, "startup-target.json"))};
+try{fs.writeFileSync(startupTarget,String(process.pid),{flag:'wx'});}catch{}
+const firstStartupPID=Number(fs.readFileSync(startupTarget,'utf8'));
 console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
-let tick=0, ignoresTerm=false;
+let tick=0;
+process.on('SIGTERM',()=>{record('SIGTERM');if(!scene.ignoreTerm)process.exit(0);});
+process.on('exit',code=>record('exit',{code}));
 setInterval(()=>{
   const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)},'utf8'));
-  if(value.ignoreTerm && !ignoresTerm){process.on('SIGTERM',()=>{});ignoresTerm=true;}
+  if(value.revision!==scene.revision){scene=value;tick=0;record('input',{value});}
   const elapsed=(performance.now()-start)/1000;
-  const sparse=value.sparseFreshSeconds && elapsed<value.sparseFreshSeconds;
+  const phaseSeconds=(Date.now()-Math.max(birth,value.sceneEpoch))/1000;
+  const sparse=value.sparseFreshSeconds && phaseSeconds<value.sparseFreshSeconds;
   if(sparse && ++tick%10!==0)return;
-  const shortFresh=value.shortFreshSeconds && elapsed<value.shortFreshSeconds;
-  const silent=!(sparse||shortFresh) && (value.reason==='callback_silence'||(value.silenceFirstChild&&ordinal===1));
+  const shortFresh=value.shortFreshSeconds && phaseSeconds<value.shortFreshSeconds;
+  const silent=!(sparse||shortFresh) && (value.reason==='callback_silence'||value.silencePID===process.pid||(value.startupSilence&&process.pid===firstStartupPID));
   const observation=silent?null:(sparse||shortFresh)?null:value.observation??null;
   const reason=silent?'callback_silence':(sparse||shortFresh)?'alpha_empty':value.reason??(observation?'current':'alpha_empty');
   const blocked=reason==='permission_lost'||reason==='permission_unavailable';
   console.log(JSON.stringify({type:'observation',elapsed,sequence:++sequence,sourceAgeSeconds:silent||blocked?null:value.sourceAgeSeconds??0,callbackAgeSeconds:silent||blocked?null:(value.callbackAgeSeconds===undefined?0:value.callbackAgeSeconds),idle:value.idle??false,reason,observation}));
   if(blocked)process.exit(2);
 },100);
-`,
+`;
+    await writeFile(
+      helper,
+      source === "native-status"
+        ? await nativeRuntimeFixture(root, input, pids)
+        : scriptedProducer,
     );
     await chmod(helper, 0o755);
     app = await electron.launch(
@@ -90,6 +138,40 @@ setInterval(()=>{
             args: [`--user-data-dir=${root}/profile`],
           }
         : { args: [".", `--user-data-dir=${root}/profile`] },
+    );
+    publicEvents = await app.evaluateHandle(
+      ({ app, BrowserWindow, screen, powerMonitor }) => {
+        const events: LifecycleEvent[] = [];
+        const record = (event: string, detail?: unknown) =>
+          events.push({
+            event,
+            detail,
+            at: Date.now(),
+            monotonic: performance.now(),
+          });
+        powerMonitor.on("suspend", () => record("suspend"));
+        powerMonitor.on("resume", () => record("resume"));
+        powerMonitor.on("lock-screen", () => record("lock-screen"));
+        powerMonitor.on("unlock-screen", () => record("unlock-screen"));
+        screen.on("display-metrics-changed", (_event, display, changed) =>
+          record("display-metrics-changed", { display, changed }),
+        );
+        screen.on("display-added", (_event, display) =>
+          record("display-added", display),
+        );
+        screen.on("display-removed", (_event, display) =>
+          record("display-removed", display),
+        );
+        const observe = (window: Electron.BrowserWindow) => {
+          window.on("show", () => record("show", window.id));
+          window.on("hide", () => record("hide", window.id));
+          window.on("closed", () => record("closed", window.id));
+        };
+        BrowserWindow.getAllWindows().forEach(observe);
+        app.on("browser-window-created", (_event, window) => observe(window));
+        record("attached", screen.getPrimaryDisplay());
+        return events;
+      },
     );
     const pet = await app.firstWindow();
     await pet.locator("canvas").waitFor();
@@ -170,8 +252,47 @@ setInterval(()=>{
       ),
       primaryDisplayID: display.id,
     };
-    const spawnedPIDs = async () =>
-      (await readFile(pids, "utf8")).trim().split("\n").map(Number);
+    let epochOffset = 0;
+    let epochActor: number | undefined;
+    const beginScene = async () => {
+      await expect
+        .poll(
+          async () => {
+            const owned = children();
+            if (owned.length !== 1) return false;
+            const candidate = owned[0]!;
+            const accepted = (await ledger()).some(
+              (record) => record.event === "input" && record.pid === candidate,
+            );
+            if (!accepted) return false;
+            const snapshot = await ledger();
+            const confirmed = children();
+            if (confirmed.length !== 1 || confirmed[0] !== candidate)
+              return false;
+            epochActor = candidate;
+            epochOffset = snapshot.length;
+            return true;
+          },
+          { timeout: 5000 },
+        )
+        .toBe(true);
+      expect(children()).toEqual([epochActor]);
+      sceneEpoch = Date.now();
+    };
+    const spawnedPIDs = async () => {
+      const records = await ledger();
+      return [
+        ...(epochActor === undefined ? [] : [epochActor]),
+        ...records
+          .slice(epochOffset)
+          .filter((record) => record.event === "spawn")
+          .map((record) => record.pid),
+      ];
+    };
+    if (!initial.startupSilence) {
+      await beginScene();
+      await publish(initial);
+    }
     const status = () =>
       app!.evaluate(
         ({ Menu }) =>
@@ -186,8 +307,61 @@ setInterval(()=>{
           .submenu!.items.find((i) => i.label === label)!
           .click();
       }, label);
+    if (initial.startupSilence) {
+      const first = (await ledger()).find((record) => record.event === "spawn");
+      expect(first).toBeDefined();
+      await expect
+        .poll(
+          async () =>
+            (await ledger()).some(
+              (record) =>
+                record.event === "SIGTERM" && record.pid === first.pid,
+            ),
+          { timeout: 11000 },
+        )
+        .toBe(true);
+      const records = await ledger();
+      const inputs = records.filter(
+        (record) => record.event === "input" && record.pid === first.pid,
+      );
+      expect(inputs).toHaveLength(1);
+      expect(inputs[0].value).toMatchObject({ startupSilence: true });
+      const term = records.find(
+        (record) => record.event === "SIGTERM" && record.pid === first.pid,
+      );
+      expect(term.monotonic - inputs[0].monotonic).toBeGreaterThanOrEqual(5000);
+      const lifecycle = await publicEvents.evaluate((events) => events);
+      expect(lifecycle[0]!.at).toBeLessThanOrEqual(first.at);
+      const interruptions = lifecycle.filter((event) => {
+        if (event.at < first.at || event.at > term.at) return false;
+        if (event.event === "display-metrics-changed") {
+          const detail = event.detail;
+          return !(
+            detail &&
+            typeof detail === "object" &&
+            "changed" in detail &&
+            Array.isArray(detail.changed) &&
+            detail.changed.length === 0
+          );
+        }
+        return [
+          "display-added",
+          "display-removed",
+          "hide",
+          "suspend",
+          "resume",
+          "lock-screen",
+          "unlock-screen",
+        ].includes(event.event);
+      });
+      expect(
+        interruptions,
+        "startup silence must reach five seconds without a replacing lifecycle event",
+      ).toEqual([]);
+    }
     await run({
       publish,
+      beginScene,
       footY,
       children,
       status,
@@ -209,8 +383,24 @@ setInterval(()=>{
           evidence:
             "Synthetic OS producer; real Electron app, owned OS processes and public geometry. No physical Dock or SCK root-cause claim.",
           spawnedPIDs: await spawnedPIDs(),
+          scenarioBoundary: {
+            sceneEpoch,
+            actor: epochActor,
+            ledgerOffset: epochOffset,
+          },
+          fullProducerLedger: await ledger(),
+          publicLifecycle: await publicEvents.evaluate((events) => events),
           remainingOwnedChildren: children(),
           finalBounds: await bounds(),
+          nativeFixtureReceipt:
+            source === "native-status"
+              ? JSON.parse(
+                  await readFile(
+                    path.join(root, "native-source-fixture-receipt.json"),
+                    "utf8",
+                  ),
+                )
+              : undefined,
           menu: await app.evaluate(({ Menu }) =>
             Menu.getApplicationMenu()!
               .items.find((i) => i.label === "Mosey")!
@@ -223,6 +413,45 @@ setInterval(()=>{
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
+    const name = expect
+      .getState()
+      .currentTestName!.replace(/[^a-z0-9]+/gi, "-")
+      .toLowerCase();
+    await writeFile(
+      `test-results/failure-${packaged ? "packaged" : "development"}-${name}.json`,
+      JSON.stringify(
+        {
+          producerLedger: await ledger(),
+          nativeFixtureReceipt:
+            source === "native-status"
+              ? await readFile(
+                  path.join(root, "native-source-fixture-receipt.json"),
+                  "utf8",
+                ).catch(() => undefined)
+              : undefined,
+          input: await readFile(input, "utf8"),
+          publicLifecycle: await publicEvents
+            ?.evaluate((events) => events)
+            .catch(() => undefined),
+          publicState: await app
+            ?.evaluate(({ Menu, BrowserWindow, screen }) => ({
+              menu: Menu.getApplicationMenu()?.items.map((item) => ({
+                label: item.label,
+                submenu: item.submenu?.items.map((i) => i.label),
+              })),
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                id: window.id,
+                visible: window.isVisible(),
+                bounds: window.getBounds(),
+              })),
+              display: screen.getPrimaryDisplay(),
+            }))
+            .catch(() => undefined),
+        },
+        null,
+        2,
+      ),
+    );
     await app
       ?.windows()[0]
       ?.screenshot({
@@ -242,13 +471,161 @@ setInterval(()=>{
   }
 }
 
+test("Explicit source suspension waits on one capture and resumes without Retry", async () => {
+  await withRuntime(
+    async ({ publish, observation, children, footY, floor, status }) => {
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      const sourcePID = children()[0]!;
+      // A real public native status attachment enters the unchanged product
+      // Receiver. No synthetic protocol reason bypasses its normalization.
+      await publish({ sourceStatus: 3 });
+      await expect.poll(footY, { timeout: 3000 }).toBe(floor);
+      const until = performance.now() + 9000;
+      while (performance.now() < until) {
+        expect(children()).toEqual([sourcePID]);
+        expect(await footY()).toBe(floor);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+      await expect
+        .poll(status)
+        .toBe("Dock source suspended; waiting for updates");
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      expect(children()).toEqual([sourcePID]);
+    },
+    { observation: null },
+    "native-status",
+  );
+});
+
+test("Unstable bottom contact stays grounded while stable overlap supports climbing", async () => {
+  await withRuntime(
+    async ({ app, publish, observation, footY, floor, children }) => {
+      const originalPID = children()[0]!;
+      const origin = await app.evaluate(({ BrowserWindow, screen }) => {
+        const window = BrowserWindow.getAllWindows()[0]!;
+        const area = screen.getPrimaryDisplay().workArea;
+        const bounds = window.getBounds();
+        window.setPosition(
+          area.x + Math.round((area.width - bounds.width) / 2),
+          area.y + area.height - bounds.height,
+        );
+        return window.getBounds();
+      });
+      expect(origin.width).toBe(240);
+      const display = await app.evaluate(({ screen }) =>
+        screen.getPrimaryDisplay(),
+      );
+      const bounds = () =>
+        app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()[0]!.getBounds(),
+        );
+      const bottom = (start: number) => ({
+        orientation: "bottom",
+        bounds: {
+          x: start,
+          y: floor - 75,
+          width: display.bounds.x + display.bounds.width - start,
+          height: display.bounds.y + display.bounds.height - (floor - 75),
+        },
+        contour: Array.from(
+          {
+            length: Math.ceil(display.bounds.x + display.bounds.width - start),
+          },
+          (_, index) => ({ axis: start + index, inward: floor - 75 }),
+        ),
+        primaryDisplayID: display.id,
+      });
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await publish({ observation: null });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor);
+      // Same relative contour as the observed x615/start826 oscillation.
+      // This overlaps the resting silhouette but misses stable bottom contact.
+      await publish({ observation: bottom(origin.x + 211) });
+      const until = performance.now() + 6500;
+      while (performance.now() < until) {
+        expect(await footY()).toBe(floor);
+        expect((await bounds()).x).toBe(origin.x);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      // The observed x615/start814 control is narrow but stably supported.
+      await publish({ observation: bottom(origin.x + 199) });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(await footY()).toBe(floor - 75);
+      await publish({ observation: null });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor);
+      await publish({ observation: bottom(origin.x + 260) });
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(await footY()).toBe(floor);
+      for (const orientation of ["left", "right"] as const) {
+        const before = await bounds();
+        const inward = before.x + (orientation === "left" ? 100 : 140);
+        await publish({
+          observation: {
+            orientation,
+            bounds: {
+              x: orientation === "left" ? display.bounds.x : inward,
+              y: display.bounds.y,
+              width:
+                orientation === "left"
+                  ? inward - display.bounds.x
+                  : display.bounds.x + display.bounds.width - inward,
+              height: display.bounds.height,
+            },
+            contour: Array.from(
+              { length: Math.ceil(display.bounds.height) },
+              (_, index) => ({ axis: display.bounds.y + index, inward }),
+            ),
+            primaryDisplayID: display.id,
+          },
+        });
+        await expect
+          .poll(async () =>
+            orientation === "left"
+              ? (await bounds()).x > before.x
+              : (await bounds()).x < before.x,
+          )
+          .toBe(true);
+        expect(await footY()).toBe(floor);
+        await publish({ observation: null });
+      }
+      expect(children()).toEqual([originalPID]);
+    },
+  );
+});
+
 test("Dock capture rebuilds a continuously silent stream and restores support without manual Retry", async () => {
   await withRuntime(
-    async ({ publish, footY, children, spawnedPIDs, floor, observation }) => {
+    async ({
+      publish,
+      beginScene,
+      footY,
+      children,
+      spawnedPIDs,
+      floor,
+      observation,
+      app,
+    }) => {
+      const setupPID = children()[0]!;
+      await app.evaluate(({ screen }) =>
+        screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+          "workArea",
+        ]),
+      );
+      await expect
+        .poll(() => {
+          const owned = children();
+          return owned.length === 1 && owned[0] !== setupPID;
+        })
+        .toBe(true);
+      await beginScene();
       const firstPID = children()[0]!;
       await publish({ observation });
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
-      await publish({ observation, silenceFirstChild: true });
+      await publish({ observation, silencePID: firstPID });
       await expect.poll(footY, { timeout: 3000 }).toBe(floor);
       await expect
         .poll(
@@ -261,6 +638,35 @@ test("Dock capture rebuilds a continuously silent stream and restores support wi
         .toBe(true);
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       expect(await spawnedPIDs()).toHaveLength(2);
+    },
+  );
+});
+
+test("Empty display-metric notifications preserve a healthy owned capture and support", async () => {
+  await withRuntime(
+    async ({
+      publish,
+      observation,
+      children,
+      spawnedPIDs,
+      footY,
+      floor,
+      app,
+    }) => {
+      const healthyPID = children()[0]!;
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await app.evaluate(async ({ screen }) => {
+        const display = screen.getPrimaryDisplay();
+        for (let index = 0; index < 5; index++) {
+          screen.emit("display-metrics-changed", {}, display, []);
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      expect(children()).toEqual([healthyPID]);
+      expect(await spawnedPIDs()).toHaveLength(1);
+      expect(await footY()).toBe(floor - 75);
     },
   );
 });
@@ -348,7 +754,10 @@ test("Startup silence recovers while healthy idle, empty frames, brief silence a
       invoke,
       app,
     }) => {
-      const initialPID = children()[0]!;
+      await expect
+        .poll(async () => (await spawnedPIDs()).length)
+        .toBeGreaterThan(0);
+      const initialPID = (await spawnedPIDs())[0]!;
       expect(await footY()).toBe(floor);
       await expect
         .poll(
@@ -406,7 +815,7 @@ test("Startup silence recovers while healthy idle, empty frames, brief silence a
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       expect(await spawnedPIDs()).toHaveLength(4);
     },
-    { silenceFirstChild: true },
+    { startupSilence: true },
   );
 });
 

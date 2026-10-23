@@ -1,0 +1,27 @@
+{
+  "type": "audited_public_SCStreamOutput_protocol_binding",
+  "captureConstructed": false,
+  "preflightCalled": false,
+  "pixelsRead": false,
+  "optionalProtocolSelector": "stream:didOutputSampleBuffer:ofType:",
+  "receiverResponds": true,
+  "conclusion": "The independently compiled diagnostic Receiver responds to the callback selector exposed by the public Objective-C protocol on this host.",
+  "limits": [
+    "This is method-export/selector evidence for this diagnostic artifact, not callback delivery or end-to-end registration/capture proof.",
+    "It does not exercise a live product helper Receiver or establish a root cause, official timing/ownership requirement or product acceptance.",
+    "No capture/preflight/pixel read invoked by this check; inherited Receiver callback bodies were not executed."
+  ],
+  "sources": [
+    {
+      "localBasename": "result.json",
+      "sha256": "c9e1adddc1771bb4ab7744432c4787fee7c0be19fb438952fa443fcad222e8db"
+    },
+    {
+      "localBasename": "check.swift",
+      "sha256": "928845c65d2ed296703987f6c442882d53cefc458ca9f89e819e62906f25df78"
+    }
+  ],
+  "schemaVersion": 1,
+  "auditedAtUTC": "2026-10-22T11:17:27.026930+00:00",
+  "auditMethod": "Read existing source/receipts only; no UI, SCK, tests, network or new agents."
+}

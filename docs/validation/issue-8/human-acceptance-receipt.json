@@ -1,0 +1,149 @@
+{
+  "receiptVersion": 1,
+  "evidenceClass": "user_reports_and_identified_parent_snapshots",
+  "sourceSHA256": "0c0e4a3f49d0c3f07c7107b9babf1285e0abce0760b3cdb9bfe177551932c962",
+  "candidateAsarSHA256": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "overallAccepted": false,
+  "finalBuildPackageAuthorizedToStart": false,
+  "steps": [
+    {
+      "step": 1,
+      "basis": "user_report",
+      "topic": "startup/display",
+      "result": "reported_pass"
+    },
+    {
+      "step": 2,
+      "basis": "user_report",
+      "topic": "drag/hold/release",
+      "result": "reported_pass"
+    },
+    {
+      "step": 3,
+      "basis": "user_report",
+      "topic": "regrab during return",
+      "result": "reported_pass"
+    },
+    {
+      "step": 4,
+      "basis": "user_report",
+      "topic": "body click/transparent pass-through/first click",
+      "result": "reported_pass"
+    },
+    {
+      "step": 5,
+      "basis": "user_report",
+      "topic": "bottom Dock climb/return",
+      "result": "short_term_pass_after_manual_retry",
+      "long_term_stability": "reported_failure",
+      "durationMeasured": false
+    },
+    {
+      "step": 6,
+      "basis": "user_report",
+      "topic": "Dock magnification and visible edge updates",
+      "result": "reported_pass"
+    },
+    {
+      "step": 7,
+      "basis": "user_report",
+      "topic": "No climb when horizontally not overlapping bottom Dock",
+      "result": "reported_pass"
+    },
+    {
+      "step": 8,
+      "basis": "user_report",
+      "topic": "Left-side Dock avoidance",
+      "result": "reported_pass"
+    },
+    {
+      "step": 9,
+      "basis": "user_report",
+      "topic": "Right-side Dock avoidance; restored bottom",
+      "result": "reported_pass"
+    },
+    {
+      "step": 10,
+      "basis": "user_report",
+      "topic": "Small/Large interactions and Dock; restored Medium",
+      "result": "reported_pass"
+    },
+    {
+      "step": "11-hidden",
+      "basis": "user_report",
+      "topic": "Hidden pet, lower window input, hidden intent survives Dock show/hide",
+      "result": "reported_pass",
+      "backgroundProcessCheck": {
+        "basis": "single_post_hide_snapshot",
+        "matchingHelpersObserved": 0,
+        "preHideHealthyCaptureBaseline": false,
+        "exitLatencyMeasured": false
+      }
+    },
+    {
+      "step": "11-shown",
+      "basis": "user_report",
+      "topic": "Show Mosey restores pet and interaction",
+      "result": "ordinary_interaction_reported_pass",
+      "automaticDockRecovery": "reported_failure"
+    },
+    {
+      "step": 12,
+      "basis": "user_report",
+      "topic": "Display scaling, hit testing, drag and hidden intent; original scaling restored",
+      "result": "reported_pass"
+    },
+    {
+      "step": "13-permission-off-check",
+      "basis": "user_report",
+      "result": "initial_permission_warning_and_ordinary_interaction_reported_pass",
+      "retryDidNotRestoreDock": true,
+      "warningAfterRetry": "ambiguous_user_report",
+      "unexpectedRecoveryClaim": false
+    },
+    {
+      "step": "13-permission-on-relaunch",
+      "basis": "user_report",
+      "result": "identity_verified_by_parent_receipt",
+      "mainPID": 15120,
+      "parentPID": 1
+    },
+    {
+      "step": "13-restored-permission-result",
+      "basis": "user_report",
+      "result": "ordinary_interaction_reported_pass",
+      "automaticDockRecovery": "reported_failure",
+      "manualRetry": "reported_restores_Dock"
+    }
+  ],
+  "openDefectGroups": [
+    {
+      "id": "manual_retry_required",
+      "reportedTriggers": [
+        "startup",
+        "longer_unmeasured_runtime",
+        "Show_after_Hide",
+        "permission_restored_and_exact_app_relaunched"
+      ],
+      "commonRootCauseEstablished": false
+    },
+    {
+      "id": "partial_overlap_repeated_jumping",
+      "rootCauseEstablished": false
+    }
+  ],
+  "excludedObservation": {
+    "permissionOffBeforeIdentityCorrection": "historical_same_name_app; excluded from candidate acceptance",
+    "switchCause": "unconfirmed"
+  },
+  "limits": [
+    "Individual positive replies do not constitute overall acceptance.",
+    "No measured runtime duration supports the longer-runtime report.",
+    "No resource budget or final full-suite result is inferred from manual checks.",
+    "Single hidden-state process snapshot cannot establish cleanup latency or termination of a previously healthy child.",
+    "Retry warning wording remains ambiguous; no menu UI defect is inferred."
+  ],
+  "rawDesktopMediaIncluded": false,
+  "sourceBasename": "mosey-issue-8-human-acceptance-2026-10-22.json",
+  "sourceLocationPolicy": "Original remains local; basename and SHA256 identify the source without publishing the local path."
+}

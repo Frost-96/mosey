@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUTC": "2026-10-22T08:58:17.220357+00:00",
+  "candidateAsarSHA256": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "scope": "One temporary packaged Vitest test with10 fresh isolated app/profile rounds; synthetic product Dock producer seam retained; not actual ScreenCapture acceptance.",
+  "originalStatusAssertionTimeoutMs": 1000,
+  "sourceModified": false,
+  "frozenCandidateModified": false,
+  "rounds": [
+    {
+      "round": 0,
+      "pid": 47274,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 14.565042000000176,
+      "source": {
+        "localBasename": "round-0.json",
+        "sha256": "f4abd8a1fcb5661883216e0591b07b9b26ef3f6a90bb6873cc76e3d1444b9a61"
+      }
+    },
+    {
+      "round": 1,
+      "pid": 47345,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 13.341374999999971,
+      "source": {
+        "localBasename": "round-1.json",
+        "sha256": "2d7e9052411ce3e09002d9230377e6e0183ad1fe5a9b2476f5fc61279505c7bd"
+      }
+    },
+    {
+      "round": 2,
+      "pid": 47393,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 44.4429999999993,
+      "source": {
+        "localBasename": "round-2.json",
+        "sha256": "c3af87e79949b25fb22e71e6a2e92f90ae25fb20ede5db3b206e020bce41590b"
+      }
+    },
+    {
+      "round": 3,
+      "pid": 47473,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 13.745750000001863,
+      "source": {
+        "localBasename": "round-3.json",
+        "sha256": "3f57801f36ba37a4c40bd364f94b5cc122c57fe9e1dc7e8fbbaf4f0f610714d8"
+      }
+    },
+    {
+      "round": 4,
+      "pid": 47523,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 14.067417000005662,
+      "source": {
+        "localBasename": "round-4.json",
+        "sha256": "02c9287a169a59895888a7f3be53740016c0988e54e9c4674a9184e71f321ae7"
+      }
+    },
+    {
+      "round": 5,
+      "pid": 47564,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 13.716166999998677,
+      "source": {
+        "localBasename": "round-5.json",
+        "sha256": "2bac59dfb8396f88d7c920cf67f1af3fcd1793c14db3a2d54985aba35f21ccb9"
+      }
+    },
+    {
+      "round": 6,
+      "pid": 47607,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 13.277208999992581,
+      "source": {
+        "localBasename": "round-6.json",
+        "sha256": "3fd47cfb82560eda96068648e7fe08ccfb2c6231313caf685083a943ba3313fe"
+      }
+    },
+    {
+      "round": 7,
+      "pid": 47673,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 13.093458000003011,
+      "source": {
+        "localBasename": "round-7.json",
+        "sha256": "2b16db86ceebb9d00c463adfc799546581360506b08ca55bb24e1099418ce8ef"
+      }
+    },
+    {
+      "round": 8,
+      "pid": 47725,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 14.62424999999348,
+      "source": {
+        "localBasename": "round-8.json",
+        "sha256": "91bb7a9210b9cee6fb6c24dd92b16156bd31ff9f33c51274eb57d0ccdd5158f4"
+      }
+    },
+    {
+      "round": 9,
+      "pid": 47778,
+      "targetFailed": false,
+      "pollDurationMilliseconds": 21.742957999987993,
+      "source": {
+        "localBasename": "round-9.json",
+        "sha256": "556e3085e7e6f89af53c2f7f8aed3282ae2026d0bca3fcb27b66504a26766e0c"
+      }
+    }
+  ],
+  "controllerDurationSeconds": 95.66389299999719,
+  "controllerReturnCode": 0,
+  "timedOut": false,
+  "publicObserverAudit": "Each round6loadURL+6fulfilled, zero rejected, all wall and monotonic fields present, maxUnsettled1, finalproduct-requested fulfilled.",
+  "postFailureObservationBranchExecuted": false,
+  "interpretation": "10 green original polls; postfailure branch never executed; navigation extraction present, not proof against unobserved load/render loss or timeout hypothesis.",
+  "cleanup": {
+    "temporaryTestExists": false,
+    "profilesRemoved": true,
+    "byteMatchingOwnedProcessRecordsStillAlive": []
+  },
+  "observerAuditSource": {
+    "localBasename": "observer-audit.json",
+    "sha256": "3baa9a495f97946457ca0a06a6b5893ed6674c5c861ef74711cb8e56bffd8543"
+  }
+}

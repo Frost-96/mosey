@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-23",
+  "sourceCommit": "e5f22969bf3311bd564dbad10d0eb9e160992d3e",
+  "asarSHA256": "084441b87a216cc00f213255257398c6e4951f7621787f679120e3cd289bc4b1",
+  "targetedSizeRun": {
+    "exitCode": 0,
+    "testsPassed": 1,
+    "elapsedSeconds": 29.200280165998265
+  },
+  "completePackagedRun": {
+    "exitCode": 1,
+    "testFilesPassed": 7,
+    "testFilesFailed": 1,
+    "testsPassed": 17,
+    "testsFailed": 1,
+    "elapsedSeconds": 468.96609895800066,
+    "timedOut": false,
+    "ownedProcessesRemaining": 0,
+    "failure": {
+      "testFile": "tests/size.test.ts",
+      "assertionLine": 226,
+      "expectedGroundDistanceDIP": 0,
+      "actualGroundDistanceDIP": -84,
+      "phase": "after regrab hold and mouse up",
+      "rootCause": "not established; no sufficient same-run menu/source trace to attribute to Dock or input"
+    }
+  },
+  "resourceMeasurement": {
+    "userDecision": "让当前自动回归跑完，跳过60分钟资源测量（推荐）",
+    "status": "explicitly_skipped_before_acquisition",
+    "passed": false,
+    "samplesCollected": 0,
+    "caffeinateStarted": false
+  },
+  "otherScopes": {
+    "sixFocusedHumanCases": "reported pass; separately documented",
+    "newDevelopmentRecoveryCases": "previous targeted evidence retained",
+    "newCompleteDevelopmentSuite": "not run in this phase"
+  },
+  "limits": [
+    "One targeted pass does not erase the complete-run failure.",
+    "The -84DIP value alone cannot establish whether support was legitimate Dock geometry or a gesture failure.",
+    "No source/fixture/assertion fix or full-suite-green claim.",
+    "Resource waiver is not a measured budget pass."
+  ],
+  "localArtifacts": [
+    {
+      "basename": "packaged-size-baseline.log",
+      "sha256": "a7b26ce654b0672e605ad89fe08dea3b9df2629c78a70d5009e39c9266ca45bd"
+    },
+    {
+      "basename": "packaged-size-baseline-controller.json",
+      "sha256": "b64f47eaaa168529488e00bf45d4126936088ece9d90d4c696de2eea8798a742"
+    },
+    {
+      "basename": "packaged-full-084441b8.log",
+      "sha256": "af44c0efce6bded27754ba6f8617a0c6d0e4236f81f77437863d8d1ae8510b01"
+    },
+    {
+      "basename": "packaged-full-084441b8-controller.json",
+      "sha256": "92cd968138bdf9eae59defcf34a4cbd9843008eee02561f4b740e4b0527e84a8"
+    }
+  ]
+}

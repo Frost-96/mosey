@@ -1,0 +1,179 @@
+{
+  "date": "2026-10-22",
+  "status": "Development-only red/green evidence; focused human retest and final package pending",
+  "baseIntegration": "616ae544d24513ed61268d28b1b90e76ee70df7d",
+  "nativeBoundary": {
+    "input": "Synthetic CoreMedia SCFrameStatus.suspended attachment via public SCStreamOutput callback; no capture/query/preflight",
+    "codeUnderTest": "Byte-identical production Receiver prefix, mapping, silhouette, clocks, and Output stdout",
+    "oldPrefixSHA256": "5e27be26d17d97da3e863f1eeb9c5a83038cf0e24b3112a734cb3ae410b8f82b",
+    "newPrefixSHA256": "784de056cc03bd7b5c95aa4083b9b5cf403f274be03c3fb5f7bff6398c1c5415",
+    "oldReasons": ["incomplete_frame", "callback_silence", "callback_silence"],
+    "newReasons": ["source_suspended", "source_suspended", "source_suspended"],
+    "nativeAssertExitBefore": 1,
+    "nativeAssertExitAfter": 0,
+    "oldGeometryAndSourceCleared": true,
+    "agesRetainedBeyond075Seconds": true,
+    "controls": [
+      "single idle then silence",
+      "blank then silence",
+      "stopped then silence",
+      "unknown then silence",
+      "never received callback",
+      "stream error overrides suspended"
+    ],
+    "controlsBeforeAndAfterPassed": true,
+    "streamConstructor": "Public unstarted stream; no capture started"
+  },
+  "sourceSuspensionWholeApp": {
+    "red": "Established native-produced support then explicit status3; real host terminated owned producer about5.85s later, violating same-stream expectation",
+    "green": "Same owned process through9s suspension; old support immediately discarded; fresh native complete input restores75DIP support without Retry",
+    "safety": "Existing retry budget/timers/freshness, permission and ownership gates unchanged. No new budget-reset rule: one suspension callback and its subsequent aging heartbeats cannot independently satisfy the sustained-fresh-callback window."
+  },
+  "stableContactWholeApp": {
+    "userChoice": "Unstable contact stays on floor; stable body overlap may climb",
+    "red": "After full-support and null-ground prerequisites, fixed narrow contour x+211 caused bottom952 instead of floor956",
+    "green": "Narrow contact stays grounded6.5s with no x drift; x+199 narrow stable overlap climbs75DIP and holds; null drops, no-overlap stays down, left/right avoidance still shifts in correct directions",
+    "geometry": "Common horizontal projection across all loaded atlas frames and both facings, relative to each foot and pixelRatio, scaled through existing petGeometry",
+    "emptyIntersection": "Bottom support fails closed and logs once; ordinary interaction and painted side avoidance remain",
+    "unchanged": "Current contour, source freshness, null/pending ownership, renderer assets and input alpha"
+  },
+  "runs": [
+    {
+      "label": "suspension-whole-red",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Explicit source suspension waits on one capture and resumes without Retry",
+      "exitCode": 1,
+      "elapsedSeconds": 17.64196075000109,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "suspension-whole-green",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Explicit source suspension waits on one capture and resumes without Retry",
+      "exitCode": 0,
+      "elapsedSeconds": 20.898539042000266,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "recovery-boundaries-a",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Dock capture rebuilds|Empty display-metric|Startup silence",
+      "exitCode": 0,
+      "elapsedSeconds": 59.21355612499974,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "recovery-boundaries-b",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Sparse fresh reports|Brief fresh callbacks",
+      "exitCode": 0,
+      "elapsedSeconds": 99.54025895900122,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "recovery-boundaries-c",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Hidden, suspended|Sustained fresh callbacks",
+      "exitCode": 0,
+      "elapsedSeconds": 101.79278462500042,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "contact-whole-red",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Unstable bottom contact stays grounded while stable overlap supports climbing",
+      "exitCode": 1,
+      "elapsedSeconds": 9.841260000001057,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "both-slices-green",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Explicit source suspension|Unstable bottom contact",
+      "exitCode": 0,
+      "elapsedSeconds": 39.63256970800103,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    }
+  ],
+  "checks": {
+    "pnpm check": "exit0 after both slices",
+    "git diff --check": "exit0",
+    "originalRecoveryCases": "7/7 passed in3 bounded development batches",
+    "newWholeAppCases": "2/2 passed together after both source changes"
+  },
+  "limits": [
+    "No real SCK capture or user-app interaction in these development runs",
+    "Synthetic source is not physical Dock recovery proof",
+    "Original dock.test.ts full file not run in this slice because it starts real dock-live capture",
+    "Earlier complete-suite failures remain open; no complete-suite-green claim",
+    "Launch/Show/permission restoration/long-running behavior and partial-overlap visuals still require focused human retest",
+    "No final build/package, push, PR or issue close"
+  ],
+  "frozenAsarSHA256VerifiedUnchanged": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "localArtifacts": [
+    {
+      "localArtifact": "native-tracer/red-stdout.jsonl",
+      "sha256": "eb77f9fbd3b3aab80ac40518490dac44409bd378e8bfdf9438176cca108062ac"
+    },
+    {
+      "localArtifact": "native-tracer/red-result.json",
+      "sha256": "0a2d2fe6ce7e9e836e1ca833e38dcb92eb65e678ec500b69a809abfea0e7767d"
+    },
+    {
+      "localArtifact": "native-tracer/green-suspended.jsonl",
+      "sha256": "1458c6b948f673fe6bd02a88f1ff5e24897d632acba100311a7abe4508300239"
+    },
+    {
+      "localArtifact": "native-tracer/green-and-controls-result.json",
+      "sha256": "edd99c25312e4e489eef206855ff1d3d1757f5b6869c083fe858a963dad5523b"
+    },
+    {
+      "localArtifact": "suspension-whole-red-evidence.json",
+      "sha256": "838a3d7ef1f4ae33fa343dc06d602f027f234798da934eba6d009279f3a14c03"
+    },
+    {
+      "localArtifact": "contact-whole-red-evidence.json",
+      "sha256": "7dd39c691d86c8b707e7a21f0f89e4ed3d17e019ec218cecf9290998e19360aa"
+    },
+    {
+      "localArtifact": "development-explicit-source-suspension-waits-on-one-capture-and-resumes-without-retry.json",
+      "sha256": "359ffd31eaa2a79d7710b8fe89485d62bdd6d20802cb20c2d74af830580e79a4"
+    },
+    {
+      "localArtifact": "development-unstable-bottom-contact-stays-grounded-while-stable-overlap-supports-climbing.json",
+      "sha256": "013e17678babe2cb7f688a1b29bd57bd053bd16c7f7dd4fc0475ea45f8d1cfb0"
+    },
+    {
+      "localArtifact": "slices-final-source-check.json",
+      "sha256": "76959b6fa03def930da88bfad8d539ea195e02cde6fd2faa9d99b4c4293547d4"
+    },
+    {
+      "localArtifact": "suspension-whole-red.log",
+      "sha256": "1e2b6d91b86190920eb0da3a6a87dc54632dd9f3e59a7025806106fea6673239"
+    },
+    {
+      "localArtifact": "suspension-whole-green.log",
+      "sha256": "84ed25f5581de91ef6f39a513eb38d8af9adb34f234e7b9fe9468baca5e224e1"
+    },
+    {
+      "localArtifact": "recovery-boundaries-a.log",
+      "sha256": "d97ed1b11598321a4a772f7e981e62dd44649c3cbe0e52e95c9060c210ed81a7"
+    },
+    {
+      "localArtifact": "recovery-boundaries-b.log",
+      "sha256": "485f71e082ffb12f056d820f04549605661ac69bd4895c8e1ef76ae96379ff97"
+    },
+    {
+      "localArtifact": "recovery-boundaries-c.log",
+      "sha256": "8f4db0d6e2baafd4b7f23b65168e703ac803824b396723a74537c21cd2261a38"
+    },
+    {
+      "localArtifact": "contact-whole-red.log",
+      "sha256": "ad70bc7cb2bfd8114f763bf841daa0eb2755c76561d17bae29728e4c0822b24b"
+    },
+    {
+      "localArtifact": "both-slices-green.log",
+      "sha256": "621c6e1c3afb029ee9adf9a4e4713f01fa64551d37917717be11cc5d7943d545"
+    }
+  ]
+}

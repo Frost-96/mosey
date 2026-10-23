@@ -162,7 +162,10 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
         lastCallback = now; lastStatus = status
         guard active else { lock.unlock(); return }
         guard status == SCFrameStatus.complete.rawValue else {
-            if status != SCFrameStatus.idle.rawValue { epoch += 1; pending = nil; clearLocked("incomplete_frame") }
+            if status != SCFrameStatus.idle.rawValue {
+                epoch += 1; pending = nil
+                clearLocked(status == SCFrameStatus.suspended.rawValue ? "source_suspended" : "incomplete_frame")
+            }
             lock.unlock(); return
         }
         sequence += 1
@@ -209,7 +212,12 @@ final class Receiver: NSObject, SCStreamOutput, SCStreamDelegate {
         let callbackAge = lastCallback.map { age(now, $0) }
         let sourceAge = source.map { age(now, $0) }
         let idle = lastStatus == SCFrameStatus.idle.rawValue
-        if active && (callbackAge.map({ $0 < 0 || $0 > 0.75 }) ?? true) {
+        // Suspended is an explicit source status, not evidence of a failed
+        // callback channel. Keep waiting without keeping any old support edge.
+        // A new callback or terminal lifecycle event replaces this status.
+        if active && lastStatus == SCFrameStatus.suspended.rawValue {
+            clearLocked("source_suspended")
+        } else if active && (callbackAge.map({ $0 < 0 || $0 > 0.75 }) ?? true) {
             epoch += 1; pending = nil; clearLocked("callback_silence")
         } else if active && (acceptedSequence != sequence || pending != nil || !(sourceAge.map({ $0 >= 0 && ($0 <= 1 || idle) }) ?? false)) {
             clearLocked(shape.reason == "current" ? "stale_source" : shape.reason)

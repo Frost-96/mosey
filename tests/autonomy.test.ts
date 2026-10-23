@@ -38,12 +38,15 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     const pet = await app.firstWindow();
     // Bounded public-boundary diagnostics only. These do not change menu
     // selection, timing expectations or the asserted visibility intent.
-    await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app }) => {
+    await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app, screen }) => {
       const trace: unknown[] = [];
-      const snapshot = (event: string) => {
+      const snapshot = (event: string, detail?: unknown) => {
         trace.push({
           event,
+          detail,
+          pointer: screen.getCursorScreenPoint(),
           at: performance.now(),
+          wall: Date.now(),
           applicationHidden: app.isHidden(),
           menus: Menu.getApplicationMenu()?.items.map((item) => ({
             label: item.label,
@@ -67,11 +70,21 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         snapshot("setApplicationMenu");
       };
       for (const window of BrowserWindow.getAllWindows()) {
+        window.on("move", () => snapshot("move"));
         window.on("show", () => snapshot("show"));
         window.on("hide", () => snapshot("hide"));
         window.on("blur", () => snapshot("blur"));
         window.on("focus", () => snapshot("focus"));
       }
+      screen.on("display-metrics-changed", (_event, display, changed) =>
+        snapshot("display-metrics-changed", { display, changed }),
+      );
+      screen.on("display-added", (_event, display) =>
+        snapshot("display-added", display),
+      );
+      screen.on("display-removed", (_event, display) =>
+        snapshot("display-removed", display),
+      );
       powerMonitor.on("suspend", () => snapshot("suspend"));
       powerMonitor.on("resume", () => snapshot("resume"));
       powerMonitor.on("lock-screen", () => snapshot("lock-screen"));
@@ -84,7 +97,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const invoke = (label: string) =>
-      app!.evaluate(({ Menu, BrowserWindow, app }, label) => {
+      app!.evaluate(async ({ Menu, BrowserWindow, app }, label) => {
         const menu = Menu.getApplicationMenu();
         const item = menu?.items
           .find((entry) => entry.label === "Mosey")
@@ -108,10 +121,70 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
               })),
             }),
           );
-        item.click();
+        // Cocoa delivers the public hide/show event after the menu callback.
+        // Wait for that boundary before positioning or driving the pet; an
+        // in-flight visibility transition can otherwise replace setup geometry.
+        const target = BrowserWindow.getAllWindows()[0]!;
+        const event =
+          label === "Hide Mosey"
+            ? "hide"
+            : label === "Show Mosey"
+              ? "show"
+              : undefined;
+        if (!event) {
+          item.click();
+          return;
+        }
+        await new Promise<void>((resolve, reject) => {
+          const settled = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          const timer = setTimeout(() => {
+            if (event === "hide") target.removeListener("hide", settled);
+            else target.removeListener("show", settled);
+            reject(new Error(`No public ${event} event after ${label}`));
+          }, 5000);
+          if (event === "hide") target.once("hide", settled);
+          else target.once("show", settled);
+          item.click();
+        });
       }, label);
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
+    await pet.evaluate(() => {
+      const trace: unknown[] = [];
+      Reflect.set(window, "autonomyInputTrace", trace);
+      for (const type of [
+        "pointerdown",
+        "pointerup",
+        "pointermove",
+        "pointercancel",
+        "gotpointercapture",
+        "lostpointercapture",
+      ]) {
+        window.addEventListener(
+          type,
+          (event) => {
+            const pointer = event as PointerEvent;
+            trace.push({
+              type,
+              at: performance.now(),
+              wall: Date.now(),
+              buttons: pointer.buttons,
+              button: pointer.button,
+              pointerId: pointer.pointerId,
+              clientX: pointer.clientX,
+              clientY: pointer.clientY,
+              screenX: pointer.screenX,
+              screenY: pointer.screenY,
+            });
+            if (trace.length > 128) trace.shift();
+          },
+          true,
+        );
+      }
+    });
     const pixels = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -374,13 +447,17 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         trace: Reflect.get(globalThis, "autonomyMenuTrace"),
       }))
       .catch((failure: unknown) => ({ unavailable: String(failure) }));
+    const inputTrace = await app
+      ?.windows()[0]
+      ?.evaluate(() => Reflect.get(window, "autonomyInputTrace"))
+      .catch((failure: unknown) => ({ unavailable: String(failure) }));
     const preferences = await readFile(
       path.join(root, "profile/preferences.json"),
       "utf8",
     ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
     await writeFile(
       `test-results/failure-${packaged ? "packaged" : "development"}-autonomy-state.json`,
-      JSON.stringify({ externalState, preferences }, null, 2),
+      JSON.stringify({ externalState, inputTrace, preferences }, null, 2),
     );
     await app
       ?.windows()[0]

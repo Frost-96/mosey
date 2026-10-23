@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-23",
+  "status": "Size fixture condition corrected; independent 1DIP failure retained, one subsequent observed positive control passed; full suite pending",
+  "baseIntegration": "747e94d",
+  "changeScope": "tests/size.test.ts selects an explicit empty Dock OS producer; no product-source or assertion change",
+  "controlledRed": {
+    "asarSHA256": "084441b87a216cc00f213255257398c6e4951f7621787f679120e3cd289bc4b1",
+    "exitCode": 1,
+    "elapsedSeconds": 11.255059666997113,
+    "originalAssertion": "post-regrab mouse.up expects workArea groundDistance0; controlled full-width contour yields-84",
+    "size": "Small",
+    "publicPresentationAtIndependentObservation": "resting",
+    "publicDockStatus": "Dock interaction active",
+    "producerProcesses": 1,
+    "DOMReleaseObserved": true,
+    "sameSourceNullReturnsToFloor": true,
+    "nullPhaseMarkerToObservedFloorMs": 270,
+    "originalFailureRethrown": true,
+    "limit": "Establishes a missing no-Dock precondition in the generic size test, not the cause of the earlier real-native full-suite failure"
+  },
+  "fixture": {
+    "protocol": "Actual child PID/PPID, monotonic elapsed, increasing sequence,100ms numeric alpha_empty/null heartbeat;120s owned-source deadline",
+    "selection": "Known empty Dock OS-source condition, not permission refusal or verification",
+    "packaged": "Only private test clone native producer replaced; portable default out/Mosey-darwin-arm64 path retained",
+    "development": "After Forge prep, replace build/native/dock-runtime and finally restore original bytes/mode; nested finally still stops Forge and removes profile",
+    "noObserverInTrackedTest": true,
+    "originalAssertionsAndInputActions": {
+      "oldExpectCount": 35,
+      "newExpectCount": 35,
+      "oldMouseDown": 3,
+      "newMouseDown": 3,
+      "oldMouseUp": 3,
+      "newMouseUp": 3,
+      "sourceSHA256": "3ff4236c12deeb9265b40e3de2ac34a92130ecc83178c0fc4d249e28350353a1"
+    },
+    "devRestoration": {
+      "originalSHA256": "d1588f6ba496d5216ead3054a899d354ad16acf2033f5a7521b5a130b5ceec17",
+      "restoredSHA256": "d1588f6ba496d5216ead3054a899d354ad16acf2033f5a7521b5a130b5ceec17",
+      "sameBytes": true
+    },
+    "copiedPackageIdentity": [
+      {
+        "relativePath": "Contents/Resources/app.asar",
+        "sha256": "084441b87a216cc00f213255257398c6e4951f7621787f679120e3cd289bc4b1",
+        "destinationMatches": true
+      },
+      {
+        "relativePath": "Contents/MacOS/Mosey",
+        "sha256": "ee70cc94fd05d2432d9872790c44854eb981d889ad9d591ea50f8b4eccf4932e",
+        "destinationMatches": true
+      },
+      {
+        "relativePath": "Contents/Resources/native/dock-runtime",
+        "sha256": "0a22d5a876912594580f6004c069914d33ef3b9d113bb94ab046e99c461d69c3",
+        "destinationMatches": true
+      },
+      {
+        "relativePath": "Contents/Resources/native/dock-live",
+        "sha256": "204164ebcb615f7c0501ba31330100565fbd0f888a9b1a9cf0f076f2d76c86fa",
+        "destinationMatches": true
+      }
+    ]
+  },
+  "targetedRuns": [
+    {
+      "label": "size-empty-packaged",
+      "command": "pnpm exec vitest run --project packaged tests/size.test.ts",
+      "exitCode": 0,
+      "elapsedSeconds": 29.69929370799946,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "size-empty-development",
+      "command": "pnpm exec vitest run --project development tests/size.test.ts",
+      "exitCode": 0,
+      "elapsedSeconds": 34.83993945799739,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    },
+    {
+      "label": "dock-positive-independent",
+      "command": "pnpm exec vitest run --project development tests/dock-recovery.test.ts -t Unstable bottom contact",
+      "exitCode": 1,
+      "elapsedSeconds": 12.491495124999346,
+      "timedOut": false,
+      "remainingOwnedProcesses": 0
+    }
+  ],
+  "positiveControlFailure": {
+    "test": "Unstable bottom contact stays grounded while stable overlap supports climbing",
+    "assertion": "grounded narrow-contact loop",
+    "expectedFootY": 956,
+    "actualFootY": 955,
+    "failureSnapshotWindow": {
+      "x": 701,
+      "y": 715,
+      "width": 240,
+      "height": 240
+    },
+    "currentWorkAreaFloor": 956,
+    "sourceContourStart": 826,
+    "sourceEdge": 881,
+    "sourceStatus": "Dock interaction active",
+    "observedPowerDisplayEvents": 0,
+    "laterStableOverlapPositiveReached": false,
+    "rootCause": "not established; preserved; one subsequent temporary public-observation run passed without product, assertion or timeout changes"
+  },
+  "checks": {
+    "pnpm check": "final exit0; earlier unsafe-finally and formatting reports corrected by local cleanup-function extraction/formatting",
+    "git diff --check": "exit0",
+    "runtimeSourceTiming": "Two size passes preceded cleanup-only extraction into local async restoreDockHelper for no-unsafe-finally; final source static checks passed; actions and restoration logic unchanged"
+  },
+  "limits": [
+    "Packaged and development size each passed once; no full-suite-green claim",
+    "Initial independent Dock control failed at956vs955; subsequent one observed run passed. Earlier failure remains unclassified, not resolved.",
+    "Original historical real-native-84 failure remains preserved; no retrospective same-cause claim",
+    "No resource measurement/caffeinate, permission/global Dock/physical mouse changes, production source change, repackaging/resigning/push/PR/issue close"
+  ],
+  "localArtifacts": [
+    {
+      "basename": "control-summary.json",
+      "sha256": "f7541b5e4db89e490472db9cfaf8f28fceab7e148c80b61367a5d609f2502da5"
+    },
+    {
+      "basename": "vitest.log",
+      "sha256": "5056fc1a6119c263e15b9288f5f2d8d1603fc3fe31689675230271033750d89b"
+    },
+    {
+      "basename": "controller.json",
+      "sha256": "000c12a5ae3d50570d007c804c23521e5c313d8aec3f861c8c2ca718b10f9ff3"
+    },
+    {
+      "basename": "source-manifest.json",
+      "sha256": "165927b6084d1ad880cd9d06c0678ff3aa9d2f6b08f50e0eca60479f424fdb5b"
+    },
+    {
+      "basename": "package-copy-receipt.json",
+      "sha256": "98634a2cad6374dc3c8c796ba8b6a844c1381f4a91a40a3a8b2f766f8412d6d9"
+    },
+    {
+      "basename": "development-restoration.json",
+      "sha256": "368cf24e254a266165118ff377d755a6b6e9f239b780b71be14c4a8b6030e2fb"
+    },
+    {
+      "basename": "dock-positive-independent-failure.json",
+      "sha256": "a8088b4c37ac7b2a6f7e525a4b1c7d7d53a11e2928d2a3049c4ce135b4e07043"
+    },
+    {
+      "basename": "dock-positive-independent-failure-summary.json",
+      "sha256": "b03d6297d69d16a327db694208e838184be595e67bbe7e0568d9ceee929e2fda"
+    },
+    {
+      "basename": "size-empty-packaged.log",
+      "sha256": "edef9afa415374e3f353c51828dc1c64804cea92545360d5e7b0001108a8efe0"
+    },
+    {
+      "basename": "size-empty-development.log",
+      "sha256": "7ee4517e453481ffaa3555ddb9c4613a5b5982f285be581af2ea087529cc8811"
+    },
+    {
+      "basename": "dock-positive-independent.log",
+      "sha256": "d33c9e4f55d9e96cb29ecd5c08879e47a1e46204fdf28d5216e0613820c202a6"
+    },
+    {
+      "basename": "size-empty-packaged-controller.json",
+      "sha256": "55218233539cbe99a953c8380b2951b926c5c4ef2226859ec1dbc17865b62c69"
+    },
+    {
+      "basename": "size-empty-development-controller.json",
+      "sha256": "bbd6bc45a366de1a0c32561d597307eff0f2da07461d22dc33aa6e1dfa907c46"
+    },
+    {
+      "basename": "dock-positive-independent-controller.json",
+      "sha256": "c7f22cd35c831a85661bf82f3340e0f4036e0cfdc3d9889d2fe93946439f922b"
+    },
+    {
+      "basename": "unstable-observation/observed-valid.log",
+      "sha256": "5f40b8c07fdf2e6fc5c2774ff4676621637d050738ac258ee9a96d429d534e53"
+    },
+    {
+      "basename": "unstable-observation/observed-valid-controller.json",
+      "sha256": "2a8e36e15148601c7435fd2215778948e36ff217ded9dd8f17524982409baeab"
+    },
+    {
+      "basename": "unstable-observation/public-observation.json",
+      "sha256": "b3610cf289f9f0f00a92b4b3200b64bb02ae85be6a6cc777defbd818b0a43250"
+    },
+    {
+      "basename": "unstable-observation/observation-summary.json",
+      "sha256": "3645226a2276b562744f0ff8a7cd8e4406ef6aa64ffa68321a2cf9c12bf8cab6"
+    },
+    {
+      "basename": "unstable-observation/observation-only.diff",
+      "sha256": "fb836c4894797ee6679f3b3c2231a5f1b698fd312c4893cc0e69a527381fdaab"
+    },
+    {
+      "basename": "unstable-observation/source-manifest.json",
+      "sha256": "f901fd55e2540ec02460e730b5c4b862f5cfa822fdc0d8d53f02a694a922254c"
+    },
+    {
+      "basename": "unstable-observation/invalid-observer-scope/observed-once.log",
+      "sha256": "9aee2a42df7e65ee40c850b1fb1b796a496f813890f8d9523a0160c8654dca62"
+    },
+    {
+      "basename": "unstable-observation/invalid-observer-scope/observed-once-controller.json",
+      "sha256": "d0a8192b6faa6c52c8da49f213fb45d0f57585819647c6663520e18fd965c915"
+    }
+  ],
+  "subsequentObservation": {
+    "command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.config.ts",
+      "--project",
+      "development",
+      "unstable-observed.test.ts",
+      "-t",
+      "Unstable bottom contact"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 18.030897291002475,
+    "remainingOwnedProcesses": 0,
+    "originalAssertionChange": false,
+    "publicOnly": true,
+    "mainRows": 307,
+    "presentationRows": 100,
+    "DOMEvents": 0,
+    "ringDrops": 0,
+    "narrowContact": {
+      "durationMs": 6544,
+      "windowX": 615,
+      "footY": 956,
+      "postures": ["landing", "resting"]
+    },
+    "stableOverlapAndSideAssertions": "passed in this run",
+    "invalidAttempt": {
+      "exitCode": 1,
+      "elapsedSeconds": 8.664017208000587,
+      "reason": "temporary origin marker referenced a withRuntime-local variable from caller scope; no valid product result; removed marker before one authorized correction"
+    },
+    "limit": "Observation changes timing; cannot identify cause of earlier x701/foot955 failure or erase it"
+  }
+}

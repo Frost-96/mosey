@@ -269,6 +269,40 @@ async function start() {
     falling,
     landing,
   ].map((value) => atlasSchema.parse(value));
+  // Bottom support uses the common horizontal projection across every frame
+  // and both facings. Pose changes alone cannot lose and regain that contact.
+  const frameContacts = atlases.flatMap((atlas) =>
+    atlas.frames.map((frame) => {
+      const runs = frame.hitRows.flat();
+      if (!runs.length) return undefined;
+      return {
+        left:
+          (Math.min(...runs.map(([start]) => start)) - frame.foot.x) /
+          atlas.pixelRatio,
+        right:
+          (Math.max(...runs.map(([, end]) => end)) - frame.foot.x) /
+          atlas.pixelRatio,
+      };
+    }),
+  );
+  const contactLeft = Math.max(
+    ...frameContacts.map((contact) =>
+      contact ? Math.max(contact.left, -contact.right) : Infinity,
+    ),
+  );
+  const contactRight = Math.min(
+    ...frameContacts.map((contact) =>
+      contact ? Math.min(contact.right, -contact.left) : -Infinity,
+    ),
+  );
+  const bottomContact =
+    Number.isFinite(contactLeft) &&
+    Number.isFinite(contactRight) &&
+    contactLeft < contactRight
+      ? { left: contactLeft, right: contactRight }
+      : undefined;
+  if (!bottomContact)
+    log.error("Pet atlases have no stable horizontal bottom Dock contact");
   // Pointer identity outlives posture/action transitions during a captured gesture.
   let gesture:
     | {
@@ -354,7 +388,18 @@ async function start() {
   };
   const supportAt = (x: number, y: number) => {
     const area = screen.getPrimaryDisplay().workArea;
-    return dockSupport(dockObservation, bodyAt(x, y), area.y + area.height);
+    const floor = area.y + area.height;
+    const body = bodyAt(x, y);
+    if (dockObservation?.orientation === "bottom") {
+      if (!bottomContact) return { footY: floor, shiftX: 0 };
+      const geometry = petGeometry(preferences.size);
+      body.left =
+        x + geometry.foot.x + bottomContact.left * geometry.assetScale;
+      body.right =
+        x + geometry.foot.x + bottomContact.right * geometry.assetScale;
+    }
+    // Side avoidance retains the actual painted extent; input still uses alpha.
+    return dockSupport(dockObservation, body, floor);
   };
   const reconcileDock = () => {
     if (
@@ -909,7 +954,14 @@ async function start() {
         startDock();
     });
   };
-  screen.on("display-metrics-changed", displayChanged);
+  const displayMetricsChanged = (
+    _event: Electron.Event,
+    _display: Electron.Display,
+    changedMetrics: string[],
+  ) => {
+    if (changedMetrics.length > 0) displayChanged();
+  };
+  screen.on("display-metrics-changed", displayMetricsChanged);
   screen.on("display-added", displayChanged);
   screen.on("display-removed", displayChanged);
   pet.on("unresponsive", cancelInteraction);
@@ -924,7 +976,7 @@ async function start() {
     powerMonitor.off("resume", resume);
     powerMonitor.off("unlock-screen", resume);
     powerMonitor.off("lock-screen", pause);
-    screen.off("display-metrics-changed", displayChanged);
+    screen.off("display-metrics-changed", displayMetricsChanged);
     screen.off("display-added", displayChanged);
     screen.off("display-removed", displayChanged);
   });

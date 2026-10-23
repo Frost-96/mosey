@@ -35,6 +35,13 @@ function signature(file: string) {
   });
   return { status: result.status, details: result.stderr.slice(0, 16000) };
 }
+type DiagnosticRender = {
+  window: BrowserWindow;
+  requestedHTML: string;
+  loadedHTML: string;
+  loading: boolean;
+};
+
 export class DockValidation {
   private child?: ChildProcessWithoutNullStreams;
   get running() {
@@ -42,7 +49,7 @@ export class DockValidation {
   }
   private window?: BrowserWindow;
   private state = "Not started";
-  private lastHTML = "";
+  private renderJob?: DiagnosticRender;
   private currentness = "Unavailable";
   private orientation: "bottom" | "left" | "right" = "bottom";
   private destination = "Created when validation starts";
@@ -104,7 +111,6 @@ export class DockValidation {
   }
   private show() {
     if (!this.window || this.window.isDestroyed()) {
-      this.lastHTML = "";
       this.window = new BrowserWindow({
         title: "Mosey Dock validation",
         width: 720,
@@ -119,8 +125,17 @@ export class DockValidation {
       this.window.webContents.on("will-navigate", (event) =>
         event.preventDefault(),
       );
-      this.window.on("closed", () => {
+      const window = this.window;
+      this.renderJob = {
+        window,
+        requestedHTML: "",
+        loadedHTML: "",
+        loading: false,
+      };
+      window.on("closed", () => {
+        if (this.window !== window) return;
         this.window = undefined;
+        this.renderJob = undefined;
       });
     }
     this.render();
@@ -129,13 +144,34 @@ export class DockValidation {
   private render() {
     if (!this.window || this.window.isDestroyed()) return;
     const body = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Mosey Dock validation</title><style>body{font:16px system-ui;margin:28px;color:#242424;background:#faf9f7}p{line-height:1.5}input{box-sizing:border-box;width:100%;padding:8px}small{line-height:1.5}</style></head><body><h1>Dock validation</h1><p role="status">${escape(this.state)}</p><p>Latest validated native currentness: ${escape(this.currentness)}</p><p>Operator orientation: ${this.orientation}. Confirm the actual Dock position before starting.</p><label>Local log<input aria-label="Local log" readonly value="${escape(this.destination)}"></label><p>Electron screen-recording status: ${escape(systemPreferences.getMediaAccessStatus("screen"))}. Native preflight is reported separately above.</p><small>Experimental local statistics, bounded to 120 seconds. No pet collision edge is accepted. Start and Stop are available in the Dock validation menu. Permission changes require your own System Settings action.</small></body></html>`;
-    if (body === this.lastHTML) return;
-    this.lastHTML = body;
-    void this.window
-      .loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(body)}`)
-      .catch(() => {
-        this.lastHTML = "";
-      });
+    const job = this.renderJob;
+    if (!job) return;
+    job.requestedHTML = body;
+    if (job.loading || body === job.loadedHTML) return;
+    void this.loadLatest(job);
+  }
+  private async loadLatest(job: DiagnosticRender): Promise<void> {
+    if (this.renderJob !== job || job.window.isDestroyed()) return;
+    const body = job.requestedHTML;
+    job.loading = true;
+    try {
+      await job.window.loadURL(
+        `data:text/html;charset=utf-8,${encodeURIComponent(body)}`,
+      );
+      if (this.renderJob === job) job.loadedHTML = body;
+    } catch {
+      job.loadedHTML = "";
+      // A future render may retry; a failed navigation must not loop itself.
+    } finally {
+      job.loading = false;
+      if (
+        this.renderJob === job &&
+        !job.window.isDestroyed() &&
+        job.requestedHTML !== body
+      ) {
+        void this.loadLatest(job);
+      }
+    }
   }
   private record(value: unknown) {
     if (this.fd === undefined) return;

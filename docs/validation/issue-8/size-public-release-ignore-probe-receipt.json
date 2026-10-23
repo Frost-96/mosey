@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "type": "size_public_release_ignore_probe",
+  "localSource": "batch-receipt.json",
+  "sourceSHA256": "59509db2f850ba5daaa848c1387a0fe1e83bcf6771ee4f14e258eab21755b97c",
+  "numericSummary": {
+    "roundCount": 3,
+    "scenarioHashesSame": true,
+    "sameSymptomRedSeen": false,
+    "rows": [
+      {
+        "round": 1,
+        "duration": 33.317652500001714,
+        "returnCode": 0,
+        "timedOut": false,
+        "tempRemoved": true,
+        "ownedStillAlive": [],
+        "failureMessage": null,
+        "sourceSHA256": "389ef9b2ffa323890509f93dc6f579da7109c23152f00893ce084d44f79d50e8",
+        "normalizedScenarioSHA256": "a87647d110b13cd7ef44133f9b2e267c8c00d0b94f3d0d85f2763e07b3989956",
+        "retryCount": 0,
+        "attachmentEvents": [
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664136068,
+            "at": 9182.190792,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664136072,
+            "at": 9186.120542,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664155099,
+            "at": 28213.453667,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664155101,
+            "at": 28215.642417,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664156982,
+            "at": 30096.196167,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664156984,
+            "at": 30098.164875,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664159218,
+            "at": 32331.926125,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664159220,
+            "at": 32333.992875,
+            "url": "http://localhost:5173/"
+          }
+        ],
+        "batchLogSHA256": "dda7dd6cef5fcd2f2968d0ce9f86e545c067f492a130e1d9ccf236cb67d62f78",
+        "failureFiles": [],
+        "observedIsolatedProfilesRemoved": true
+      },
+      {
+        "round": 2,
+        "duration": 32.19227595800476,
+        "returnCode": 0,
+        "timedOut": false,
+        "tempRemoved": true,
+        "ownedStillAlive": [],
+        "failureMessage": null,
+        "sourceSHA256": "cae11b9306d26a7edac6dcf369742a0c06a3605af19a2c8edc81eff7b4cf5731",
+        "normalizedScenarioSHA256": "a87647d110b13cd7ef44133f9b2e267c8c00d0b94f3d0d85f2763e07b3989956",
+        "retryCount": 0,
+        "attachmentEvents": [
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664183737,
+            "at": 8907.689541,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664183740,
+            "at": 8910.223708,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664202697,
+            "at": 27867.607625,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664202700,
+            "at": 27870.474791,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664204879,
+            "at": 30048.996916,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664204880,
+            "at": 30050.517833,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664206738,
+            "at": 31907.774583,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664206741,
+            "at": 31910.187833,
+            "url": "http://localhost:5173/"
+          }
+        ],
+        "batchLogSHA256": "4c4d402be257b030da54eb1432ea0398e94dc4b3c02e283f1d8e0ebece1522b0",
+        "failureFiles": [],
+        "observedIsolatedProfilesRemoved": true
+      },
+      {
+        "round": 3,
+        "duration": 33.28434208299586,
+        "returnCode": 0,
+        "timedOut": false,
+        "tempRemoved": true,
+        "ownedStillAlive": [],
+        "failureMessage": null,
+        "sourceSHA256": "a13799c9b9567848897c4cd76189aed272e6f8fc56c5928048d1694651d92e43",
+        "normalizedScenarioSHA256": "a87647d110b13cd7ef44133f9b2e267c8c00d0b94f3d0d85f2763e07b3989956",
+        "retryCount": 0,
+        "attachmentEvents": [
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664243559,
+            "at": 8436.852625,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664243562,
+            "at": 8439.602667,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664262552,
+            "at": 27428.929125,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664262554,
+            "at": 27430.737833,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664264607,
+            "at": 29484.466,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664264610,
+            "at": 29486.841625,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-start",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664267476,
+            "at": 32352.80525,
+            "url": "http://localhost:5173/"
+          },
+          {
+            "event": "install-fulfilled",
+            "details": {
+              "attempt": 1
+            },
+            "wall": 1792664267478,
+            "at": 32354.976,
+            "url": "http://localhost:5173/"
+          }
+        ],
+        "batchLogSHA256": "109614e8b6fa134330acc5eb46407367e094b4ef3af876db5ccd6e0b49f70b56",
+        "failureFiles": [],
+        "observedIsolatedProfilesRemoved": true
+      }
+    ],
+    "interpretation": "3green same removeSmall/body-edge-present scenario with public wrappers. No RED branch, so call-before-lost predictions not resolved. Failure-only event rings were not extracted on green, so no assertion of complete green call/power-event absence. No renewed wakefulness/permissions/UI/product changes, no extra batch.",
+    "trackedWorktreeClean": true
+  },
+  "limitation": "No same-symptom red in three runs; failure-only extraction means full green call/power rings unavailable. Does not prove no lock throughout run, root cause, fixture fault, or product fix. Original actions/assertions and product bytes unchanged."
+}

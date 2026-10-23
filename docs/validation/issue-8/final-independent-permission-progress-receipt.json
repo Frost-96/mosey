@@ -1,0 +1,55 @@
+{
+  "recordedAtUTC": "2026-10-22T07:15:30.270046+00:00",
+  "candidateAsarSHA256": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "root": {
+    "pid": 40911,
+    "ppid": 1,
+    "executableIdentity": "out/issue-8-acceptance-a75980c5/Mosey.app/Contents/MacOS/Mosey",
+    "rusageError": 0,
+    "userCPUTimeRawTicks": 14377621,
+    "systemCPUTimeRawTicks": 6080417,
+    "userCPUTimeNS": 599067541,
+    "systemCPUTimeNS": 253350708,
+    "residentBytes": 209092608,
+    "physicalFootprintBytes": 75073600,
+    "wiredBytes": 0,
+    "packageIdleWakeups": 859,
+    "interruptWakeups": 4184,
+    "pageins": 279,
+    "processStartMachTicks": 1191374979881,
+    "processExitMachTicks": 0
+  },
+  "windowID": 3406,
+  "launchMethod": "Finder exact final directory and Open Finder item action",
+  "predecessorNormalQuit": {
+    "pid": 12847,
+    "candidate": "631a788b",
+    "method": "CUA application menu Quit Mosey",
+    "verified": "App quit result and subsequent exact candidate root40911"
+  },
+  "deniedLaunchAndExplicitRetry": {
+    "menu": "Dock interaction needs Screen Recording permission",
+    "nativeHelperPresent": false,
+    "petSizeDIP": 240,
+    "scale": 2,
+    "displayDIP": [1470, 956],
+    "numericSources": [
+      {
+        "pathIdentity": "resume-final-independent-launch.json",
+        "sha256": "19811b3a395ae1af41d9c94a96da06cd0eef6f720c74aad6f8acf08f4a36644e"
+      },
+      {
+        "pathIdentity": "resume-final-initial-window.json",
+        "sha256": "d1d34b8d99d7e17a346109e2736019c11b68bb1c5d18ff622a28a44af979973e"
+      },
+      {
+        "pathIdentity": "resume-final-denied-retry.json",
+        "sha256": "49ca09a7bb4f148193e5bfba010ac904cceba8758efad7217dcb55c236f70eb5"
+      }
+    ]
+  },
+  "authorizationPicker": "Selected exact finala759Mosey.app; final Open not performed",
+  "automaticApprovalRejection": "Final Open rejected: specific persistent screen-recording permission change not recognized as explicitly authorized; awaiting direct scoped approval",
+  "resourceAcquisitionStarted": false,
+  "privacy": "No pixels included; all physical image/video remains local"
+}

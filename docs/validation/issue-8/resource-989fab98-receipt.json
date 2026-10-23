@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "candidateAsarSHA256": "989fab98a3a7bb14a55bddf9d3b950ee8a55c79f211d0f5ee2501826ce37170b",
+  "scope": "Historical frozen pre-recovery candidate only. No60min duration or resource budget result transfers to the new4228ca5 recovery build.",
+  "overall": "not-all-budgets-verified",
+  "duration": {
+    "verdict": "pass",
+    "evidence": "Two independently completed60min runs; never splice across restart",
+    "oldMain67040": {
+      "seconds": 3600.056441709001,
+      "samples": 721
+    },
+    "reopenedMain82634": {
+      "seconds": 3600.042851457998,
+      "samples": 721
+    }
+  },
+  "activeDockCPU": {
+    "verdict": "pass_for_measured300s",
+    "p95PercentOneCore": 11.32925910618576,
+    "maximum": 20
+  },
+  "groupRSS": {
+    "verdict": "pass_for_completed_windows",
+    "maximumMiB": 526.46875,
+    "limitMiB": 600,
+    "qualification": "RSS sum may double-count shared pages. PostB2 diagnostics excluded."
+  },
+  "restingCPU": {
+    "verdict": "inconclusive",
+    "acceptedLimitPercentOneCoreP95": 5,
+    "original0800msValidRestIntervalsA2": 0,
+    "original0800msValidRestIntervalsB2": 0,
+    "original0800msValidRestIntervalsC2": 0,
+    "supplementalAllObservedShapeP95": {
+      "A2": 3.3340899907906687,
+      "B2": 3.4752353798341122,
+      "C2": 3.3201851669972
+    },
+    "qualification": "All-observed-resting-like samples do not prove continuously pure rest. Acquisition gaps, aliases, observer load and concurrent separate test/prototype system load remain; CPU values did not select intervals."
+  },
+  "originalMedianRSSGrowthA2B2": {
+    "verdict": "numeric_fail_comparability_inconclusive",
+    "A2MedianMiB": 448.40625,
+    "B2MedianMiB": 489.625,
+    "deltaMiB": 41.21875,
+    "limitMiB": 30,
+    "qualification": "A2 capture had no support, B2 had restored support and different native helper. Exceedance retained; not proof of leak. New C2 comparison is additional evidence, not replacement."
+  },
+  "additionalMatchedB2C2": {
+    "sameRootAndNativeStartIdentities": true,
+    "mainPID": 82634,
+    "nativePID": 87095,
+    "phases": {
+      "poseRestB2": {
+        "window": {
+          "startUTC": "2026-10-21T15:04:16.545Z",
+          "endUTC": "2026-10-21T15:14:17.944Z",
+          "source": "pose-B2",
+          "scope": "Actual observer metadata→finished summary"
+        },
+        "samples": 121,
+        "medianSumRSSMiB": 489.625,
+        "maxSumRSSMiB": 509.3125,
+        "allMediumVisiblePreferences": true,
+        "allPetWindows240": true
+      },
+      "poseRestC2": {
+        "window": {
+          "startUTC": "2026-10-21T15:17:25.698Z",
+          "endUTC": "2026-10-21T15:27:27.290Z",
+          "source": "pose-C2",
+          "scope": "Actual observer metadata→finished summary"
+        },
+        "samples": 121,
+        "medianSumRSSMiB": 473.9375,
+        "maxSumRSSMiB": 502.46875,
+        "allMediumVisiblePreferences": true,
+        "allPetWindows240": true
+      }
+    },
+    "medianRSSGrowth": {
+      "B2MedianMiB": 489.625,
+      "C2MedianMiB": 473.9375,
+      "deltaMiB": -15.6875,
+      "maximumGrowthMiB": 30,
+      "verdict": "pass_numeric_additional_matched_identity_comparison",
+      "scope": "Additional B2→C2 controlled comparison; does not replace prior A2→B2 exceedance or prove absence of future leaks."
+    },
+    "groupRSSPeak": {
+      "maximumMiB": 509.3125,
+      "limitMiB": 600,
+      "verdict": "pass",
+      "scope": "Only strict B2/C2 windows; system/other-app processes excluded; shared pages may double count."
+    }
+  },
+  "hiddenHelper": {
+    "verdict": "old_instance_only_evidence",
+    "oldEvidence": {
+      "dedicatedReportedPrefixSamples": 69,
+      "prefixSpanSeconds": 340.00496266700065,
+      "allPrefixNativeHelpersAbsent": true,
+      "allPrefixPetWindowsAbsent": true,
+      "allPrefixWindowEnumerationAvailable": true,
+      "rawExtendedHiddenMarkerSamples": 147,
+      "qualification": "Only first69/340s used for reported dedicated observation; marker remains later. All147 raw marker samples also show helper0/window0, but not claimed as separately predeclared longer phase. Original67040 only; reopened82634 no dedicated hidden phase."
+    }
+  },
+  "stability": {
+    "verdict": "no_observed_root_or_Electron_identity_loss_in_resource_samples",
+    "qualification": "No observed leaked candidate child under completed audits; planned external frozen-native probes are retained and attributed separately. Resource snapshots alone do not prove no crash event ever occurred."
+  },
+  "causalBoundary": "A2 started after an earlier heartbeat-unavailable log; support was not verified at A2 start. After A2 no support was observed and explicit Retry restored it. Do not claim quiet caused the stall or a10min decay; exact stalled-child frame history and SCK cause remain unknown.",
+  "measurement": "CPU uses process counter deltas over actual monotonic intervals;100% is one logical core. Group RSS sums can double-count shared pages. Post-window diagnostics excluded, independent60min runs never spliced across restart. No energy or precise input-latency measurement claimed.",
+  "sources": [
+    {
+      "localBasename": "completed-A2-active-B2-budget-report.json",
+      "sha256": "8fe823dc33a4d563677a4fa6c1d90fb3f9324282bc0727cfe6cb6567e59dd99a"
+    },
+    {
+      "localBasename": "healthy-B2-C2-budget-report.json",
+      "sha256": "9b8002d313df682832ebef936e53a02b33aab6ccd9571e4f574402a4719225bb"
+    },
+    {
+      "localBasename": "final-observation-windows.json",
+      "sha256": "1e7b131fad6a7bbdea4f491c43fb26ae2c34ba072b5f79303ca3b7bb6a0d2e5f"
+    },
+    {
+      "localBasename": "phase-conditions-and-boundaries.json",
+      "sha256": "932315144779c77656b1311a67118606e1adc1bb61ee9e1c99abd86ef3916209"
+    },
+    {
+      "localBasename": "reopened-handoff-receipt.json",
+      "sha256": "e00b4a73347511164c328caa012e838dddb2256a011a6af1e4f0f73b9d86e8c8"
+    }
+  ],
+  "observerSources": [
+    {
+      "localBasename": "metadata.json",
+      "sha256": "d453ba5882adfaadd49063e08ba98b6c08d937f38238c70c9f2c03b1a07cf442"
+    },
+    {
+      "localBasename": "summary.json",
+      "sha256": "f2922dcda74b9f5ba8fa611da587379e537aace0b4e4332dd3e3556d60d0899c"
+    },
+    {
+      "localBasename": "metadata.json",
+      "sha256": "24a2f887f3bd59cdeecf099a206fd5a7b8fccc3a5dd8d485e5a74f3395fede90"
+    },
+    {
+      "localBasename": "summary.json",
+      "sha256": "5568270fc1b2ddeeaa80638497496200f90e69980ad08fc846c4190aa4aba15b"
+    },
+    {
+      "localBasename": "metadata.json",
+      "sha256": "e83ae788e210b700fdbb44d8fedbdada7a95b9ca9e85bae20d23cd5d536dfb60"
+    },
+    {
+      "localBasename": "summary.json",
+      "sha256": "214424224e1455adbae1104642b278c8fe5074521c142ec4a49e6729f48dbfc1"
+    }
+  ],
+  "privacy": "Raw images/video remain local; this receipt contains numeric summaries and localpaths/SHA only."
+}

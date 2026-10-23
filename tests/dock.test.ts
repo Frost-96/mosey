@@ -228,6 +228,52 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     );
     expect(productChild).toBeDefined();
     process.kill(productChild!.pid, "SIGSTOP");
+    // Observe actual public navigation calls; never inspect the diagnostic's
+    // internal render job. Replacing a live data document before loadURL settles
+    // has crashed the packaged navigation host during Stop followed by Retry.
+    const navigation = await app.evaluateHandle(({ app }) => {
+      const events: unknown[] = [];
+      const state = { maxUnsettled: 0, events };
+      Object.assign(globalThis, { dockNavigationTrace: state });
+      app.once("browser-window-created", (_event, window) => {
+        const contents = window.webContents;
+        const original = contents.loadURL.bind(contents);
+        let unsettled = 0;
+        contents.loadURL = (url, options) => {
+          unsettled += 1;
+          state.maxUnsettled = Math.max(state.maxUnsettled, unsettled);
+          const status = decodeURIComponent(url).match(
+            /<p role="status">([^<]*)<\/p>/,
+          )?.[1];
+          const record = (event: string, error?: unknown) => {
+            state.events.push({
+              event,
+              status,
+              at: performance.now(),
+              wall: Date.now(),
+              unsettled,
+              error: error === undefined ? undefined : String(error),
+            });
+            if (state.events.length > 128) state.events.shift();
+          };
+          record("loadURL");
+          return original(url, options)
+            .then(
+              () => {
+                record("loadURL-fulfilled");
+              },
+              (error: unknown) => {
+                record("loadURL-rejected", error);
+                throw error;
+              },
+            )
+            .finally(() => {
+              unsettled -= 1;
+            });
+        };
+      });
+      return state;
+    });
     const diagnosticWindow = app.waitForEvent("window");
     await invokeDiagnostic("Start Dock validation (120 seconds)");
     await invoke("Hide Mosey");
@@ -253,6 +299,10 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         { timeout: 4000 },
       )
       .toBe(true);
+    expect(await navigation.evaluate((state) => state.maxUnsettled)).toBe(1);
+    await expect
+      .poll(() => diagnostic.locator("body").innerText())
+      .toContain("Stopped: product Dock interaction requested");
     const origin = await bounds();
     await setDock(
       "bottom",
@@ -621,6 +671,31 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         : "not launched",
     });
     console.log(
+      "Owned windows at failure",
+      await app
+        ?.evaluate(({ BrowserWindow, screen, powerMonitor }) => ({
+          windows: BrowserWindow.getAllWindows().map((window) => ({
+            id: window.id,
+            visible: window.isVisible(),
+            bounds: window.getBounds(),
+            url: window.webContents.getURL(),
+            loading: window.webContents.isLoading(),
+          })),
+          display: screen.getPrimaryDisplay(),
+          idleState: powerMonitor.getSystemIdleState(1),
+        }))
+        .catch(() => undefined),
+      await app
+        ?.windows()[0]
+        ?.evaluate(async () => ({
+          presentation: await window.mosey.getPresentation(),
+          visibility: document.visibilityState,
+          readyState: document.readyState,
+          scripts: Array.from(document.scripts, (script) => script.src),
+        }))
+        .catch(() => undefined),
+    );
+    console.log(
       "Dock menu at failure",
       await app
         ?.evaluate(({ Menu }) =>
@@ -632,6 +707,17 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         .catch(() => undefined),
     );
     await mkdir("test-results", { recursive: true });
+    const navigationState = await app
+      ?.evaluate(() => Reflect.get(globalThis, "dockNavigationTrace"))
+      .catch((failure: unknown) => ({ unavailable: String(failure) }));
+    await writeFile(
+      `test-results/failure-${packaged ? "packaged" : "development"}-dock-navigation.json`,
+      JSON.stringify(
+        navigationState ?? { unavailable: "navigation trace not attached" },
+        null,
+        2,
+      ),
+    );
     await app
       ?.windows()[0]
       ?.screenshot({

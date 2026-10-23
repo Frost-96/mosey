@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "type": "after_matrix_full_suite_and_ordinary_control_audit",
+  "recordedAtUTC": "2026-10-22T09:53:30.227555+00:00",
+  "sourceCommitAtAudit": "0195d279e97bc16c6e2c10742958a3c0e8a596c6",
+  "sourceCommitQualification": "Current source commit recorded at audit, not an independently stamped test-launch commit. Log assertions checked against current unchanged source lines.",
+  "runs": [
+    {
+      "mode": "development",
+      "completeSuiteReportPresent": true,
+      "passedTests": 14,
+      "failedTests": 1,
+      "skippedTests": 1,
+      "totalTests": 16,
+      "passedFiles": 7,
+      "failedFiles": 1,
+      "totalFiles": 8,
+      "durationSeconds": 523.47,
+      "exitCodeFromLog": 1,
+      "reportedStartAsiaShanghai": "2026-10-22T17:09:04+08:00",
+      "logLastModifiedAsiaShanghai": "2026-10-22T17:17:48.393725+08:00",
+      "failures": [
+        {
+          "source": "tests/size.test.ts",
+          "line": 202,
+          "assertion": "poll((await bounds()).y).toBeLessThan(ground.y - 150)",
+          "observedY": 656,
+          "requiredStrictlyLessThanY": 506,
+          "testTitle": "size menu scales the visible corgi and keeps its feet on the same ground",
+          "rootCause": "unlocalized"
+        }
+      ],
+      "sameRunSuccessArtifactEvidence": [
+        {
+          "localBasename": "development-dock.json",
+          "sha256": "79adbe3e574796a5371682aa95977dccd23176cff3c87528846cd24755729aba",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:09:36.149094+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "development-autonomy.json",
+          "sha256": "c0f8c9da46f4005242bfead8be87df5854ba3343e451c7f1aa6f99be31e4872a",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:17:30.974872+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "development-size-autonomy.json",
+          "sha256": "cd539b8824481ff1226c8212a0e3df640a1437994444ae83c8f6cfbf6edc4525",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:16:04.786958+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "failure-development-size.png",
+          "sha256": "713e61ccac40fd2856616d65bb0c39819fe2a5206ad6efb5e61389ebe6d7fce5",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:16:27.774323+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        }
+      ],
+      "resultFreshness": {
+        "ownModeArtifactCount": 44,
+        "withinRunFileTimeWindowCount": 42,
+        "olderThanRunCount": 2,
+        "afterLogModificationCount": 0,
+        "staleOwnModeNames": [
+          "development-size-medium-1x.png",
+          "failure-development-dock.png"
+        ],
+        "afterLogModificationNames": [],
+        "manifestEntries": 87,
+        "manifestContentHashMismatches": [],
+        "manifest": {
+          "localBasename": "all-top-level-local-artifacts-manifest.json",
+          "sha256": "8d769d5a409ea0b94fd034ee9cb54c44b6d1e2dd118b27f382a3ec45ca1d3f6d"
+        },
+        "qualification": "Results directories retain earlier outputs and the other mode. Directory copy time or mere file presence is not a fresh pass. Packaged-size-autonomy.json is old13:23 output; current packaged run failed that file."
+      },
+      "log": {
+        "localBasename": "resume-after-matrix-development.log",
+        "sha256": "bcd2d235389bcf94cc12110d0d4d6382a230db7e3249b593b707d78b5b1c9b04"
+      },
+      "resultDirectory": "resume-after-matrix-development-results"
+    },
+    {
+      "mode": "packaged",
+      "completeSuiteReportPresent": true,
+      "passedTests": 14,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "totalTests": 16,
+      "passedFiles": 6,
+      "failedFiles": 2,
+      "totalFiles": 8,
+      "durationSeconds": 419.9,
+      "exitCodeFromLog": 1,
+      "reportedStartAsiaShanghai": "2026-10-22T17:19:59+08:00",
+      "logLastModifiedAsiaShanghai": "2026-10-22T17:26:59.126797+08:00",
+      "failures": [
+        {
+          "source": "tests/size-autonomy.test.ts",
+          "line": 476,
+          "assertion": "expect((await desktop()).bounds).toEqual(held.bounds) after1600ms held wait",
+          "expectedBounds": {
+            "x": 1170,
+            "y": 536,
+            "width": 300,
+            "height": 300
+          },
+          "actualBounds": {
+            "x": 1170,
+            "y": 656,
+            "width": 300,
+            "height": 300
+          },
+          "testTitle": "three sizes preserve left-facing interaction and autonomous movement across resizing",
+          "rootCause": "unlocalized"
+        },
+        {
+          "source": "tests/size.test.ts",
+          "line": 202,
+          "assertion": "poll((await bounds()).y).toBeLessThan(ground.y - 150)",
+          "observedY": 656,
+          "requiredStrictlyLessThanY": 506,
+          "testTitle": "size menu scales the visible corgi and keeps its feet on the same ground",
+          "rootCause": "unlocalized"
+        }
+      ],
+      "sameRunSuccessArtifactEvidence": [
+        {
+          "localBasename": "packaged-dock.json",
+          "sha256": "011d43ae4c6a7bc0af492c48bdf5df7c0846748a6e6edac4eabe5f0492608ade",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:25:56.093998+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "packaged-autonomy.json",
+          "sha256": "0006dde958a93ed8b097b889540344dc4003e17182f2eae3f26908d58febb3e8",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:20:24.950474+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "packaged-size-autonomy.json",
+          "sha256": "c8510e9bb55d7aed762afbe4e1cc0374491f1b2fef55f061ffb0b71001f0d774",
+          "modifiedAtAsiaShanghai": "2026-10-22T13:23:06.539333+08:00",
+          "withinThisRunFileWindow": false,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "failure-packaged-size.png",
+          "sha256": "713e61ccac40fd2856616d65bb0c39819fe2a5206ad6efb5e61389ebe6d7fce5",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:26:19.724404+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        },
+        {
+          "localBasename": "failure-packaged-size-autonomy.png",
+          "sha256": "32e2858a258eec1ea825ad810cfa780d23fb0f1abfac14a41c4c82f30a394e3d",
+          "modifiedAtAsiaShanghai": "2026-10-22T17:25:31.080664+08:00",
+          "withinThisRunFileWindow": true,
+          "qualification": "mtime is artifact write/copy-preserved evidence; not test execution time or image exposure time"
+        }
+      ],
+      "resultFreshness": {
+        "ownModeArtifactCount": 46,
+        "withinRunFileTimeWindowCount": 36,
+        "olderThanRunCount": 10,
+        "afterLogModificationCount": 0,
+        "staleOwnModeNames": [
+          "failure-packaged-autonomy-state.json",
+          "failure-packaged-autonomy.png",
+          "packaged-size-autonomy-180-playing.png",
+          "packaged-size-autonomy-180-stretching.png",
+          "packaged-size-autonomy-180-walking.png",
+          "packaged-size-autonomy-240-playing.png",
+          "packaged-size-autonomy-240-stretching.png",
+          "packaged-size-autonomy-240-walking.png",
+          "packaged-size-autonomy.json",
+          "packaged-size-medium-1x.png"
+        ],
+        "afterLogModificationNames": [],
+        "manifestEntries": 90,
+        "manifestContentHashMismatches": [],
+        "manifest": {
+          "localBasename": "all-top-level-local-artifacts-manifest.json",
+          "sha256": "81212763c1f57c9d05065ae44b085f5519da768fc7411c2b2785bb105ffeca4a"
+        },
+        "qualification": "Results directories retain earlier outputs and the other mode. Directory copy time or mere file presence is not a fresh pass. Packaged-size-autonomy.json is old13:23 output; current packaged run failed that file."
+      },
+      "log": {
+        "localBasename": "resume-after-matrix-packaged.log",
+        "sha256": "4226735a944c2572b7a80ae379be336f64d722594354cc3b387b3b38311698f3"
+      },
+      "resultDirectory": "resume-after-matrix-packaged-results"
+    }
+  ],
+  "sourceAssertions": [
+    {
+      "repositoryPath": "tests/size.test.ts",
+      "absoluteBasename": "tests/size.test.ts",
+      "sha256": "783e61c8ba7749e27a0cd2ac34b7676d249d32e2ee9b81576d9cd2dc13fb94fe",
+      "line": 202
+    },
+    {
+      "repositoryPath": "tests/size-autonomy.test.ts",
+      "absoluteBasename": "tests/size-autonomy.test.ts",
+      "sha256": "5e814501be6d429c57c5ef09ab82acd9f6aad6b70d3b1033b8c94c6c1c6e8419",
+      "line": 476
+    }
+  ],
+  "ordinaryWindowControl": {
+    "validCaptureRuns": 1,
+    "preStreamGuardAborts": 1,
+    "runs": [
+      {
+        "attempt": "20261022T174645-ordinary-product",
+        "pid": 54237,
+        "controllerDurationSeconds": 0.8613111250015208,
+        "returnCode": 2,
+        "forcedExactPIDKill": false,
+        "ownedPIDStillAliveAtControllerCheck": false,
+        "rawLogHashMatches": true,
+        "recordTypes": {
+          "environment": 1,
+          "preflight": 1,
+          "public_display_initialization": 1,
+          "binding_identity_validated": 1,
+          "identity_unavailable": 1
+        },
+        "startReturnedCount": 0,
+        "stopRequestedCount": 0,
+        "stopReturnedCount": 0,
+        "receipt": {
+          "localBasename": "20261022T174645-ordinary-product.receipt.json",
+          "sha256": "c7585b7a1911fc98d7d2d92036bb55c5ad4fd1da5fdaf8db8d7715be076be763"
+        },
+        "rawNumericSource": {
+          "localBasename": "20261022T174645-ordinary-product.jsonl",
+          "sha256": "c09c16301e43cca842010cf58c01dc45d8037b5de5767b9a3f6939352da3f923"
+        },
+        "binarySHA256": "b92da4d3b3020ab87e5fd96a78cb23e6983730f4cb5758feb69b350b22f40609",
+        "bindingSHA256": "b8ac35551ad3f146104279a197301456a3eb66bb898cbd5464f48ca625356f63",
+        "classification": "pre_stream_identity_guard_abort_no_capture_started",
+        "guardErrors": [
+          {
+            "elapsed": 0.09686366666666667,
+            "expectedPID": 54170,
+            "expectedWindowID": 3929,
+            "layer0MatchingCount": 5,
+            "type": "identity_unavailable"
+          }
+        ]
+      },
+      {
+        "attempt": "20261022T174754-ordinary-product",
+        "pid": 54267,
+        "controllerDurationSeconds": 9.996932499998366,
+        "returnCode": 0,
+        "forcedExactPIDKill": false,
+        "ownedPIDStillAliveAtControllerCheck": false,
+        "rawLogHashMatches": true,
+        "recordTypes": {
+          "environment": 1,
+          "preflight": 1,
+          "public_display_initialization": 1,
+          "binding_identity_validated": 1,
+          "selected": 1,
+          "configuration": 1,
+          "start_requested": 1,
+          "start_returned": 1,
+          "heartbeat": 77,
+          "stop_requested": 1,
+          "stop_returned": 1
+        },
+        "startReturnedCount": 1,
+        "stopRequestedCount": 1,
+        "stopReturnedCount": 1,
+        "receipt": {
+          "localBasename": "20261022T174754-ordinary-product.receipt.json",
+          "sha256": "9d2023702d7c58c802a7749626704c1b727f058068f6d378dfa8cad53b2c817b"
+        },
+        "rawNumericSource": {
+          "localBasename": "20261022T174754-ordinary-product.jsonl",
+          "sha256": "7d2f6e9fbdd9487b5042cbecc45507a1143e71805b9ce640e23d8dcf21ac2cd4"
+        },
+        "binarySHA256": "f059b600c97135935b5e477afd4739c28ea12893d7baceb69175862b4fd7eb56",
+        "bindingSHA256": "67e360b92373a9bee4836b13ce6dbffaaac2c36457a703b4b942dc929c8810db",
+        "classification": "one_valid_bounded_ordinary_window_capture_observation",
+        "selectedTarget": {
+          "bundleIdentifier": "dev.frost.mosey.input-receiver",
+          "elapsed": 0.101838125,
+          "frame": {
+            "height": 923,
+            "width": 1470,
+            "x": 0,
+            "y": 33
+          },
+          "isOnScreen": true,
+          "layer": 0,
+          "pid": 54170,
+          "type": "selected",
+          "windowID": 3929
+        },
+        "configuredCapturesAudio": false,
+        "configuredCaptureMicrophone": false,
+        "startReturnedElapsedSeconds": 0.17666229166666667,
+        "stopRequestedElapsedSeconds": 8.187509125,
+        "startReturnedToStopRequestedSeconds": 8.010846833333334,
+        "stopReturnedElapsedSeconds": 9.474497166666666,
+        "stopRequestedToReturnedSeconds": 1.2869880416666657,
+        "rawCallbacksAtStopRequest": 0,
+        "screenCallbacksAtStopRequest": 0,
+        "rawCallbacksAtStopReturn": 0,
+        "screenCallbacksAtStopReturn": 0,
+        "streamErrorAtStopReturn": null,
+        "preflightAvailable": true,
+        "errors": []
+      }
+    ],
+    "currentBuildIdentityChecks": {
+      "sourceSHA256Matches": true,
+      "currentBinarySHA256MatchesBuildAndValidRun": true,
+      "bindingSHA256MatchesValidRun": true
+    },
+    "buildReceipt": {
+      "localBasename": "build-receipt.json",
+      "sha256": "05771716aa82f38c634a7037b311a21d178749a0af5b15fa269b0c873fddbfe0"
+    },
+    "independentExactPIDCleanupCheck": {
+      "pids": [54237, 54267, 54170],
+      "method": "ps -p 54170,54237,54267 -o pid=,ppid=,command=",
+      "exitCode": 1,
+      "stdoutEmpty": true,
+      "observedMatchingPIDs": [],
+      "qualification": "Read-only narrow process check performed during this audit; no matching PID was present. Original controller receipts separately record54237/54267 not alive."
+    },
+    "interpretation": "One ordinary layer0 fixture control delivered zero callbacks despite start/stop completion. Earlier guard aborted before any stream. This expands observed no-delivery scope to this fixed source/run, does not establish system/permission/SCK root cause, layer-only causation or product fix.",
+    "publicationSafeFields": [
+      "attempt labels",
+      "exact owned PID/window/bundle identity",
+      "duration and start/stop counts/elapsed values",
+      "callback/status/error counts",
+      "returnCode/forcedKill/ownedPIDStillAlive",
+      "source/binary/binding/receipt/localraw SHA and paths",
+      "bounded cleanup audit method and absent exact PIDs"
+    ],
+    "publicationExclusions": [
+      "No raw pixel/video/framebuffer contents",
+      "No raw TCC/replayd logs",
+      "No unrelated window titles/contents or credential material"
+    ]
+  },
+  "conclusions": [
+    "Both complete runs are red. Development14pass1fail1skip523.47s; packaged14pass2fail419.90s.",
+    "Previous diagnostic status and autonomy-held cases passed in these runs, with fresh dock/autonomy success JSONs. Passing does not locate or fix their earlier intermittent failures.",
+    "Current failures concern size.test.ts:202 in both modes and size-autonomy.test.ts:476 in packaged. They remain unlocalized; do not erase with fresh physical input matrix or green other files.",
+    "No complete green, real Dock/capture acceptance or60min resource result is inferred.",
+    "All PNG/raw evidence remains local; this audit carries numeric summaries, source paths and hashes only."
+  ],
+  "versionableSafeFields": [
+    "mode/file/test counts and duration/exit status",
+    "exact source path/line/assertion with expected vs actual numeric geometry",
+    "mtime-based freshness classifications with explicit stale-output qualification",
+    "local log/result-manifest/selected artifact paths and SHA without file contents",
+    "ordinary fixture start/stop/callback/identity/cleanup numeric summaries and provenance hashes"
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUTC": "2026-10-22T05:59:33.455583+00:00",
+  "baseline": "d577fb9",
+  "commit": "80ef4f7bbd2171ce2b4186de9759b4aac48f7262",
+  "changeType": "bounded public navigation failure evidence only; no claimed bug fix",
+  "sourceChanged": false,
+  "testsChanged": ["tests/dock.test.ts"],
+  "candidateAsarSHA256": "a75980c5bc4f3692a5efe177f0c2609b15d3733255153c31f82d839253d75afd",
+  "candidateRebuiltOrResigned": false,
+  "signature": "codesign --verify --deep --strict passed after tests",
+  "unresolvedSymptom": "After Stop Dock validation then Retry Dock interaction, the actual public diagnostic body intermittently remains Stopped:user stop rather than Stopped:product Dock interaction requested. Original product/helper-ownership assertions are retained.",
+  "runs": {
+    "rootCompleteDevelopmentRed": {
+      "durationSeconds": 507.81,
+      "testsPassed": 14,
+      "testsFailed": 1,
+      "testsSkipped": 1,
+      "filesPassed": 7,
+      "filesFailed": 1,
+      "assertion": "tests/dock.test.ts:278"
+    },
+    "originalFocusedDevelopment": {
+      "durationSeconds": 42.22,
+      "testsPassed": 2
+    },
+    "minimalPackagedRapid": {
+      "durationSeconds": 47.24,
+      "testsPassed": 5
+    },
+    "minimalPackagedCompletedUserStopBeforeRetry": {
+      "durationSeconds": 29,
+      "testsPassed": 3
+    },
+    "minimalDevelopmentPublicNavigation": {
+      "durationSeconds": 43.22,
+      "testsPassed": 2,
+      "testsFailed": 1,
+      "redRound": 0
+    },
+    "minimalDevelopmentPublicNavigationAndMenu": {
+      "durationSeconds": 42.58,
+      "testsPassed": 2,
+      "testsFailed": 1,
+      "redRound": 0
+    },
+    "temporaryTargetedStopCloseRenderLogging": {
+      "durationSeconds": 41.77,
+      "testsPassed": 3,
+      "qualification": "Debug source logging changes timing; all green does not erase either public red or establish cause/fix. Exact original source restored afterward; none of the debug logs/source changes committed."
+    },
+    "finalFocusedDevelopment": {
+      "durationSeconds": 40.82,
+      "testsPassed": 2
+    },
+    "finalFocusedPackaged": {
+      "durationSeconds": 16.08,
+      "testsPassed": 1,
+      "testsFailed": 1,
+      "assertion": "tests/dock.test.ts:305",
+      "newRegularFailureJSON": "final-packaged-navigation-red.json"
+    },
+    "finalCheck": "pnpm check passed"
+  },
+  "confirmedPublicEvidence": [
+    "Both development public red rounds had maxUnsettled1 and the final actual loadURL/settle status was Stopped:user stop, with no observed navigation rejection.",
+    "The menu-instrumented development red recorded Stop Dock validation click/return, then Retry Dock interaction click/return, then final Stopped:user stop navigation. This rules out merely omitting the Retry call in that round.",
+    "The final packaged regular test retained the same red and successfully wrote bounded loadURL/fulfilled/status/time evidence; final loaded status user stop, maxUnsettled1, no rejected call.",
+    "Explicitly waiting for completed user stop before Retry still correctly updates status in three packaged controls. No-child stop as a legitimate no-op is not supported."
+  ],
+  "notEstablished": [
+    "No root cause established for the intermittent final user-stop status. State/request coalescing or other ordering remains unisolated.",
+    "No claim that navigation serialization failed: maximum unsettled remained1 in these red runs.",
+    "No claim that temporary logging or added diagnostics fixes the symptom.",
+    "Separate from earlier autonomy setup race and unlocalized autonomy held failure.",
+    "Focused greens do not replace complete final development/packaged requirements. #8 must remain open until actual remaining acceptance complete."
+  ],
+  "instrumentation": "Added at most128 public loadURL start/fulfilled/rejected records with diagnostic status, main monotonic and wall time and unsettled count; failure writes a separate JSON. All existing behavior/status/maxUnsettled assertions retained.",
+  "cleanup": [
+    "Temporary source log changes restored exactly from backup. No DEBUG-dock-stop remains in src/tests.",
+    "Four throwaway diagnostic test files moved out of tests into this local directory.",
+    "No owned test/temporary Electron process remained in final process audit; root may resume UI.",
+    "Physical/test screenshots remain local and are excluded from this source manifest."
+  ],
+  "sources": [
+    {
+      "localBasename": "full-development-red.log",
+      "sha256": "2466f2c86fe1d6ace938fde39c58442cf40a55e0eb03c16e7cdf071078aa2201"
+    },
+    {
+      "localBasename": "original-focused-development.log",
+      "sha256": "8d88c39793965acc460059de2b6b8e52f40393430fd7ca8403eb2a873539287a"
+    },
+    {
+      "localBasename": "minimal-packaged.log",
+      "sha256": "e03f7ec42739a9d699670787b78d05a7eb3e05afdfbe1a4a46e5d4bdacffaa4a"
+    },
+    {
+      "localBasename": "completed-stop-packaged.log",
+      "sha256": "c6e47fcad08e58e1c87eaadb0ac31819554ca4673d843f094dcfbf2fc8cef089"
+    },
+    {
+      "localBasename": "minimal-development.log",
+      "sha256": "ac88bb7999169d855dac52b075780cdb3fad950058389e3ef39f88fd5b881b47"
+    },
+    {
+      "localBasename": "menu-development.log",
+      "sha256": "9d6b42012b677c7fe571b7777b08940f53cb395bb7ed063776a3c1e59652a1a8"
+    },
+    {
+      "localBasename": "temporary-debug-development.log",
+      "sha256": "4be2030ba042457ddbb3616906b0d4aa5a427584e7cd3dd2a712b120712ae3d2"
+    },
+    {
+      "localBasename": "final-check.log",
+      "sha256": "589146a44cb5fb10b56ee0ab07fef6d5b08fb4973e1d5905e79dee43a90700d7"
+    },
+    {
+      "localBasename": "final-development.log",
+      "sha256": "9f36b53e06f4284bfe7e24b06e5da784d9ebd25f5ab1046dcecbd72ceeab6c7e"
+    },
+    {
+      "localBasename": "final-packaged.log",
+      "sha256": "a6b960886f3a446899ac70f3cc1078821d4abfb4720151ec94f1127ab1e7a3d5"
+    },
+    {
+      "localBasename": "final-packaged-navigation-red.json",
+      "sha256": "33b6a64161c8f8e267a485d679b249e90cb4e0b40aca2b437879b24c5ef1216c"
+    },
+    {
+      "localBasename": "development-round-0.json",
+      "sha256": "4470b741e3760d7e72cd2c9ae05ec181be04a9e871592d49751494803a63ee48"
+    },
+    {
+      "localBasename": "menu-round-0.json",
+      "sha256": "8e702678ad36d0eeac76e022163ee40ffed902b5cf1ba3b971572ac3628c07f0"
+    },
+    {
+      "localBasename": "debug-stop-round-0.log",
+      "sha256": "f4fad2d56921ff92823ce0e8fb4c0488e698736f7fc88be0591f5fcb419124c9"
+    },
+    {
+      "localBasename": "debug-stop-round-1.log",
+      "sha256": "4171eb42e0849d4555d5e6930c2ad96d4352eed3cab18b4e5d1b2174e53621f5"
+    },
+    {
+      "localBasename": "debug-stop-round-2.log",
+      "sha256": "412b46685d1c05e7b1756ef9135ff303c24a113ba85cd5f2cca089d727032f19"
+    }
+  ]
+}
