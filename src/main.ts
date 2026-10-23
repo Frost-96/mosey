@@ -150,8 +150,9 @@ async function start() {
   let geometryRevision = 0;
   let settingsWindow: BrowserWindow | undefined;
   let failedSize: PetSize | undefined;
+  let liveSize = preferences.size;
   const settingsState = () => ({
-    size: preferences.size,
+    size: liveSize,
     visibility: preferences.visibility,
     failedSize,
   });
@@ -167,7 +168,7 @@ async function start() {
     const window = new BrowserWindow({
       title: "Mosey 设置",
       width: 460,
-      height: 590,
+      height: 680,
       resizable: false,
       show: false,
       webPreferences: {
@@ -178,6 +179,9 @@ async function start() {
       },
     });
     settingsWindow = window;
+    window.on("close", () => {
+      if (liveSize !== preferences.size) changeSize(liveSize);
+    });
     window.on("closed", () => {
       if (settingsWindow === window) settingsWindow = undefined;
     });
@@ -264,7 +268,7 @@ async function start() {
   tray.on("right-click", openTrayMenu);
   app.on("activate", refreshMenus);
   const area = screen.getPrimaryDisplay().workArea;
-  const initialSide = petGeometry(preferences.size).side;
+  const initialSide = petGeometry(liveSize).side;
   const pet = new BrowserWindow({
     title: "Mosey",
     width: initialSide,
@@ -410,7 +414,7 @@ async function start() {
     const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
     if (!frame || !atlas) return false;
-    const geometry = petGeometry(preferences.size);
+    const geometry = petGeometry(liveSize);
     const localX = Math.floor(
       (((visible.direction === "left" ? geometry.side - x : x) -
         geometry.foot.x) /
@@ -462,7 +466,7 @@ async function start() {
       startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
       frozenAt: timeline.pausedAt,
       visibility: suspended ? "hidden" : visibility,
-      size: preferences.size,
+      size: liveSize,
       geometryRevision,
     });
   const authorized = (
@@ -604,19 +608,18 @@ async function start() {
     if (!pet?.isDestroyed())
       pet?.webContents.send(channels.presentation, presentation());
   };
-  const changeSize = (size: PetSize) => {
-    if (size === preferences.size) {
-      failedSize = undefined;
+  const changeSize = (size: PetSize, commit = true) => {
+    if (commit) {
+      if (size !== preferences.size && !preferences.setSize(size)) {
+        failedSize = size;
+        size = preferences.size;
+      } else failedSize = undefined;
+    } else failedSize = undefined;
+    if (size === liveSize) {
       publishSettings();
       return;
     }
-    if (!preferences.setSize(size)) {
-      failedSize = size;
-      publishSettings();
-      refreshMenus();
-      return;
-    }
-    failedSize = undefined;
+    liveSize = size;
     const old = pet.getBounds();
     const side = petGeometry(size).side;
     geometryRevision++;
@@ -652,6 +655,14 @@ async function start() {
     if (!settingsAuthorized(event)) throw new Error("Untrusted size request");
     changeSize(petSizeSchema.parse(value));
     return settingsState();
+  });
+  ipcMain.handle(channels.previewSize, (event, value: unknown) => {
+    if (!settingsAuthorized(event)) throw new Error("Untrusted size preview");
+    changeSize(petSizeSchema.parse(value), false);
+    return settingsState();
+  });
+  app.on("before-quit", () => {
+    if (liveSize !== preferences.size) changeSize(liveSize);
   });
   ipcMain.handle(channels.showPet, (event, value: unknown) => {
     if (!settingsAuthorized(event))
