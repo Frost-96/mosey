@@ -33,7 +33,8 @@ export async function openSettings(app: ElectronApplication) {
       { timeout: 15000 },
     )
     .toBe(true);
-  // DOM readiness precedes ready-to-show; real input needs a visible, focused window.
+  // DOM readiness precedes ready-to-show. CDP input needs the visible fixture;
+  // native OS focus belongs to separate desktop acceptance.
   await expect
     .poll(
       () =>
@@ -41,7 +42,7 @@ export async function openSettings(app: ElectronApplication) {
           const window = BrowserWindow.getAllWindows().find(
             (window) => window.getTitle() === "Mosey 设置",
           );
-          return !!window?.isVisible() && window.isFocused();
+          return !!window?.isVisible();
         }),
       { timeout: 15000 },
     )
