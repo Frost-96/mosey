@@ -20,6 +20,13 @@ export async function openSettings(app: ElectronApplication) {
   await page.getByRole("button", { name: "中（默认）" }).waitFor();
   return page;
 }
+export async function closeSettings(app: ElectronApplication) {
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()
+      .find((window) => window.getTitle() === "Mosey 设置")
+      ?.close();
+  });
+}
 export async function chooseSize(app: ElectronApplication, label: string) {
   const page = await openSettings(app);
   const before = await app.evaluate(({ BrowserWindow }) => {
@@ -58,12 +65,14 @@ export async function chooseSize(app: ElectronApplication, label: string) {
       .find((w) => w.getTitle() === "Mosey")!
       .getBounds(),
   );
-  return (
-    (await app.evaluate(() => {
-      const result = Reflect.get(globalThis, "resizeObservation") as
-        { before: typeof before; after: typeof after } | undefined;
-      Reflect.get(globalThis, "restoreResizeObservation")();
-      return result;
-    })) ?? { before, after }
-  );
+  const observation = (await app.evaluate(() => {
+    const result = Reflect.get(globalThis, "resizeObservation") as
+      { before: typeof before; after: typeof after } | undefined;
+    Reflect.get(globalThis, "restoreResizeObservation")();
+    return result;
+  })) ?? { before, after };
+  // Pet acceptance scenarios finish their setup here. Settings interaction is
+  // exercised separately; keep its focused controls out of subsequent input.
+  await closeSettings(app);
+  return observation;
 }

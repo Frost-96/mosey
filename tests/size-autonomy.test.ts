@@ -4,7 +4,7 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
-import { chooseSize, openSettings } from "./support/settings";
+import { chooseSize, closeSettings, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
 
@@ -71,6 +71,8 @@ test(
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     const evidence: unknown[] = [];
+    const diagnostics: unknown[] = [];
+    const settingsEvents: unknown[] = [];
     const references = new Map<
       number,
       { right: Set<string>; left: Set<string> }
@@ -115,7 +117,62 @@ test(
           if (!item) throw new Error(`Missing menu ${label}`);
           item.click();
         }, label);
-      const choose = (label: string) => chooseSize(app!, label);
+      await pet
+        .context()
+        .exposeBinding(
+          "recordSizeAcceptanceInput",
+          (_source, event: unknown) => {
+            settingsEvents.push(event);
+            if (settingsEvents.length > 100) settingsEvents.shift();
+          },
+        );
+      await pet.context().addInitScript(() => {
+        for (const type of [
+          "input",
+          "change",
+          "pointerdown",
+          "pointerup",
+          "keydown",
+        ])
+          document.addEventListener(
+            type,
+            (event) => {
+              if (document.documentElement.dataset.page !== "settings") return;
+              const target = event.target as HTMLInputElement;
+              void Reflect.get(
+                window,
+                "recordSizeAcceptanceInput",
+              )({
+                type,
+                at: Date.now(),
+                target: target.tagName,
+                input: target.type,
+                value: target.value,
+                trusted: event.isTrusted,
+                x: Reflect.get(event, "clientX"),
+                y: Reflect.get(event, "clientY"),
+                key: Reflect.get(event, "key"),
+              }).catch(() => {});
+            },
+            true,
+          );
+      });
+      const trace = async (stage: string) => {
+        diagnostics.push({
+          stage,
+          at: Date.now(),
+          desktop: await desktop(),
+          presentation: await pet.evaluate(() =>
+            window.mosey.getPresentation(),
+          ),
+        });
+        if (diagnostics.length > 48) diagnostics.shift();
+      };
+      const choose = async (label: string) => {
+        const resize = await chooseSize(app!, label);
+        await trace("choose " + label);
+        return resize;
+      };
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -341,6 +398,7 @@ test(
           mobile: false,
         });
         await menu("Show Mosey");
+        await trace("DPR override " + side);
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
           ratio: changedRatio,
           width: side * changedRatio,
@@ -400,15 +458,20 @@ test(
           throw new Error("No asymmetric left-body and transparent pair");
         });
         const beforeTransparent = await desktop();
+        await trace("before transparent " + side);
         await pet.mouse.click(points.transparent.x, points.transparent.y);
+        await trace("after transparent " + side);
         await new Promise((resolve) => setTimeout(resolve, 180));
         expect((await desktop()).bounds.x).toBeLessThan(
           beforeTransparent.bounds.x - 3,
         );
+        await trace("before body " + side);
         await pet.mouse.click(points.body.x, points.body.y);
+        await trace("after body " + side);
         await new Promise((resolve) => setTimeout(resolve, 60));
         const clicked = await desktop();
         await new Promise((resolve) => setTimeout(resolve, 500));
+        await trace("body settled " + side);
         expect((await desktop()).bounds).toEqual(clicked.bounds);
         await displaySession.send("Emulation.clearDeviceMetricsOverride");
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
@@ -515,6 +578,8 @@ test(
         await settings.keyboard.press("ArrowRight");
       await settings.keyboard.press("Tab");
       await expect.poll(() => slider.inputValue()).toBe("110");
+      await closeSettings(app);
+      await trace("nonpreset 110");
       await expect.poll(footprint).toEqual({ width: 110, bottom: 110 });
       await grounded();
       const customIdle = new Set<string>();
@@ -569,6 +634,10 @@ test(
       );
     } catch (error) {
       await mkdir("test-results", { recursive: true });
+      await writeFile(
+        `test-results/failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
+        JSON.stringify({ diagnostics, settingsEvents }, null, 2),
+      );
       await app
         ?.windows()[0]
         ?.screenshot({
