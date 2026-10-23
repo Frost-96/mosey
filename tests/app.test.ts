@@ -374,7 +374,20 @@ async function exercisePet() {
       expect(idleFrames.has(await pixels())).toBe(true);
     }
     expect(responses.size).toBe(3);
-    // A system visibility change cancels the reaction; showing resumes interaction.
+    // macOS can omit native visibility notifications. Withhold only that
+    // platform event boundary; the real window still hides and shows, and the
+    // application must cancel the reaction before accepting the next click.
+    await app.evaluate(({ BrowserWindow }) => {
+      const pet = BrowserWindow.getAllWindows()[0]!;
+      const emit = pet.emit;
+      Reflect.set(globalThis, "restoreVisibilityEvents", () => {
+        pet.emit = emit;
+      });
+      pet.emit = ((event: string, ...args: unknown[]) => {
+        if (event === "hide" || event === "show") return false;
+        return Reflect.apply(emit, pet, [event, ...args]);
+      }) as typeof pet.emit;
+    });
     await window.mouse.click(120, 180);
     await new Promise((resolve) => setTimeout(resolve, 400));
     await app.evaluate(({ BrowserWindow }) =>
@@ -393,6 +406,9 @@ async function exercisePet() {
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
       .toBe(true);
+    await app.evaluate(() => {
+      Reflect.get(globalThis, "restoreVisibilityEvents")();
+    });
     // Public whole-application seam: directed pointer input, rendered pixels,
     // and the actual desktop window bounds (not behavior context).
     // Playwright directs events without moving the physical OS cursor. Keep
@@ -694,21 +710,25 @@ async function exercisePet() {
             height: area.height - 80,
           },
         });
-        try {
-          screen.emit(event, {}, screen.getPrimaryDisplay(), [
-            "workArea",
-            "scaleFactor",
-          ]);
-          const pet = BrowserWindow.getAllWindows()[0]!;
-          return {
-            bounds: pet.getBounds(),
-            visible: pet.isVisible(),
-            workArea: screen.getPrimaryDisplay().workArea,
-          };
-        } finally {
+        // Keep the external display boundary active while later input and
+        // recovery are verified; restoring it here creates a second real change.
+        Reflect.set(globalThis, "restoreDisplayBoundary", () => {
           screen.getPrimaryDisplay = original;
-        }
+          screen.emit("display-metrics-changed", {}, original(), ["workArea"]);
+        });
+        screen.emit(event, {}, screen.getPrimaryDisplay(), [
+          "workArea",
+          "scaleFactor",
+        ]);
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        return {
+          bounds: pet.getBounds(),
+          visible: pet.isVisible(),
+          workArea: screen.getPrimaryDisplay().workArea,
+        };
       }, event);
+    const restoreDisplayBoundary = () =>
+      app!.evaluate(() => Reflect.get(globalThis, "restoreDisplayBoundary")());
     for (const [phase, event] of [
       ["idle", "display-metrics-changed"],
       ["pressed", "display-metrics-changed"],
@@ -805,6 +825,8 @@ async function exercisePet() {
       await window.mouse.up();
       await waitForGround();
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await restoreDisplayBoundary();
+      await waitForGround();
     }
     // Preserve the actual manual hide choice while the display topology changes.
     const invokeVisibility = (label: string) =>
@@ -819,11 +841,7 @@ async function exercisePet() {
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
     );
-    await app.evaluate(({ screen }) => {
-      screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
-        "workArea",
-      ]);
-    });
+    await restoreDisplayBoundary();
     expect(
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),
