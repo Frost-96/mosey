@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
@@ -14,6 +15,11 @@ test("body secondary clicks open a native menu and cancel without changing the p
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   try {
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+    );
     if (!packaged) stopForge = await startForge();
     else
       execFileSync("/usr/bin/ditto", [
@@ -268,13 +274,14 @@ test("body secondary clicks open a native menu and cancel without changing the p
     expect(await bounds()).toEqual(falling.bounds);
     await closeMenu();
     await expect
-      .poll(async () => (await bounds()).y, { timeout: 4000, interval: 10 })
-      .toBe(ground.y);
+      .poll(() => distanceFromGround(app!), { timeout: 4000, interval: 10 })
+      .toBe(0);
     await openMenu();
     const landing = await pixels();
+    const landingBounds = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect((await pixels()) === landing).toBe(true);
-    expect((await bounds()).y).toBe(ground.y);
+    expect(await bounds()).toEqual(landingBounds);
     await closeMenu();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Preserve both a native-state deadline and in-progress desktop movement.

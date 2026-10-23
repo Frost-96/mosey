@@ -1,4 +1,5 @@
 import { startForge } from "./support/forge";
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
@@ -93,6 +94,10 @@ test(
 async function exercisePet() {
   const profile = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
+  );
+  await writeFile(
+    path.join(profile, "preferences.json"),
+    JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
   );
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
@@ -422,6 +427,10 @@ async function exercisePet() {
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const ground = await petBounds();
+    // Dock/work-area changes can occur while the real app runs. Sample the
+    // current floor and pet bounds together, rather than reuse the initial y.
+    const waitForGround = (timeout = 1000) =>
+      expect.poll(() => distanceFromGround(app!), { timeout }).toBe(0);
     await window.mouse.move(120, 180);
     await window.mouse.down();
     await window.mouse.move(180, 80, { steps: 5 });
@@ -429,9 +438,7 @@ async function exercisePet() {
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 50);
     await window.mouse.up();
-    await expect
-      .poll(async () => (await petBounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+    await waitForGround(4000);
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
       .toBe(true);
@@ -476,7 +483,7 @@ async function exercisePet() {
     await expect
       .poll(async () => (await petBounds()).y, { interval: 10 })
       .toBeGreaterThan(held.y + 20);
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await window.screenshot({
       path: `test-results/${packaged ? "packaged" : "development"}-landing.png`,
       omitBackground: true,
@@ -497,10 +504,7 @@ async function exercisePet() {
         await expect
           .poll(async () => (await petBounds()).y, { interval: 10 })
           .toBeGreaterThan(elevated.y + 20);
-      else if (phase === "landing")
-        await expect
-          .poll(async () => (await petBounds()).y, { interval: 10 })
-          .toBe(ground.y);
+      else if (phase === "landing") await waitForGround();
       // Use the visible body as the input target even when the pose changes.
       const point = await window.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -538,9 +542,7 @@ async function exercisePet() {
         `regrab during ${phase} draws held pose`,
       ).toBe(false);
       await window.mouse.up();
-      await expect
-        .poll(async () => (await petBounds()).y, { timeout: 3000 })
-        .toBe(ground.y);
+      await waitForGround(3000);
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     }
     // Browser pointer-capture loss is a real input cancellation event; subsequent
@@ -566,7 +568,7 @@ async function exercisePet() {
     await window.mouse.move(121, -120);
     await new Promise((resolve) => setTimeout(resolve, 50));
     await window.mouse.move(500, -300);
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     const cancelled = await petBounds();
     await window.mouse.move(-500, -500);
@@ -588,7 +590,7 @@ async function exercisePet() {
       BrowserWindow.getAllWindows()[0]!.showInactive(),
     );
     await window.mouse.up();
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // The visible desktop window stays within the primary work area even when
     // captured input travels far beyond it, then releases at the same floor.
@@ -603,9 +605,7 @@ async function exercisePet() {
       .toBe(area.x + area.width - ground.width);
     expect((await petBounds()).y).toBe(area.y);
     await window.mouse.up();
-    await expect
-      .poll(async () => (await petBounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+    await waitForGround(4000);
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     if (!packaged) {
       await placeAwayFromPhysicalCursor();
@@ -616,7 +616,7 @@ async function exercisePet() {
         .poll(async () => (await petBounds()).y)
         .toBeLessThan(ground.y - 100);
       await window.evaluate(() => location.reload());
-      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await waitForGround();
       await expect
         .poll(async () => idleFrames.has(await pixels()), { timeout: 5000 })
         .toBe(true);
@@ -686,7 +686,7 @@ async function exercisePet() {
       .poll(async () => (await petBounds()).y)
       .toBeGreaterThan(rapidHeld.y + 40);
     await window.mouse.up();
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Inject only Electron's external display boundary. Actual renderer, IPC,
     // pointer capture, drawing and native window placement remain in use.
@@ -711,7 +711,11 @@ async function exercisePet() {
             "scaleFactor",
           ]);
           const pet = BrowserWindow.getAllWindows()[0]!;
-          return { bounds: pet.getBounds(), visible: pet.isVisible() };
+          return {
+            bounds: pet.getBounds(),
+            visible: pet.isVisible(),
+            workArea: screen.getPrimaryDisplay().workArea,
+          };
         } finally {
           screen.getPrimaryDisplay = original;
         }
@@ -771,8 +775,14 @@ async function exercisePet() {
       const recovered = await recoverOnDisplayChange(event!);
       expect(recovered.visible, phase).toBe(true);
       expect(recovered.bounds, phase).toEqual({
-        x: before.x === area.x ? area.x + 40 : area.x + area.width - 280,
-        y: ground.y - 40,
+        x: Math.max(
+          recovered.workArea.x,
+          Math.min(
+            before.x,
+            recovered.workArea.x + recovered.workArea.width - 240,
+          ),
+        ),
+        y: recovered.workArea.y + recovered.workArea.height - 240,
         width: 240,
         height: 240,
       });
@@ -804,7 +814,7 @@ async function exercisePet() {
         .poll(async () => (await petBounds()).y)
         .toBeLessThan(recovered.bounds.y - 40);
       await window.mouse.up();
-      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await waitForGround();
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     }
     // Preserve the actual manual hide choice while the display topology changes.

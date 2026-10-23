@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -23,6 +24,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     console.log(`[autonomy-progress] ${entry}`);
   };
   try {
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+    );
     if (!packaged) stopForge = await startForge();
     else
       execFileSync("/usr/bin/ditto", [
@@ -291,8 +297,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     expect(await bounds()).toEqual(grabbed);
     await pet.mouse.up();
     await expect
-      .poll(async () => (await bounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+      .poll(() => distanceFromGround(app!), { timeout: 4000 })
+      .toBe(0);
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 4000 })
       .toBe(true);

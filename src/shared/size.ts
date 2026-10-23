@@ -1,10 +1,7 @@
 import { z } from "zod";
-
-export const petSizeSchema = z.enum(["small", "medium", "large"]);
+export const petSizeSchema = z.number().int().min(70).max(240).multipleOf(10);
 export type PetSize = z.infer<typeof petSizeSchema>;
-// Desktop coordinates are DIP; atlas coordinates are pixels, independent of DPR.
-// All poses share a bottom-center foot. Future movement uses this same geometry.
-export function petGeometry(size: PetSize) {
-  const side = { small: 180, medium: 240, large: 300 }[size];
+// Window side and foot are DIP; atlas coordinates remain independent of DPR.
+export function petGeometry(side: PetSize) {
   return { side, foot: { x: side / 2, y: side }, assetScale: side / 240 };
 }

@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
@@ -15,6 +16,11 @@ test(
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     try {
+      await mkdir(path.join(root, "profile"), { recursive: true });
+      await writeFile(
+        path.join(root, "profile/preferences.json"),
+        JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+      );
       if (!packaged) stopForge = await startForge();
       else
         execFileSync("/usr/bin/ditto", [
@@ -287,14 +293,15 @@ test(
         expect(await bounds()).toEqual(grabbed);
         await pet.mouse.up();
         await expect
-          .poll(async () => (await bounds()).y, { timeout: 4000 })
-          .toBe(ground.y);
+          .poll(() => distanceFromGround(app!), { timeout: 4000 })
+          .toBe(0);
         await expect
           .poll(async () => idleFrames.has(await pixels()), { timeout: 4000 })
           .toBe(true);
         // Release must return to quiet rest rather than queue a teasing reaction.
+        const landed = await bounds();
         await new Promise((resolve) => setTimeout(resolve, 150));
-        expect(await bounds()).toEqual(ground);
+        expect(await bounds()).toEqual(landed);
         expect(idleFrames.has(await pixels())).toBe(true);
       }
 
