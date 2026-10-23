@@ -86,15 +86,38 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       screen.getPrimaryDisplay(),
     );
     const floor = display.workArea.y + display.workArea.height;
-    const invoke = (label: string) =>
+    const invokeMenu = (section: string, label: string) =>
       app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
+        ({ Menu }, { section, label }) => {
+          const item = Menu.getApplicationMenu()!
+            .items.find((i) => i.label === section)!
+            .submenu!.items.find((i) => i.label === label)!;
+          const trace = Reflect.get(globalThis, "dockNavigationTrace");
+          const record = (event: string, error?: unknown) => {
+            if (!trace) return;
+            trace.menuEvents.push({
+              event,
+              label,
+              enabled: item.enabled,
+              at: performance.now(),
+              wall: Date.now(),
+              error: error === undefined ? undefined : String(error),
+            });
+            if (trace.menuEvents.length > 128) trace.menuEvents.shift();
+          };
+          record("fresh-menu-entry");
+          try {
+            const result = item.click();
+            record("fresh-menu-return");
+            return result;
+          } catch (error) {
+            record("fresh-menu-throw", error);
+            throw error;
+          }
+        },
+        { section, label },
       );
+    const invoke = (label: string) => invokeMenu("Mosey", label);
     const setDock = async (
       orientation: "bottom" | "left" | "right",
       start: number,
@@ -212,14 +235,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         )
         .map((parts) => ({ pid: Number(parts![1]), command: parts![3]! }));
     const invokeDiagnostic = (label: string) =>
-      app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Dock validation")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
-      );
+      invokeMenu("Dock validation", label);
     // Keep the owned product helper alive but stopped while the user selects
     // diagnostics then rapidly hides/shows. Capture ownership must be reserved
     // before its SIGKILL cleanup deadline, not after diagnostic startup.
@@ -231,49 +247,138 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     // Observe actual public navigation calls; never inspect the diagnostic's
     // internal render job. Replacing a live data document before loadURL settles
     // has crashed the packaged navigation host during Stop followed by Retry.
-    const navigation = await app.evaluateHandle(({ app }) => {
-      const events: unknown[] = [];
-      const state = { maxUnsettled: 0, events };
-      Object.assign(globalThis, { dockNavigationTrace: state });
-      app.once("browser-window-created", (_event, window) => {
-        const contents = window.webContents;
-        const original = contents.loadURL.bind(contents);
-        let unsettled = 0;
-        contents.loadURL = (url, options) => {
-          unsettled += 1;
-          state.maxUnsettled = Math.max(state.maxUnsettled, unsettled);
-          const status = decodeURIComponent(url).match(
-            /<p role="status">([^<]*)<\/p>/,
-          )?.[1];
-          const record = (event: string, error?: unknown) => {
-            state.events.push({
-              event,
-              status,
-              at: performance.now(),
-              wall: Date.now(),
-              unsettled,
-              error: error === undefined ? undefined : String(error),
-            });
-            if (state.events.length > 128) state.events.shift();
-          };
-          record("loadURL");
-          return original(url, options)
-            .then(
-              () => {
-                record("loadURL-fulfilled");
-              },
-              (error: unknown) => {
-                record("loadURL-rejected", error);
-                throw error;
-              },
-            )
-            .finally(() => {
-              unsettled -= 1;
-            });
+    const navigation = await app.evaluateHandle(
+      ({ app, Menu, MenuItem, BrowserWindow, powerMonitor, screen }) => {
+        const events: unknown[] = [];
+        const menuEvents: unknown[] = [];
+        const lifecycle: unknown[] = [];
+        const state = { maxUnsettled: 0, events, menuEvents, lifecycle };
+        Object.assign(globalThis, { dockNavigationTrace: state });
+        const record = (rows: unknown[], event: string, detail?: unknown) => {
+          rows.push({ event, detail, at: performance.now(), wall: Date.now() });
+          if (rows.length > 128) rows.shift();
         };
-      });
-      return state;
-    });
+        // Observe the supplied callback as well as MenuItem.click. Electron builds
+        // submenus recursively, so never wrap an already observed callback twice.
+        const observed = new WeakSet<
+          NonNullable<Electron.MenuItemConstructorOptions["click"]>
+        >();
+        const originalBuild = Menu.buildFromTemplate;
+        const isTemplate = (
+          item: Electron.MenuItemConstructorOptions | Electron.MenuItem,
+        ): item is Electron.MenuItemConstructorOptions =>
+          !(item instanceof MenuItem);
+        const observeTemplate = (
+          item: Electron.MenuItemConstructorOptions,
+        ): Electron.MenuItemConstructorOptions => {
+          const copy = { ...item };
+          if (Array.isArray(copy.submenu))
+            copy.submenu = copy.submenu.map(observeTemplate);
+          const handler = copy.click;
+          if (handler && !observed.has(handler)) {
+            const wrapped: typeof handler = function (this: unknown, ...args) {
+              record(menuEvents, "template-handler-entry", {
+                label: item.label,
+              });
+              try {
+                const result = Reflect.apply(handler, this, args);
+                record(menuEvents, "template-handler-return", {
+                  label: item.label,
+                });
+                return result;
+              } catch (error) {
+                record(menuEvents, "template-handler-throw", {
+                  label: item.label,
+                  error: String(error),
+                });
+                throw error;
+              }
+            };
+            observed.add(wrapped);
+            copy.click = wrapped;
+          }
+          return copy;
+        };
+        Menu.buildFromTemplate = function (this: typeof Menu, template) {
+          return originalBuild.call(
+            this,
+            template.map((item) =>
+              isTemplate(item) ? observeTemplate(item) : item,
+            ),
+          );
+        };
+        powerMonitor.on("suspend", () => record(lifecycle, "suspend"));
+        powerMonitor.on("resume", () => record(lifecycle, "resume"));
+        powerMonitor.on("lock-screen", () => record(lifecycle, "lock-screen"));
+        powerMonitor.on("unlock-screen", () =>
+          record(lifecycle, "unlock-screen"),
+        );
+        screen.on("display-metrics-changed", (_event, display, changed) =>
+          record(lifecycle, "display-metrics-changed", {
+            id: display.id,
+            bounds: display.bounds,
+            workArea: display.workArea,
+            changed,
+          }),
+        );
+        const observeWindow = (window: Electron.BrowserWindow) => {
+          const id = window.id;
+          window.on("show", () => record(lifecycle, "show", { id }));
+          window.on("hide", () => record(lifecycle, "hide", { id }));
+          window.on("closed", () => record(lifecycle, "closed", { id }));
+        };
+        BrowserWindow.getAllWindows().forEach(observeWindow);
+        app.on("browser-window-created", (_event, window) =>
+          observeWindow(window),
+        );
+        record(lifecycle, "attached", {
+          // This value alone does not establish whether the session is unlocked.
+          idleStateDiagnosticOnly: powerMonitor.getSystemIdleState(1),
+          windows: BrowserWindow.getAllWindows().map((window) => ({
+            id: window.id,
+            visible: window.isVisible(),
+          })),
+        });
+        app.once("browser-window-created", (_event, window) => {
+          const contents = window.webContents;
+          const original = contents.loadURL.bind(contents);
+          let unsettled = 0;
+          contents.loadURL = (url, options) => {
+            unsettled += 1;
+            state.maxUnsettled = Math.max(state.maxUnsettled, unsettled);
+            const status = decodeURIComponent(url).match(
+              /<p role="status">([^<]*)<\/p>/,
+            )?.[1];
+            const record = (event: string, error?: unknown) => {
+              state.events.push({
+                event,
+                status,
+                at: performance.now(),
+                wall: Date.now(),
+                unsettled,
+                error: error === undefined ? undefined : String(error),
+              });
+              if (state.events.length > 128) state.events.shift();
+            };
+            record("loadURL");
+            return original(url, options)
+              .then(
+                () => {
+                  record("loadURL-fulfilled");
+                },
+                (error: unknown) => {
+                  record("loadURL-rejected", error);
+                  throw error;
+                },
+              )
+              .finally(() => {
+                unsettled -= 1;
+              });
+          };
+        });
+        return state;
+      },
+    );
     const diagnosticWindow = app.waitForEvent("window");
     await invokeDiagnostic("Start Dock validation (120 seconds)");
     await invoke("Hide Mosey");
