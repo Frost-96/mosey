@@ -47,3 +47,18 @@
 以上均为真实 Electron 应用，不是普通浏览器替代品。Playwright 定向输入、窗口属性读回和 CDP 的 DPR 变化，证明的是应用几何／绘制／生命周期行为；**本次没有执行真实鼠标跨应用穿透、物理显示器缩放切换、前台应用焦点保持或真实注销／登录验收**，不把定向输入或属性读回等同这些系统验收。没有为本切片重新执行已有独立 Dock 实验，也没有把登录系统入口迁入设置页。
 
 每个测试使用隔离用户目录并在 `finally` 关闭自己启动的 Electron 应用、停止自己的 Forge 进程组、删除临时配置／复制应用；失败路径保存截图。桌面上原有的其他任务应用进程保持不动。
+
+## PR #34 CI 修复 — 2026-10-23
+
+同一提交 2c1c5a1 的 pull_request 检查通过，但 [push 检查](https://github.com/Frost-96/mosey/actions/runs/39810772076) 在打包版 `tests/app.test.ts` 隐藏／再显示后的落地断言失败：期待旧 Y=466，实际 Y=456。失败截图已是稳定休息姿态。原 CI 没有记录失败瞬间的 workArea，因此不能直接确认当时系统变化的触发源。
+
+本地直接重跑原开发版场景通过（65.99s）。随后将反馈缩小为真实 Electron 的启动、隐藏／显示与受控的 display-metrics-changed 边界事件：令 workArea.height 减少10 DIP。旧断言稳定失败，期待716、实际706；同次读取的当前地面也是706（5.20s）。这确认旧测试将启动后较早记录的窗口 Y 当成永不变化的地面，能够误拒应用按当前可用区域恢复的正确位置；并不把受控系统边界等同原 CI 的完整系统事件记录。
+
+修复只涉及测试：在同一个主进程回合读取真实宠物边界与当前主屏 workArea，严格断言脚底与可用区域底部相差0 DIP，不增加坐标容差、不延长原轮询超时。显示变化案例的期望也采用该次受控边界，避免依赖更早的真实屏幕快照。新增 `ground-recovery.test.ts` 在开发／打包应用复现10 DIP变化并复用同一落地检查；修正后最小开发回归通过（5.42s）。
+
+修复后的本地验证：
+
+- `pnpm test:dev tests/app.test.ts tests/ground-recovery.test.ts`：2项通过、1项打包专属测试跳过，60.67s。
+- `pnpm package:mac`：通过。
+- `pnpm test:packaged tests/app.test.ts tests/ground-recovery.test.ts`：3项全部通过，55.20s。
+- `pnpm check` 与 `git diff --check`：通过。
