@@ -4,7 +4,7 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
-import { chooseSize } from "./support/settings";
+import { chooseSize, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
 
@@ -217,7 +217,7 @@ test(
         app!.evaluate((_electron, ms) => {
           Reflect.get(globalThis, "sizeAutonomyClock").restMs = ms;
         }, ms);
-      const activity = async (random: number) => {
+      const activity = async (random: number, atLeftEdge = false) => {
         await app!.evaluate((_electron, random) => {
           Math.random = () => random;
         }, random);
@@ -225,18 +225,20 @@ test(
         await menu("Hide Mosey");
         // Restoring visibility preserves position. Arrange room for the
         // deliberately left-facing walk instead of relying on old recentering.
-        await app!.evaluate(({ BrowserWindow, screen }) => {
+        await app!.evaluate(({ BrowserWindow, screen }, atLeftEdge) => {
           const pet = BrowserWindow.getAllWindows().find(
             (w) => w.getTitle() === "Mosey",
           )!;
           const area = screen.getPrimaryDisplay().workArea;
           const bounds = pet.getBounds();
           pet.setPosition(
-            area.x + Math.round(Math.max(0, area.width - bounds.width) / 2),
+            atLeftEdge
+              ? area.x
+              : area.x + Math.round(Math.max(0, area.width - bounds.width) / 2),
             bounds.y,
             false,
           );
-        });
+        }, atLeftEdge);
         await menu("Show Mosey");
       };
       const visiblePoint = () =>
@@ -504,6 +506,55 @@ test(
           actions: ["walking", "stretching", "playing"],
         });
       }
+      // A nonpreset uses the same rendered/input/desktop seams as the presets.
+      const settings = await openSettings(app);
+      const slider = settings.getByRole("slider", { name: "宠物大小" });
+      await slider.focus();
+      await settings.keyboard.press("Home");
+      for (let step = 0; step < 4; step++)
+        await settings.keyboard.press("ArrowRight");
+      await settings.keyboard.press("Tab");
+      await expect.poll(() => slider.inputValue()).toBe("110");
+      await expect.poll(footprint).toEqual({ width: 110, bottom: 110 });
+      await grounded();
+      const customIdle = new Set<string>();
+      const until = Date.now() + 2150;
+      while (Date.now() < until) {
+        customIdle.add(await pixels());
+        await new Promise((resolve) => setTimeout(resolve, 60));
+      }
+      // Directed input checks application hit geometry, not OS click routing.
+      await pet.mouse.click(0, 0);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(customIdle.has(await pixels()), "110 transparent corner").toBe(
+        true,
+      );
+      // At the left edge a seeded left walk must turn into available space.
+      await activity(0.1, true);
+      const customOrigin = await desktop();
+      await expect
+        .poll(
+          async () => {
+            const { bounds, area } = await desktop();
+            expect(bounds.x).toBeGreaterThanOrEqual(area.x);
+            expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+              area.x + area.width,
+            );
+            return bounds.x - customOrigin.bounds.x;
+          },
+          { timeout: 4000, interval: 20 },
+        )
+        .toBeGreaterThan(140);
+      await restClock(60000);
+      expect(
+        (await desktop()).bounds.x - customOrigin.bounds.x,
+      ).toBeLessThanOrEqual(151);
+      await grounded();
+      evidence.push({
+        side: 110,
+        origin: customOrigin,
+        boundary: await desktop(),
+      });
       await writeFile(
         `test-results/${packaged ? "packaged" : "development"}-size-autonomy.json`,
         JSON.stringify(

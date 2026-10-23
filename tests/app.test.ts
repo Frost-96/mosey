@@ -133,25 +133,14 @@ async function exercisePet() {
       profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
-    const loginMenu = await app.evaluate(({ Menu, app }) => {
-      const item = Menu.getApplicationMenu()
+    const menuLabels = await app.evaluate(({ Menu }) =>
+      Menu.getApplicationMenu()
         ?.items.find((entry) => entry.label === "Mosey")
-        ?.submenu?.items.find((entry) => entry.label === "Launch at Login");
-      return {
-        exists: !!item,
-        checked: item?.checked,
-        enabled: item?.enabled,
-        actual:
-          app.getLoginItemSettings().status === "enabled" &&
-          app.getLoginItemSettings().openAtLogin,
-        packaged: app.isPackaged,
-      };
-    });
-    expect(loginMenu.exists).toBe(true);
-    expect(loginMenu.checked).toBe(loginMenu.actual);
-    expect(loginMenu.enabled).toBe(
-      loginMenu.packaged && process.platform === "darwin",
+        ?.submenu?.items.map((entry) => entry.label),
     );
+    expect(menuLabels).toContain("设置…");
+    expect(menuLabels).not.toContain("Launch at Login");
+    expect(menuLabels).not.toContain("Size");
 
     window.on("pageerror", (error) => {
       errors.push(error.message);
