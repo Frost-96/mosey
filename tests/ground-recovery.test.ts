@@ -40,10 +40,6 @@ test.each([
       await expect
         .poll(() => page.locator("canvas").getAttribute("width"))
         .not.toBeNull();
-      const oldGround = await app.evaluate(({ screen }, size) => {
-        const area = screen.getPrimaryDisplay().workArea;
-        return area.y + area.height - size;
-      }, size);
       const result = await app.evaluate(({ BrowserWindow, screen }, delta) => {
         const display = screen.getPrimaryDisplay();
         screen.getPrimaryDisplay = () => ({
@@ -60,6 +56,10 @@ test.each([
         ]);
         pet.showInactive();
         return {
+          initialGround:
+            display.workArea.y +
+            display.workArea.height -
+            pet.getBounds().height,
           actual: pet.getBounds().y,
           currentGround:
             screen.getPrimaryDisplay().workArea.y +
@@ -67,7 +67,7 @@ test.each([
             pet.getBounds().height,
         };
       }, delta);
-      expect(result.actual).toBe(oldGround - delta);
+      expect(result.actual).toBe(result.initialGround - delta);
       expect(result.actual).toBe(result.currentGround);
       await expect.poll(() => distanceFromGround(app!)).toBe(0);
     } catch (error) {
