@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-23",
+  "scope": "Test observability and provenance only; not a product fix or established root cause",
+  "basePublicCommit": "a4d39a34d03b67150249a69a28128a82d24d43c2",
+  "CI": {
+    "runID": 39916672370,
+    "developmentPassed": 15,
+    "developmentFailed": 2,
+    "developmentSkipped": 1,
+    "developmentDurationSeconds": 749.02,
+    "check": "passed",
+    "packageAndPackagedTests": "skipped after development failure"
+  },
+  "StopRetryEvidence": {
+    "actualStopAndRetryTemplateCallbacksEnteredAndReturned": true,
+    "extraStopInRecordedEvents": false,
+    "navigationMaxUnsettled": 1,
+    "navigationRejected": 0,
+    "latestStatus": "Stopped: user stop",
+    "cause": "not established"
+  },
+  "startupEvidence": {
+    "firstProducerInputToTERMmilliseconds": 78.33458399999998,
+    "realWorkAreaHeights": [681, 682, 681],
+    "lastMetricsEventBeforeTERMapproxMilliseconds": 6,
+    "limit": "Temporal association with a replacing display event; not proof of TERM call origin or a broken silence timer. Original uninterrupted-lifecycle precondition not met; failure retained."
+  },
+  "newObservation": {
+    "entry": "Relative package.main and realpath identity plus SHA256, read using Electron public fs for asar compatibility",
+    "sourceSnippets": {
+      "count": 5,
+      "maxCharactersEach": 640
+    },
+    "templateCallback": {
+      "identity": "handler ID and full source SHA256",
+      "maxTextCharacters": 768
+    },
+    "windowIdentity": "BrowserWindow and webContents IDs on navigation and public failure DOM snapshot",
+    "unavailable": "Provenance read errors recorded without replacing original assertion failure",
+    "privateStateOrClosureReads": false,
+    "productChanges": false,
+    "newLocalAppOrBuildOrSignRuns": false
+  },
+  "staticAST": {
+    "base": "a4d39a34d03b67150249a69a28128a82d24d43c2",
+    "originalSHA256": "c3492b125ee5f5b4e0836759ff5f0fb5d5c3ebdc10ba2f8ebb6a39e5d3ab9115",
+    "newSHA256": "05ef7967558df71c9f83cfdc713556864ed5d7675bf32a86e5d96362b19142f9",
+    "comparisons": {
+      "assertionCalls": {
+        "unchanged": true,
+        "oldCount": 96,
+        "newCount": 96
+      },
+      "mouseActions": {
+        "unchanged": true,
+        "oldCount": 11,
+        "newCount": 11
+      },
+      "menuActions": {
+        "unchanged": true,
+        "oldCount": 17,
+        "newCount": 17
+      },
+      "timeouts": {
+        "unchanged": true,
+        "oldCount": 27,
+        "newCount": 27
+      },
+      "SIGSTOP": {
+        "unchanged": true,
+        "oldCount": 2,
+        "newCount": 2
+      }
+    },
+    "expectIdentifiers": {
+      "old": 48,
+      "new": 48
+    },
+    "mouseDown": {
+      "old": 3,
+      "new": 3
+    },
+    "mouseUp": {
+      "old": 3,
+      "new": 3
+    }
+  },
+  "checks": "pnpm check exit0; no local application execution for this change",
+  "limits": [
+    "CI remains red; next remote validation not yet obtained",
+    "No assertion/action/timer weakening or retries",
+    "Historical independent 1DIP and real-native -84 failures remain unresolved",
+    "Resource measurement remains explicitly skipped, 0 samples, no caffeinate",
+    "Independent app.test diagnostic ledgers are not same-source evidence for this Stop/Retry failure",
+    "Raw logs/screenshots/JSONL and source observer outputs remain outside Git history"
+  ],
+  "localSources": [
+    {
+      "basename": "job.log",
+      "sha256": "dd9469658a8a0d19734c875b74deaacee8c5bf9e3f7504e601f6b1ae4837f2d2"
+    },
+    {
+      "basename": "failure-development-dock-navigation.json",
+      "sha256": "a4414fce918dded6f747d3c148f84a8133bd8f9097a05e4b185ac77867baf11a"
+    },
+    {
+      "basename": "failure-development-startup-silence-recovers-while-healthy-idle-empty-frames-brief-silence-and-permission-refusal-keep-their-boundaries.json",
+      "sha256": "d6f12a9cdad95180ecd9697111cec82902abea3f045b03744db1bb922a26ecb1"
+    }
+  ]
+}

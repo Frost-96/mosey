@@ -10,6 +10,7 @@ import {
   rm,
   rename,
 } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
@@ -23,6 +24,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
   let stopForge: (() => Promise<void>) | undefined;
   let original: Buffer | undefined;
   let helper = "";
+  let runtimeProvenance: unknown;
   let applicationProcess:
     ReturnType<ElectronApplication["process"]> | undefined;
   const input = path.join(root, "observation.json");
@@ -57,6 +59,66 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         : { args: [".", `--user-data-dir=${root}/profile`] },
     );
     applicationProcess = app.process();
+    try {
+      const testSHA256 = createHash("sha256")
+        .update(await readFile(path.resolve("tests/dock.test.ts")))
+        .digest("hex");
+      runtimeProvenance = await app.evaluate(({ app }, testSHA256) => {
+        try {
+          // Read through Electron's public fs so virtual app.asar paths work too.
+          const fs = process.getBuiltinModule("node:fs");
+          const path = process.getBuiltinModule("node:path");
+          const crypto = process.getBuiltinModule("node:crypto");
+          const hash = (value: Buffer | string) =>
+            crypto.createHash("sha256").update(value).digest("hex");
+          const appPath = app.getAppPath();
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(appPath, "package.json"), "utf8"),
+          );
+          const entry = path.resolve(appPath, manifest.main);
+          const actualEntry = fs.realpathSync(entry);
+          const bytes = fs.readFileSync(actualEntry);
+          const text = bytes.toString("utf8");
+          const snippets = [
+            "product Dock interaction requested",
+            "async stop(reason",
+            "this.stopReason = reason",
+            "job.requestedHTML = body",
+            "job.requestedHTML !== body",
+          ].map((marker) => {
+            const offset = text.indexOf(marker);
+            const snippet =
+              offset < 0
+                ? ""
+                : Buffer.from(
+                    text.slice(Math.max(0, offset - 160), offset + 480),
+                  )
+                    .subarray(0, 640)
+                    .toString("utf8");
+            return {
+              marker,
+              found: offset >= 0,
+              snippet,
+              sha256: hash(snippet),
+            };
+          });
+          return {
+            entryRelative: path.relative(appPath, entry),
+            realEntryRelative: path.relative(
+              fs.realpathSync(appPath),
+              actualEntry,
+            ),
+            entrySHA256: hash(bytes),
+            testSHA256,
+            snippets,
+          };
+        } catch (error) {
+          return { unavailable: String(error).slice(0, 500) };
+        }
+      }, testSHA256);
+    } catch (error) {
+      runtimeProvenance = { unavailable: String(error).slice(0, 500) };
+    }
     const pet = await app.firstWindow();
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
@@ -264,6 +326,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
           NonNullable<Electron.MenuItemConstructorOptions["click"]>
         >();
         const originalBuild = Menu.buildFromTemplate;
+        let nextHandlerID = 0;
         const isTemplate = (
           item: Electron.MenuItemConstructorOptions | Electron.MenuItem,
         ): item is Electron.MenuItemConstructorOptions =>
@@ -276,20 +339,40 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
             copy.submenu = copy.submenu.map(observeTemplate);
           const handler = copy.click;
           if (handler && !observed.has(handler)) {
+            const handlerID = ++nextHandlerID;
+            let source = "";
+            let handlerSHA256: string | undefined;
+            let hashError: string | undefined;
+            try {
+              source = Function.prototype.toString.call(handler);
+              handlerSHA256 = process
+                .getBuiltinModule("node:crypto")
+                .createHash("sha256")
+                .update(source)
+                .digest("hex");
+            } catch (error) {
+              hashError = String(error).slice(0, 500);
+            }
+            const identity = {
+              label: item.label,
+              handlerID,
+              handlerSHA256,
+              hashError,
+            };
             const wrapped: typeof handler = function (this: unknown, ...args) {
               record(menuEvents, "template-handler-entry", {
-                label: item.label,
+                ...identity,
+                source: source.slice(0, 768),
+                sourceTruncated: source.length > 768,
               });
               try {
                 const result = Reflect.apply(handler, this, args);
-                record(menuEvents, "template-handler-return", {
-                  label: item.label,
-                });
+                record(menuEvents, "template-handler-return", identity);
                 return result;
               } catch (error) {
                 record(menuEvents, "template-handler-throw", {
-                  label: item.label,
-                  error: String(error),
+                  ...identity,
+                  error: String(error).slice(0, 500),
                 });
                 throw error;
               }
@@ -341,6 +424,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         });
         app.once("browser-window-created", (_event, window) => {
           const contents = window.webContents;
+          const windowID = window.id;
+          const webContentsID = contents.id;
           const original = contents.loadURL.bind(contents);
           let unsettled = 0;
           contents.loadURL = (url, options) => {
@@ -353,6 +438,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
               state.events.push({
                 event,
                 status,
+                windowID,
+                webContentsID,
                 at: performance.now(),
                 wall: Date.now(),
                 unsettled,
@@ -743,6 +830,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         {
           display,
           origin,
+          runtimeProvenance,
           final: await bounds(),
           capture:
             "external synthetic native producer; no claim of physical Dock validation",
@@ -813,12 +901,44 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     );
     await mkdir("test-results", { recursive: true });
     const navigationState = await app
-      ?.evaluate(() => Reflect.get(globalThis, "dockNavigationTrace"))
+      ?.evaluate(async ({ BrowserWindow }) => ({
+        ...(Reflect.get(globalThis, "dockNavigationTrace") ?? {
+          unavailable: "navigation trace not attached",
+        }),
+        publicWindows: await Promise.all(
+          BrowserWindow.getAllWindows()
+            .slice(0, 4)
+            .map(async (window) => {
+              const contents = window.webContents;
+              const url = contents.getURL();
+              return {
+                windowID: window.id,
+                webContentsID: contents.id,
+                url: url.slice(0, 2000),
+                urlTruncated: url.length > 2000,
+                visible: window.isVisible(),
+                loading: contents.isLoading(),
+                status: await contents
+                  .executeJavaScript(
+                    `document.querySelector('p[role="status"]')?.textContent`,
+                  )
+                  .catch((error: unknown) => ({
+                    unavailable: String(error).slice(0, 500),
+                  })),
+              };
+            }),
+        ),
+      }))
       .catch((failure: unknown) => ({ unavailable: String(failure) }));
     await writeFile(
       `test-results/failure-${packaged ? "packaged" : "development"}-dock-navigation.json`,
       JSON.stringify(
-        navigationState ?? { unavailable: "navigation trace not attached" },
+        {
+          runtimeProvenance,
+          ...(navigationState ?? {
+            unavailable: "navigation trace not attached",
+          }),
+        },
         null,
         2,
       ),
