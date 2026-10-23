@@ -62,3 +62,9 @@
 - `pnpm package:mac`：通过。
 - `pnpm test:packaged tests/app.test.ts tests/ground-recovery.test.ts`：3项全部通过，55.20s。
 - `pnpm check` 与 `git diff --check`：通过。
+
+首次远程修复验证时，[push 检查](https://github.com/Frost-96/mosey/actions/runs/39884946830) 的原应用场景与新增地面回归已通过，但设置迁移测试的110 DIP拖放案例再次暴露同类旧坐标断言：期望597，实际596。该测试同样把拖动前窗口位置当成地面，未记录那一刻的系统可用区域，不能仅据1 DIP差异判断是系统边界变化还是初始原生窗口位置差异。
+
+后续将设置、睡眠、自由活动与本体菜单中相同的“释放后回到旧Y”断言统一改为当前地面检查；睡眠与菜单的落地后保持静止仍使用落地后的实际边界进行严格比较。系统边界回归扩展到240 DIP／10 DIP变化以及110 DIP／1 DIP变化，避免只覆盖旧默认大小。
+
+后续本地 `pnpm exec vitest run tests/settings.test.ts tests/ground-recovery.test.ts`：开发／打包两种模式共4个文件、8项测试全部通过（38.64s）；`pnpm check` 与 `git diff --check` 通过。其余受影响场景由最新提交的完整远程开发／打包流程复核。
