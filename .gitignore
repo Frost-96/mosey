@@ -9,8 +9,8 @@ dist/
 release/
 playwright-report/
 
-# Track only shared agent guidance, architecture decisions, and validation docs.
+# Track only shared agent guidance and architecture decisions.
 /docs/*
 !/docs/agents/
 !/docs/adr/
-!/docs/validation/
+/docs/validation/
