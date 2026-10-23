@@ -49,9 +49,16 @@ test("slider previews without saving, commits on release, and persists nonpreset
             .getBounds().width,
       );
     const file = path.join(profile, "preferences.json");
+    // Grab the current thumb. The midpoint is track at size160 in range70–240.
+    const thumbFraction = () =>
+      slider.evaluate(
+        (input: HTMLInputElement) =>
+          (Number(input.value) - Number(input.min)) /
+          (Number(input.max) - Number(input.min)),
+      );
     const bounds = (await slider.boundingBox())!;
     await settings.mouse.move(
-      bounds.x + bounds.width / 2,
+      bounds.x + bounds.width * (await thumbFraction()),
       bounds.y + bounds.height / 2,
     );
     await settings.mouse.down();
@@ -120,7 +127,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await slider.scrollIntoViewIfNeeded();
     const closingBounds = (await slider.boundingBox())!;
     await settings.mouse.move(
-      closingBounds.x + closingBounds.width / 2,
+      closingBounds.x + closingBounds.width * (await thumbFraction()),
       closingBounds.y + closingBounds.height / 2,
     );
     await settings.mouse.down();
@@ -149,6 +156,20 @@ test("slider previews without saving, commits on release, and persists nonpreset
           .isVisible(),
       ),
     ).toBe(false);
+  } catch (error) {
+    await mkdir("test-results", { recursive: true }).catch(() => {});
+    for (const page of app?.windows() ?? []) {
+      const name = new URL(page.url()).searchParams.has("settings")
+        ? "settings"
+        : "pet";
+      await page
+        .screenshot({
+          path: `test-results/failure-${packaged ? "packaged" : "development"}-slider-${name}.png`,
+          timeout: 3000,
+        })
+        .catch(() => {});
+    }
+    throw error;
   } finally {
     await app?.close().catch(() => {});
     await stop?.();
