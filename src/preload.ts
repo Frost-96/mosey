@@ -51,6 +51,11 @@ const settingsBridge: SettingsBridge = {
       await ipcRenderer.invoke(channels.setSize, size),
     );
   },
+  async previewSize(size) {
+    return settingsSchema.parse(
+      await ipcRenderer.invoke(channels.previewSize, size),
+    );
+  },
   async showPet() {
     return settingsSchema.parse(await ipcRenderer.invoke(channels.showPet));
   },

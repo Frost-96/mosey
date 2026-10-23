@@ -96,3 +96,9 @@ html[data-page="settings"] .error {
 html[data-page="settings"] [hidden] {
   display: none !important;
 }
+
+html[data-page="settings"] input[type="range"] {
+  width: 100%;
+  margin: 18px 0 0;
+  accent-color: #404b3d;
+}

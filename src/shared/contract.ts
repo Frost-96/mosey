@@ -84,6 +84,7 @@ export const channels = {
   setSize: "settings:size",
   setLoginLaunch: "settings:login-launch",
   openLoginSettings: "settings:open-login-settings",
+  previewSize: "settings:preview-size",
   showPet: "settings:show-pet",
   settings: "settings:state",
   getPresentation: "pet:get-presentation",
@@ -114,6 +115,7 @@ export type Settings = z.infer<typeof settingsSchema>;
 export interface SettingsBridge {
   get(): Promise<Settings>;
   setSize(size: number): Promise<Settings>;
+  previewSize(size: number): Promise<Settings>;
   showPet(): Promise<Settings>;
   setLoginLaunch(enabled: boolean): Promise<Settings>;
   openLoginSettings(): Promise<Settings>;
