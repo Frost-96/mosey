@@ -1,5 +1,5 @@
 import { distanceFromGround } from "./support/ground";
-import { test, expect } from "vitest";
+import { test, expect, onTestFailed } from "vitest";
 import {
   _electron as electron,
   type ElectronApplication,
@@ -18,7 +18,29 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
   let stop: (() => Promise<void>) | undefined;
   let settings: Page | undefined;
   const profile = path.join(root, "profile");
+  const progressFile = `test-results/${packaged ? "packaged" : "development"}-settings-progress.json`;
+  const progress: { stage: string; at: number }[] = [];
+  const stage = async (name: string) => {
+    progress.push({ stage: name, at: Date.now() });
+    await mkdir("test-results", { recursive: true });
+    await writeFile(progressFile, JSON.stringify(progress, null, 2));
+  };
+  onTestFailed(async () => {
+    await stage("test failed");
+    await (settings ?? app?.windows()[0])
+      ?.screenshot({
+        path: `test-results/failure-settings-${packaged ? "packaged" : "development"}.png`,
+        timeout: 3000,
+      })
+      .catch(() => {});
+    // Vitest's test timeout does not unwind an outstanding Playwright call.
+    // Release only this test's process so its pending calls and finally settle.
+    const child = app?.process();
+    if (child?.exitCode === null && child.signalCode === null)
+      child.kill("SIGTERM");
+  });
   try {
+    await stage("prepare app");
     if (!packaged) stop = await startForge();
     else
       execFileSync("/usr/bin/ditto", [
@@ -53,9 +75,12 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           bounds: pet.getBounds(),
         };
       });
+    await stage("launch");
     app = await launch();
+    await stage("first window");
     await app.firstWindow();
     expect((await petState()).bounds.width).toBe(160);
+    await stage("open settings");
     await invoke("设置…");
     await expect
       .poll(() =>
@@ -84,7 +109,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .items.find((x) => x.label === "Mosey")!
           .submenu!.items.map((x) => x.label),
       ),
-    ).toContain("Launch at Login");
+    ).not.toContain("Launch at Login");
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
@@ -92,6 +117,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .submenu!.items.map((x) => x.label),
       ),
     ).not.toContain("Size");
+    await stage("validate IPC boundaries");
     expect(
       await settings.evaluate(() =>
         window.mosey.getPresentation().then(
@@ -112,6 +138,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         ),
     ).toBe("rejected");
 
+    await stage("hidden presets and save failure");
     const petId = (await petState()).id;
     await invoke("Hide Mosey");
     await expect
@@ -125,7 +152,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await mkdir(file);
     await settings.getByRole("button", { name: "大", exact: true }).click();
     await expect
-      .poll(() => settings!.getByRole("alert").textContent())
+      .poll(() => settings!.locator(".error [role=alert]").textContent())
       .toContain("保存失败");
     expect((await petState()).bounds.width).toBe(70);
     await mkdir("docs/validation", { recursive: true });
@@ -134,10 +161,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         .locator("body")
         .evaluate((element) => getComputedStyle(element).overflowY),
     ).toBe("auto");
-    const loginNote = settings.getByText(
-      "请通过菜单中的 Launch at Login 管理。",
-      { exact: true },
-    );
+    const loginNote = settings.getByRole("region", { name: "开机启动" });
     await loginNote.scrollIntoViewIfNeeded();
     expect(
       await loginNote.evaluate((element) => {
@@ -145,10 +169,12 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         return bounds.top >= 0 && bounds.bottom <= innerHeight;
       }),
     ).toBe(true);
+    await stage("save-error screenshot");
     await settings.screenshot({
       fullPage: true,
       path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-save-error.png`,
     });
+    await stage("retry failed size");
     await rm(file, { recursive: true });
     await settings.getByRole("button", { name: "重试", exact: true }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(240);
@@ -161,7 +187,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await mkdir(file);
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await expect
-      .poll(() => settings!.getByRole("alert").isVisible())
+      .poll(() => settings!.locator(".error [role=alert]").isVisible())
       .toBe(true);
     await rm(file, { recursive: true });
     await settings.evaluate(() => {
@@ -170,9 +196,10 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     });
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
     await expect
-      .poll(() => settings!.getByRole("alert").isVisible())
+      .poll(() => settings!.locator(".error [role=alert]").isVisible())
       .toBe(false);
 
+    await stage("new presets");
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await settings.getByRole("button", { name: "中（默认）" }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
@@ -192,24 +219,25 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         .locator("main")
         .evaluate((element) => getComputedStyle(element).paddingLeft),
     ).toBe("32px");
-    expect(
-      await settings
-        .locator("main")
-        .evaluate(
-          (element) => element.getBoundingClientRect().bottom <= innerHeight,
-        ),
-    ).toBe(true);
+    await settings
+      .getByRole("region", { name: "开机启动" })
+      .scrollIntoViewIfNeeded();
+    await stage("settings screenshot");
     await settings.screenshot({
       path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-settings.png`,
     });
+    await stage("close settings");
     await settings.close();
     settings = undefined;
     expect((await petState()).id).toBe(petId);
     expect((await petState()).visible).toBe(false);
     await invoke("设置…");
     await expect.poll(() => app!.windows().length).toBe(2);
+    await stage("quit after reopening settings");
     await app.close();
+    await stage("restart");
     app = await launch();
+    await stage("restart first window");
     await app.firstWindow();
     expect((await petState()).bounds.width).toBe(160);
     expect((await petState()).visible).toBe(false);
@@ -228,9 +256,11 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .catch(() => {});
     throw error;
   } finally {
+    await stage("cleanup app");
     await app?.close().catch(() => {});
     await stop?.();
     await rm(root, { recursive: true, force: true });
+    await stage("complete");
   }
 });
 

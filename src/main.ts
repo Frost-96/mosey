@@ -14,6 +14,7 @@ import {
   screen,
   ipcMain,
   powerMonitor,
+  shell,
 } from "electron";
 import path from "node:path";
 import { PreferencesStore } from "./platform/preferences";
@@ -26,6 +27,8 @@ import {
   assetErrorSchema,
   channels,
   emptyRequestSchema,
+  loginLaunchRequestSchema,
+  type Settings,
   presentationSchema,
   inputSchema,
   type Presentation,
@@ -74,64 +77,47 @@ async function start() {
   const quit = () => app.quit();
   let drained = false;
   let loginError: string | undefined;
-  const setLoginLaunch = (openAtLogin: boolean) => {
-    if (process.platform !== "darwin" || !app.isPackaged) return;
-    loginError = undefined;
+  const loginState = (): Settings["login"] => {
+    if (process.platform !== "darwin" || !app.isPackaged)
+      return {
+        status: "unavailable",
+        reason: "开机启动仅适用于打包后的 macOS 应用。",
+        error: loginError,
+      };
     try {
-      app.setLoginItemSettings({ type: "mainAppService", openAtLogin });
       const actual = app.getLoginItemSettings({ type: "mainAppService" });
-      const registered = ["enabled", "requires-approval"].includes(
-        actual.status,
-      );
-      if (registered !== openAtLogin)
-        loginError = "Login launch change failed; try System Settings";
-    } catch (error) {
-      loginError = "Login launch change failed; try System Settings";
-      log.warn("Unable to change login item settings", error);
-    }
-    refreshMenus();
-  };
-  const loginItems = (): Electron.MenuItemConstructorOptions[] => {
-    const supported = process.platform === "darwin" && app.isPackaged;
-    let settings: Electron.LoginItemSettings | undefined;
-    try {
-      if (process.platform === "darwin")
-        settings = app.getLoginItemSettings({ type: "mainAppService" });
+      if (actual.status === "requires-approval")
+        return { status: "requires-approval", error: loginError };
+      return {
+        status:
+          actual.status === "enabled" && actual.openAtLogin
+            ? "enabled"
+            : "disabled",
+        error: loginError,
+      };
     } catch (error) {
       log.warn("Unable to read login item settings", error);
+      return {
+        status: "unavailable",
+        reason: `无法读取系统开机启动状态：${error instanceof Error ? error.message : String(error)}`,
+        error: loginError,
+      };
     }
-    return [
-      {
-        label: "Launch at Login",
-        type: "checkbox",
-        checked: settings?.status === "enabled" && settings.openAtLogin,
-        enabled: supported && !!settings,
-        // mainAppService resolves this running .app itself. Never register the
-        // development executable or store a JSON preference competing with macOS.
-        click: (item) => setLoginLaunch(item.checked),
-      },
-      ...(settings?.status === "requires-approval"
-        ? [
-            {
-              label: "Cancel Pending Login Launch",
-              click: () => setLoginLaunch(false),
-            },
-          ]
-        : []),
-      ...(loginError ? [{ label: loginError, enabled: false }] : []),
-      ...(!supported || !settings || settings.status === "requires-approval"
-        ? [
-            {
-              label: !supported
-                ? "Login launch requires the packaged macOS app"
-                : !settings
-                  ? "Login launch status unavailable"
-                  : "Allow Mosey in System Settings → General → Login Items",
-              enabled: false,
-            },
-          ]
-        : []),
-    ];
+  };
+  const setLoginLaunch = (openAtLogin: boolean) => {
+    loginError = undefined;
+    if (loginState().status === "unavailable") return;
+    try {
+      app.setLoginItemSettings({ type: "mainAppService", openAtLogin });
+      const actual = loginState();
+      const registered =
+        actual.status === "enabled" || actual.status === "requires-approval";
+      if (actual.status === "unavailable" || registered !== openAtLogin)
+        loginError = "系统未完成开机启动更改，请重试或检查系统设置。";
+    } catch (error) {
+      loginError = `开机启动更改失败：${error instanceof Error ? error.message : String(error)}`;
+      log.warn("Unable to change login item settings", error);
+    }
   };
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
@@ -150,10 +136,12 @@ async function start() {
   let geometryRevision = 0;
   let settingsWindow: BrowserWindow | undefined;
   let failedSize: PetSize | undefined;
+  let liveSize = preferences.size;
   const settingsState = () => ({
-    size: preferences.size,
+    size: liveSize,
     visibility: preferences.visibility,
     failedSize,
+    login: loginState(),
   });
   const publishSettings = () =>
     settingsWindow?.webContents.send(channels.settings, settingsState());
@@ -162,12 +150,13 @@ async function start() {
       if (settingsWindow.isMinimized()) settingsWindow.restore();
       settingsWindow.show();
       settingsWindow.focus();
+      publishSettings();
       return;
     }
     const window = new BrowserWindow({
       title: "Mosey 设置",
       width: 460,
-      height: 590,
+      height: 680,
       resizable: false,
       show: false,
       webPreferences: {
@@ -178,6 +167,10 @@ async function start() {
       },
     });
     settingsWindow = window;
+    window.on("focus", publishSettings);
+    window.on("close", () => {
+      if (liveSize !== preferences.size) changeSize(liveSize);
+    });
     window.on("closed", () => {
       if (settingsWindow === window) settingsWindow = undefined;
     });
@@ -219,7 +212,6 @@ async function start() {
         {
           label: "Mosey",
           submenu: [
-            ...loginItems(),
             visibilityItem(),
             settingsItem(),
             {
@@ -235,7 +227,6 @@ async function start() {
     return Menu.buildFromTemplate([
       visibilityItem(),
       settingsItem(),
-      ...loginItems(),
       diagnostic,
       { label: "Quit Mosey", click: quit },
     ]);
@@ -262,9 +253,12 @@ async function start() {
   const openTrayMenu = () => tray.popUpContextMenu(refreshMenus());
   tray.on("click", openTrayMenu);
   tray.on("right-click", openTrayMenu);
-  app.on("activate", refreshMenus);
+  app.on("activate", () => {
+    refreshMenus();
+    publishSettings();
+  });
   const area = screen.getPrimaryDisplay().workArea;
-  const initialSide = petGeometry(preferences.size).side;
+  const initialSide = petGeometry(liveSize).side;
   const pet = new BrowserWindow({
     title: "Mosey",
     width: initialSide,
@@ -364,6 +358,21 @@ async function start() {
     const area = screen.getPrimaryDisplay().workArea;
     constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
   };
+  const reconcileGround = () => {
+    // The live work area can change before its native notification arrives.
+    // Keep grounded poses on that floor without touching captured or moving pets.
+    if (gesture || motion !== undefined) return;
+    const posture = behavior.getSnapshot().value;
+    if (
+      posture === "dragging" ||
+      posture === "flutter" ||
+      posture === "falling"
+    )
+      return;
+    const area = screen.getPrimaryDisplay().workArea;
+    const bounds = pet.getBounds();
+    if (bounds.y + bounds.height !== area.y + area.height) alignGround();
+  };
   const cancelInteraction = () => {
     dismissBodyMenu();
     const cancelledGesture = gesture;
@@ -410,7 +419,7 @@ async function start() {
     const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
     if (!frame || !atlas) return false;
-    const geometry = petGeometry(preferences.size);
+    const geometry = petGeometry(liveSize);
     const localX = Math.floor(
       (((visible.direction === "left" ? geometry.side - x : x) -
         geometry.foot.x) /
@@ -462,7 +471,7 @@ async function start() {
       startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
       frozenAt: timeline.pausedAt,
       visibility: suspended ? "hidden" : visibility,
-      size: preferences.size,
+      size: liveSize,
       geometryRevision,
     });
   const authorized = (
@@ -604,19 +613,18 @@ async function start() {
     if (!pet?.isDestroyed())
       pet?.webContents.send(channels.presentation, presentation());
   };
-  const changeSize = (size: PetSize) => {
-    if (size === preferences.size) {
-      failedSize = undefined;
+  const changeSize = (size: PetSize, commit = true) => {
+    if (commit) {
+      if (size !== preferences.size && !preferences.setSize(size)) {
+        failedSize = size;
+        size = preferences.size;
+      } else failedSize = undefined;
+    } else failedSize = undefined;
+    if (size === liveSize) {
       publishSettings();
       return;
     }
-    if (!preferences.setSize(size)) {
-      failedSize = size;
-      publishSettings();
-      refreshMenus();
-      return;
-    }
-    failedSize = undefined;
+    liveSize = size;
     const old = pet.getBounds();
     const side = petGeometry(size).side;
     geometryRevision++;
@@ -652,6 +660,37 @@ async function start() {
     if (!settingsAuthorized(event)) throw new Error("Untrusted size request");
     changeSize(petSizeSchema.parse(value));
     return settingsState();
+  });
+  ipcMain.handle(channels.setLoginLaunch, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted login launch request");
+    setLoginLaunch(loginLaunchRequestSchema.parse(value));
+    publishSettings();
+    return settingsState();
+  });
+  ipcMain.handle(channels.openLoginSettings, async (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted system settings request");
+    emptyRequestSchema.parse(value);
+    try {
+      if (process.platform !== "darwin")
+        throw new Error("此平台不支持 macOS 系统设置。");
+      await shell.openExternal(
+        "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      );
+    } catch (error) {
+      loginError = `无法打开系统设置：${error instanceof Error ? error.message : String(error)}`;
+    }
+    publishSettings();
+    return settingsState();
+  });
+  ipcMain.handle(channels.previewSize, (event, value: unknown) => {
+    if (!settingsAuthorized(event)) throw new Error("Untrusted size preview");
+    changeSize(petSizeSchema.parse(value), false);
+    return settingsState();
+  });
+  app.on("before-quit", () => {
+    if (liveSize !== preferences.size) changeSize(liveSize);
   });
   ipcMain.handle(channels.showPet, (event, value: unknown) => {
     if (!settingsAuthorized(event))
@@ -802,7 +841,7 @@ async function start() {
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   // Some packaged macOS launches update native visibility without delivering
-  // show/hide notifications. Reconcile explicit operations too; delayed or
+  // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
   const synchronizeVisibility = () => {
     if (preferences.visibility === "hidden" && pet.isVisible()) pet.hide();
@@ -825,6 +864,17 @@ async function start() {
   };
   pet.on("show", synchronizeVisibility);
   pet.on("hide", synchronizeVisibility);
+  // Native hide/show and work-area events can be omitted or coalesced. Keep a
+  // bounded lifecycle check even when hidden; expensive pointer polling still
+  // stops while hidden. Idempotent visibility updates preserve active actions.
+  const nativeStatePoll = setInterval(() => {
+    if (pet.isDestroyed()) return;
+    synchronizeVisibility();
+    if (visibility === "visible" && !suspended && !bodyMenu) reconcileGround();
+  }, 50);
+  const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
+  pet.once("closed", stopNativeStatePolling);
+  app.once("before-quit", stopNativeStatePolling);
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
     ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
     : undefined;
