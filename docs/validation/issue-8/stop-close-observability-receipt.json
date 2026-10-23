@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-23",
+  "scope": "Test-only same-run stop evidence and public close-event observability; not a product fix",
+  "basePublicCommit": "3177d3603e7ce2ef6c2ed26df2067e0ec80712e3",
+  "CI": {
+    "runID": 39972257889,
+    "development": {
+      "passed": 17,
+      "skipped": 1,
+      "durationSeconds": 750.4,
+      "skipReason": "packaged-only startup case"
+    },
+    "build": "success",
+    "packaged": {
+      "passed": 17,
+      "failed": 1,
+      "durationSeconds": 484.46
+    },
+    "archive": "skipped after packaged failure"
+  },
+  "captureStartup": [
+    {
+      "mode": "development",
+      "firstInputCount": 1,
+      "inputToTERMmilliseconds": 5113.186750000001
+    },
+    {
+      "mode": "packaged",
+      "firstInputCount": 1,
+      "inputToTERMmilliseconds": 5106.186875
+    }
+  ],
+  "StopRetry": {
+    "actualRetryHandlerEnteredAndReturned": true,
+    "extraStopInRecordedTrace": false,
+    "windowID": 2,
+    "webContentsID": 2,
+    "navigationMaxUnsettled": 1,
+    "navigationRejected": 0,
+    "finalDOMStatus": "Stopped: user stop",
+    "entrySHA256": "8d6761beb8d1d511d93cdaef028ad306f6f6ad919f9c2d66f64c503c873a7f1c",
+    "sameRunStopRecordAvailable": false,
+    "cause": "not established; missing variable-name markers reflect minification, not absent implementation"
+  },
+  "newObservation": {
+    "childProcessEvents": "Public emit close/exit entry/return/throw, max128, original this/args/return/error preserved; no signals or substitutions",
+    "sameRunLocalLog": "Only public DOM Local log within owned real userData/dock-validation, run basename format, size <=8MiB, host PID must match; output basename/hash/host and native identity/last3 stop summaries only",
+    "alignment": "Stop record has no own timestamp; align native PID with same-main-clock close event and Retry callback trace",
+    "stderr": "Passive tail, max8192 characters, no exception/rejection handler or error suppression",
+    "sourceMarkers": "5 regex-based bounded snippets, variable-name independent",
+    "productSourceChanges": false,
+    "localAppBuildSignCaptureRuns": 0
+  },
+  "AST": {
+    "base": "3177d3603e7ce2ef6c2ed26df2067e0ec80712e3",
+    "originalSHA256": "05ef7967558df71c9f83cfdc713556864ed5d7675bf32a86e5d96362b19142f9",
+    "newSHA256": "95ed947d99c937624986a9d7736cf52787f9d75abec70272002c99744d0d2d0b",
+    "comparisons": {
+      "assertionCalls": {
+        "unchanged": true,
+        "oldCount": 96,
+        "newCount": 96
+      },
+      "mouseActions": {
+        "unchanged": true,
+        "oldCount": 11,
+        "newCount": 11
+      },
+      "menuActions": {
+        "unchanged": true,
+        "oldCount": 17,
+        "newCount": 17
+      },
+      "timeouts": {
+        "unchanged": true,
+        "oldCount": 27,
+        "newCount": 27
+      },
+      "SIGSTOP": {
+        "unchanged": true,
+        "oldCount": 2,
+        "newCount": 2
+      }
+    },
+    "expectIdentifiers": {
+      "old": 48,
+      "new": 48
+    },
+    "mouseDown": {
+      "old": 3,
+      "new": 3
+    },
+    "mouseUp": {
+      "old": 3,
+      "new": 3
+    }
+  },
+  "checks": "pnpm check exit0 and original assertions/actions/timeouts unchanged; next remote validation pending",
+  "limits": [
+    "#8 remains open until agreed completion work is done",
+    "No early-stop, render-loss or permission root cause established",
+    "Independent app.test ledgers cannot replace same-run stop evidence",
+    "Historical1DIP/native-84 causes remain unknown",
+    "Resource skipped by user choice, zero samples, no caffeinate",
+    "No raw logs/screenshots/JSONL or credentials committed"
+  ],
+  "localSources": [
+    {
+      "basename": "job.log",
+      "sha256": "48c77b56a334c9494e0ad47126393142cdb0584b3365de9ee86aeed63ee10c58"
+    },
+    {
+      "basename": "failure-packaged-dock-navigation.json",
+      "sha256": "b5942e09540570a863e4e25d99f1ad935796627c256bec8854c5599437ee5c66"
+    },
+    {
+      "basename": "development-capture-startup-silence-recovers-while-healthy-idle-empty-frames-brief-silence-and-permission-refusal-keep-their-boundaries.json",
+      "sha256": "33c719f40c380adcf1d1318af32bd182e2d630a20935fd6b0da0e1105e42a012"
+    },
+    {
+      "basename": "packaged-capture-startup-silence-recovers-while-healthy-idle-empty-frames-brief-silence-and-permission-refusal-keep-their-boundaries.json",
+      "sha256": "2f7ffa580b542de788b6d8b5135d9688669b8bcff8dd67e24c3198286c266e8c"
+    }
+  ]
+}

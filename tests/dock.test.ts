@@ -25,6 +25,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
   let original: Buffer | undefined;
   let helper = "";
   let runtimeProvenance: unknown;
+  let applicationStderrTail = "";
   let applicationProcess:
     ReturnType<ElectronApplication["process"]> | undefined;
   const input = path.join(root, "observation.json");
@@ -59,6 +60,11 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         : { args: [".", `--user-data-dir=${root}/profile`] },
     );
     applicationProcess = app.process();
+    applicationProcess.stderr?.on("data", (bytes: Buffer) => {
+      applicationStderrTail = (
+        applicationStderrTail + bytes.toString("utf8")
+      ).slice(-8192);
+    });
     try {
       const testSHA256 = createHash("sha256")
         .update(await readFile(path.resolve("tests/dock.test.ts")))
@@ -79,22 +85,28 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
           const actualEntry = fs.realpathSync(entry);
           const bytes = fs.readFileSync(actualEntry);
           const text = bytes.toString("utf8");
-          const snippets = [
-            "product Dock interaction requested",
-            "async stop(reason",
-            "this.stopReason = reason",
-            "job.requestedHTML = body",
-            "job.requestedHTML !== body",
-          ].map((marker) => {
-            const offset = text.indexOf(marker);
+          const markers: [string, RegExp][] = [
+            ["Retry reason", /product Dock interaction requested/],
+            ["Diagnostic stop method", /async stop\([^)]*,[^)]*\)\s*\{/],
+            [
+              "Stop reason assignment",
+              /this\.stopReason\s*=\s*[A-Za-z_$][\w$]*/,
+            ],
+            [
+              "Render request assignment",
+              /[A-Za-z_$][\w$]*\.requestedHTML\s*=/,
+            ],
+            [
+              "Render queue continuation",
+              /[A-Za-z_$][\w$]*\.requestedHTML\s*!==/,
+            ],
+          ];
+          const snippets = markers.map(([marker, pattern]) => {
+            const offset = text.search(pattern);
             const snippet =
               offset < 0
                 ? ""
-                : Buffer.from(
-                    text.slice(Math.max(0, offset - 160), offset + 480),
-                  )
-                    .subarray(0, 640)
-                    .toString("utf8");
+                : text.slice(Math.max(0, offset - 80), offset + 560);
             return {
               marker,
               found: offset >= 0,
@@ -314,11 +326,43 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         const events: unknown[] = [];
         const menuEvents: unknown[] = [];
         const lifecycle: unknown[] = [];
-        const state = { maxUnsettled: 0, events, menuEvents, lifecycle };
+        const childEvents: unknown[] = [];
+        const state = {
+          maxUnsettled: 0,
+          events,
+          menuEvents,
+          lifecycle,
+          childEvents,
+        };
         Object.assign(globalThis, { dockNavigationTrace: state });
         const record = (rows: unknown[], event: string, detail?: unknown) => {
           rows.push({ event, detail, at: performance.now(), wall: Date.now() });
           if (rows.length > 128) rows.shift();
+        };
+        // Public ChildProcess event dispatch brackets the existing close handler.
+        // No child is replaced, signalled or delayed by this observer.
+        const { ChildProcess } = process.getBuiltinModule("node:child_process");
+        const originalEmit = ChildProcess.prototype.emit;
+        ChildProcess.prototype.emit = function (
+          this: import("node:child_process").ChildProcess,
+          event: string | symbol,
+          ...args: unknown[]
+        ) {
+          if (event !== "close" && event !== "exit")
+            return Reflect.apply(originalEmit, this, [event, ...args]);
+          const detail = { pid: this.pid, code: args[0], signal: args[1] };
+          record(childEvents, `child-${event}-entry`, detail);
+          try {
+            const result = Reflect.apply(originalEmit, this, [event, ...args]);
+            record(childEvents, `child-${event}-return`, detail);
+            return result;
+          } catch (error) {
+            record(childEvents, `child-${event}-throw`, {
+              ...detail,
+              error: String(error).slice(0, 500),
+            });
+            throw error;
+          }
         };
         // Observe the supplied callback as well as MenuItem.click. Electron builds
         // submenus recursively, so never wrap an already observed callback twice.
@@ -901,7 +945,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     );
     await mkdir("test-results", { recursive: true });
     const navigationState = await app
-      ?.evaluate(async ({ BrowserWindow }) => ({
+      ?.evaluate(async ({ app, BrowserWindow }) => ({
         ...(Reflect.get(globalThis, "dockNavigationTrace") ?? {
           unavailable: "navigation trace not attached",
         }),
@@ -911,6 +955,77 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
             .map(async (window) => {
               const contents = window.webContents;
               const url = contents.getURL();
+              const diagnostic = await contents
+                .executeJavaScript(
+                  `({status: document.querySelector('p[role="status"]')?.textContent, localLog: document.querySelector('input[aria-label="Local log"]')?.value})`,
+                )
+                .catch((error: unknown) => ({
+                  unavailable: String(error).slice(0, 500),
+                }));
+              let localLogEvidence: unknown;
+              if (typeof diagnostic.localLog === "string") {
+                try {
+                  const fs = process.getBuiltinModule("node:fs");
+                  const path = process.getBuiltinModule("node:path");
+                  const crypto = process.getBuiltinModule("node:crypto");
+                  const expected = fs.realpathSync(
+                    path.join(app.getPath("userData"), "dock-validation"),
+                  );
+                  const file = fs.realpathSync(diagnostic.localLog);
+                  if (
+                    path.dirname(file) !== expected ||
+                    !/^run-[\da-f-]+\.jsonl$/.test(path.basename(file))
+                  )
+                    throw new Error("Local diagnostic log identity mismatch");
+                  if (fs.statSync(file).size > 8 * 1024 * 1024)
+                    throw new Error(
+                      "Local diagnostic log exceeds existing bound",
+                    );
+                  const bytes = fs.readFileSync(file);
+                  const records = bytes
+                    .toString("utf8")
+                    .trim()
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((line) => JSON.parse(line));
+                  const host = records.find(
+                    (row) => row.type === "electron-host",
+                  );
+                  if (host?.processID !== process.pid)
+                    throw new Error("Local diagnostic host PID mismatch");
+                  const native = records.find(
+                    (row) =>
+                      row.type === "native" &&
+                      row.record?.type === "environment",
+                  );
+                  const stops = records.filter(
+                    (row) => row.type === "electron-stop",
+                  );
+                  localLogEvidence = {
+                    basename: path.basename(file),
+                    sha256: crypto
+                      .createHash("sha256")
+                      .update(bytes)
+                      .digest("hex"),
+                    hostPID: host.processID,
+                    nativePID: native?.record.processID,
+                    nativeParentPID: native?.record.parentPID,
+                    nativeEnvironmentReceivedAt: native?.receivedAtMonotonicMs,
+                    stopRecordCount: stops.length,
+                    stops: stops.slice(-3).map((row) => ({
+                      code: row.code,
+                      signal: row.signal,
+                      reason: String(row.reason).slice(0, 200),
+                    })),
+                    limitation:
+                      "Stop records have no close timestamp; align nativePID with the public childEvents trace",
+                  };
+                } catch (error) {
+                  localLogEvidence = {
+                    unavailable: String(error).slice(0, 500),
+                  };
+                }
+              }
               return {
                 windowID: window.id,
                 webContentsID: contents.id,
@@ -918,13 +1033,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
                 urlTruncated: url.length > 2000,
                 visible: window.isVisible(),
                 loading: contents.isLoading(),
-                status: await contents
-                  .executeJavaScript(
-                    `document.querySelector('p[role="status"]')?.textContent`,
-                  )
-                  .catch((error: unknown) => ({
-                    unavailable: String(error).slice(0, 500),
-                  })),
+                status: diagnostic.status ?? diagnostic.unavailable,
+                localLogEvidence,
               };
             }),
         ),
@@ -935,6 +1045,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       JSON.stringify(
         {
           runtimeProvenance,
+          applicationStderrTail,
           ...(navigationState ?? {
             unavailable: "navigation trace not attached",
           }),
