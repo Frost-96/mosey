@@ -35,6 +35,84 @@ test("slider previews without saving, commits on release, and persists nonpreset
       );
     app = await launch();
     await app.firstWindow();
+    await app.evaluate(({ app }) => {
+      Reflect.set(globalThis, "sliderNativeTrace", []);
+      app.on("browser-window-created", (_event, window) => {
+        const record = (type: string) => {
+          if (window.isDestroyed()) return;
+          const events = Reflect.get(globalThis, "sliderNativeTrace");
+          events.push({
+            type,
+            at: Date.now(),
+            visible: window.isVisible(),
+            focused: window.isFocused(),
+          });
+          if (events.length > 50) events.shift();
+        };
+        record("created");
+        window.on("ready-to-show", () => record("ready-to-show"));
+        window.on("show", () => record("show"));
+        window.on("focus", () => record("focus"));
+        window.on("blur", () => record("blur"));
+        window.on("hide", () => record("hide"));
+      });
+    });
+    await app.context().addInitScript(() => {
+      const observer = new MutationObserver(() => {
+        const input = document.querySelector<HTMLInputElement>(
+          'input[type="range"]',
+        );
+        if (!input) return;
+        observer.disconnect();
+        const events: unknown[] = [];
+        Reflect.set(window, "sliderTrace", events);
+        const record = (type: string, event?: Event) => {
+          const rect = input.getBoundingClientRect();
+          events.push({
+            type,
+            at: performance.now(),
+            wall: Date.now(),
+            value: input.value,
+            active: document.activeElement === input,
+            focused: document.hasFocus(),
+            x: event && Reflect.get(event, "clientX"),
+            y: event && Reflect.get(event, "clientY"),
+            buttons: event && Reflect.get(event, "buttons"),
+            pointerId: event && Reflect.get(event, "pointerId"),
+            capture:
+              event && Reflect.has(event, "pointerId")
+                ? input.hasPointerCapture(Reflect.get(event, "pointerId"))
+                : undefined,
+            screenX: event && Reflect.get(event, "screenX"),
+            screenY: event && Reflect.get(event, "screenY"),
+            rect: {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            },
+          });
+          if (events.length > 150) events.shift();
+        };
+        for (const type of [
+          "pointerdown",
+          "pointermove",
+          "pointerup",
+          "pointercancel",
+          "gotpointercapture",
+          "lostpointercapture",
+          "input",
+          "change",
+          "blur",
+          "focus",
+        ])
+          window.addEventListener(type, (event) => record(type, event), true);
+        window.moseySettings.onChange((next) =>
+          record("settings-update " + next.size),
+        );
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
     const settings = await openSettings(app);
     const slider = settings.getByRole("slider", { name: "宠物大小" });
     await slider.waitFor({ timeout: 5000 });
@@ -56,6 +134,16 @@ test("slider previews without saving, commits on release, and persists nonpreset
           (Number(input.value) - Number(input.min)) /
           (Number(input.max) - Number(input.min)),
       );
+    // This acceptance directs CDP input; physical mouse/OS routing is a separate
+    // desktop check. Native range capture receives global OS movement even when
+    // the cursor is outside, so exclude it only while the synthetic drag is held.
+    const isolateNativePointer = (ignore: boolean) =>
+      app!.evaluate(({ BrowserWindow }, ignore) => {
+        BrowserWindow.getAllWindows()
+          .find((window) => window.getTitle() === "Mosey 设置")
+          ?.setIgnoreMouseEvents(ignore);
+      }, ignore);
+    await isolateNativePointer(true);
     const bounds = (await slider.boundingBox())!;
     await settings.mouse.move(
       bounds.x + bounds.width * (await thumbFraction()),
@@ -68,6 +156,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await expect.poll(side).toBe(70);
     expect(JSON.parse(await readFile(file, "utf8")).size).toBe(160);
     await settings.mouse.up();
+    await isolateNativePointer(false);
     await expect
       .poll(async () => JSON.parse(await readFile(file, "utf8")).size)
       .toBe(70);
@@ -125,6 +214,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     // Close while a pointer preview is uncommitted. The main process owns the
     // final commit, so renderer teardown cannot drop it.
     await slider.scrollIntoViewIfNeeded();
+    await isolateNativePointer(true);
     const closingBounds = (await slider.boundingBox())!;
     await settings.mouse.move(
       closingBounds.x + closingBounds.width * (await thumbFraction()),
@@ -158,6 +248,30 @@ test("slider previews without saving, commits on release, and persists nonpreset
     ).toBe(false);
   } catch (error) {
     await mkdir("test-results", { recursive: true }).catch(() => {});
+    const settings = app
+      ?.windows()
+      .find((page) => new URL(page.url()).searchParams.has("settings"));
+    const renderer = await settings
+      ?.evaluate(async () => ({
+        events: Reflect.get(window, "sliderTrace"),
+        settings: await window.moseySettings.get(),
+      }))
+      .catch(() => undefined);
+    const native = await app
+      ?.evaluate(({ BrowserWindow }) => ({
+        events: Reflect.get(globalThis, "sliderNativeTrace"),
+        windows: BrowserWindow.getAllWindows().map((window) => ({
+          title: window.getTitle(),
+          bounds: window.getBounds(),
+          visible: window.isVisible(),
+          focused: window.isFocused(),
+        })),
+      }))
+      .catch(() => undefined);
+    await writeFile(
+      `test-results/failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
+      JSON.stringify({ renderer, native }, null, 2),
+    ).catch(() => {});
     for (const page of app?.windows() ?? []) {
       const name = new URL(page.url()).searchParams.has("settings")
         ? "settings"
@@ -171,6 +285,15 @@ test("slider previews without saving, commits on release, and persists nonpreset
     }
     throw error;
   } finally {
+    for (const page of app?.windows() ?? [])
+      await page.mouse.up().catch(() => {});
+    await app
+      ?.evaluate(({ BrowserWindow }) => {
+        BrowserWindow.getAllWindows()
+          .find((window) => window.getTitle() === "Mosey 设置")
+          ?.setIgnoreMouseEvents(false);
+      })
+      .catch(() => {});
     await app?.close().catch(() => {});
     await stop?.();
     await rm(root, { recursive: true, force: true });

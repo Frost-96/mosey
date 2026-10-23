@@ -33,6 +33,19 @@ export async function openSettings(app: ElectronApplication) {
       { timeout: 15000 },
     )
     .toBe(true);
+  // DOM readiness precedes ready-to-show; real input needs a visible, focused window.
+  await expect
+    .poll(
+      () =>
+        app.evaluate(({ BrowserWindow }) => {
+          const window = BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey 设置",
+          );
+          return !!window?.isVisible() && window.isFocused();
+        }),
+      { timeout: 15000 },
+    )
+    .toBe(true);
   return page!;
 }
 export async function closeSettings(app: ElectronApplication) {

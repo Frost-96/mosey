@@ -1,0 +1,338 @@
+{
+  "renderer": {
+    "events": [
+      {
+        "type": "settings-update 160",
+        "at": 106.89999999850988,
+        "wall": 1792726693300,
+        "value": "160",
+        "active": false,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 141.89999999850988,
+        "wall": 1792726693335,
+        "value": "160",
+        "active": false,
+        "focused": true,
+        "x": 224.1328125,
+        "y": 324.70703125,
+        "buttons": 0,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 729.1328125,
+        "screenY": 494.70703125,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 158.29999999701977,
+        "wall": 1792726693352,
+        "value": "160",
+        "active": false,
+        "focused": true,
+        "x": 241.64706420898438,
+        "y": 358.5,
+        "buttons": 0,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1251.6470947265625,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointerdown",
+        "at": 159.09999999776483,
+        "wall": 1792726693352,
+        "value": "160",
+        "active": false,
+        "focused": true,
+        "x": 241.64706420898438,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1251.6470947265625,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "focus",
+        "at": 159.19999999925494,
+        "wall": 1792726693352,
+        "value": "160",
+        "active": true,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "gotpointercapture",
+        "at": 167.79999999701977,
+        "wall": 1792726693361,
+        "value": "160",
+        "active": true,
+        "focused": true,
+        "x": 191.23529052734375,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1201.2353515625,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 167.79999999701977,
+        "wall": 1792726693361,
+        "value": "160",
+        "active": true,
+        "focused": true,
+        "x": 191.23529052734375,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1201.2353515625,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "input",
+        "at": 167.89999999850988,
+        "wall": 1792726693361,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "lostpointercapture",
+        "at": 168.09999999776483,
+        "wall": 1792726693361,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "x": -280.8671875,
+        "y": 324.70703125,
+        "buttons": 0,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 729.1328125,
+        "screenY": 494.70703125,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "change",
+        "at": 168.19999999925494,
+        "wall": 1792726693361,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "settings-update 140",
+        "at": 174.59999999776483,
+        "wall": 1792726693368,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "settings-update 140",
+        "at": 190.09999999776483,
+        "wall": 1792726693383,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 193.29999999701977,
+        "wall": 1792726693387,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "x": 140.8235321044922,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1150.823486328125,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 210,
+        "wall": 1792726693403,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "x": 90.4117660522461,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1100.4117431640625,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      },
+      {
+        "type": "pointermove",
+        "at": 226.59999999776483,
+        "wall": 1792726693420,
+        "value": "140",
+        "active": true,
+        "focused": true,
+        "x": 40,
+        "y": 358.5,
+        "buttons": 1,
+        "pointerId": 1,
+        "capture": false,
+        "screenX": 1050,
+        "screenY": 528.5,
+        "rect": {
+          "x": 32,
+          "y": 350.5,
+          "width": 396,
+          "height": 16
+        }
+      }
+    ],
+    "settings": {
+      "size": 140,
+      "visibility": "visible",
+      "login": {
+        "status": "disabled"
+      }
+    }
+  },
+  "native": {
+    "events": [
+      {
+        "type": "created",
+        "at": 1792726693190,
+        "visible": false,
+        "focused": false
+      },
+      {
+        "type": "ready-to-show",
+        "at": 1792726693279,
+        "visible": false,
+        "focused": false
+      },
+      {
+        "type": "focus",
+        "at": 1792726693298,
+        "visible": true,
+        "focused": true
+      },
+      {
+        "type": "show",
+        "at": 1792726693334,
+        "visible": true,
+        "focused": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "Mosey 设置",
+        "bounds": {
+          "x": 1010,
+          "y": 138,
+          "width": 460,
+          "height": 680
+        },
+        "visible": true,
+        "focused": true
+      },
+      {
+        "title": "Mosey",
+        "bounds": {
+          "x": 665,
+          "y": 816,
+          "width": 140,
+          "height": 140
+        },
+        "visible": true,
+        "focused": false
+      }
+    ]
+  }
+}
