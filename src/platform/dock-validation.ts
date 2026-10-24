@@ -50,6 +50,7 @@ export class DockValidation {
   private window?: BrowserWindow;
   private state = "Not started";
   private renderJob?: DiagnosticRender;
+  private renderRevision = 0;
   private currentness = "Unavailable";
   private orientation: "bottom" | "left" | "right" = "bottom";
   private destination = "Created when validation starts";
@@ -142,14 +143,13 @@ export class DockValidation {
     this.window.show();
   }
   private render() {
+    const revision = ++this.renderRevision;
     if (!this.window || this.window.isDestroyed()) return;
-    // A synchronous native query can dispatch pending menu input. Read it
-    // before snapshotting mutable state so an outer render cannot overwrite
-    // a newer Retry document produced during that call.
-    const permission = systemPreferences.getMediaAccessStatus("screen");
-    const body = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Mosey Dock validation</title><style>body{font:16px system-ui;margin:28px;color:#242424;background:#faf9f7}p{line-height:1.5}input{box-sizing:border-box;width:100%;padding:8px}small{line-height:1.5}</style></head><body><h1>Dock validation</h1><p role="status">${escape(this.state)}</p><p>Latest validated native currentness: ${escape(this.currentness)}</p><p>Operator orientation: ${this.orientation}. Confirm the actual Dock position before starting.</p><label>Local log<input aria-label="Local log" readonly value="${escape(this.destination)}"></label><p>Electron screen-recording status: ${escape(permission)}. Native preflight is reported separately above.</p><small>Experimental local statistics, bounded to 120 seconds. No pet collision edge is accepted. Start and Stop are available in the Dock validation menu. Permission changes require your own System Settings action.</small></body></html>`;
+    const body = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Mosey Dock validation</title><style>body{font:16px system-ui;margin:28px;color:#242424;background:#faf9f7}p{line-height:1.5}input{box-sizing:border-box;width:100%;padding:8px}small{line-height:1.5}</style></head><body><h1>Dock validation</h1><p role="status">${escape(this.state)}</p><p>Latest validated native currentness: ${escape(this.currentness)}</p><p>Operator orientation: ${this.orientation}. Confirm the actual Dock position before starting.</p><label>Local log<input aria-label="Local log" readonly value="${escape(this.destination)}"></label><p>Electron screen-recording status: ${escape(systemPreferences.getMediaAccessStatus("screen"))}. Native preflight is reported separately above.</p><small>Experimental local statistics, bounded to 120 seconds. No pet collision edge is accepted. Start and Stop are available in the Dock validation menu. Permission changes require your own System Settings action.</small></body></html>`;
     const job = this.renderJob;
-    if (!job) return;
+    // Reentrant input can request a newer document while this snapshot is
+    // being built. Only the latest render may publish to the navigation queue.
+    if (!job || revision !== this.renderRevision) return;
     job.requestedHTML = body;
     if (job.loading || body === job.loadedHTML) return;
     void this.loadLatest(job);
