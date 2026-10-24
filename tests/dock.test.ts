@@ -243,7 +243,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       .toBe(floor);
     // Pending/null capture reports have never established Dock support. They
     // cannot undo placement recovered at an external display boundary.
-    const displayRecovery = await app.evaluate(
+    const displayRecoveryState = await app.evaluateHandle(
       ({ screen, BrowserWindow }, id) => {
         const pet = BrowserWindow.fromId(id)!;
         const original = screen.getPrimaryDisplay;
@@ -259,19 +259,22 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
             height: display.workArea.height - 80,
           },
         });
-        try {
-          screen.emit(
-            "display-metrics-changed",
-            {},
-            screen.getPrimaryDisplay(),
-            ["workArea"],
-          );
-          return pet.getBounds();
-        } finally {
-          screen.getPrimaryDisplay = original;
-        }
+        screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+          "workArea",
+        ]);
+        return {
+          bounds: pet.getBounds(),
+          restore: () => {
+            screen.getPrimaryDisplay = original;
+          },
+        };
       },
       petWindowID,
+    );
+    // Keep the public display fixture active through the entire scenario,
+    // including main's native-state reconciliation polls.
+    const displayRecovery = await displayRecoveryState.evaluate(
+      (state) => state.bounds,
     );
     await publishObservation(JSON.stringify({ testPending: true }));
     await new Promise((resolve) => setTimeout(resolve, 700));
@@ -285,6 +288,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       await bounds(),
       "null completion without previous Dock support preserves display recovery",
     ).toEqual(displayRecovery);
+    await displayRecoveryState.evaluate((state) => state.restore());
+    await displayRecoveryState.dispose();
     await app.evaluate(({ screen }) =>
       screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
         "workArea",

@@ -346,7 +346,6 @@ test(
           ...(await choose(endLabel)),
           ...(await app.evaluate(({ screen }) => ({
             area: screen.getPrimaryDisplay().workArea,
-            at: performance.now(),
           }))),
         };
         expect(resize.after.x + resize.after.width / 2).toBe(

@@ -20,7 +20,10 @@ jobs:
           run_install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: pnpm test:dev
+      - name: Development geometry and settings
+        run: pnpm test:dev tests/dock.test.ts tests/size-autonomy.test.ts tests/settings.test.ts
+      - name: Remaining development checks
+        run: pnpm test:dev --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts
       - run: pnpm package:mac
       - run: pnpm test:packaged
       - name: Archive local unsigned app

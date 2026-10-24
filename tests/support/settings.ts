@@ -86,6 +86,7 @@ export async function chooseSize(app: ElectronApplication, label: string) {
         Reflect.set(globalThis, "resizeObservation", {
           before,
           after: pet.getBounds(),
+          at: performance.now(),
         });
     };
     return pet.getBounds();
@@ -108,10 +109,10 @@ export async function chooseSize(app: ElectronApplication, label: string) {
   );
   const observation = (await app.evaluate(() => {
     const result = Reflect.get(globalThis, "resizeObservation") as
-      { before: typeof before; after: typeof after } | undefined;
+      { before: typeof before; after: typeof after; at: number } | undefined;
     Reflect.get(globalThis, "restoreResizeObservation")();
     return result;
-  })) ?? { before, after };
+  })) ?? { before, after, at: await app.evaluate(() => performance.now()) };
   // Pet acceptance scenarios finish their setup here. Settings interaction is
   // exercised separately; keep its focused controls out of subsequent input.
   await closeSettings(app);
