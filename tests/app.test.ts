@@ -139,8 +139,8 @@ async function exercisePet() {
         ?.submenu?.items.map((entry) => entry.label),
     );
     expect(menuLabels).toContain("设置…");
-    expect(menuLabels).not.toContain("Launch at Login");
-    expect(menuLabels).not.toContain("Size");
+    expect(menuLabels).toContain("Launch at Login");
+    expect(menuLabels).toContain("Pet Size");
 
     window.on("pageerror", (error) => {
       errors.push(error.message);

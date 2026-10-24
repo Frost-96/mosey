@@ -234,7 +234,31 @@ test(
         };
       });
       await enterSleep();
+      const freezeMenu = async () => {
+        const point = await body();
+        await pet.mouse.click(point.x, point.y, { button: "right" });
+        await expect
+          .poll(() =>
+            app!.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+          )
+          .toBe(false);
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        const frozen = await pixels();
+        const stationary = await bounds();
+        await new Promise((resolve) => setTimeout(resolve, 1300));
+        expect(await pixels()).toBe(frozen);
+        expect(await bounds()).toEqual(stationary);
+        await app!.evaluate(({ BrowserWindow }) =>
+          Reflect.get(globalThis, "sleepMenu").closePopup(
+            BrowserWindow.getAllWindows()[0],
+          ),
+        );
+      };
+      // A secondary click in sleep cannot arm the ordinary two-click window.
+      await freezeMenu();
       await click();
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      expect(await height()).toBeLessThan(160);
       const point = await body();
       await pet.mouse.click(point.x, point.y, { button: "right" });
       await expect
@@ -259,6 +283,7 @@ test(
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 350));
       await click();
+      await freezeMenu();
       await expect
         .poll(height, { timeout: 2500, interval: 30 })
         .toBeGreaterThan(180);
