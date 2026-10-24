@@ -5,6 +5,10 @@ export const presentationSchema = z.strictObject({
   geometryRevision: z.number().int().nonnegative(),
   posture: z.enum([
     "resting",
+    "sleeping",
+    "ear",
+    "waking",
+    "settling",
     "walking",
     "stretching",
     "playing",
@@ -77,6 +81,13 @@ export interface PetBridge {
   input(event: PetInput): void;
 }
 export const channels = {
+  getSettings: "settings:get",
+  setSize: "settings:size",
+  setLoginLaunch: "settings:login-launch",
+  openLoginSettings: "settings:open-login-settings",
+  previewSize: "settings:preview-size",
+  showPet: "settings:show-pet",
+  settings: "settings:state",
   getPresentation: "pet:get-presentation",
   presentation: "pet:presentation",
   gestureCancellation: "pet:gesture-cancellation",
@@ -86,5 +97,33 @@ export const channels = {
 declare global {
   interface Window {
     mosey: PetBridge;
+  }
+}
+
+export const loginLaunchSchema = z.strictObject({
+  status: z.enum(["enabled", "disabled", "requires-approval", "unavailable"]),
+  reason: z.string().optional(),
+  error: z.string().optional(),
+});
+export const loginLaunchRequestSchema = z.boolean();
+export const settingsSchema = z.strictObject({
+  size: petSizeSchema,
+  visibility: z.enum(["visible", "hidden"]),
+  failedSize: petSizeSchema.optional(),
+  login: loginLaunchSchema,
+});
+export type Settings = z.infer<typeof settingsSchema>;
+export interface SettingsBridge {
+  get(): Promise<Settings>;
+  setSize(size: number): Promise<Settings>;
+  previewSize(size: number): Promise<Settings>;
+  showPet(): Promise<Settings>;
+  setLoginLaunch(enabled: boolean): Promise<Settings>;
+  openLoginSettings(): Promise<Settings>;
+  onChange(listener: (state: Settings) => void): () => void;
+}
+declare global {
+  interface Window {
+    moseySettings: SettingsBridge;
   }
 }

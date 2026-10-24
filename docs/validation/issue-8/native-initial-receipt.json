@@ -1,7 +1,0 @@
-{
-  "sourceSHA256": "64ccef1d058268e1ebcfc2e7f5baa31d91057567fa1ffd51a9eac5d3f18d4c4c",
-  "buildHelperSHA256": "5075880d9392d8f31732bcff252312a76ab4c2ce3617f5050e444147ded42e12",
-  "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0",
-  "flags": ["-O", "-target", "arm64-apple-macos15.0", "-parse-as-library"],
-  "signature": "Executable=/Users/frost/.codex/worktrees/ticket-8-dock/mosey/build/native/dock-runtime\nIdentifier=dev.frost.mosey.dock-runtime\nFormat=Mach-O thin (arm64)\nCodeDirectory v=20400 size=501 flags=0x2(adhoc) hashes=10+2 location=embedded\nHash type=sha256 size=32\nCandidateCDHash sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nCandidateCDHashFull sha256=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nHash choices=sha256\nCMSDigest=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9dbd6abd01c801e712713d33e\nCMSDigestType=2\nCDHash=1848b2a8de95e7cd1f0f99c44daa40b3f6dc9fc9\nSignature=adhoc\nInfo.plist=not bound\nTeamIdentifier=not set\nSealed Resources=none\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\n"
-}

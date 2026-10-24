@@ -131,15 +131,17 @@ setInterval(()=>{
         : scriptedProducer,
     );
     await chmod(helper, 0o755);
-    if (initial.startupSilence) {
-      // Exercise the first capture startup after the desktop preparation phase.
-      // A cold app launch can legitimately change the virtual Dock workArea.
-      await mkdir(path.join(root, "profile"), { recursive: true });
-      await writeFile(
-        path.join(root, "profile/preferences.json"),
-        JSON.stringify({ version: 1, visibility: "hidden", size: "medium" }),
-      );
-    }
+    // Existing contour coordinates use a 240DIP pet; keep this setup explicit
+    // after main introduced numeric size preferences and a 160DIP default.
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({
+        version: 2,
+        visibility: initial.startupSilence ? "hidden" : "visible",
+        size: 240,
+      }),
+    );
     app = await electron.launch(
       packaged
         ? {

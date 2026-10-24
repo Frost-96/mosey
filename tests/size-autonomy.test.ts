@@ -4,6 +4,7 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
+import { chooseSize, closeSettings, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
 
@@ -70,6 +71,8 @@ test(
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     const evidence: unknown[] = [];
+    const diagnostics: unknown[] = [];
+    const settingsEvents: unknown[] = [];
     const references = new Map<
       number,
       { right: Set<string>; left: Set<string> }
@@ -100,7 +103,9 @@ test(
       const changedRatio = baseRatio === 2 ? 1 : 2;
       const desktop = () =>
         app!.evaluate(({ BrowserWindow, screen }) => ({
-          bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
+          bounds: BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .getBounds(),
           area: screen.getPrimaryDisplay().workArea,
           at: performance.now(),
         }));
@@ -112,15 +117,62 @@ test(
           if (!item) throw new Error(`Missing menu ${label}`);
           item.click();
         }, label);
-      const choose = (label: string) =>
-        app!.evaluate(({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find((item) => item.label === "Size")
-            ?.submenu?.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing size ${label}`);
-          item.click();
-        }, label);
+      await pet
+        .context()
+        .exposeBinding(
+          "recordSizeAcceptanceInput",
+          (_source, event: unknown) => {
+            settingsEvents.push(event);
+            if (settingsEvents.length > 100) settingsEvents.shift();
+          },
+        );
+      await pet.context().addInitScript(() => {
+        for (const type of [
+          "input",
+          "change",
+          "pointerdown",
+          "pointerup",
+          "keydown",
+        ])
+          document.addEventListener(
+            type,
+            (event) => {
+              if (document.documentElement.dataset.page !== "settings") return;
+              const target = event.target as HTMLInputElement;
+              void Reflect.get(
+                window,
+                "recordSizeAcceptanceInput",
+              )({
+                type,
+                at: Date.now(),
+                target: target.tagName,
+                input: target.type,
+                value: target.value,
+                trusted: event.isTrusted,
+                x: Reflect.get(event, "clientX"),
+                y: Reflect.get(event, "clientY"),
+                key: Reflect.get(event, "key"),
+              }).catch(() => {});
+            },
+            true,
+          );
+      });
+      const trace = async (stage: string) => {
+        diagnostics.push({
+          stage,
+          at: Date.now(),
+          desktop: await desktop(),
+          presentation: await pet.evaluate(() =>
+            window.mosey.getPresentation(),
+          ),
+        });
+        if (diagnostics.length > 48) diagnostics.shift();
+      };
+      const choose = async (label: string) => {
+        const resize = await chooseSize(app!, label);
+        await trace("choose " + label);
+        return resize;
+      };
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -169,9 +221,9 @@ test(
       // Calibrate only visible pixels before the first seeded activity; all three
       // initial idle silhouettes face right. Their mirrors are external references.
       for (const [label, side] of [
-        ["Small", 180],
-        ["Medium", 240],
-        ["Large", 300],
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
       ] as const) {
         await choose(label);
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
@@ -222,12 +274,28 @@ test(
         app!.evaluate((_electron, ms) => {
           Reflect.get(globalThis, "sizeAutonomyClock").restMs = ms;
         }, ms);
-      const activity = async (random: number) => {
+      const activity = async (random: number, atLeftEdge = false) => {
         await app!.evaluate((_electron, random) => {
           Math.random = () => random;
         }, random);
         await restClock(600);
         await menu("Hide Mosey");
+        // Restoring visibility preserves position. Arrange room for the
+        // deliberately left-facing walk instead of relying on old recentering.
+        await app!.evaluate(({ BrowserWindow, screen }, atLeftEdge) => {
+          const pet = BrowserWindow.getAllWindows().find(
+            (w) => w.getTitle() === "Mosey",
+          )!;
+          const area = screen.getPrimaryDisplay().workArea;
+          const bounds = pet.getBounds();
+          pet.setPosition(
+            atLeftEdge
+              ? area.x
+              : area.x + Math.round(Math.max(0, area.width - bounds.width) / 2),
+            bounds.y,
+            false,
+          );
+        }, atLeftEdge);
         await menu("Show Mosey");
       };
       const visiblePoint = () =>
@@ -260,9 +328,9 @@ test(
           return point;
         });
       for (const [startLabel, endLabel, side] of [
-        ["Small", "Large", 300],
-        ["Large", "Medium", 240],
-        ["Medium", "Small", 180],
+        ["Small", "Large", 240],
+        ["Large", "Medium", 160],
+        ["Medium", "Small", 70],
       ] as const) {
         await choose(startLabel);
         await activity(0.1);
@@ -274,25 +342,13 @@ test(
           })
           .toBeLessThan(origin.bounds.x - 15);
         await restClock(60000);
-        const resize = await app.evaluate(
-          ({ Menu, BrowserWindow, screen }, label) => {
-            const pet = BrowserWindow.getAllWindows()[0]!;
-            const before = pet.getBounds(),
-              area = screen.getPrimaryDisplay().workArea;
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === "Size")!
-              .submenu!.items.find((item) => item.label === label)!
-              .click();
-            return {
-              before,
-              after: pet.getBounds(),
-              area,
-              at: performance.now(),
-            };
-          },
-          endLabel,
-        );
+        const resize = {
+          ...(await choose(endLabel)),
+          ...(await app.evaluate(({ screen }) => ({
+            area: screen.getPrimaryDisplay().workArea,
+            at: performance.now(),
+          }))),
+        };
         expect(resize.after.x + resize.after.width / 2).toBe(
           resize.before.x + resize.before.width / 2,
         );
@@ -342,6 +398,7 @@ test(
           mobile: false,
         });
         await menu("Show Mosey");
+        await trace("DPR override " + side);
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
           ratio: changedRatio,
           width: side * changedRatio,
@@ -351,7 +408,7 @@ test(
         });
         const changedRaster = await raster();
         expect(changedRaster.opaque).toBeGreaterThan(
-          2000 * changedRatio * changedRatio,
+          side * side * 0.2 * changedRatio * changedRatio,
         );
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
         await grounded();
@@ -401,15 +458,20 @@ test(
           throw new Error("No asymmetric left-body and transparent pair");
         });
         const beforeTransparent = await desktop();
+        await trace("before transparent " + side);
         await pet.mouse.click(points.transparent.x, points.transparent.y);
+        await trace("after transparent " + side);
         await new Promise((resolve) => setTimeout(resolve, 180));
         expect((await desktop()).bounds.x).toBeLessThan(
           beforeTransparent.bounds.x - 3,
         );
+        await trace("before body " + side);
         await pet.mouse.click(points.body.x, points.body.y);
+        await trace("after body " + side);
         await new Promise((resolve) => setTimeout(resolve, 60));
         const clicked = await desktop();
         await new Promise((resolve) => setTimeout(resolve, 500));
+        await trace("body settled " + side);
         expect((await desktop()).bounds).toEqual(clicked.bounds);
         await displaySession.send("Emulation.clearDeviceMetricsOverride");
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
@@ -421,7 +483,7 @@ test(
         });
         const restoredRaster = await raster();
         expect(restoredRaster.opaque).toBeGreaterThan(
-          2000 * baseRatio * baseRatio,
+          side * side * 0.2 * baseRatio * baseRatio,
         );
         await expect
           .poll(async () => matches(await pixels(), idle.left), {
@@ -451,7 +513,9 @@ test(
           });
           // Keep synthetic capture away from the real OS cursor, as #4 does.
           await app.evaluate(({ BrowserWindow, screen }) => {
-            const pet = BrowserWindow.getAllWindows()[0]!,
+            const pet = BrowserWindow.getAllWindows().find(
+                (w) => w.getTitle() === "Mosey",
+              )!,
               area = screen.getPrimaryDisplay().workArea,
               b = pet.getBounds(),
               pointer = screen.getCursorScreenPoint();
@@ -505,6 +569,57 @@ test(
           actions: ["walking", "stretching", "playing"],
         });
       }
+      // A nonpreset uses the same rendered/input/desktop seams as the presets.
+      const settings = await openSettings(app);
+      const slider = settings.getByRole("slider", { name: "宠物大小" });
+      await slider.focus();
+      await settings.keyboard.press("Home");
+      for (let step = 0; step < 4; step++)
+        await settings.keyboard.press("ArrowRight");
+      await settings.keyboard.press("Tab");
+      await expect.poll(() => slider.inputValue()).toBe("110");
+      await closeSettings(app);
+      await trace("nonpreset 110");
+      await expect.poll(footprint).toEqual({ width: 110, bottom: 110 });
+      await grounded();
+      const customIdle = new Set<string>();
+      const until = Date.now() + 2150;
+      while (Date.now() < until) {
+        customIdle.add(await pixels());
+        await new Promise((resolve) => setTimeout(resolve, 60));
+      }
+      // Directed input checks application hit geometry, not OS click routing.
+      await pet.mouse.click(0, 0);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(customIdle.has(await pixels()), "110 transparent corner").toBe(
+        true,
+      );
+      // At the left edge a seeded left walk must turn into available space.
+      await activity(0.1, true);
+      const customOrigin = await desktop();
+      await expect
+        .poll(
+          async () => {
+            const { bounds, area } = await desktop();
+            expect(bounds.x).toBeGreaterThanOrEqual(area.x);
+            expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+              area.x + area.width,
+            );
+            return bounds.x - customOrigin.bounds.x;
+          },
+          { timeout: 4000, interval: 20 },
+        )
+        .toBeGreaterThan(140);
+      await restClock(60000);
+      expect(
+        (await desktop()).bounds.x - customOrigin.bounds.x,
+      ).toBeLessThanOrEqual(151);
+      await grounded();
+      evidence.push({
+        side: 110,
+        origin: customOrigin,
+        boundary: await desktop(),
+      });
       await writeFile(
         `test-results/${packaged ? "packaged" : "development"}-size-autonomy.json`,
         JSON.stringify(
@@ -519,6 +634,10 @@ test(
       );
     } catch (error) {
       await mkdir("test-results", { recursive: true });
+      await writeFile(
+        `test-results/failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
+        JSON.stringify({ diagnostics, settingsEvents }, null, 2),
+      );
       await app
         ?.windows()[0]
         ?.screenshot({

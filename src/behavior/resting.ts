@@ -2,12 +2,14 @@ import { assign, setup } from "xstate";
 
 // Tuning value, not a fixed product requirement. Active reactions absorb all clicks.
 export const clickMergeIntervalMs = 350;
+export const wakeClickWindowMs = 900;
 // Product tuning, intentionally not user settings. Rest dominates each cycle.
 export const autonomy = {
   restMinMs: 18000,
   restVariationMs: 14000,
   walkMs: 2400,
   walkDistance: 150,
+  awakeMs: 120000,
 };
 export const petBehavior = setup({
   types: {
@@ -17,6 +19,8 @@ export const petBehavior = setup({
       actionId: number;
       startedAt: number;
       lastClickAt: number;
+      awakeSince: number;
+      sleepClickAt: number | undefined;
       choice: number;
       direction: "left" | "right";
     },
@@ -39,6 +43,11 @@ export const petBehavior = setup({
     walkDuration: () => autonomy.walkMs,
   },
   guards: {
+    wakeClick: ({ context }) =>
+      context.sleepClickAt !== undefined &&
+      context.now() - context.sleepClickAt <= wakeClickWindowMs,
+    readyToSleep: ({ context }) =>
+      context.now() - context.awakeSince >= autonomy.awakeMs,
     freshClick: ({ context }) =>
       context.now() - context.lastClickAt >= clickMergeIntervalMs,
     currentAction: ({ context, event }) =>
@@ -46,6 +55,11 @@ export const petBehavior = setup({
       event.actionId === context.actionId,
   },
   actions: {
+    wakeCycle: assign(({ context }) => ({
+      awakeSince: context.now(),
+      sleepClickAt: undefined,
+    })),
+    armWake: assign(({ context }) => ({ sleepClickAt: context.now() })),
     begin: assign(({ context }) => ({
       actionId: context.actionId + 1,
       startedAt: context.now(),
@@ -64,6 +78,8 @@ export const petBehavior = setup({
     actionId: 0,
     startedAt: input.now(),
     lastClickAt: 0,
+    awakeSince: input.now(),
+    sleepClickAt: undefined,
     choice: 0,
     direction: "right",
   }),
@@ -71,10 +87,10 @@ export const petBehavior = setup({
   on: {
     FACE: { actions: assign(({ event }) => ({ direction: event.direction })) },
     PAUSE: { target: ".paused", actions: "rest" },
-    RESUME: { target: ".resting", actions: "rest" },
-    CANCEL: { target: ".resting", actions: "rest" },
-    DRAG_START: { target: ".dragging", actions: "rest" },
-    CLIMB: { target: ".climbing", actions: "rest" },
+    RESUME: { target: ".resting", actions: ["rest", "wakeCycle"] },
+    CANCEL: { target: ".resting", actions: ["rest", "wakeCycle"] },
+    DRAG_START: { target: ".dragging", actions: ["rest", "wakeCycle"] },
+    CLIMB: { target: ".climbing", actions: ["rest", "wakeCycle"] },
     DROP: { target: ".falling", actions: "rest" },
   },
   states: {
@@ -136,8 +152,53 @@ export const petBehavior = setup({
         DONE: { guard: "currentAction", target: "resting", actions: "rest" },
       },
     },
+    settling: {
+      on: {
+        DONE: { guard: "currentAction", target: "sleeping", actions: "rest" },
+        CLICK: { target: "waking", actions: ["rest", "wakeCycle"] },
+      },
+    },
+    sleeping: {
+      on: {
+        CLICK: [
+          {
+            guard: "wakeClick",
+            target: "waking",
+            actions: ["rest", "wakeCycle"],
+          },
+          { target: "ear", actions: ["rest", "armWake"] },
+        ],
+      },
+    },
+    ear: {
+      on: {
+        CLICK: [
+          {
+            guard: "wakeClick",
+            target: "waking",
+            actions: ["rest", "wakeCycle"],
+          },
+          { target: "ear", reenter: true, actions: ["rest", "armWake"] },
+        ],
+        DONE: { guard: "currentAction", target: "sleeping", actions: "rest" },
+      },
+    },
+    waking: {
+      on: {
+        DONE: {
+          guard: "currentAction",
+          target: "resting",
+          actions: ["rest", "wakeCycle"],
+        },
+      },
+    },
     resting: {
-      after: { restDelay: { target: "autonomous" } },
+      after: {
+        restDelay: [
+          { guard: "readyToSleep", target: "settling", actions: "rest" },
+          { target: "autonomous" },
+        ],
+      },
       on: {
         CLICK: { guard: "freshClick", target: "choosing", actions: "begin" },
       },

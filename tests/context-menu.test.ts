@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
@@ -14,6 +15,11 @@ test("body secondary clicks open a native menu and cancel without changing the p
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   try {
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+    );
     if (!packaged) stopForge = await startForge();
     else
       execFileSync("/usr/bin/ditto", [
@@ -124,16 +130,54 @@ test("body secondary clicks open a native menu and cancel without changing the p
         const { data, width, height } = canvas
           .getContext("2d")!
           .getImageData(0, 0, canvas.width, canvas.height);
-        const points: { x: number; y: number }[] = [];
+        // The median opaque pixel can be on an outline edge that disappears on the
+        // next frame. Choose the deepest visible interior, not an arbitrary
+        // pixel in scan order, so a moving-body click survives ordinary latency.
+        const distance = new Uint16Array(width * height);
         for (let y = 0; y < height; y++)
-          for (let x = 0; x < width; x++)
-            if (data[(y * width + x) * 4 + 3]! > 200) points.push({ x, y });
-        const point = points[Math.floor(points.length / 2)]!;
-        return { x: (point.x * 240) / width, y: (point.y * 240) / height };
+          for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            if (data[index * 4 + 3]! > 200)
+              distance[index] =
+                1 +
+                Math.min(
+                  x ? distance[index - 1]! : 0,
+                  y ? distance[index - width]! : 0,
+                );
+          }
+        let deepest = 0;
+        let point: { x: number; y: number } | undefined;
+        for (let y = height - 1; y >= 0; y--)
+          for (let x = width - 1; x >= 0; x--) {
+            const index = y * width + x;
+            if (distance[index])
+              distance[index] = Math.min(
+                distance[index]!,
+                1 +
+                  Math.min(
+                    x < width - 1 ? distance[index + 1]! : 0,
+                    y < height - 1 ? distance[index + width]! : 0,
+                  ),
+              );
+            if (distance[index]! > deepest) {
+              deepest = distance[index]!;
+              point = { x, y };
+            }
+          }
+        if (!point) throw new Error("No visible body for secondary click");
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: ((point.x + 0.5) * rect.width) / width,
+          y: ((point.y + 0.5) * rect.height) / height,
+        };
       });
-    const openMenu = async (control = false) => {
+    const openMenu = async (
+      control = false,
+      afterTarget?: () => Promise<void>,
+    ) => {
       const count = await menuCount();
       const point = await body();
+      await afterTarget?.();
       controlHeld = control;
       if (control) await pet.keyboard.down("Control");
       await pet.mouse.move(point.x, point.y);
@@ -239,10 +283,10 @@ test("body secondary clicks open a native menu and cancel without changing the p
     const ground = await bounds();
     await pet.mouse.move(120, 180);
     await pet.mouse.down();
-    await pet.mouse.move(120, 40, { steps: 4 });
+    await pet.mouse.move(120, -120, { steps: 4 });
     await expect
       .poll(async () => (await bounds()).y)
-      .toBeLessThan(ground.y - 80);
+      .toBeLessThan(ground.y - 200);
     const beforeRightDrag = await menuCount();
     await pet.mouse.down({ button: "right" });
     await pet.mouse.up({ button: "right" });
@@ -261,20 +305,32 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await expect
       .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
       .toBeGreaterThan(returning.bounds.y + 3);
-    await openMenu();
+    // Leave enough fall distance to observe two successive drawn frames. The
+    // body target must remain inside the pet when input crosses a frame change.
+    const firstFallingFrame = await pixels();
+    await expect
+      .poll(pixels, { timeout: 1000, interval: 5 })
+      .not.toBe(firstFallingFrame);
+    await openMenu(false, async () => {
+      const selectedFrame = await pixels();
+      await expect
+        .poll(pixels, { timeout: 1000, interval: 5 })
+        .not.toBe(selectedFrame);
+    });
     const falling = { pixels: await pixels(), bounds: await bounds() };
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect((await pixels()) === falling.pixels).toBe(true);
     expect(await bounds()).toEqual(falling.bounds);
     await closeMenu();
     await expect
-      .poll(async () => (await bounds()).y, { timeout: 4000, interval: 10 })
-      .toBe(ground.y);
+      .poll(() => distanceFromGround(app!), { timeout: 4000, interval: 10 })
+      .toBe(0);
     await openMenu();
     const landing = await pixels();
+    const landingBounds = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect((await pixels()) === landing).toBe(true);
-    expect((await bounds()).y).toBe(ground.y);
+    expect(await bounds()).toEqual(landingBounds);
     await closeMenu();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Preserve both a native-state deadline and in-progress desktop movement.

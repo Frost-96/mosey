@@ -1,5 +1,13 @@
 import climbingUrl from "./assets/generated/climbing-atlas.png";
 import climbing from "./assets/generated/climbing-atlas.json";
+import settlingUrl from "./assets/generated/settling-atlas.png";
+import settling from "./assets/generated/settling-atlas.json";
+import wakingUrl from "./assets/generated/waking-atlas.png";
+import waking from "./assets/generated/waking-atlas.json";
+import earUrl from "./assets/generated/ear-atlas.png";
+import ear from "./assets/generated/ear-atlas.json";
+import sleepingUrl from "./assets/generated/sleeping-atlas.png";
+import sleeping from "./assets/generated/sleeping-atlas.json";
 import walkingUrl from "./assets/generated/walking-atlas.png";
 import walking from "./assets/generated/walking-atlas.json";
 import stretchingUrl from "./assets/generated/stretching-atlas.png";
@@ -31,6 +39,10 @@ try {
     [
       [idle, idleUrl],
       [climbing, climbingUrl],
+      [sleeping, sleepingUrl],
+      [settling, settlingUrl],
+      [waking, wakingUrl],
+      [ear, earUrl],
       [walking, walkingUrl],
       [stretching, stretchingUrl],
       [playing, playingUrl],
@@ -60,7 +72,7 @@ try {
     frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
-    size: "medium",
+    size: 160,
     geometryRevision: 0,
     posture: "resting",
     direction: "right",

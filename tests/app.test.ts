@@ -1,4 +1,5 @@
 import { startForge } from "./support/forge";
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
@@ -94,6 +95,10 @@ async function exercisePet() {
   const profile = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
   );
+  await writeFile(
+    path.join(profile, "preferences.json"),
+    JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+  );
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   const errors: string[] = [];
@@ -128,6 +133,15 @@ async function exercisePet() {
       profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
+    const menuLabels = await app.evaluate(({ Menu }) =>
+      Menu.getApplicationMenu()
+        ?.items.find((entry) => entry.label === "Mosey")
+        ?.submenu?.items.map((entry) => entry.label),
+    );
+    expect(menuLabels).toContain("设置…");
+    expect(menuLabels).not.toContain("Launch at Login");
+    expect(menuLabels).not.toContain("Size");
+
     window.on("pageerror", (error) => {
       errors.push(error.message);
       console.error(error.message);
@@ -360,7 +374,20 @@ async function exercisePet() {
       expect(idleFrames.has(await pixels())).toBe(true);
     }
     expect(responses.size).toBe(3);
-    // A system visibility change cancels the reaction; showing resumes interaction.
+    // macOS can omit native visibility notifications. Withhold only that
+    // platform event boundary; the real window still hides and shows, and the
+    // application must cancel the reaction before accepting the next click.
+    await app.evaluate(({ BrowserWindow }) => {
+      const pet = BrowserWindow.getAllWindows()[0]!;
+      const emit = pet.emit;
+      Reflect.set(globalThis, "restoreVisibilityEvents", () => {
+        pet.emit = emit;
+      });
+      pet.emit = ((event: string, ...args: unknown[]) => {
+        if (event === "hide" || event === "show") return false;
+        return Reflect.apply(emit, pet, [event, ...args]);
+      }) as typeof pet.emit;
+    });
     await window.mouse.click(120, 180);
     await new Promise((resolve) => setTimeout(resolve, 400));
     await app.evaluate(({ BrowserWindow }) =>
@@ -379,6 +406,9 @@ async function exercisePet() {
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
       .toBe(true);
+    await app.evaluate(() => {
+      Reflect.get(globalThis, "restoreVisibilityEvents")();
+    });
     // Public whole-application seam: directed pointer input, rendered pixels,
     // and the actual desktop window bounds (not behavior context).
     // Playwright directs events without moving the physical OS cursor. Keep
@@ -402,6 +432,10 @@ async function exercisePet() {
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const ground = await petBounds();
+    // Dock/work-area changes can occur while the real app runs. Sample the
+    // current floor and pet bounds together, rather than reuse the initial y.
+    const waitForGround = (timeout = 1000) =>
+      expect.poll(() => distanceFromGround(app!), { timeout }).toBe(0);
     await window.mouse.move(120, 180);
     await window.mouse.down();
     await window.mouse.move(180, 80, { steps: 5 });
@@ -409,9 +443,7 @@ async function exercisePet() {
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 50);
     await window.mouse.up();
-    await expect
-      .poll(async () => (await petBounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+    await waitForGround(4000);
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
       .toBe(true);
@@ -456,7 +488,7 @@ async function exercisePet() {
     await expect
       .poll(async () => (await petBounds()).y, { interval: 10 })
       .toBeGreaterThan(held.y + 20);
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await window.screenshot({
       path: `test-results/${packaged ? "packaged" : "development"}-landing.png`,
       omitBackground: true,
@@ -477,10 +509,7 @@ async function exercisePet() {
         await expect
           .poll(async () => (await petBounds()).y, { interval: 10 })
           .toBeGreaterThan(elevated.y + 20);
-      else if (phase === "landing")
-        await expect
-          .poll(async () => (await petBounds()).y, { interval: 10 })
-          .toBe(ground.y);
+      else if (phase === "landing") await waitForGround();
       // Use the visible body as the input target even when the pose changes.
       const point = await window.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -518,9 +547,7 @@ async function exercisePet() {
         `regrab during ${phase} draws held pose`,
       ).toBe(false);
       await window.mouse.up();
-      await expect
-        .poll(async () => (await petBounds()).y, { timeout: 3000 })
-        .toBe(ground.y);
+      await waitForGround(3000);
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     }
     // Browser pointer-capture loss is a real input cancellation event; subsequent
@@ -546,7 +573,7 @@ async function exercisePet() {
     await window.mouse.move(121, -120);
     await new Promise((resolve) => setTimeout(resolve, 50));
     await window.mouse.move(500, -300);
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     const cancelled = await petBounds();
     await window.mouse.move(-500, -500);
@@ -568,7 +595,7 @@ async function exercisePet() {
       BrowserWindow.getAllWindows()[0]!.showInactive(),
     );
     await window.mouse.up();
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // The visible desktop window stays within the primary work area even when
     // captured input travels far beyond it, then releases at the same floor.
@@ -583,9 +610,7 @@ async function exercisePet() {
       .toBe(area.x + area.width - ground.width);
     expect((await petBounds()).y).toBe(area.y);
     await window.mouse.up();
-    await expect
-      .poll(async () => (await petBounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+    await waitForGround(4000);
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     if (!packaged) {
       await placeAwayFromPhysicalCursor();
@@ -596,7 +621,7 @@ async function exercisePet() {
         .poll(async () => (await petBounds()).y)
         .toBeLessThan(ground.y - 100);
       await window.evaluate(() => location.reload());
-      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await waitForGround();
       await expect
         .poll(async () => idleFrames.has(await pixels()), { timeout: 5000 })
         .toBe(true);
@@ -666,7 +691,7 @@ async function exercisePet() {
       .poll(async () => (await petBounds()).y)
       .toBeGreaterThan(rapidHeld.y + 40);
     await window.mouse.up();
-    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await waitForGround();
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Inject only Electron's external display boundary. Actual renderer, IPC,
     // pointer capture, drawing and native window placement remain in use.
@@ -685,17 +710,25 @@ async function exercisePet() {
             height: area.height - 80,
           },
         });
-        try {
-          screen.emit(event, {}, screen.getPrimaryDisplay(), [
-            "workArea",
-            "scaleFactor",
-          ]);
-          const pet = BrowserWindow.getAllWindows()[0]!;
-          return { bounds: pet.getBounds(), visible: pet.isVisible() };
-        } finally {
+        // Keep the external display boundary active while later input and
+        // recovery are verified; restoring it here creates a second real change.
+        Reflect.set(globalThis, "restoreDisplayBoundary", () => {
           screen.getPrimaryDisplay = original;
-        }
+          screen.emit("display-metrics-changed", {}, original(), ["workArea"]);
+        });
+        screen.emit(event, {}, screen.getPrimaryDisplay(), [
+          "workArea",
+          "scaleFactor",
+        ]);
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        return {
+          bounds: pet.getBounds(),
+          visible: pet.isVisible(),
+          workArea: screen.getPrimaryDisplay().workArea,
+        };
       }, event);
+    const restoreDisplayBoundary = () =>
+      app!.evaluate(() => Reflect.get(globalThis, "restoreDisplayBoundary")());
     for (const [phase, event] of [
       ["idle", "display-metrics-changed"],
       ["pressed", "display-metrics-changed"],
@@ -751,8 +784,14 @@ async function exercisePet() {
       const recovered = await recoverOnDisplayChange(event!);
       expect(recovered.visible, phase).toBe(true);
       expect(recovered.bounds, phase).toEqual({
-        x: before.x === area.x ? area.x + 40 : area.x + area.width - 280,
-        y: ground.y - 40,
+        x: Math.max(
+          recovered.workArea.x,
+          Math.min(
+            before.x,
+            recovered.workArea.x + recovered.workArea.width - 240,
+          ),
+        ),
+        y: recovered.workArea.y + recovered.workArea.height - 240,
         width: 240,
         height: 240,
       });
@@ -784,8 +823,10 @@ async function exercisePet() {
         .poll(async () => (await petBounds()).y)
         .toBeLessThan(recovered.bounds.y - 40);
       await window.mouse.up();
-      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await waitForGround();
       await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await restoreDisplayBoundary();
+      await waitForGround();
     }
     // Preserve the actual manual hide choice while the display topology changes.
     const invokeVisibility = (label: string) =>
@@ -800,11 +841,7 @@ async function exercisePet() {
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
     );
-    await app.evaluate(({ screen }) => {
-      screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
-        "workArea",
-      ]);
-    });
+    await restoreDisplayBoundary();
     expect(
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),

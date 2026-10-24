@@ -1,7 +1,0 @@
-{
-  "initialStatus": "Dock interaction waiting for visible Dock",
-  "permissionBlocked": false,
-  "faultInjected": true,
-  "helperPID": 52123,
-  "evidence": "real compiled helper; Playwright launch responsibility; no physical Dock geometry or independent LaunchServices permission claim"
-}

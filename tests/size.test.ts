@@ -13,6 +13,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { chooseSize, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -90,11 +91,15 @@ setTimeout(()=>process.exit(0),120000);
     let pet = await app.firstWindow();
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.getBounds(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .getBounds(),
       );
     const desktop = () =>
       app!.evaluate(({ BrowserWindow, screen }) => ({
-        bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
+        bounds: BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .getBounds(),
         area: screen.getPrimaryDisplay().workArea,
       }));
     const groundDistance = async () => {
@@ -115,25 +120,19 @@ setTimeout(()=>process.exit(0),120000);
           }),
         { timeout: 10000 },
       )
-      .toBeGreaterThan(5000);
+      .toBeGreaterThan(1500);
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.isVisible(),
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .isVisible(),
         ),
       )
       .toBe(true);
     const { bounds: initial, area: initialArea } = await desktop();
     expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
-    const choose = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Size")
-          ?.submenu?.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing size menu item: ${label}`);
-        item.click();
-      }, label);
+    const choose = (label: string) => chooseSize(app!, label);
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
@@ -151,9 +150,9 @@ setTimeout(()=>process.exit(0),120000);
         return canvas.toDataURL();
       });
     for (const [label, side] of [
-      ["Small", 180],
-      ["Large", 300],
-      ["Medium", 240],
+      ["Small", 70],
+      ["Large", 240],
+      ["Medium", 160],
     ] as const) {
       const before = await desktop();
       await choose(label);
@@ -188,7 +187,7 @@ setTimeout(()=>process.exit(0),120000);
             return {
               width: canvas.getBoundingClientRect().width,
               bottom: Math.round((bottom + 1) / devicePixelRatio),
-              visible: opaque > 2000,
+              visible: opaque > 200,
             };
           }),
         )
@@ -236,7 +235,9 @@ setTimeout(()=>process.exit(0),120000);
       }
       // Keep the directed gesture away from real cursor movement, as #4 does.
       await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
         const area = screen.getPrimaryDisplay().workArea;
         const pointer = screen.getCursorScreenPoint();
         pet.setPosition(
@@ -283,7 +284,9 @@ setTimeout(()=>process.exit(0),120000);
         .toBe(true);
       // Place the next size fixture at the current primary work-area center.
       await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
         const bounds = pet.getBounds();
         const area = screen.getPrimaryDisplay().workArea;
         pet.setPosition(
@@ -296,12 +299,12 @@ setTimeout(()=>process.exit(0),120000);
     // Resize a captured pet in the air: preserve the physical foot, release the
     // old capture, and let the return finish with the new ground geometry.
     const beforeLift = await bounds();
-    await pet.mouse.move(120, 180);
+    await pet.mouse.move(80, 120);
     await pet.mouse.down();
     // One client-space move makes one 150-DIP screen-space displacement.
     // Interpolated client moves would compound as the native window follows,
     // reaching the work-area ceiling on smaller CI displays.
-    await pet.mouse.move(120, 30);
+    await pet.mouse.move(80, -30);
     await expect
       .poll(async () => (await bounds()).y)
       .toBeLessThan(beforeLift.y - 100);
@@ -317,9 +320,12 @@ setTimeout(()=>process.exit(0),120000);
     await expect
       .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
       .toBeGreaterThan(resizedHeld.y + 10);
-    const falling = await bounds();
-    await choose("Small");
-    const resizedFalling = await bounds();
+    // Include driver delay without counting ongoing falling as a resize jump.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Measure the resize itself in one main-process turn. Separate driver
+    // round trips include legitimate falling motion under scheduler load.
+    const { before: falling, after: resizedFalling } = await choose("Small");
+    expect(resizedFalling.width).toBe(70);
     expect(resizedFalling.x + resizedFalling.width / 2).toBe(
       falling.x + falling.width / 2,
     );
@@ -336,10 +342,12 @@ setTimeout(()=>process.exit(0),120000);
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.isVisible(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .isVisible(),
       ),
     ).toBe(false);
     await invoke("Show Mosey");
@@ -356,7 +364,7 @@ setTimeout(()=>process.exit(0),120000);
           }),
         { timeout: 10000 },
       )
-      .toBeGreaterThan(5000);
+      .toBeGreaterThan(1500);
     // Restart must recompute the current primary floor; its work area may
     // legitimately differ from the previous process by even one desktop point.
     const { bounds: stable, area: restoredArea } = await desktop();
@@ -370,10 +378,12 @@ setTimeout(()=>process.exit(0),120000);
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.isVisible(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .isVisible(),
       ),
     ).toBe(false);
     await invoke("Show Mosey");
@@ -385,16 +395,13 @@ setTimeout(()=>process.exit(0),120000);
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
     await choose("Small");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
+    const settings = await openSettings(app);
     expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Size")
-          ?.submenu?.items.filter((item) => item.checked)
-          .map((item) => item.label),
-      ),
-    ).toEqual(["Large"]);
+      await settings
+        .getByRole("button", { name: "大", exact: true })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     const logPath = await app.evaluate(({ app }) =>
       process
         .getBuiltinModule("node:path")

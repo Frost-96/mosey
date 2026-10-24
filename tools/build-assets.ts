@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import sharp, { type Metadata } from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
 import { atlasSchema } from "../src/shared/assets.ts";
 
@@ -87,6 +87,50 @@ const actionConfigs = [
       [1, 240],
       [2, 280],
       [3, 280],
+    ],
+  },
+  {
+    action: "ear",
+    source: "sleep",
+    loop: "once",
+    sequence: [
+      [2, 100],
+      [3, 180],
+      [2, 100],
+      [0, 120],
+    ],
+  },
+  {
+    action: "waking",
+    source: "wake",
+    loop: "once",
+    sequence: [
+      [0, 180],
+      [1, 220],
+      [2, 220],
+      [3, 220],
+      [-1, 160],
+    ],
+  },
+  {
+    action: "settling",
+    source: "wake",
+    loop: "once",
+    sequence: [
+      [-1, 120],
+      [3, 180],
+      [2, 180],
+      [1, 180],
+      [0, 220],
+    ],
+  },
+  {
+    action: "sleeping",
+    source: "sleep",
+    loop: "repeat",
+    sequence: [
+      [0, 900],
+      [1, 900],
     ],
   },
   {
@@ -226,67 +270,103 @@ const actionConfigs = [
   },
 ] as const;
 
-// Generated response sheets are 2x2. Normalize each cell to one 2x canvas,
-// preserving its complete silhouette and anchoring the lowest opaque pixel.
-for (const { action, source, sequence, loop } of actionConfigs) {
-  const input = `src/assets/corgi-${source}.png`;
-  const size = await sharp(input).metadata();
-  const cellWidth = Math.floor(size.width! / 2);
-  const cellHeight = Math.floor(size.height! / 2);
-  const poses: Buffer[] = [];
-  for (let index = 0; index < 4; index++) {
-    const cell = await sharp(input)
-      .extract({
-        left: source === "climb" && index === 3 ? 680 : (index % 2) * cellWidth,
-        top: Math.floor(index / 2) * cellHeight,
-        width:
-          source === "climb" && index >= 2
-            ? index === 2
-              ? 680
-              : 574
-            : cellWidth,
-        height: cellHeight,
-      })
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    let left = cellWidth,
-      top = cellHeight,
-      right = 0,
-      bottom = 0;
-    for (let y = 0; y < cell.info.height; y++)
-      for (let x = 0; x < cell.info.width; x++) {
-        const offset = (y * cell.info.width + x) * 4 + 3;
-        if (cell.data[offset]! < 128) cell.data[offset] = 0;
-        else {
-          left = Math.min(left, x);
-          right = Math.max(right, x);
-          top = Math.min(top, y);
-          bottom = Math.max(bottom, y);
-        }
+// Source sheets are cropped once. The selected wake sheet has a transparent
+// inter-row gap at y435..480 rather than at its nominal y512 midpoint.
+const sources = new Map<
+  string,
+  Promise<{ poses: Buffer[]; dimensions: Metadata[] }>
+>();
+function readSource(source: string) {
+  let result = sources.get(source);
+  if (!result) {
+    result = (async () => {
+      const input = `src/assets/corgi-${source}.png`;
+      const size = await sharp(input).metadata();
+      const cellWidth = Math.floor(size.width! / 2);
+      const rowSplit = source === "wake" ? 460 : Math.floor(size.height! / 2);
+      const poses: Buffer[] = [];
+      for (let index = 0; index < 4; index++) {
+        const cellHeight = index < 2 ? rowSplit : size.height! - rowSplit;
+        const cell = await sharp(input)
+          .extract({
+            left:
+              source === "climb" && index === 3 ? 680 : (index % 2) * cellWidth,
+            top: index < 2 ? 0 : rowSplit,
+            width:
+              source === "climb" && index >= 2
+                ? index === 2
+                  ? 680
+                  : 574
+                : cellWidth,
+            height: index < 2 ? rowSplit : size.height! - rowSplit,
+          })
+          .ensureAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+        let left = cellWidth,
+          top = cellHeight,
+          right = 0,
+          bottom = 0;
+        for (let y = 0; y < cell.info.height; y++)
+          for (let x = 0; x < cell.info.width; x++) {
+            const offset = (y * cell.info.width + x) * 4 + 3;
+            if (cell.data[offset]! < 128) cell.data[offset] = 0;
+            else {
+              left = Math.min(left, x);
+              right = Math.max(right, x);
+              top = Math.min(top, y);
+              bottom = Math.max(bottom, y);
+            }
+          }
+        if (right <= left || bottom <= top)
+          throw new Error(`Empty ${source} cell ${index}`);
+        poses.push(
+          await sharp(cell.data, { raw: cell.info })
+            .extract({
+              left,
+              top,
+              width: right - left + 1,
+              height: bottom - top + 1,
+            })
+            .png()
+            .toBuffer(),
+        );
       }
-    if (right <= left || bottom <= top)
-      throw new Error(`Empty ${action} cell ${index}`);
-    poses.push(
-      await sharp(cell.data, { raw: cell.info })
-        .extract({
-          left,
-          top,
-          width: right - left + 1,
-          height: bottom - top + 1,
-        })
-        .png()
-        .toBuffer(),
-    );
+
+      const dimensions = await Promise.all(
+        poses.map((pose) => sharp(pose).metadata()),
+      );
+      return { poses, dimensions };
+    })();
+    sources.set(source, result);
   }
-  // Shared scale across an action avoids size pumping between its poses.
-  const dimensions = await Promise.all(
-    poses.map((pose) => sharp(pose).metadata()),
-  );
+  return result;
+}
+// Retarget the sleep family together to the original idle's standing size.
+// Fixed horizontal/vertical scales avoid per-pose pumping; the width cap keeps
+// even the widest lying silhouette inside the canvas with a transparent margin.
+const sleepSource = await readSource("sleep");
+const wakeSource = await readSource("wake");
+const sleepDimensions = [...sleepSource.dimensions, ...wakeSource.dimensions];
+const standing = wakeSource.dimensions[3]!;
+const sleepScale = {
+  x: Math.min(
+    420 / standing.width!,
+    474 / Math.max(...sleepDimensions.map((d) => d.width!)),
+  ),
+  y: Math.min(
+    394 / standing.height!,
+    402 / Math.max(...sleepDimensions.map((d) => d.height!)),
+  ),
+};
+for (const { action, source, sequence, loop } of actionConfigs) {
+  const { poses, dimensions } = await readSource(source);
   const ratio = Math.min(
     420 / Math.max(...dimensions.map((d) => d.width!)),
     402 / Math.max(...dimensions.map((d) => d.height!)),
   );
+  const sleepFamily = source === "sleep" || source === "wake";
+  const scale = sleepFamily ? sleepScale : { x: ratio, y: ratio };
   const responseFrames = [];
   const responseLayers = [];
   for (const [index, [pose, durationMs]] of sequence.entries()) {
@@ -297,10 +377,10 @@ for (const { action, source, sequence, loop } of actionConfigs) {
         .png()
         .toBuffer();
     else {
-      const width = Math.round(dimensions[pose]!.width! * ratio);
-      const height = Math.round(dimensions[pose]!.height! * ratio);
+      const width = Math.round(dimensions[pose]!.width! * scale.x);
+      const height = Math.round(dimensions[pose]!.height! * scale.y);
       const image = await sharp(poses[pose])
-        .resize(width, height)
+        .resize(width, height, { fit: sleepFamily ? "fill" : "cover" })
         .png()
         .toBuffer();
       raster = await sharp({

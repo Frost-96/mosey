@@ -2,7 +2,9 @@
 
 > 状态（2026-10-21）：保留 #3 已实现的点击互动，仅取消“点击宠物后保持原输入框键盘焦点”的验收要求；点击后可能需要重新点击输入框恢复输入。不采用私有 AppKit 焦点适配，其余功能和验收标准保留。
 
-单只柯基的本地 macOS 应用。已接入点击、拖放、回到底部、自由活动、隐藏、主屏恢复、小中大三档缩放及本体右键菜单。#8 在这些能力上增加实际 Dock 像素边缘捕获、攀爬、落回与侧边避让；代码与整应用自动化并不等于全部真实桌面验收通过，当前范围和缺口见 [#8 验证记录](docs/validation/issue-8.md)。点击后可能需要重新点击工作应用的输入框恢复输入；8ms 光标轮询的首次进入竞态仍需真实输入证据。
+单只柯基的本地 macOS 应用。清醒时点击可见身体，随机歪头、伸爪或翻肚，连点合并且不排队；拖动可打断动作，松手后扑腾、下落并蹲下落地。柯基平时休息，偶尔散步、伸懒腰或自己玩；清醒活动约两分钟后在下一次休息调度躺下睡觉。睡眠第一次点击只动耳，900ms内第二次点击才醒，拖动立即唤醒。保持静音、无文字、无需照料。见 [#5 行为、素材与验证边界](docs/validation/issue-5.md)。
+
+透明窗口默认160×160 DIP，位于主屏可用区域底部；菜单栏 🐾 提供设置、显示／隐藏和退出，本体右键菜单提供隐藏与退出。设置窗口提供小／中（默认）／大预设，分别为70／160／240 DIP，并提供70–240 DIP、步进10 DIP的滑块；拖动实时生效，松手或方向键操作停止后保存，大小和隐藏意图跨重启保留；关闭设置后宠物继续运行。开机启动已迁入设置，以 macOS 实际状态为准，不写入偏好文件；开发版说明不可用原因，打包版支持开启、关闭、等待批准时取消请求及打开系统设置，返回设置窗口后刷新系统状态。真实注销／登录与系统设置桌面导航尚需人工验收；受控批准与失败场景仅验证真实 Electron 设置 UI 和 IPC，不等同系统批准通过。本切片的迁移、失败重试与验证边界见 [#31 设置窗口验证](docs/validation/issue-31-settings.md)。透明区域使用当前帧同源alpha切换鼠标穿透；8ms光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录，见 [#3 证据与限制](docs/validation/issue-3.md)。已接入真实 Dock 边缘攀爬、落回与侧边避让，详见下文。
 
 ## 运行与验证
 
@@ -13,7 +15,9 @@ pnpm install --frozen-lockfile
 pnpm start
 ```
 
-正式入口是根目录的 pnpm / Forge 流程；保留的 `probes/` 可独立运行，其 npm 入口不是正式应用入口。
+正式入口是根目录的 pnpm / Forge 流程。Dock 原生辅助程序源码位于 `src/platform/native/dock-live.swift`，由 `pnpm native:build` 编译并签名至 `build/native/`，开发启动和打包前自动构建，打包时随应用交付。
+
+原生 CLI 回归检查：先运行 `pnpm native:build`，再运行 `python3 tests/native/test-dock-live.py build/native/dock-live`。历史日志的稳定阶段校验工具保留在 `tools/check-dock-live-phase.py`，参数可用 `--help` 查看。旧 `probes/` 实验、原始结果和根目录 `assets/` 测试素材已移除；正式角色素材保留在 `src/assets/`。
 
 ```sh
 pnpm assets:build   # sharp 制作图集、版本化描述及同源 alpha 命中数据
@@ -54,7 +58,7 @@ pnpm test:packaged  # 启动刚生成的真实 .app
 
 主进程在异步启动函数内等待 `app.whenReady()` 初始化，避免 ESM 顶层 await app.whenReady 与 Playwright 初始化加载器相互等待。开发测试仅为 Forge 的首个自动启动槽提供一个临时可执行占位程序，以保持其 Vite 服务器和 watcher 存活；随后由 Playwright 启动**真实且无测试分支的应用入口**。产品代码不识别测试环境变量。该占位程序不模拟渲染、菜单或 Electron API。
 
-素材输入保留在 `src/assets/corgi-idle.png`。`tools/build-assets.ts` 使用 sharp 提取单一稳定姿态，制作同身份呼吸循环、2x PNG 图集及版本化 JSON；制作幅度、脚底锚点和透明边缘处理见 [#2 证据](docs/validation/issue-2.md)。`start` / `build` / `package:mac` 的 pre 脚本自动生成素材；生成物也提交，开发与打包均使用同一结果。开发由 Vite 提供图片 URL，生产通过 import 打包为带 hash 本地资源，随 asar 交付。
+素材输入按动作保留在 `src/assets/corgi-*.png`。`tools/build-assets.ts` 使用 sharp 制作待机、互动、拖动、自由活动及睡眠的2x PNG图集、版本化JSON和同源命中区域；制作幅度、脚底锚点和透明边缘处理见 [#2 证据](docs/validation/issue-2.md)。`start` / `build` / `package:mac` 的 pre 脚本自动生成素材；生成物也提交，开发与打包均使用同一结果。开发由 Vite 提供图片 URL，生产通过 import 打包为带 hash 本地资源，随 asar 交付。
 
 行为模块只依赖 XState 和 TypeScript，主进程分别管理姿态与系统可见性；renderer 按实际经过时间选帧，仅在帧改变时绘制，不可见时停调度。单实例锁在建立窗口／托盘之前获取；重复启动不激活已有窗口。日志只写本地 `~/Library/Logs/Mosey/main.log`，1 MiB 阈值与单份旧文件轮转，不上传，不开启逐帧日志。
 
@@ -76,8 +80,10 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 ## Dock 交互（#8）
 
-宠物可见时，已授权的本地 ScreenCaptureKit helper 从独立 Dock 窗口提取真实透明轮廓，仅向主进程发送受限数字边缘。底部轮廓与当前已绘制的身体横向重叠才攀爬；隐藏、失效或不重叠时回原地面；左右轮廓仅横向避让。角色和命中沿用同一大小、脚底与实际帧的 alpha 坐标约定。攀爬可再次抓起，菜单打开冻结运动；手动隐藏不会因 Dock 变化而恢复显示。
+宠物可见时，已授权的本地 ScreenCaptureKit helper 从独立 Dock 窗口提取真实透明轮廓，仅向主进程发送受限数字边缘。底部轮廓与跨动作稳定的身体横向范围重叠才攀爬；隐藏、失效或不重叠时回原地面；左右轮廓仅横向避让。角色和命中沿用同一大小、脚底与实际帧的 alpha 坐标约定。攀爬可再次抓起，菜单打开冻结运动；手动隐藏不会因 Dock 变化而恢复显示。
 
 应用菜单及菜单栏显示 Dock 交互状态。若显示需要 Screen Recording 权限，由用户在系统设置手动授权当前实际使用的 Mosey，再选择 **Retry Dock interaction**，必要时退出并重开同一应用。应用不会自行更改权限，也不因拒绝授权而把一般工作区当成 Dock 轮廓。开发宿主权限不代表 Finder 独立启动的打包应用已经获权；本地 ad-hoc 重建、重签或移动应用后需重新核对实际权限。
 
-`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、当前屏分辨率／缩放恢复验收。详见 [#8 验证记录](docs/validation/issue-8.md)。
+`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、当前屏分辨率／缩放恢复验收。详见 [#8 验证记录](https://github.com/Frost-96/mosey/blob/2d6c3b8d97ba4aa1c2eab06fe4e4115cb4d94ca2/docs/validation/issue-8.md)。
+
+#8 的原候选已通过用户六项定向复测及[完整云端回归](https://github.com/Frost-96/mosey/actions/runs/39978862581)（开发版17通过／1项仅打包版适用而跳过，打包版18通过）。与最新主线整合后的结果以 PR #38 检查为准。用户明确跳过60分钟资源测量，0样本，不计预算通过；历史独立1DIP、真实native -84DIP及Stop/Retry间歇失败原因仍未确认。原始桌面证据与历史验收记录保留本地，不重新引入主线已清理的验证文件。

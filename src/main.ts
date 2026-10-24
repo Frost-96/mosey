@@ -1,6 +1,10 @@
 import climbing from "./assets/generated/climbing-atlas.json";
 import { DockRuntime, type DockObservation } from "./platform/dock-runtime";
 import { dockSupport } from "./behavior/dock-support";
+import settling from "./assets/generated/settling-atlas.json";
+import waking from "./assets/generated/waking-atlas.json";
+import ear from "./assets/generated/ear-atlas.json";
+import sleeping from "./assets/generated/sleeping-atlas.json";
 import walking from "./assets/generated/walking-atlas.json";
 import stretching from "./assets/generated/stretching-atlas.json";
 import playing from "./assets/generated/playing-atlas.json";
@@ -13,6 +17,7 @@ import {
   screen,
   ipcMain,
   powerMonitor,
+  shell,
 } from "electron";
 import path from "node:path";
 import { PreferencesStore } from "./platform/preferences";
@@ -25,6 +30,8 @@ import {
   assetErrorSchema,
   channels,
   emptyRequestSchema,
+  loginLaunchRequestSchema,
+  type Settings,
   presentationSchema,
   inputSchema,
   type Presentation,
@@ -38,7 +45,7 @@ import dragging from "./assets/generated/dragging-atlas.json";
 import flutter from "./assets/generated/flutter-atlas.json";
 import falling from "./assets/generated/falling-atlas.json";
 import landing from "./assets/generated/landing-atlas.json";
-import { petGeometry, type PetSize } from "./shared/size";
+import { petGeometry, petSizeSchema, type PetSize } from "./shared/size";
 import { atlasSchema } from "./shared/assets";
 
 // A second launch has no side effects: future hidden intent stays untouched.
@@ -79,6 +86,49 @@ async function start() {
     requestedCaptureMode = mode;
     return ++captureRevision;
   };
+  let loginError: string | undefined;
+  const loginState = (): Settings["login"] => {
+    if (process.platform !== "darwin" || !app.isPackaged)
+      return {
+        status: "unavailable",
+        reason: "开机启动仅适用于打包后的 macOS 应用。",
+        error: loginError,
+      };
+    try {
+      const actual = app.getLoginItemSettings({ type: "mainAppService" });
+      if (actual.status === "requires-approval")
+        return { status: "requires-approval", error: loginError };
+      return {
+        status:
+          actual.status === "enabled" && actual.openAtLogin
+            ? "enabled"
+            : "disabled",
+        error: loginError,
+      };
+    } catch (error) {
+      log.warn("Unable to read login item settings", error);
+      return {
+        status: "unavailable",
+        reason: `无法读取系统开机启动状态：${error instanceof Error ? error.message : String(error)}`,
+        error: loginError,
+      };
+    }
+  };
+  const setLoginLaunch = (openAtLogin: boolean) => {
+    loginError = undefined;
+    if (loginState().status === "unavailable") return;
+    try {
+      app.setLoginItemSettings({ type: "mainAppService", openAtLogin });
+      const actual = loginState();
+      const registered =
+        actual.status === "enabled" || actual.status === "requires-approval";
+      if (actual.status === "unavailable" || registered !== openAtLogin)
+        loginError = "系统未完成开机启动更改，请重试或检查系统设置。";
+    } catch (error) {
+      loginError = `开机启动更改失败：${error instanceof Error ? error.message : String(error)}`;
+      log.warn("Unable to change login item settings", error);
+    }
+  };
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
     dismissBodyMenu();
@@ -86,20 +136,74 @@ async function start() {
     else {
       behavior.send({ type: "CANCEL" });
       displayed = undefined;
-      positionOnGround();
+      alignGround();
       pet.showInactive();
     }
+    synchronizeVisibility();
     refreshMenus();
+    publishSettings();
   };
   let geometryRevision = 0;
-  const sizeItem = (): Electron.MenuItemConstructorOptions => ({
-    label: "Size",
-    submenu: (["small", "medium", "large"] as const).map((size) => ({
-      label: size[0]!.toUpperCase() + size.slice(1),
-      type: "radio",
-      checked: preferences.size === size,
-      click: () => changeSize(size),
-    })),
+  let settingsWindow: BrowserWindow | undefined;
+  let failedSize: PetSize | undefined;
+  let liveSize = preferences.size;
+  const settingsState = () => ({
+    size: liveSize,
+    visibility: preferences.visibility,
+    failedSize,
+    login: loginState(),
+  });
+  const publishSettings = () =>
+    settingsWindow?.webContents.send(channels.settings, settingsState());
+  const openSettings = () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      if (settingsWindow.isMinimized()) settingsWindow.restore();
+      settingsWindow.show();
+      settingsWindow.focus();
+      publishSettings();
+      return;
+    }
+    const window = new BrowserWindow({
+      title: "Mosey 设置",
+      width: 460,
+      height: 680,
+      resizable: false,
+      show: false,
+      webPreferences: {
+        preload: path.join(import.meta.dirname, "preload.cjs"),
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+    settingsWindow = window;
+    window.on("focus", publishSettings);
+    window.on("close", () => {
+      if (liveSize !== preferences.size) changeSize(liveSize);
+    });
+    window.on("closed", () => {
+      if (settingsWindow === window) settingsWindow = undefined;
+    });
+    window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+    window.webContents.on("will-navigate", (event) => event.preventDefault());
+    window.once("ready-to-show", () => window.show());
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL)
+      void window.loadURL(
+        new URL("?settings", MAIN_WINDOW_VITE_DEV_SERVER_URL).href,
+      );
+    else
+      void window.loadFile(
+        path.join(
+          import.meta.dirname,
+          `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
+        ),
+        { query: { settings: "" } },
+      );
+  };
+  const settingsItem = (): Electron.MenuItemConstructorOptions => ({
+    label: "设置…",
+    accelerator: "CommandOrControl+,",
+    click: openSettings,
   });
   const visibilityItem = (): Electron.MenuItemConstructorOptions => ({
     label: preferences.visibility === "visible" ? "Hide Mosey" : "Show Mosey",
@@ -162,7 +266,7 @@ async function start() {
           label: "Mosey",
           submenu: [
             visibilityItem(),
-            sizeItem(),
+            settingsItem(),
             ...dockItems(),
             {
               label: "Quit Mosey",
@@ -174,15 +278,13 @@ async function start() {
         diagnostic,
       ]),
     );
-    tray.setContextMenu(
-      Menu.buildFromTemplate([
-        visibilityItem(),
-        sizeItem(),
-        ...dockItems(),
-        diagnostic,
-        { label: "Quit Mosey", click: quit },
-      ]),
-    );
+    return Menu.buildFromTemplate([
+      visibilityItem(),
+      settingsItem(),
+      ...dockItems(),
+      diagnostic,
+      { label: "Quit Mosey", click: quit },
+    ]);
   };
   app.on("before-quit", (event) => {
     quitting = true;
@@ -204,9 +306,19 @@ async function start() {
   tray.setTitle("🐾");
   tray.setToolTip("Mosey");
   const dockValidation = new DockValidation(refreshMenus);
+  // macOS's cached native context menu does not provide a reliable pre-open
+  // callback. Open explicitly so every click reads the current system setting.
+  const openTrayMenu = () => tray.popUpContextMenu(refreshMenus());
+  tray.on("click", openTrayMenu);
+  tray.on("right-click", openTrayMenu);
+  app.on("activate", () => {
+    refreshMenus();
+    publishSettings();
+  });
   const area = screen.getPrimaryDisplay().workArea;
-  const initialSide = petGeometry(preferences.size).side;
+  const initialSide = petGeometry(liveSize).side;
   const pet = new BrowserWindow({
+    title: "Mosey",
     width: initialSide,
     height: initialSide,
     x: area.x + Math.round((area.width - initialSide) / 2),
@@ -246,16 +358,12 @@ async function start() {
     // tracking loop and therefore does not deliver a popup completion callback.
     finishBodyMenu(menu);
   };
-  const positionOnGround = () => {
-    const ground = screen.getPrimaryDisplay().workArea;
-    const { width, height } = pet.getBounds();
-    pet.setPosition(
-      ground.x + Math.round((ground.width - width) / 2),
-      ground.y + ground.height - height,
-    );
-  };
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
+    settling,
+    waking,
+    ear,
+    sleeping,
     idle,
     climbing,
     walking,
@@ -358,12 +466,12 @@ async function start() {
     dockPendingTimer = undefined;
   };
   const bodyAt = (x: number, y: number) => {
-    const geometry = petGeometry(preferences.size);
+    const geometry = petGeometry(liveSize);
     // Use the pose actually drawn, including facing, until its next frame
     // report. This is the same alpha mask and foot transform as input routing.
     const atlas =
       atlases.find((value) => value.action === displayed?.posture) ??
-      atlases[0]!;
+      atlases.find((value) => value.action === "resting")!;
     const frame = atlas.frames[displayed?.frame ?? 0] ?? atlas.frames[0]!;
     const runs = frame.hitRows.flat();
     const localLeft = Math.min(...runs.map(([start]) => start));
@@ -392,7 +500,7 @@ async function start() {
     const body = bodyAt(x, y);
     if (dockObservation?.orientation === "bottom") {
       if (!bottomContact) return { footY: floor, shiftX: 0 };
-      const geometry = petGeometry(preferences.size);
+      const geometry = petGeometry(liveSize);
       body.left =
         x + geometry.foot.x + bottomContact.left * geometry.assetScale;
       body.right =
@@ -481,6 +589,21 @@ async function start() {
       Math.min(area.y + area.height, support.footY) - bounds.height,
     );
   };
+  const reconcileGround = () => {
+    // The live work area can change before its native notification arrives.
+    // Keep grounded poses on that floor without touching captured or moving pets.
+    if (gesture || motion !== undefined || dockPendingAt !== undefined) return;
+    const posture = behavior.getSnapshot().value;
+    if (
+      posture === "dragging" ||
+      posture === "flutter" ||
+      posture === "falling"
+    )
+      return;
+    const bounds = pet.getBounds();
+    const support = supportAt(bounds.x, bounds.y);
+    if (bounds.y + bounds.height !== support.footY) alignGround();
+  };
   const cancelInteraction = () => {
     dismissBodyMenu();
     const cancelledGesture = gesture;
@@ -529,7 +652,7 @@ async function start() {
     const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
     if (!frame || !atlas) return false;
-    const geometry = petGeometry(preferences.size);
+    const geometry = petGeometry(liveSize);
     const localX = Math.floor(
       (((visible.direction === "left" ? geometry.side - x : x) -
         geometry.foot.x) /
@@ -581,7 +704,7 @@ async function start() {
       startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
       frozenAt: timeline.pausedAt,
       visibility: suspended ? "hidden" : visibility,
-      size: preferences.size,
+      size: liveSize,
       geometryRevision,
     });
   const authorized = (
@@ -723,12 +846,18 @@ async function start() {
     if (!pet?.isDestroyed())
       pet?.webContents.send(channels.presentation, presentation());
   };
-  const changeSize = (size: PetSize) => {
-    if (size === preferences.size) return;
-    if (!preferences.setSize(size)) {
-      refreshMenus();
+  const changeSize = (size: PetSize, commit = true) => {
+    if (commit) {
+      if (size !== preferences.size && !preferences.setSize(size)) {
+        failedSize = size;
+        size = preferences.size;
+      } else failedSize = undefined;
+    } else failedSize = undefined;
+    if (size === liveSize) {
+      publishSettings();
       return;
     }
+    liveSize = size;
     const old = pet.getBounds();
     const side = petGeometry(size).side;
     geometryRevision++;
@@ -754,8 +883,62 @@ async function start() {
     }
     reconcileDock();
     publish();
+    publishSettings();
     refreshMenus();
   };
+  const settingsAuthorized = (event: Electron.IpcMainInvokeEvent) =>
+    settingsWindow &&
+    event.sender === settingsWindow.webContents &&
+    event.senderFrame === settingsWindow.webContents.mainFrame;
+  ipcMain.handle(channels.getSettings, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted settings request");
+    emptyRequestSchema.parse(value);
+    return settingsState();
+  });
+  ipcMain.handle(channels.setSize, (event, value: unknown) => {
+    if (!settingsAuthorized(event)) throw new Error("Untrusted size request");
+    changeSize(petSizeSchema.parse(value));
+    return settingsState();
+  });
+  ipcMain.handle(channels.setLoginLaunch, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted login launch request");
+    setLoginLaunch(loginLaunchRequestSchema.parse(value));
+    publishSettings();
+    return settingsState();
+  });
+  ipcMain.handle(channels.openLoginSettings, async (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted system settings request");
+    emptyRequestSchema.parse(value);
+    try {
+      if (process.platform !== "darwin")
+        throw new Error("此平台不支持 macOS 系统设置。");
+      await shell.openExternal(
+        "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
+      );
+    } catch (error) {
+      loginError = `无法打开系统设置：${error instanceof Error ? error.message : String(error)}`;
+    }
+    publishSettings();
+    return settingsState();
+  });
+  ipcMain.handle(channels.previewSize, (event, value: unknown) => {
+    if (!settingsAuthorized(event)) throw new Error("Untrusted size preview");
+    changeSize(petSizeSchema.parse(value), false);
+    return settingsState();
+  });
+  app.on("before-quit", () => {
+    if (liveSize !== preferences.size) changeSize(liveSize);
+  });
+  ipcMain.handle(channels.showPet, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted visibility request");
+    emptyRequestSchema.parse(value);
+    setVisibility("visible");
+    return settingsState();
+  });
   behavior.subscribe((snapshot) => {
     if (snapshot.value === "resting" && gesture) {
       behavior.send({ type: "PAUSE" });
@@ -985,35 +1168,49 @@ async function start() {
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   app.on("before-quit", finishDockPending);
-  pet.on("show", () => {
-    if (preferences.visibility === "hidden") {
-      pet.hide();
-      return;
-    }
-    visibility = "visible";
-    behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
-    if (!quitting && !suspended) {
-      startPointerPolling();
-      startDock();
+  // Some packaged macOS launches update native visibility without delivering
+  // show/hide notifications. Reconcile explicit operations and native state;
+  // duplicate notifications must not reset a running action or click window.
+  const synchronizeVisibility = () => {
+    if (preferences.visibility === "hidden" && pet.isVisible()) pet.hide();
+    const next = pet.isVisible() ? "visible" : "hidden";
+    if (visibility === next) return;
+    visibility = next;
+    if (next === "visible") {
+      behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
+      if (!quitting && !suspended) {
+        startPointerPolling();
+        startDock();
+      }
+    } else {
+      dockSupported = false;
+      dockPendingSince = undefined;
+      finishDockPending();
+      void dockRuntime.stop();
+      dockObservation = null;
+      stopPointerPolling();
+      // Immediately release any last opaque region, independent of cursor polling.
+      pet.setIgnoreMouseEvents(true, { forward: true });
+      ignoring = true;
+      displayed = undefined;
+      cancelInteraction();
+      behavior.send({ type: "PAUSE" });
     }
     publish();
-  });
-  pet.on("hide", () => {
-    visibility = "hidden";
-    dockSupported = false;
-    dockPendingSince = undefined;
-    finishDockPending();
-    void dockRuntime.stop();
-    dockObservation = null;
-    stopPointerPolling();
-    // Immediately release any last opaque region, independent of cursor polling.
-    pet.setIgnoreMouseEvents(true, { forward: true });
-    ignoring = true;
-    displayed = undefined;
-    cancelInteraction();
-    behavior.send({ type: "PAUSE" });
-    publish();
-  });
+  };
+  pet.on("show", synchronizeVisibility);
+  pet.on("hide", synchronizeVisibility);
+  // Native hide/show and work-area events can be omitted or coalesced. Keep a
+  // bounded lifecycle check even when hidden; expensive pointer polling still
+  // stops while hidden. Idempotent visibility updates preserve active actions.
+  const nativeStatePoll = setInterval(() => {
+    if (pet.isDestroyed()) return;
+    synchronizeVisibility();
+    if (visibility === "visible" && !suspended && !bodyMenu) reconcileGround();
+  }, 50);
+  const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
+  pet.once("closed", stopNativeStatePolling);
+  app.once("before-quit", stopNativeStatePolling);
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
     ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
     : undefined;
@@ -1042,6 +1239,7 @@ async function start() {
   });
   pet.once("ready-to-show", () => {
     if (preferences.visibility === "visible") pet.showInactive();
+    synchronizeVisibility();
   });
   if (devURL) await pet.loadURL(devURL);
   else

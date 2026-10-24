@@ -13,6 +13,7 @@ import {
 import { createHash } from "node:crypto";
 import path from "node:path";
 import os from "node:os";
+import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -51,6 +52,11 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       `#!${process.execPath}\nimport fs from 'node:fs';\nconst start = performance.now(); let sequence=0; fs.appendFileSync(${JSON.stringify(path.join(root, "pids.jsonl"))},process.pid+'\\n');\nconsole.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));\nsetInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)},'utf8')); const pending=value?.testPending===true; const observation=pending?null:value; console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-start)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:pending?'new_complete_pending':observation?'current':'alpha_empty',observation})); },100);\n`,
     );
     await chmod(helper, 0o755);
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({ version: 2, visibility: "visible", size: 240 }),
+    );
     app = await electron.launch(
       packaged
         ? {
@@ -608,20 +614,11 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         timeout: 5000,
       })
       .toBe(floor);
-    const size = (label: string) =>
-      app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === "Size")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
-      );
+    const size = (label: string) => chooseSize(app!, label);
     for (const [label, side] of [
-      ["Small", 180],
-      ["Medium", 240],
-      ["Large", 300],
+      ["Small", 70],
+      ["Medium", 160],
+      ["Large", 240],
     ] as const) {
       await setDock(
         "bottom",
