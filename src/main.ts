@@ -209,6 +209,55 @@ async function start() {
     rendererState === "failed"
       ? [{ label: "Retry Mosey", click: () => void loadPet() }]
       : [];
+  const sizeItem = (): Electron.MenuItemConstructorOptions => ({
+    label: "Pet Size",
+    submenu: (
+      [
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
+      ] as const
+    ).map(([label, size]) => ({
+      label,
+      type: "checkbox",
+      checked: liveSize === size,
+      click: () => changeSize(size),
+    })),
+  });
+  const loginItems = (): Electron.MenuItemConstructorOptions[] => {
+    const login = loginState();
+    return [
+      {
+        label: "Launch at Login",
+        type: "checkbox",
+        checked: login.status === "enabled",
+        enabled: login.status === "enabled" || login.status === "disabled",
+        click: (item) => {
+          setLoginLaunch(item.checked);
+          refreshMenus();
+          publishSettings();
+        },
+      },
+      ...(login.status === "requires-approval"
+        ? [
+            { label: "开机启动等待系统批准", enabled: false },
+            { label: "打开系统设置…", click: () => void openLoginSettings() },
+            {
+              label: "取消待批准请求",
+              click: () => {
+                setLoginLaunch(false);
+                refreshMenus();
+                publishSettings();
+              },
+            },
+          ]
+        : []),
+      ...(login.status === "unavailable"
+        ? [{ label: login.reason, enabled: false }]
+        : []),
+      ...(login.error ? [{ label: login.error, enabled: false }] : []),
+    ];
+  };
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
       label: "Dock validation",
@@ -221,6 +270,8 @@ async function start() {
           submenu: [
             ...recoveryItems(),
             visibilityItem(),
+            sizeItem(),
+            ...loginItems(),
             settingsItem(),
             {
               label: "Quit Mosey",
@@ -235,6 +286,8 @@ async function start() {
     return Menu.buildFromTemplate([
       ...recoveryItems(),
       visibilityItem(),
+      sizeItem(),
+      ...loginItems(),
       settingsItem(),
       diagnostic,
       { label: "Quit Mosey", click: quit },
@@ -527,6 +580,8 @@ async function start() {
       publish();
       const menu = Menu.buildFromTemplate([
         { label: "Hide Mosey", click: () => setVisibility("hidden") },
+        sizeItem(),
+        ...loginItems(),
         { label: "Quit Mosey", click: quit },
       ]);
       bodyMenu = menu;
@@ -640,6 +695,7 @@ async function start() {
     } else failedSize = undefined;
     if (size === liveSize) {
       publishSettings();
+      refreshMenus();
       return;
     }
     liveSize = size;
@@ -683,13 +739,11 @@ async function start() {
     if (!settingsAuthorized(event))
       throw new Error("Untrusted login launch request");
     setLoginLaunch(loginLaunchRequestSchema.parse(value));
+    refreshMenus();
     publishSettings();
     return settingsState();
   });
-  ipcMain.handle(channels.openLoginSettings, async (event, value: unknown) => {
-    if (!settingsAuthorized(event))
-      throw new Error("Untrusted system settings request");
-    emptyRequestSchema.parse(value);
+  const openLoginSettings = async () => {
     try {
       if (process.platform !== "darwin")
         throw new Error("此平台不支持 macOS 系统设置。");
@@ -700,6 +754,13 @@ async function start() {
       loginError = `无法打开系统设置：${error instanceof Error ? error.message : String(error)}`;
     }
     publishSettings();
+    refreshMenus();
+  };
+  ipcMain.handle(channels.openLoginSettings, async (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted system settings request");
+    emptyRequestSchema.parse(value);
+    await openLoginSettings();
     return settingsState();
   });
   ipcMain.handle(channels.previewSize, (event, value: unknown) => {
