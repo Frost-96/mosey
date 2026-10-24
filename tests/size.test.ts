@@ -130,8 +130,9 @@ setTimeout(()=>process.exit(0),120000);
         ),
       )
       .toBe(true);
-    const { bounds: initial, area: initialArea } = await desktop();
-    expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
+    // Native visibility can precede the bounded work-area reconciliation.
+    // Require actual startup settlement, still with strict zero distance.
+    await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
     const choose = (label: string) => chooseSize(app!, label);
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {

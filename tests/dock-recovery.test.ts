@@ -160,7 +160,10 @@ setInterval(()=>{
             event,
             detail,
             at: Date.now(),
-            monotonic: performance.now(),
+            // Avoid the lazily initialized global performance getter while
+            // Electron's Node bootstrap may still be completing. This ledger's
+            // monotonic clock is hrtime milliseconds; producer clocks are separate.
+            monotonic: Number(process.hrtime.bigint()) / 1_000_000,
           });
         powerMonitor.on("suspend", () => record("suspend"));
         powerMonitor.on("resume", () => record("resume"));
