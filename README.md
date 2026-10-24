@@ -4,7 +4,7 @@
 
 单只柯基的本地 macOS 应用。清醒时点击可见身体，随机歪头、伸爪或翻肚，连点合并且不排队；拖动可打断动作，松手后扑腾、下落并蹲下落地。柯基平时休息，偶尔散步、伸懒腰或自己玩；清醒活动约两分钟后在下一次休息调度躺下睡觉。睡眠第一次点击只动耳，900ms内第二次点击才醒，拖动立即唤醒。保持静音、无文字、无需照料。见 [#5 行为、素材与验证边界](docs/validation/issue-5.md)。
 
-透明窗口默认160×160 DIP，位于主屏可用区域底部；菜单栏 🐾 提供设置、显示／隐藏和退出，本体右键菜单提供隐藏与退出。设置窗口提供小／中（默认）／大预设，分别为70／160／240 DIP，并提供70–240 DIP、步进10 DIP的滑块；拖动实时生效，松手或方向键操作停止后保存，大小和隐藏意图跨重启保留；关闭设置后宠物继续运行。开机启动已迁入设置，以 macOS 实际状态为准，不写入偏好文件；开发版说明不可用原因，打包版支持开启、关闭、等待批准时取消请求及打开系统设置，返回设置窗口后刷新系统状态。真实注销／登录与系统设置桌面导航尚需人工验收；受控批准与失败场景仅验证真实 Electron 设置 UI 和 IPC，不等同系统批准通过。本切片的迁移、失败重试与验证边界见 [#31 设置窗口验证](docs/validation/issue-31-settings.md)。透明区域使用当前帧同源alpha切换鼠标穿透；8ms光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录，见 [#3 证据与限制](docs/validation/issue-3.md)。Dock攀爬尚未实现，下述可选验证入口仍是独立实验。
+透明窗口默认160×160 DIP，位于主屏可用区域底部；菜单栏 🐾 提供设置、显示／隐藏和退出，本体右键菜单提供隐藏与退出。设置窗口提供小／中（默认）／大预设，分别为70／160／240 DIP，并提供70–240 DIP、步进10 DIP的滑块；拖动实时生效，松手或方向键操作停止后保存，大小和隐藏意图跨重启保留；关闭设置后宠物继续运行。开机启动已迁入设置，以 macOS 实际状态为准，不写入偏好文件；开发版说明不可用原因，打包版支持开启、关闭、等待批准时取消请求及打开系统设置，返回设置窗口后刷新系统状态。真实注销／登录与系统设置桌面导航尚需人工验收；受控批准与失败场景仅验证真实 Electron 设置 UI 和 IPC，不等同系统批准通过。本切片的迁移、失败重试与验证边界见 [#31 设置窗口验证](docs/validation/issue-31-settings.md)。透明区域使用当前帧同源alpha切换鼠标穿透；8ms光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录，见 [#3 证据与限制](docs/validation/issue-3.md)。已接入真实 Dock 边缘攀爬、落回与侧边避让，详见下文。
 
 ## 运行与验证
 
@@ -74,6 +74,16 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 ## 可选 Dock 验证（#14）
 
-默认启动显示柯基并运行日常循环，不进行屏幕捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
+#14 的独立诊断入口仍保留。#8 现在在宠物可见且系统未暂停时启动单独的产品捕获 helper：已授权则本地分析 Dock 像素，未授权则在 preflight 阻断，不主动弹出权限申请。隐藏、锁屏、休眠和退出停止捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
 
-此入口是实际 Forge/Vite 应用中的独立实验，尚未提供宠物碰撞、攀爬或固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
+此诊断入口与 #8 产品捕获独立；启动诊断会先停止产品捕获，避免同时占用捕获资源。诊断期间隐藏再显示仍保留诊断捕获的独占意图；**Stop Dock validation** 等待诊断退出后恢复产品捕获，或用 **Retry Dock interaction** 明确切回产品。自然到时结束后可用 Retry 恢复。产品捕获不可用时清除支撑边缘，不使用固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。
+
+## Dock 交互（#8）
+
+宠物可见时，已授权的本地 ScreenCaptureKit helper 从独立 Dock 窗口提取真实透明轮廓，仅向主进程发送受限数字边缘。底部轮廓与跨动作稳定的身体横向范围重叠才攀爬；隐藏、失效或不重叠时回原地面；左右轮廓仅横向避让。角色和命中沿用同一大小、脚底与实际帧的 alpha 坐标约定。攀爬可再次抓起，菜单打开冻结运动；手动隐藏不会因 Dock 变化而恢复显示。
+
+应用菜单及菜单栏显示 Dock 交互状态。若显示需要 Screen Recording 权限，由用户在系统设置手动授权当前实际使用的 Mosey，再选择 **Retry Dock interaction**，必要时退出并重开同一应用。应用不会自行更改权限，也不因拒绝授权而把一般工作区当成 Dock 轮廓。开发宿主权限不代表 Finder 独立启动的打包应用已经获权；本地 ad-hoc 重建、重签或移动应用后需重新核对实际权限。
+
+`tests/dock.test.ts` 分开记录两类证据：确定性 OS 生产者替代所驱动的真实 Electron 行为，以及保持实际 Swift helper 的捕获传输、隐藏与退出清理。前者不代表真实 Dock 几何通过；后者也不代替独立 LaunchServices 授权与真实显隐／放大、三档、当前屏分辨率／缩放恢复验收。详见 [#8 验证记录](https://github.com/Frost-96/mosey/blob/2d6c3b8d97ba4aa1c2eab06fe4e4115cb4d94ca2/docs/validation/issue-8.md)。
+
+#8 的原候选已通过用户六项定向复测及[完整云端回归](https://github.com/Frost-96/mosey/actions/runs/39978862581)（开发版17通过／1项仅打包版适用而跳过，打包版18通过）。与最新主线整合后的结果以 PR #38 检查为准。用户明确跳过60分钟资源测量，0样本，不计预算通过；历史独立1DIP、真实native -84DIP及Stop/Retry间歇失败原因仍未确认。原始桌面证据与历史验收记录保留本地，不重新引入主线已清理的验证文件。
