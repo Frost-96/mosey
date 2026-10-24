@@ -93,7 +93,9 @@ test.each([
         return Array.from(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data).filter((value, i) => i % 4 === 3 && value > 127).length;
       })()`),
         );
-      await expect.poll(drawn).toBeGreaterThan(1500);
+      // A freshly copied/signed app can decode its first atlas after Vitest's
+      // default one-second polling deadline on a cold CI runner.
+      await expect.poll(drawn, { timeout: 10000 }).toBeGreaterThan(1500);
       if (phase === "main") {
         const children = await app.evaluate(({ app }) =>
           app
