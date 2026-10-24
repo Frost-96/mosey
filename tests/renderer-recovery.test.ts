@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { PNG } from "pngjs";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
 import { openSettings } from "./support/settings";
@@ -171,6 +172,42 @@ test.each([
         );
         await new Promise((resolve) => setTimeout(resolve, 60));
       }
+      const references =
+        phase === "preview"
+          ? [...idleFrames].map((value) =>
+              PNG.sync.read(Buffer.from(value.split(",")[1]!, "base64")),
+            )
+          : [];
+      const matchesIdle = (value: string) => {
+        if (idleFrames.has(value)) return true;
+        if (phase !== "preview") return false;
+        const actual = PNG.sync.read(
+          Buffer.from(value.split(",")[1]!, "base64"),
+        );
+        return references.some((reference) => {
+          if (
+            actual.width !== reference.width ||
+            actual.height !== reference.height
+          )
+            return false;
+          let error = 0;
+          for (let i = 0; i < actual.data.length; i += 4) {
+            const alpha = actual.data[i + 3]!;
+            const expectedAlpha = reference.data[i + 3]!;
+            error += Math.abs(alpha - expectedAlpha);
+            for (let channel = 0; channel < 3; channel++) {
+              error += Math.abs(
+                (actual.data[i + channel]! * alpha) / 255 -
+                  (reference.data[i + channel]! * expectedAlpha) / 255,
+              );
+            }
+          }
+          // Noninteger atlas scaling can round differently in a rebuilt Canvas
+          // context. Allow under one level per premultiplied RGBA channel;
+          // retain exact comparison for the unscaled recovery fixtures.
+          return error / actual.data.length < 1;
+        });
+      };
       const invoke = (label: string) =>
         app!.evaluate(({ Menu }, label) => {
           const item = Menu.getApplicationMenu()!
@@ -266,13 +303,13 @@ test.each([
         .toBe(true);
       expect(await visible()).toBe(phase !== "hidden");
       if (phase === "hidden") await invoke("Show Mosey");
-      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
       await expect.poll(() => distanceFromGround(app!)).toBe(0);
       // Wait past the interrupted short deadline: no overdue activity or
       // completion may displace the new resting renderer.
       await new Promise((resolve) => setTimeout(resolve, 2600));
       const recoveredPixels = await pixels();
-      if (!idleFrames.has(recoveredPixels)) {
+      if (!matchesIdle(recoveredPixels)) {
         await mkdir("test-results", { recursive: true });
         await writeFile(
           `test-results/recovery-${phase}-${packaged ? "packaged" : "development"}.png`,
@@ -286,6 +323,15 @@ test.each([
         throw new Error(
           `Recovered canvas is not resting: ${JSON.stringify(state)}`,
         );
+      }
+      if (phase === "preview") {
+        const presentation = await app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.executeJavaScript("window.mosey.getPresentation()"),
+        );
+        expect(presentation.posture).toBe("resting");
+        expect(presentation.size).toBe(expectedSize);
       }
       expect(await distanceFromGround(app)).toBe(0);
       expect(
