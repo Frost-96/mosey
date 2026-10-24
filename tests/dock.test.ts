@@ -166,37 +166,68 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       screen.getPrimaryDisplay(),
     );
     const floor = display.workArea.y + display.workArea.height;
-    const invokeMenu = (section: string, label: string) =>
-      app!.evaluate(
-        ({ Menu }, { section, label }) => {
-          const item = Menu.getApplicationMenu()!
-            .items.find((i) => i.label === section)!
-            .submenu!.items.find((i) => i.label === label)!;
-          const trace = Reflect.get(globalThis, "dockNavigationTrace");
-          const record = (event: string, error?: unknown) => {
-            if (!trace) return;
-            trace.menuEvents.push({
-              event,
-              label,
-              enabled: item.enabled,
-              at: performance.now(),
-              wall: Date.now(),
-              error: error === undefined ? undefined : String(error),
+    const invokeMenu = async (section: string, label: string) => {
+      // Input requires a currently available public menu item. Native menu
+      // replacement can finish after a prior show/hide operation returns.
+      await expect
+        .poll(
+          () =>
+            app!.evaluate(
+              ({ Menu }, { section, label }) =>
+                Menu.getApplicationMenu()
+                  ?.items.find((item) => item.label === section)
+                  ?.submenu?.items.some(
+                    (item) => item.label === label && item.enabled,
+                  ) ?? false,
+              { section, label },
+            ),
+          { timeout: 1000 },
+        )
+        .toBe(true);
+      return app!.evaluate(
+        ({ Menu }, { section, label }) =>
+          new Promise<void>((resolve, reject) => {
+            // Dispatch on an application turn instead of executing user input
+            // inside the inspector evaluation's interrupted native callback.
+            setImmediate(() => {
+              try {
+                const item = Menu.getApplicationMenu()!
+                  .items.find((item) => item.label === section)!
+                  .submenu!.items.find((item) => item.label === label);
+                if (!item || !item.enabled)
+                  throw new Error(
+                    `Menu item unavailable: ${section} / ${label}`,
+                  );
+                const trace = Reflect.get(globalThis, "dockNavigationTrace");
+                const record = (event: string, error?: unknown) => {
+                  if (!trace) return;
+                  trace.menuEvents.push({
+                    event,
+                    label,
+                    enabled: item.enabled,
+                    at: performance.now(),
+                    wall: Date.now(),
+                    error: error === undefined ? undefined : String(error),
+                  });
+                  if (trace.menuEvents.length > 128) trace.menuEvents.shift();
+                };
+                record("fresh-menu-entry");
+                try {
+                  item.click();
+                  record("fresh-menu-return");
+                  resolve();
+                } catch (error) {
+                  record("fresh-menu-throw", error);
+                  reject(error);
+                }
+              } catch (error) {
+                reject(error);
+              }
             });
-            if (trace.menuEvents.length > 128) trace.menuEvents.shift();
-          };
-          record("fresh-menu-entry");
-          try {
-            const result = item.click();
-            record("fresh-menu-return");
-            return result;
-          } catch (error) {
-            record("fresh-menu-throw", error);
-            throw error;
-          }
-        },
+          }),
         { section, label },
       );
+    };
     const invoke = (label: string) => invokeMenu("Mosey", label);
     const setDock = async (
       orientation: "bottom" | "left" | "right",
