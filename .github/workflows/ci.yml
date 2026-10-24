@@ -20,10 +20,12 @@ jobs:
           run_install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - name: Development diagnostic reentry
+        run: pnpm test:dev tests/dock-status.test.ts
       - name: Development geometry and settings
         run: pnpm test:dev tests/dock.test.ts tests/size-autonomy.test.ts tests/settings.test.ts
       - name: Remaining development checks
-        run: pnpm test:dev --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts
+        run: pnpm test:dev --exclude tests/dock-status.test.ts --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts
       - run: pnpm package:mac
       - run: pnpm test:packaged
       - name: Archive local unsigned app
