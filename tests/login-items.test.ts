@@ -1,8 +1,13 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
+import {
+  _electron as electron,
+  type Page,
+  type ElectronApplication,
+} from "playwright";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { openSettings } from "./support/settings";
 
 test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
   "login launch follows the packaged app service across changes, quit and restart",
@@ -14,30 +19,26 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
     const lsregister =
       "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
     let app: ElectronApplication | undefined;
+    let settings: Page | undefined;
     let prepared = false;
     let failure: unknown;
     const cleanupErrors: string[] = [];
     const evidence: unknown[] = [];
     const read = async () => {
-      const result = await app!.evaluate(({ Menu, app }) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === "Launch at Login");
-        return {
-          system: app.getLoginItemSettings({ type: "mainAppService" }),
-          checked: item?.checked,
-          enabled: item?.enabled,
-          labels: Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Mosey")
-            ?.submenu?.items.map((item) => item.label),
-          appPath: app.getAppPath(),
-          executable: process.execPath,
-        };
-      });
-      expect(result.checked).toBe(
-        result.system.status === "enabled" && result.system.openAtLogin,
+      const result = await app!.evaluate(({ app }) => ({
+        system: app.getLoginItemSettings({ type: "mainAppService" }),
+        appPath: app.getAppPath(),
+        executable: process.execPath,
+      }));
+      const login = settings!.getByRole("region", { name: "开机启动" });
+      await expect
+        .poll(() => login.getByRole("checkbox").isChecked())
+        .toBe(result.system.status === "enabled" && result.system.openAtLogin);
+      expect(await login.getByRole("checkbox").isDisabled()).toBe(
+        result.system.status === "requires-approval",
       );
-      expect(result.enabled).toBe(true);
+      if (result.system.status === "requires-approval")
+        expect(await login.textContent()).toContain("等待批准");
       evidence.push(result);
       return result;
     };
@@ -49,15 +50,26 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       });
       await app.firstWindow();
       await app.context().setOffline(true);
+      settings = await openSettings(app);
     };
-    const click = async () =>
-      app!.evaluate(({ Menu }) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === "Launch at Login");
-        if (!item?.enabled) throw new Error("Login launch menu unavailable");
-        item.click();
-      });
+    const click = async () => {
+      const previous = await app!.evaluate(
+        ({ app }) =>
+          app.getLoginItemSettings({ type: "mainAppService" }).status,
+      );
+      await settings!
+        .getByRole("region", { name: "开机启动" })
+        .getByRole("checkbox")
+        .click();
+      await expect
+        .poll(() =>
+          app!.evaluate(
+            ({ app }) =>
+              app.getLoginItemSettings({ type: "mainAppService" }).status,
+          ),
+        )
+        .not.toBe(previous);
+    };
     const quit = async () => {
       const child = app!.process();
       const closed = app!.waitForEvent("close");
@@ -95,7 +107,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       await launch();
       const fresh = await read();
       expect(fresh.system.openAtLogin).toBe(false);
-      expect(fresh.labels?.join(" ")).not.toContain("unavailable");
+
       await click();
       const requested = await read();
       expect(["enabled", "requires-approval"]).toContain(
@@ -116,18 +128,11 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
         app.emit("activate");
       });
       expect((await read()).system.openAtLogin).toBe(false);
-      // Prove explicit Off through the product menu before another ordinary Quit.
+      // Prove explicit Off through settings before another ordinary Quit.
       await click();
       const reenabled = await read();
       if (reenabled.system.status === "requires-approval") {
-        await app!.evaluate(({ Menu }) => {
-          Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find(
-              (item) => item.label === "Cancel Pending Login Launch",
-            )
-            ?.click();
-        });
+        await settings!.getByRole("button", { name: "取消待批准请求" }).click();
       } else await click();
       expect((await read()).system.openAtLogin).toBe(false);
       await quit();

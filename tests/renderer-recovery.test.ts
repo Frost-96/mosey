@@ -6,10 +6,19 @@ import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
+import { openSettings } from "./support/settings";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
-test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
+test.each([
+  "dragging",
+  "falling",
+  "hidden",
+  "walking",
+  "sleeping",
+  "preview",
+  "main",
+])(
   "%s failure preserves the bounded recovery and process lifecycle",
   async (phase) => {
     const root = await mkdtemp(
@@ -75,8 +84,9 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
       // public API instead of depending on that stale driver Page.
       const drawn = () =>
         app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.webContents
-            .executeJavaScript(`(() => {
+          BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey",
+          )!.webContents.executeJavaScript(`(() => {
         const canvas = document.querySelector("canvas");
         if (!canvas) return 0;
         return Array.from(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data).filter((value, i) => i % 4 === 3 && value > 127).length;
@@ -115,11 +125,32 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
         }
         return;
       }
+      const expectedSize = phase === "preview" ? 200 : 240;
+      if (phase === "preview") {
+        const settings = await openSettings(app);
+        await settings.evaluate(() => window.moseySettings.previewSize(200));
+        // Wait for the resized paint before sampling a complete idle cycle.
+        // The previous-size canvas can still contain opaque pixels meanwhile.
+        await expect
+          .poll(() =>
+            app!.evaluate(({ BrowserWindow }) =>
+              BrowserWindow.getAllWindows()
+                .find((window) => window.getTitle() === "Mosey")!
+                .webContents.executeJavaScript(
+                  'document.querySelector("canvas").width / devicePixelRatio',
+                ),
+            ),
+          )
+          .toBe(expectedSize);
+        await expect.poll(drawn).toBeGreaterThan(1500);
+      }
       const pixels = () =>
         app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.webContents.executeJavaScript(
-            `document.querySelector("canvas").toDataURL()`,
-          ),
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.executeJavaScript(
+              `document.querySelector("canvas").toDataURL()`,
+            ),
         );
       const idleFrames = new Set<string>();
       const until = Date.now() + 2200;
@@ -150,11 +181,15 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
         }, label);
       const visible = () =>
         app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.isVisible(),
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .isVisible(),
         );
       const crash = () =>
         app!.evaluate(({ BrowserWindow }) => {
-          BrowserWindow.getAllWindows()[0]!.webContents.forcefullyCrashRenderer();
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.forcefullyCrashRenderer();
         });
       // Exercise real held and released gestures, plus a hidden renderer.
       if (phase === "hidden") await invoke("Hide Mosey");
@@ -205,7 +240,7 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
         await app.evaluate(() =>
           Reflect.get(globalThis, "restoreRecoveryClock")(),
         );
-      } else {
+      } else if (phase !== "preview") {
         await page.mouse.move(120, 180);
         await page.mouse.down();
         await page.mouse.move(120, -120);
@@ -222,7 +257,9 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
       await expect
         .poll(() =>
           app!.evaluate(({ BrowserWindow }) => {
-            const contents = BrowserWindow.getAllWindows()[0]!.webContents;
+            const contents = BrowserWindow.getAllWindows().find(
+              (window) => window.getTitle() === "Mosey",
+            )!.webContents;
             return !contents.isCrashed() && !contents.isLoading();
           }),
         )
@@ -234,16 +271,35 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
       // Wait past the interrupted short deadline: no overdue activity or
       // completion may displace the new resting renderer.
       await new Promise((resolve) => setTimeout(resolve, 2600));
-      expect(idleFrames.has(await pixels())).toBe(true);
+      const recoveredPixels = await pixels();
+      if (!idleFrames.has(recoveredPixels)) {
+        await mkdir("test-results", { recursive: true });
+        await writeFile(
+          `test-results/recovery-${phase}-${packaged ? "packaged" : "development"}.png`,
+          Buffer.from(recoveredPixels.split(",")[1]!, "base64"),
+        );
+        const state = await app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.executeJavaScript("window.mosey.getPresentation()"),
+        );
+        throw new Error(
+          `Recovered canvas is not resting: ${JSON.stringify(state)}`,
+        );
+      }
       expect(await distanceFromGround(app)).toBe(0);
       expect(
         await app.evaluate(
           ({ BrowserWindow }) =>
-            BrowserWindow.getAllWindows()[0]!.getBounds().width,
+            BrowserWindow.getAllWindows()
+              .find((window) => window.getTitle() === "Mosey")!
+              .getBounds().width,
         ),
-      ).toBe(240);
+      ).toBe(expectedSize);
       await app.evaluate(({ BrowserWindow }) => {
-        const contents = BrowserWindow.getAllWindows()[0]!.webContents;
+        const contents = BrowserWindow.getAllWindows().find(
+          (window) => window.getTitle() === "Mosey",
+        )!.webContents;
         contents.sendInputEvent({
           type: "mouseUp",
           button: "left",
@@ -269,14 +325,18 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
       expect(await visible()).toBe(false);
       expect(
         await app.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.webContents.isCrashed(),
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.isCrashed(),
         ),
       ).toBe(true);
       await invoke("Retry Mosey");
       await expect
         .poll(() =>
           app!.evaluate(({ BrowserWindow }) => {
-            const contents = BrowserWindow.getAllWindows()[0]!.webContents;
+            const contents = BrowserWindow.getAllWindows().find(
+              (window) => window.getTitle() === "Mosey",
+            )!.webContents;
             return !contents.isCrashed() && !contents.isLoading();
           }),
         )
@@ -296,14 +356,18 @@ test.each(["dragging", "falling", "hidden", "walking", "sleeping", "main"])(
         .poll(() =>
           app!.evaluate(
             ({ BrowserWindow }) =>
-              !BrowserWindow.getAllWindows()[0]!.isVisible(),
+              !BrowserWindow.getAllWindows()
+                .find((window) => window.getTitle() === "Mosey")!
+                .isVisible(),
           ),
         )
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 500));
       expect(
         await app.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.webContents.isCrashed(),
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.isCrashed(),
         ),
       ).toBe(true);
       const exited = app.waitForEvent("close");
