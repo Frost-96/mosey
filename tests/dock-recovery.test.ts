@@ -17,6 +17,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { distanceFromGround } from "./support/ground";
 import { nativeRuntimeFixture } from "./support/native-runtime";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -46,6 +47,7 @@ type Runtime = {
   publish: (value: ProducerScene) => Promise<void>;
   beginScene: () => Promise<void>;
   footY: () => Promise<number>;
+  groundDistance: () => Promise<number>;
   children: () => number[];
   status: () => Promise<string>;
   spawnedPIDs: () => Promise<number[]>;
@@ -441,6 +443,7 @@ setInterval(()=>{
       publish,
       beginScene,
       footY,
+      groundDistance: () => distanceFromGround(app!),
       children,
       status,
       spawnedPIDs,
@@ -551,18 +554,26 @@ setInterval(()=>{
 
 test("Explicit source suspension waits on one capture and resumes without Retry", async () => {
   await withRuntime(
-    async ({ publish, observation, children, footY, floor, status }) => {
+    async ({
+      publish,
+      observation,
+      children,
+      footY,
+      groundDistance,
+      floor,
+      status,
+    }) => {
       await publish({ observation });
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       const sourcePID = children()[0]!;
       // A real public native status attachment enters the unchanged product
       // Receiver. No synthetic protocol reason bypasses its normalization.
       await publish({ sourceStatus: 3 });
-      await expect.poll(footY, { timeout: 3000 }).toBe(floor);
+      await expect.poll(groundDistance, { timeout: 3000 }).toBe(0);
       const until = performance.now() + 9000;
       while (performance.now() < until) {
         expect(children()).toEqual([sourcePID]);
-        expect(await footY()).toBe(floor);
+        expect(await groundDistance()).toBe(0);
         await new Promise((resolve) => setTimeout(resolve, 150));
       }
       await expect
@@ -579,7 +590,15 @@ test("Explicit source suspension waits on one capture and resumes without Retry"
 
 test("Unstable bottom contact stays grounded while stable overlap supports climbing", async () => {
   await withRuntime(
-    async ({ app, publish, observation, footY, floor, children }) => {
+    async ({
+      app,
+      publish,
+      observation,
+      footY,
+      groundDistance,
+      floor,
+      children,
+    }) => {
       const originalPID = children()[0]!;
       const origin = await app.evaluate(({ BrowserWindow, screen }) => {
         const window = BrowserWindow.getAllWindows()[0]!;
@@ -618,13 +637,13 @@ test("Unstable bottom contact stays grounded while stable overlap supports climb
       await publish({ observation });
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       await publish({ observation: null });
-      await expect.poll(footY, { timeout: 5000 }).toBe(floor);
+      await expect.poll(groundDistance, { timeout: 5000 }).toBe(0);
       // Same relative contour as the observed x615/start826 oscillation.
       // This overlaps the resting silhouette but misses stable bottom contact.
       await publish({ observation: bottom(origin.x + 211) });
       const until = performance.now() + 6500;
       while (performance.now() < until) {
-        expect(await footY()).toBe(floor);
+        expect(await groundDistance()).toBe(0);
         expect((await bounds()).x).toBe(origin.x);
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
@@ -634,10 +653,10 @@ test("Unstable bottom contact stays grounded while stable overlap supports climb
       await new Promise((resolve) => setTimeout(resolve, 700));
       expect(await footY()).toBe(floor - 75);
       await publish({ observation: null });
-      await expect.poll(footY, { timeout: 5000 }).toBe(floor);
+      await expect.poll(groundDistance, { timeout: 5000 }).toBe(0);
       await publish({ observation: bottom(origin.x + 260) });
       await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(await footY()).toBe(floor);
+      expect(await groundDistance()).toBe(0);
       for (const orientation of ["left", "right"] as const) {
         const before = await bounds();
         const inward = before.x + (orientation === "left" ? 100 : 140);
@@ -667,7 +686,7 @@ test("Unstable bottom contact stays grounded while stable overlap supports climb
               : (await bounds()).x < before.x,
           )
           .toBe(true);
-        expect(await footY()).toBe(floor);
+        expect(await groundDistance()).toBe(0);
         await publish({ observation: null });
       }
       expect(children()).toEqual([originalPID]);
@@ -681,6 +700,7 @@ test("Dock capture rebuilds a continuously silent stream and restores support wi
       publish,
       beginScene,
       footY,
+      groundDistance,
       children,
       spawnedPIDs,
       floor,
@@ -704,7 +724,7 @@ test("Dock capture rebuilds a continuously silent stream and restores support wi
       await publish({ observation });
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       await publish({ observation, silencePID: firstPID });
-      await expect.poll(footY, { timeout: 3000 }).toBe(floor);
+      await expect.poll(groundDistance, { timeout: 3000 }).toBe(0);
       await expect
         .poll(
           () => {
@@ -828,6 +848,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
       publish,
       observation,
       footY,
+      groundDistance,
       floor,
       invoke,
       app,
@@ -836,7 +857,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
         .poll(async () => (await spawnedPIDs()).length)
         .toBeGreaterThan(0);
       const initialPID = (await spawnedPIDs())[0]!;
-      expect(await footY()).toBe(floor);
+      expect(await groundDistance()).toBe(0);
       await expect
         .poll(
           () => {
@@ -859,7 +880,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
       expect(children()).toEqual([healthyPID]);
       expect(await footY()).toBe(floor - 75);
       await publish({ observation: null, reason: "alpha_empty" });
-      await expect.poll(footY).toBe(floor);
+      await expect.poll(groundDistance).toBe(0);
       await new Promise((resolve) => setTimeout(resolve, 5500));
       expect(children()).toEqual([healthyPID]);
       await publish({ reason: "callback_silence" });
@@ -872,7 +893,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
       await new Promise((resolve) => setTimeout(resolve, 1600));
       expect(children()).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(2);
-      await expect.poll(footY).toBe(floor);
+      await expect.poll(groundDistance).toBe(0);
       await publish({ observation });
       await invoke("Retry Dock interaction");
       await expect.poll(children).toHaveLength(1);
