@@ -1113,6 +1113,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   let helperPID: number | undefined;
+  const readiness: { status: string; pid?: number }[] = [];
   const alive = (pid: number) => {
     try {
       process.kill(pid, 0);
@@ -1171,11 +1172,43 @@ test("real Dock helper clears its capability and exits when transport stops or t
             .click(),
         label,
       );
-    await expect
-      .poll(menuStatus, { timeout: 15000, interval: 40 })
-      .not.toBe("Checking Dock capture permission");
-    const initialStatus = await menuStatus();
-    helperPID = child();
+    const waitForCapability = async () => {
+      let observed: { status: string; pid?: number } = { status: "" };
+      await expect
+        .poll(
+          async () => {
+            observed = { status: await menuStatus(), pid: child() };
+            const previous = readiness.at(-1);
+            if (
+              previous?.status !== observed.status ||
+              previous?.pid !== observed.pid
+            )
+              readiness.push(observed);
+            // Loading/visibility reconciliation may legitimately leave Stopped
+            // before capture starts. A negative "not checking" assertion is
+            // not a capability: require a native result and, unless refused,
+            // the actual direct child before injecting a transport fault.
+            return (
+              (observed.status ===
+                "Dock interaction needs Screen Recording permission" &&
+                observed.pid === undefined) ||
+              ([
+                "Dock interaction active",
+                "Dock interaction waiting for visible Dock",
+                "Dock source suspended; waiting for updates",
+                "Updating Dock edge",
+              ].includes(observed.status) &&
+                observed.pid !== undefined)
+            );
+          },
+          { timeout: 15000, interval: 40 },
+        )
+        .toBe(true);
+      return observed;
+    };
+    const initial = await waitForCapability();
+    const initialStatus = initial.status;
+    helperPID = initial.pid;
     const permissionBlocked = initialStatus.includes(
       "needs Screen Recording permission",
     );
@@ -1201,10 +1234,8 @@ test("real Dock helper clears its capability and exits when transport stops or t
       ),
     ).toBe(false);
     await invoke("Show Mosey");
-    await expect
-      .poll(menuStatus, { timeout: 15000, interval: 40 })
-      .not.toBe("Checking Dock capture permission");
-    const restarted = child();
+    const resumed = await waitForCapability();
+    const restarted = resumed.pid;
     await app.close();
     app = undefined;
     if (restarted)
@@ -1237,8 +1268,16 @@ test("real Dock helper clears its capability and exits when transport stops or t
       .catch(() => {});
     throw error;
   } finally {
-    await app?.close().catch(() => {});
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    try {
+      await mkdir("test-results", { recursive: true });
+      await writeFile(
+        `test-results/${packaged ? "packaged" : "development"}-real-dock-readiness.json`,
+        JSON.stringify(readiness, null, 2),
+      );
+    } finally {
+      await app?.close().catch(() => {});
+      await stopForge?.();
+      await rm(root, { recursive: true, force: true });
+    }
   }
 });
