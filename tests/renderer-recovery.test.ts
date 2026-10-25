@@ -305,7 +305,11 @@ test.each([
         .toBe(true);
       expect(await visible()).toBe(phase !== "hidden");
       if (phase === "hidden") await invoke("Show Mosey");
-      await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
+      // Load completion precedes asynchronous atlas decoding. Use the same
+      // cold-paint allowance as startup, but reject a non-idle first observed
+      // frame rather than waiting for a stale action to finish playing.
+      await expect.poll(drawn, { timeout: 10000 }).toBeGreaterThan(1500);
+      expect(matchesIdle(await pixels())).toBe(true);
       await expect.poll(() => distanceFromGround(app!)).toBe(0);
       // Wait past the interrupted short deadline: no overdue activity or
       // completion may displace the new resting renderer.

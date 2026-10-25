@@ -18,6 +18,8 @@ const config: ForgeConfig = {
     executableName: "Mosey",
     extraResource: [path.resolve("build/native")],
     extendInfo: {
+      // Match the deployment target of both bundled Swift helpers.
+      LSMinimumSystemVersion: "15.0",
       NSScreenCaptureUsageDescription:
         "Local Dock edge detection for pet climbing. Screen pixels stay in the native helper; no image files or uploads.",
     },

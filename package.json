@@ -24,6 +24,7 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check",
     "postinstall": "install-electron",
     "assets:build": "node tools/build-assets.ts",
+    "measure:resources": "node tools/measure-resources.ts",
     "prestart": "pnpm assets:build && pnpm native:build",
     "prebuild": "pnpm assets:build && pnpm native:build",
     "prepackage:mac": "pnpm assets:build && pnpm native:build",
