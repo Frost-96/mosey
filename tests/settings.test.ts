@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import {
   _electron as electron,
@@ -321,8 +322,8 @@ test("old presets and hidden intent migrate durably, recover backup and accept n
           .toBeLessThan(ground.y - 50);
         await pet.mouse.up();
         await expect
-          .poll(async () => (await bounds()).y, { timeout: 4000 })
-          .toBe(ground.y);
+          .poll(() => distanceFromGround(app!), { timeout: 4000 })
+          .toBe(0);
         await app.evaluate(({ Menu }) =>
           Menu.getApplicationMenu()!
             .items.find((x) => x.label === "Mosey")!
