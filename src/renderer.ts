@@ -58,7 +58,8 @@ try {
   canvas.style.height = "240px";
   context.scale(scale, scale);
   let previous = "",
-    scheduled = 0,
+    frameRequest = 0,
+    frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
     posture: "resting",
@@ -67,8 +68,19 @@ try {
     actionId: 0,
     startedAt: Date.now(),
   };
+  function cancelDrawing() {
+    clearTimeout(frameTimer);
+    cancelAnimationFrame(frameRequest);
+    frameTimer = 0;
+    frameRequest = 0;
+  }
+  function requestDraw() {
+    frameTimer = 0;
+    if (presentation.visibility === "visible" && !document.hidden)
+      frameRequest = requestAnimationFrame(draw);
+  }
   function draw() {
-    scheduled = 0;
+    frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
@@ -120,7 +132,17 @@ try {
         previous = key;
       }
     }
-    scheduled = requestAnimationFrame(draw);
+    if (atlas.loop === "once" && elapsed >= total) return;
+    let boundary = 0;
+    for (const frame of atlas.frames) {
+      boundary += frame.durationMs;
+      if (boundary > elapsed % total) break;
+    }
+    // Sleep until the next pose, then align the actual Canvas work with refresh.
+    frameTimer = window.setTimeout(
+      requestDraw,
+      Math.max(1, boundary - (elapsed % total)),
+    );
   }
   let gesture: { pointerId: number; id: number } | undefined;
   let nextGesture = 0;
@@ -168,10 +190,8 @@ try {
   function synchronize(value: Presentation) {
     if (value.visibility === "hidden") finish("cancel");
     presentation = value;
-    if (scheduled) cancelAnimationFrame(scheduled);
-    scheduled = 0;
-    if (value.visibility === "visible" && !document.hidden)
-      scheduled = requestAnimationFrame(draw);
+    cancelDrawing();
+    requestDraw();
   }
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
@@ -183,7 +203,7 @@ try {
     () => {
       finish("cancel");
       unsubscribe();
-      cancelAnimationFrame(scheduled);
+      cancelDrawing();
     },
     { once: true },
   );

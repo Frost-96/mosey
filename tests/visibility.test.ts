@@ -70,14 +70,8 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     }
     // External renderer instrumentation only; the production app has no test hooks.
     await pet.evaluate(() => {
-      const counts = { frames: 0, draws: 0 };
+      const counts = { draws: 0 };
       Reflect.set(window, "visibilityEvidence", counts);
-      const raf = window.requestAnimationFrame;
-      window.requestAnimationFrame = (callback) =>
-        raf((time) => {
-          counts.frames++;
-          callback(time);
-        });
       const draw = CanvasRenderingContext2D.prototype.drawImage;
       Reflect.set(
         CanvasRenderingContext2D.prototype,
@@ -88,6 +82,19 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         },
       );
     });
+    const idleWorkBefore = await pet.evaluate(() => ({
+      ...Reflect.get(window, "visibilityEvidence"),
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    const idleWorkAfter = await pet.evaluate(() => ({
+      ...Reflect.get(window, "visibilityEvidence"),
+    }));
+    const idleWork = {
+      draws: idleWorkAfter.draws - idleWorkBefore.draws,
+    };
+    // Observe low-frequency Canvas work without binding to its scheduling mechanism.
+    expect(idleWork.draws).toBeGreaterThanOrEqual(1);
+    expect(idleWork.draws).toBeLessThanOrEqual(4);
     await pet.mouse.click(120, 180);
     await expect
       .poll(async () => idleFrames.has(await pixels()), { interval: 30 })
@@ -208,6 +215,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       `test-results/${packaged ? "packaged" : "development"}-visibility.json`,
       JSON.stringify(
         {
+          idleRendererWorkOver1200Ms: idleWork,
           hiddenRendererWorkBefore: stopped,
           hiddenRendererWorkAfter: afterHidden,
           visibilityRestoredInactive: true,
