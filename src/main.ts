@@ -139,6 +139,7 @@ async function start() {
       positionOnGround();
       pet.showInactive();
     }
+    synchronizeVisibility();
     refreshMenus();
   };
   let geometryRevision = 0;
@@ -723,27 +724,30 @@ async function start() {
   pet.webContents.on("render-process-gone", cancelInteraction);
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
-  pet.on("show", () => {
-    if (preferences.visibility === "hidden") {
-      pet.hide();
-      return;
+  // Some packaged macOS launches update native visibility without delivering
+  // show/hide notifications. Reconcile explicit operations too; delayed or
+  // duplicate notifications must not reset a running action or click window.
+  const synchronizeVisibility = () => {
+    if (preferences.visibility === "hidden" && pet.isVisible()) pet.hide();
+    const next = pet.isVisible() ? "visible" : "hidden";
+    if (visibility === next) return;
+    visibility = next;
+    if (next === "visible") {
+      behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
+      if (!suspended) startPointerPolling();
+    } else {
+      stopPointerPolling();
+      // Immediately release any last opaque region, independent of cursor polling.
+      pet.setIgnoreMouseEvents(true, { forward: true });
+      ignoring = true;
+      displayed = undefined;
+      cancelInteraction();
+      behavior.send({ type: "PAUSE" });
     }
-    visibility = "visible";
-    behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
-    if (!suspended) startPointerPolling();
     publish();
-  });
-  pet.on("hide", () => {
-    visibility = "hidden";
-    stopPointerPolling();
-    // Immediately release any last opaque region, independent of cursor polling.
-    pet.setIgnoreMouseEvents(true, { forward: true });
-    ignoring = true;
-    displayed = undefined;
-    cancelInteraction();
-    behavior.send({ type: "PAUSE" });
-    publish();
-  });
+  };
+  pet.on("show", synchronizeVisibility);
+  pet.on("hide", synchronizeVisibility);
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
     ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
     : undefined;
@@ -772,6 +776,7 @@ async function start() {
   });
   pet.once("ready-to-show", () => {
     if (preferences.visibility === "visible") pet.showInactive();
+    synchronizeVisibility();
   });
   if (devURL) await pet.loadURL(devURL);
   else
