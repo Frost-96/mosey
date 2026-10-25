@@ -59,11 +59,14 @@ async function start() {
   let bodyMenu: Menu | undefined;
   let visibility: Presentation["visibility"] = "hidden";
   let suspended = false;
+  let rendererState: "loading" | "ready" | "failed" = "loading";
+  let automaticRecoveryUsed = false;
+  let rendererGeneration = 0;
+  let quitting = false;
   log.transports.file.maxSize = 1024 * 1024;
   log.transports.console.level = false;
   log.transports.ipc.level = false;
   app.on("will-quit", () => {
-    tray?.destroy();
     behavior.stop();
   });
   await app.whenReady();
@@ -123,7 +126,7 @@ async function start() {
     if (!preferences.setVisibility(next)) return;
     dismissBodyMenu();
     if (next === "hidden") pet.hide();
-    else {
+    else if (rendererState === "ready") {
       behavior.send({ type: "CANCEL" });
       displayed = undefined;
       alignGround();
@@ -202,6 +205,10 @@ async function start() {
         preferences.visibility === "visible" ? "hidden" : "visible",
       ),
   });
+  const recoveryItems = (): Electron.MenuItemConstructorOptions[] =>
+    rendererState === "failed"
+      ? [{ label: "Retry Mosey", click: () => void loadPet() }]
+      : [];
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
       label: "Dock validation",
@@ -212,6 +219,7 @@ async function start() {
         {
           label: "Mosey",
           submenu: [
+            ...recoveryItems(),
             visibilityItem(),
             settingsItem(),
             {
@@ -225,6 +233,7 @@ async function start() {
       ]),
     );
     return Menu.buildFromTemplate([
+      ...recoveryItems(),
       visibilityItem(),
       settingsItem(),
       diagnostic,
@@ -232,6 +241,7 @@ async function start() {
     ]);
   };
   app.on("before-quit", (event) => {
+    quitting = true;
     if (!drained) {
       event.preventDefault();
       void dockValidation.stop("application quit").finally(() => {
@@ -244,6 +254,7 @@ async function start() {
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==",
   );
   const tray = new Tray(icon);
+  app.on("will-quit", () => tray.destroy());
   tray.setTitle("🐾");
   tray.setToolTip("Mosey");
   const dockValidation = new DockValidation(refreshMenus);
@@ -414,7 +425,8 @@ async function start() {
   const hit = (x: number, y: number) => {
     // Until the next draw report, the previous pose is still what the user sees.
     // Behavior transitions must not create an ungrabbable frame between poses.
-    if (!displayed || visibility !== "visible") return false;
+    if (rendererState !== "ready" || !displayed || visibility !== "visible")
+      return false;
     const visible = displayed;
     const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
@@ -485,7 +497,13 @@ async function start() {
     return presentation();
   });
   ipcMain.on(channels.input, (event, value: unknown) => {
-    if (!authorized(event) || visibility !== "visible" || suspended) return;
+    if (
+      !authorized(event) ||
+      rendererState !== "ready" ||
+      visibility !== "visible" ||
+      suspended
+    )
+      return;
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
@@ -837,14 +855,17 @@ async function start() {
     screen.off("display-removed", cancelInteraction);
   });
   pet.webContents.on("did-start-loading", cancelInteraction);
-  pet.webContents.on("render-process-gone", cancelInteraction);
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   // Some packaged macOS launches update native visibility without delivering
   // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
   const synchronizeVisibility = () => {
-    if (preferences.visibility === "hidden" && pet.isVisible()) pet.hide();
+    if (
+      (rendererState !== "ready" || preferences.visibility === "hidden") &&
+      pet.isVisible()
+    )
+      pet.hide();
     const next = pet.isVisible() ? "visible" : "hidden";
     if (visibility === next) return;
     visibility = next;
@@ -888,9 +909,68 @@ async function start() {
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
-  pet.webContents.on("render-process-gone", (_event, details) =>
-    log.error("Pet renderer exited", details.reason),
-  );
+  const retireRenderer = () => {
+    // Hide and release native hit regions before any reload. Hidden intent is
+    // a preference, so this operational hide must never write PreferencesStore.
+    rendererState = "loading";
+    rendererGeneration++;
+    stopPointerPolling();
+    displayed = undefined;
+    pet.setIgnoreMouseEvents(true, { forward: true });
+    ignoring = true;
+    gesture = undefined;
+    pet.hide();
+    synchronizeVisibility();
+    cancelInteraction();
+    behavior.send({ type: "PAUSE" });
+    geometryRevision++;
+    const area = screen.getPrimaryDisplay().workArea;
+    const side = petGeometry(liveSize).side;
+    pet.setBounds(
+      {
+        x: area.x + Math.round((area.width - side) / 2),
+        y: area.y + area.height - side,
+        width: side,
+        height: side,
+      },
+      false,
+    );
+  };
+  const loadPet = async () => {
+    if (quitting || pet.isDestroyed()) return;
+    retireRenderer();
+    refreshMenus();
+    const generation = rendererGeneration;
+    try {
+      if (devURL) await pet.loadURL(devURL);
+      else
+        await pet.loadFile(
+          path.join(
+            import.meta.dirname,
+            `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
+          ),
+        );
+    } catch (error) {
+      if (quitting || pet.isDestroyed() || generation !== rendererGeneration)
+        return;
+      log.error("Pet recovery load failed", error);
+      retireRenderer();
+      rendererState = "failed";
+      refreshMenus();
+    }
+  };
+  pet.webContents.on("render-process-gone", (_event, details) => {
+    log.error("Pet renderer exited", details.reason, details.exitCode);
+    if (quitting || pet.isDestroyed()) return;
+    if (!automaticRecoveryUsed) {
+      automaticRecoveryUsed = true;
+      void loadPet();
+    } else {
+      retireRenderer();
+      rendererState = "failed";
+      refreshMenus();
+    }
+  });
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
@@ -901,17 +981,14 @@ async function start() {
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.once("ready-to-show", () => {
+  pet.webContents.on("did-finish-load", () => {
+    if (quitting || rendererState !== "loading") return;
+    rendererState = "ready";
+    alignGround();
     if (preferences.visibility === "visible") pet.showInactive();
     synchronizeVisibility();
+    refreshMenus();
   });
-  if (devURL) await pet.loadURL(devURL);
-  else
-    await pet.loadFile(
-      path.join(
-        import.meta.dirname,
-        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
-      ),
-    );
+  await loadPet();
   app.on("window-all-closed", quit);
 }
