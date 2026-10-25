@@ -2,7 +2,15 @@ import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
-import { mkdir, mkdtemp, writeFile, rm, realpath } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  writeFile,
+  rm,
+  realpath,
+  copyFile,
+  stat,
+} from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
@@ -91,6 +99,7 @@ async function exercisePet() {
   const errors: string[] = [];
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
+  const ownedDiagnosticLogs = new Set<string>();
   try {
     if (!packaged) stopForge = await startForge();
     if (packaged) {
@@ -838,6 +847,7 @@ async function exercisePet() {
       expect(body).not.toContain("Failed:");
       const localLog = await diagnostic.getByLabel("Local log").inputValue();
       expect(path.isAbsolute(localLog)).toBe(true);
+      ownedDiagnosticLogs.add(localLog);
       const contents = await readFile(localLog, "utf8");
       expect((await stat(localLog)).size).toBeLessThanOrEqual(8 * 1024 * 1024);
       const records = contents
@@ -900,10 +910,15 @@ async function exercisePet() {
     const firstRun = await inspectRun();
     if (firstRun.capturing) {
       await expect
-        .poll(async () =>
-          (await readFile(firstRun.localLog, "utf8")).includes(
-            '"type":"heartbeat"',
-          ),
+        // Stream configuration precedes await startCapture and the first
+        // 100ms heartbeat. Allow the existing 2s watchdog + 250ms check cadence
+        // and file-observation margin, rather than Vitest's default 1s window.
+        .poll(
+          async () =>
+            (await readFile(firstRun.localLog, "utf8")).includes(
+              '"type":"heartbeat"',
+            ),
+          { timeout: 2500 },
         )
         .toBe(true);
       process.kill(firstRun.nativePID, "SIGSTOP");
@@ -967,6 +982,15 @@ async function exercisePet() {
     );
   } catch (error) {
     await mkdir("test-results", { recursive: true });
+    // Keep bounded native evidence before an isolated profile is removed.
+    for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
+      const info = await stat(localLog).catch(() => undefined);
+      if (info && info.size <= 8 * 1024 * 1024)
+        await copyFile(
+          localLog,
+          `test-results/failure-${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+        ).catch(() => {});
+    }
     for (const [i, window] of (app?.windows() ?? []).entries())
       await window
         .screenshot({
