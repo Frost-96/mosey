@@ -696,3 +696,319 @@ test("Unstable bottom contact stays grounded while stable overlap supports climb
     },
   );
 });
+
+test("Dock capture rebuilds a continuously silent stream and restores support without manual Retry", async () => {
+  await withRuntime(
+    async ({
+      publish,
+      beginScene,
+      footY,
+      groundDistance,
+      children,
+      spawnedPIDs,
+      floor,
+      observation,
+      app,
+    }) => {
+      const setupPID = children()[0]!;
+      await app.evaluate(({ screen }) =>
+        screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+          "workArea",
+        ]),
+      );
+      await expect
+        .poll(() => {
+          const owned = children();
+          return owned.length === 1 && owned[0] !== setupPID;
+        })
+        .toBe(true);
+      await beginScene();
+      const firstPID = children()[0]!;
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await publish({ observation, silencePID: firstPID });
+      await expect.poll(groundDistance, { timeout: 3000 }).toBe(0);
+      await expect
+        .poll(
+          () => {
+            const owned = children();
+            return owned.length === 1 && owned[0] !== firstPID;
+          },
+          { timeout: 11000, interval: 100 },
+        )
+        .toBe(true);
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      expect(await spawnedPIDs()).toHaveLength(2);
+    },
+  );
+});
+
+test("Empty display-metric notifications preserve a healthy owned capture and support", async () => {
+  await withRuntime(
+    async ({
+      publish,
+      observation,
+      children,
+      spawnedPIDs,
+      footY,
+      floor,
+      app,
+    }) => {
+      const healthyPID = children()[0]!;
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await app.evaluate(async ({ screen }) => {
+        const display = screen.getPrimaryDisplay();
+        for (let index = 0; index < 5; index++) {
+          screen.emit("display-metrics-changed", {}, display, []);
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      expect(children()).toEqual([healthyPID]);
+      expect(await spawnedPIDs()).toHaveLength(1);
+      expect(await footY()).toBe(floor - 75);
+    },
+  );
+});
+
+test("Sparse fresh reports do not replenish the bounded silent-stream recovery budget", async () => {
+  await withRuntime(
+    async ({ children, spawnedPIDs, invoke, status }) => {
+      // Each owned producer sends seven seconds of isolated fresh records a second
+      // apart, then timely silence JSON. Their uncovered gaps exceed frame freshness.
+      await expect
+        .poll(status, { timeout: 55000, interval: 150 })
+        .toBe("Dock capture unavailable; Retry Dock interaction");
+      await expect.poll(children, { timeout: 3000 }).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+      await invoke("Hide Mosey");
+      await invoke("Show Mosey");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+    },
+    { reason: "callback_silence", sparseFreshSeconds: 7.1 },
+  );
+});
+
+test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works without starting hidden capture", async () => {
+  await withRuntime(
+    async ({
+      children,
+      spawnedPIDs,
+      invoke,
+      publish,
+      observation,
+      footY,
+      floor,
+      app,
+      status,
+    }) => {
+      await expect
+        .poll(status, { timeout: 30000, interval: 100 })
+        .toBe("Dock capture unavailable; Retry Dock interaction");
+      await expect.poll(children, { timeout: 3000 }).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+      await invoke("Hide Mosey");
+      await invoke("Show Mosey");
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      expect(children()).toEqual([]);
+      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
+      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+      await invoke("Hide Mosey");
+      await expect
+        .poll(() =>
+          app.evaluate(({ BrowserWindow }) =>
+            BrowserWindow.getAllWindows()[0]!.isVisible(),
+          ),
+        )
+        .toBe(false);
+      await expect.poll(status).toBe("Stopped");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await publish({ observation });
+      await invoke("Retry Dock interaction");
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+      await invoke("Show Mosey");
+      await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      expect(await spawnedPIDs()).toHaveLength(5);
+    },
+    { reason: "callback_silence", shortFreshSeconds: 0.3 },
+  );
+});
+
+test("Capture startup silence recovers while healthy idle, empty frames, brief silence and permission refusal keep their boundaries", async () => {
+  await withRuntime(
+    async ({
+      children,
+      spawnedPIDs,
+      publish,
+      observation,
+      footY,
+      groundDistance,
+      floor,
+      invoke,
+      app,
+    }) => {
+      await expect
+        .poll(async () => (await spawnedPIDs()).length)
+        .toBeGreaterThan(0);
+      const initialPID = (await spawnedPIDs())[0]!;
+      expect(await groundDistance()).toBe(0);
+      await expect
+        .poll(
+          () => {
+            const owned = children();
+            return owned.length === 1 && owned[0] !== initialPID;
+          },
+          { timeout: 11000 },
+        )
+        .toBe(true);
+      const healthyPID = children()[0]!;
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await publish({
+        observation,
+        idle: true,
+        reason: "idle_current",
+        sourceAgeSeconds: 60,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 5500));
+      expect(children()).toEqual([healthyPID]);
+      expect(await footY()).toBe(floor - 75);
+      await publish({ observation: null, reason: "alpha_empty" });
+      await expect.poll(groundDistance).toBe(0);
+      await new Promise((resolve) => setTimeout(resolve, 5500));
+      expect(children()).toEqual([healthyPID]);
+      await publish({ reason: "callback_silence" });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await publish({ observation });
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      expect(children()).toEqual([healthyPID]);
+      await publish({ reason: "permission_lost" });
+      await expect.poll(children, { timeout: 3000 }).toEqual([]);
+      await new Promise((resolve) => setTimeout(resolve, 1600));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(2);
+      await expect.poll(groundDistance).toBe(0);
+      await publish({ observation });
+      await invoke("Retry Dock interaction");
+      await expect.poll(children).toHaveLength(1);
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      await publish({ reason: "permission_unavailable" });
+      await expect.poll(children, { timeout: 3000 }).toEqual([]);
+      await new Promise((resolve) => setTimeout(resolve, 1600));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(3);
+      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
+      await publish({ observation });
+      await invoke("Retry Dock interaction");
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      expect(children()).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(3);
+      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
+      await expect.poll(children).toHaveLength(1);
+      await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
+      expect(await spawnedPIDs()).toHaveLength(4);
+    },
+    { startupSilence: true },
+  );
+});
+
+test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without replenishing the budget", async () => {
+  await withRuntime(
+    async ({ publish, children, spawnedPIDs, invoke, app, status }) => {
+      const diagnostic = (label: string) =>
+        app.evaluate(({ Menu }, label) => {
+          Menu.getApplicationMenu()!
+            .items.find((i) => i.label === "Dock validation")!
+            .submenu!.items.find((i) => i.label === label)!
+            .click();
+        }, label);
+      const pauses = ["hidden", "suspended", "diagnostic"] as const;
+      await publish({ reason: "callback_silence", ignoreTerm: true });
+      for (const [index, pause] of pauses.entries()) {
+        // SIGTERM is ignored only by this owned producer, exposing the real
+        // application's 1.5s kill fallback and the pending restart race.
+        await expect
+          .poll(status, { timeout: 8000, interval: 25 })
+          .toBe("Dock capture callbacks unavailable; restarting");
+        if (pause === "hidden") await invoke("Hide Mosey");
+        else if (pause === "suspended")
+          await app.evaluate(({ powerMonitor }) =>
+            powerMonitor.emit("suspend"),
+          );
+        else {
+          const opened = app.waitForEvent("window");
+          await diagnostic("Start Dock validation (120 seconds)");
+          const panel = await opened;
+          await panel
+            .getByRole("heading", { name: "Dock validation" })
+            .waitFor();
+        }
+        await expect.poll(children, { timeout: 4000 }).toEqual([]);
+        await new Promise((resolve) => setTimeout(resolve, 1300));
+        expect(children()).toEqual([]);
+        expect(await spawnedPIDs()).toHaveLength(index + 1);
+        if (pause === "hidden") await invoke("Show Mosey");
+        else if (pause === "suspended")
+          await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
+        else await diagnostic("Stop Dock validation");
+        await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
+      }
+      // All three attempted recoveries were cancelled by ownership changes.
+      // Those ordinary stop/start boundaries must not create another allowance.
+      await expect
+        .poll(status, { timeout: 8000, interval: 100 })
+        .toBe("Dock capture unavailable; Retry Dock interaction");
+      await expect.poll(children, { timeout: 4000 }).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(4);
+    },
+  );
+});
+
+test("Sustained fresh callbacks replenish recovery, but non-silent reports with no callback age do not", async () => {
+  await withRuntime(
+    async ({ publish, children, spawnedPIDs, status }) => {
+      await expect
+        .poll(async () => (await spawnedPIDs()).length, { timeout: 25000 })
+        .toBe(4);
+      await expect.poll(children).toHaveLength(1);
+      const fourthPID = children()[0]!;
+      await publish({ reason: "alpha_empty" });
+      await new Promise((resolve) => setTimeout(resolve, 5600));
+      expect(children()).toEqual([fourthPID]);
+      // The three old attempts have now been replenished by genuinely fresh
+      // callbacks, despite having no visible alpha geometry to stand on.
+      await publish({ reason: "callback_silence" });
+      await expect
+        .poll(async () => (await spawnedPIDs()).length, { timeout: 8000 })
+        .toBe(5);
+      await expect.poll(children).toHaveLength(1);
+      const fifthPID = children()[0]!;
+      // Merely changing the reason away from silence does not prove callbacks.
+      await publish({ reason: "alpha_empty", callbackAgeSeconds: null });
+      await new Promise((resolve) => setTimeout(resolve, 5600));
+      expect(children()).toEqual([fifthPID]);
+      await publish({ reason: "callback_silence" });
+      await expect
+        .poll(async () => (await spawnedPIDs()).length, { timeout: 8000 })
+        .toBe(6);
+      await expect
+        .poll(async () => (await spawnedPIDs()).length, { timeout: 8000 })
+        .toBe(7);
+      await expect
+        .poll(status, { timeout: 8000 })
+        .toBe("Dock capture unavailable; Retry Dock interaction");
+      await expect.poll(children, { timeout: 3000 }).toEqual([]);
+      expect(await spawnedPIDs()).toHaveLength(7);
+    },
+    { reason: "callback_silence", shortFreshSeconds: 0.3 },
+  );
+});
