@@ -7,6 +7,3 @@ pnpm-lock.yaml
 src/assets/generated/
 
 build/
-
-# Independent native probes and immutable raw evidence use their own checks.
-probes/

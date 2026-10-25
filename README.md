@@ -15,7 +15,9 @@ pnpm install --frozen-lockfile
 pnpm start
 ```
 
-正式入口是根目录的 pnpm / Forge 流程；保留的 `probes/` 可独立运行，其 npm 入口不是正式应用入口。
+正式入口是根目录的 pnpm / Forge 流程。Dock 原生辅助程序源码位于 `src/platform/native/dock-live.swift`，由 `pnpm native:build` 编译并签名至 `build/native/`，开发启动和打包前自动构建，打包时随应用交付。
+
+原生 CLI 回归检查：先运行 `pnpm native:build`，再运行 `python3 tests/native/test-dock-live.py build/native/dock-live`。历史日志的稳定阶段校验工具保留在 `tools/check-dock-live-phase.py`，参数可用 `--help` 查看。旧 `probes/` 实验、原始结果和根目录 `assets/` 测试素材已移除；正式角色素材保留在 `src/assets/`。
 
 ```sh
 pnpm assets:build   # sharp 制作图集、版本化描述及同源 alpha 命中数据
