@@ -1159,9 +1159,8 @@ test("real Dock helper clears its capability and exits when transport stops or t
     const menuStatus = () =>
       app!.evaluate(
         ({ Menu }) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => !i.enabled)!.label,
+          Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
+            .label,
       );
     const invoke = (label: string) =>
       app!.evaluate(

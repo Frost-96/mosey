@@ -215,7 +215,7 @@ async function start() {
       ),
   });
   const dockItems = (): Electron.MenuItemConstructorOptions[] => [
-    { label: dockRuntime.status, enabled: false },
+    { id: "dock-runtime-status", label: dockRuntime.status, enabled: false },
     {
       label: "Retry Dock interaction",
       click: () => {

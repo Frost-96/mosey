@@ -379,9 +379,8 @@ setInterval(()=>{
     const status = () =>
       app!.evaluate(
         ({ Menu }) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => !i.enabled)!.label,
+          Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
+            .label,
       );
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
