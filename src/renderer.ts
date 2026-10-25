@@ -6,6 +6,14 @@ import idle from "./assets/generated/idle-atlas.json";
 import tilt from "./assets/generated/tilt-atlas.json";
 import paw from "./assets/generated/paw-atlas.json";
 import belly from "./assets/generated/belly-atlas.json";
+import draggingUrl from "./assets/generated/dragging-atlas.png";
+import dragging from "./assets/generated/dragging-atlas.json";
+import flutterUrl from "./assets/generated/flutter-atlas.png";
+import flutter from "./assets/generated/flutter-atlas.json";
+import fallingUrl from "./assets/generated/falling-atlas.png";
+import falling from "./assets/generated/falling-atlas.json";
+import landingUrl from "./assets/generated/landing-atlas.png";
+import landing from "./assets/generated/landing-atlas.json";
 import { atlasSchema } from "./shared/assets";
 import type { Presentation } from "./shared/contract";
 
@@ -16,6 +24,10 @@ try {
       [tilt, tiltUrl],
       [paw, pawUrl],
       [belly, bellyUrl],
+      [dragging, draggingUrl],
+      [flutter, flutterUrl],
+      [falling, fallingUrl],
+      [landing, landingUrl],
     ].map(async ([metadata, url]) => {
       const atlas = atlasSchema.parse(metadata);
       const image = new Image();
@@ -94,17 +106,51 @@ try {
     }
     scheduled = requestAnimationFrame(draw);
   }
+  let gesture: { pointerId: number; id: number } | undefined;
+  let nextGesture = 0;
+  function finish(type: "release" | "cancel") {
+    const current = gesture;
+    if (!current) return;
+    gesture = undefined;
+    window.mosey.input({ type, gestureId: current.id });
+    if (canvas!.hasPointerCapture(current.pointerId))
+      canvas!.releasePointerCapture(current.pointerId);
+  }
   canvas.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || gesture) return;
     const rect = canvas.getBoundingClientRect();
+    gesture = { pointerId: event.pointerId, id: ++nextGesture };
+    canvas.setPointerCapture(event.pointerId);
+    event.preventDefault();
     window.mosey.input({
-      type: "click",
+      type: "press",
       actionId: presentation.actionId,
+      gestureId: gesture.id,
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
+      screenX: event.screenX,
+      screenY: event.screenY,
     });
   });
+  canvas.addEventListener("pointermove", (event) => {
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    if (!(event.buttons & 1)) return finish("cancel");
+    window.mosey.input({
+      type: "move",
+      gestureId: gesture.id,
+      screenX: event.screenX,
+      screenY: event.screenY,
+    });
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (event.button === 0 && gesture?.pointerId === event.pointerId)
+      finish("release");
+  });
+  canvas.addEventListener("pointercancel", () => finish("cancel"));
+  canvas.addEventListener("lostpointercapture", () => finish("cancel"));
+  window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
+    if (value.visibility === "hidden") finish("cancel");
     presentation = value;
     if (scheduled) cancelAnimationFrame(scheduled);
     scheduled = 0;
@@ -119,6 +165,7 @@ try {
   window.addEventListener(
     "pagehide",
     () => {
+      finish("cancel");
       unsubscribe();
       cancelAnimationFrame(scheduled);
     },
