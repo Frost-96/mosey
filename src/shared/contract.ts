@@ -82,6 +82,8 @@ export interface PetBridge {
 export const channels = {
   getSettings: "settings:get",
   setSize: "settings:size",
+  setLoginLaunch: "settings:login-launch",
+  openLoginSettings: "settings:open-login-settings",
   previewSize: "settings:preview-size",
   showPet: "settings:show-pet",
   settings: "settings:state",
@@ -97,10 +99,17 @@ declare global {
   }
 }
 
+export const loginLaunchSchema = z.strictObject({
+  status: z.enum(["enabled", "disabled", "requires-approval", "unavailable"]),
+  reason: z.string().optional(),
+  error: z.string().optional(),
+});
+export const loginLaunchRequestSchema = z.boolean();
 export const settingsSchema = z.strictObject({
   size: petSizeSchema,
   visibility: z.enum(["visible", "hidden"]),
   failedSize: petSizeSchema.optional(),
+  login: loginLaunchSchema,
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export interface SettingsBridge {
@@ -108,6 +117,8 @@ export interface SettingsBridge {
   setSize(size: number): Promise<Settings>;
   previewSize(size: number): Promise<Settings>;
   showPet(): Promise<Settings>;
+  setLoginLaunch(enabled: boolean): Promise<Settings>;
+  openLoginSettings(): Promise<Settings>;
   onChange(listener: (state: Settings) => void): () => void;
 }
 declare global {
