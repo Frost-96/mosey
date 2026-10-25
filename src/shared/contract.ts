@@ -80,6 +80,10 @@ export interface PetBridge {
   input(event: PetInput): void;
 }
 export const channels = {
+  getSettings: "settings:get",
+  setSize: "settings:size",
+  showPet: "settings:show-pet",
+  settings: "settings:state",
   getPresentation: "pet:get-presentation",
   presentation: "pet:presentation",
   gestureCancellation: "pet:gesture-cancellation",
@@ -89,5 +93,23 @@ export const channels = {
 declare global {
   interface Window {
     mosey: PetBridge;
+  }
+}
+
+export const settingsSchema = z.strictObject({
+  size: petSizeSchema,
+  visibility: z.enum(["visible", "hidden"]),
+  failedSize: petSizeSchema.optional(),
+});
+export type Settings = z.infer<typeof settingsSchema>;
+export interface SettingsBridge {
+  get(): Promise<Settings>;
+  setSize(size: number): Promise<Settings>;
+  showPet(): Promise<Settings>;
+  onChange(listener: (state: Settings) => void): () => void;
+}
+declare global {
+  interface Window {
+    moseySettings: SettingsBridge;
   }
 }

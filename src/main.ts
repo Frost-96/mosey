@@ -39,7 +39,7 @@ import dragging from "./assets/generated/dragging-atlas.json";
 import flutter from "./assets/generated/flutter-atlas.json";
 import falling from "./assets/generated/falling-atlas.json";
 import landing from "./assets/generated/landing-atlas.json";
-import { petGeometry, type PetSize } from "./shared/size";
+import { petGeometry, petSizeSchema, type PetSize } from "./shared/size";
 import { atlasSchema } from "./shared/assets";
 
 // A second launch has no side effects: future hidden intent stays untouched.
@@ -145,22 +145,62 @@ async function start() {
     }
     synchronizeVisibility();
     refreshMenus();
+    publishSettings();
   };
   let geometryRevision = 0;
-  const sizeItem = (): Electron.MenuItemConstructorOptions => ({
-    label: "Size",
-    submenu: (
-      [
-        ["Small", 70],
-        ["Medium", 160],
-        ["Large", 240],
-      ] as const
-    ).map(([label, size]) => ({
-      label,
-      type: "radio",
-      checked: preferences.size === size,
-      click: () => changeSize(size),
-    })),
+  let settingsWindow: BrowserWindow | undefined;
+  let failedSize: PetSize | undefined;
+  const settingsState = () => ({
+    size: preferences.size,
+    visibility: preferences.visibility,
+    failedSize,
+  });
+  const publishSettings = () =>
+    settingsWindow?.webContents.send(channels.settings, settingsState());
+  const openSettings = () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      if (settingsWindow.isMinimized()) settingsWindow.restore();
+      settingsWindow.show();
+      settingsWindow.focus();
+      return;
+    }
+    const window = new BrowserWindow({
+      title: "Mosey 设置",
+      width: 460,
+      height: 590,
+      resizable: false,
+      show: false,
+      webPreferences: {
+        preload: path.join(import.meta.dirname, "preload.cjs"),
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+    settingsWindow = window;
+    window.on("closed", () => {
+      if (settingsWindow === window) settingsWindow = undefined;
+    });
+    window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+    window.webContents.on("will-navigate", (event) => event.preventDefault());
+    window.once("ready-to-show", () => window.show());
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL)
+      void window.loadURL(
+        new URL("?settings", MAIN_WINDOW_VITE_DEV_SERVER_URL).href,
+      );
+    else
+      void window.loadFile(
+        path.join(
+          import.meta.dirname,
+          `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
+        ),
+        { query: { settings: "" } },
+      );
+  };
+  const settingsItem = (): Electron.MenuItemConstructorOptions => ({
+    label: "设置…",
+    accelerator: "CommandOrControl+,",
+    click: openSettings,
   });
   const visibilityItem = (): Electron.MenuItemConstructorOptions => ({
     label: preferences.visibility === "visible" ? "Hide Mosey" : "Show Mosey",
@@ -181,7 +221,7 @@ async function start() {
           submenu: [
             ...loginItems(),
             visibilityItem(),
-            sizeItem(),
+            settingsItem(),
             {
               label: "Quit Mosey",
               accelerator: "CommandOrControl+Q",
@@ -194,7 +234,7 @@ async function start() {
     );
     return Menu.buildFromTemplate([
       visibilityItem(),
-      sizeItem(),
+      settingsItem(),
       ...loginItems(),
       diagnostic,
       { label: "Quit Mosey", click: quit },
@@ -226,6 +266,7 @@ async function start() {
   const area = screen.getPrimaryDisplay().workArea;
   const initialSide = petGeometry(preferences.size).side;
   const pet = new BrowserWindow({
+    title: "Mosey",
     width: initialSide,
     height: initialSide,
     x: area.x + Math.round((area.width - initialSide) / 2),
@@ -564,11 +605,18 @@ async function start() {
       pet?.webContents.send(channels.presentation, presentation());
   };
   const changeSize = (size: PetSize) => {
-    if (size === preferences.size) return;
+    if (size === preferences.size) {
+      failedSize = undefined;
+      publishSettings();
+      return;
+    }
     if (!preferences.setSize(size)) {
+      failedSize = size;
+      publishSettings();
       refreshMenus();
       return;
     }
+    failedSize = undefined;
     const old = pet.getBounds();
     const side = petGeometry(size).side;
     geometryRevision++;
@@ -587,8 +635,31 @@ async function start() {
     constrain(pet.getBounds().x, pet.getBounds().y);
     release(true);
     publish();
+    publishSettings();
     refreshMenus();
   };
+  const settingsAuthorized = (event: Electron.IpcMainInvokeEvent) =>
+    settingsWindow &&
+    event.sender === settingsWindow.webContents &&
+    event.senderFrame === settingsWindow.webContents.mainFrame;
+  ipcMain.handle(channels.getSettings, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted settings request");
+    emptyRequestSchema.parse(value);
+    return settingsState();
+  });
+  ipcMain.handle(channels.setSize, (event, value: unknown) => {
+    if (!settingsAuthorized(event)) throw new Error("Untrusted size request");
+    changeSize(petSizeSchema.parse(value));
+    return settingsState();
+  });
+  ipcMain.handle(channels.showPet, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted visibility request");
+    emptyRequestSchema.parse(value);
+    setVisibility("visible");
+    return settingsState();
+  });
   behavior.subscribe((snapshot) => {
     if (snapshot.value === "resting" && gesture) {
       behavior.send({ type: "PAUSE" });

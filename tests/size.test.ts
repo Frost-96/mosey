@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { chooseSize, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -36,11 +37,15 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     let pet = await app.firstWindow();
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.getBounds(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .getBounds(),
       );
     const desktop = () =>
       app!.evaluate(({ BrowserWindow, screen }) => ({
-        bounds: BrowserWindow.getAllWindows()[0]!.getBounds(),
+        bounds: BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .getBounds(),
         area: screen.getPrimaryDisplay().workArea,
       }));
     const groundDistance = async () => {
@@ -65,24 +70,15 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.isVisible(),
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .isVisible(),
         ),
       )
       .toBe(true);
     const { bounds: initial, area: initialArea } = await desktop();
     expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
-    const choose = (label: string) =>
-      app!.evaluate(({ BrowserWindow, Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Size")
-          ?.submenu?.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing size menu item: ${label}`);
-        const pet = BrowserWindow.getAllWindows()[0]!;
-        const before = pet.getBounds();
-        item.click();
-        return { before, after: pet.getBounds() };
-      }, label);
+    const choose = (label: string) => chooseSize(app!, label);
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
@@ -185,7 +181,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       }
       // Keep the directed gesture away from real cursor movement, as #4 does.
       await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
         const area = screen.getPrimaryDisplay().workArea;
         const pointer = screen.getCursorScreenPoint();
         pet.setPosition(
@@ -232,7 +230,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         .toBe(true);
       // Place the next size fixture at the current primary work-area center.
       await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
         const bounds = pet.getBounds();
         const area = screen.getPrimaryDisplay().workArea;
         pet.setPosition(
@@ -291,7 +291,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.isVisible(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .isVisible(),
       ),
     ).toBe(false);
     await invoke("Show Mosey");
@@ -325,7 +327,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()[0]!.isVisible(),
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .isVisible(),
       ),
     ).toBe(false);
     await invoke("Show Mosey");
@@ -338,15 +342,12 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     await pet.waitForLoadState("load");
     await choose("Small");
     expect((await bounds()).width).toBe(240);
+    const settings = await openSettings(app);
     expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Size")
-          ?.submenu?.items.filter((item) => item.checked)
-          .map((item) => item.label),
-      ),
-    ).toEqual(["Large"]);
+      await settings
+        .getByRole("button", { name: "大", exact: true })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     const logPath = await app.evaluate(({ app }) =>
       process
         .getBuiltinModule("node:path")
