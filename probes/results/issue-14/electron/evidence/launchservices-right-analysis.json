@@ -1,0 +1,211 @@
+{
+  "pngLocalPath": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/local-dock-captures/right-stable.png",
+  "pngSHA256": "c6ca19d73ea4b5860135fbec28ea6922fb901e4c4caf0c0d36c776281e89310f",
+  "nativeLog": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/evidence/launchservices-right-run.jsonl",
+  "nativeLogSHA256": "b5aaae6212d5301cbff3a790d7acbfd900bc5216d43e0cb150b34913adeb53e7",
+  "hostIdentity": {
+    "processID": 91387,
+    "parentPID": 1,
+    "packaged": true,
+    "helperPath": "/Users/frost/.codex/visualizations/2026/10/20/01a15879-c49a-7f92-b301-cefd8f66a866/electron-dock-issue-14-v2/Mosey.app/Contents/Resources/native/dock-live"
+  },
+  "threshold": 128,
+  "selection": "largest_4_connected_alpha_component",
+  "orientation": "right",
+  "pngBoundsPixels": {
+    "height": 1700,
+    "width": 118,
+    "x": 2813,
+    "y": 140
+  },
+  "pngSelectedPixelCount": 199724,
+  "pngContourHash": "28c7871aea87c6fb",
+  "nativeFrameComparisons": [
+    {
+      "sequence": 1,
+      "elapsed": 0.17647216666666665,
+      "hash": "cf6ad17321349f0f",
+      "boundsPixels": {
+        "x": 2817,
+        "y": 136,
+        "width": 114,
+        "height": 1706
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 2,
+      "elapsed": 0.23927616666666665,
+      "hash": "cf6ad17321349f0f",
+      "boundsPixels": {
+        "x": 2817,
+        "y": 136,
+        "width": 114,
+        "height": 1706
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 3,
+      "elapsed": 0.333846625,
+      "hash": "45e559ecd2ef17e3",
+      "boundsPixels": {
+        "x": 2817,
+        "y": 136,
+        "width": 114,
+        "height": 1704
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 4,
+      "elapsed": 0.43400925,
+      "hash": "ba911ae182741923",
+      "boundsPixels": {
+        "x": 2815,
+        "y": 138,
+        "width": 116,
+        "height": 1702
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 5,
+      "elapsed": 0.5400855416666667,
+      "hash": "5e63c982bc76b06b",
+      "boundsPixels": {
+        "x": 2815,
+        "y": 138,
+        "width": 116,
+        "height": 1700
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 6,
+      "elapsed": 0.64415025,
+      "hash": "28c7871aea87c6fb",
+      "boundsPixels": {
+        "x": 2813,
+        "y": 140,
+        "width": 118,
+        "height": 1700
+      },
+      "matchesPNGHash": true,
+      "matchesPNGBounds": true,
+      "matchesPNGSelectedCount": true,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 7,
+      "elapsed": 0.7884694166666666,
+      "hash": "28c7871aea87c6fb",
+      "boundsPixels": {
+        "x": 2813,
+        "y": 140,
+        "width": 118,
+        "height": 1700
+      },
+      "matchesPNGHash": true,
+      "matchesPNGBounds": true,
+      "matchesPNGSelectedCount": true,
+      "rejectionReason": "none"
+    },
+    {
+      "sequence": 8,
+      "elapsed": 13.670478625,
+      "hash": "42c3715f3697755b",
+      "boundsPixels": {
+        "x": 2829,
+        "y": 140,
+        "width": 111,
+        "height": 1700
+      },
+      "matchesPNGHash": false,
+      "matchesPNGBounds": false,
+      "matchesPNGSelectedCount": false,
+      "rejectionReason": "none"
+    }
+  ],
+  "nativeTypeCounts": {
+    "environment": 1,
+    "dock_windows": 1,
+    "stream_configuration": 1,
+    "frame": 8,
+    "heartbeat": 245
+  },
+  "verdict": "matched_at_least_one_complete_frame",
+  "idleCurrentEvidence": {
+    "heartbeatCount": 108,
+    "maxOriginalSourceAgeSeconds": 12.859675458333333,
+    "maxCallbackAgeSeconds": 0.18178525
+  },
+  "lastHeartbeat": {
+    "type": "heartbeat",
+    "acceptedComplete": 8,
+    "acceptedCompleteSequence": null,
+    "alphaAnalyzedCount": 8,
+    "backpressureSkipped": 0,
+    "callbackCount": 135,
+    "callbackSilenceInvalidations": 1,
+    "callbackTimeoutSeconds": 1,
+    "candidateStatus": "unavailable_or_stale",
+    "completeReceived": 8,
+    "frameStatusCounts": {
+      "0": 8,
+      "1": 126,
+      "3": 1
+    },
+    "idleCallbacks": 126,
+    "idleCurrentPolicy": true,
+    "incompleteCallbacks": 127,
+    "intervalSkipped": 0,
+    "invalidationReason": "callback_silence",
+    "lastAcceptedSourceAgeSeconds": null,
+    "lastAcceptedSourceDisplayMachTicks": null,
+    "lastCallbackAgeSeconds": 13.323809125,
+    "lastCompleteSourceAgeSeconds": 13.413621958333334,
+    "lastFrameStatusCode": 3,
+    "lastObservedStatus": "callback_silence",
+    "lateComplete": 0,
+    "latestCompleteSequence": 8,
+    "maxObservedCallbackGapSeconds": 0.19209945833333333,
+    "pendingCompleteCount": 0,
+    "pendingDiscardedOnInvalidation": 0,
+    "pendingQueued": 0,
+    "pendingReplaced": 0,
+    "processedComplete": 8,
+    "streamErrorCode": null,
+    "supersededProcessed": 0,
+    "upstreamDroppedFrames": "not_observable",
+    "supportEdge": null,
+    "elapsed": 27.00088
+  },
+  "lastHostRecord": {
+    "type": "electron-stop",
+    "code": null,
+    "signal": "SIGTERM",
+    "reason": "user stop",
+    "supportEdge": null
+  },
+  "limitations": [
+    "PNG and stream are separate capture mechanisms, same operator-labelled stable phase; no hardware synchronization or exact frame-time equality proven.",
+    "Native matches compare contour hash, bounding rectangle and selected alpha count; not full pixel color equivalence.",
+    "No product supportEdge accepted."
+  ]
+}

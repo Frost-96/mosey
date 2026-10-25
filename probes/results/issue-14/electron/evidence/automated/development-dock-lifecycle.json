@@ -1,0 +1,20 @@
+[
+  {
+    "localLog": "/Users/frost/Library/Application Support/Mosey/dock-validation/run-bb9bce36-8de1-4c7e-86d3-8f2e75d1f173.jsonl",
+    "nativePID": 88952,
+    "capturing": true,
+    "faultInjection": "SIGSTOP owned helper"
+  },
+  {
+    "localLog": "/Users/frost/Library/Application Support/Mosey/dock-validation/run-74b36e03-76d0-4899-b8bb-70667cc33f1b.jsonl",
+    "nativePID": 88967,
+    "capturing": true,
+    "faultInjection": "SIGSTOP owned helper"
+  },
+  {
+    "localLog": "/Users/frost/Library/Application Support/Mosey/dock-validation/run-d25ba539-616f-439d-b68d-e7cf5f033379.jsonl",
+    "nativePID": 88980,
+    "capturing": true,
+    "faultInjection": "SIGSTOP owned helper"
+  }
+]
