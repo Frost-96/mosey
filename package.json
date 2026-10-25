@@ -24,9 +24,10 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check",
     "postinstall": "install-electron",
     "assets:build": "node tools/build-assets.ts",
-    "prestart": "pnpm assets:build",
-    "prebuild": "pnpm assets:build",
-    "prepackage:mac": "pnpm assets:build"
+    "prestart": "pnpm assets:build && pnpm native:build",
+    "prebuild": "pnpm assets:build && pnpm native:build",
+    "prepackage:mac": "pnpm assets:build && pnpm native:build",
+    "native:build": "node tools/build-dock-helper.ts"
   },
   "devDependencies": {
     "@electron-forge/cli": "8.0.1",
