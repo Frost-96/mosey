@@ -4,3 +4,13 @@ out/
 test-results/
 
 build/
+.DS_Store
+dist/
+release/
+playwright-report/
+
+# Track only shared agent guidance, architecture decisions, and validation docs.
+/docs/*
+!/docs/agents/
+!/docs/adr/
+!/docs/validation/
