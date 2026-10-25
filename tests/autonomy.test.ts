@@ -1,3 +1,4 @@
+import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -296,8 +297,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     expect(await bounds()).toEqual(grabbed);
     await pet.mouse.up();
     await expect
-      .poll(async () => (await bounds()).y, { timeout: 4000 })
-      .toBe(ground.y);
+      .poll(() => distanceFromGround(app!), { timeout: 4000 })
+      .toBe(0);
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 4000 })
       .toBe(true);
