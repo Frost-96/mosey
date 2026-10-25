@@ -228,6 +228,18 @@ test(
         }, random);
         await restClock(600);
         await menu("Hide Mosey");
+        // Restoring visibility preserves position. Arrange room for the
+        // deliberately left-facing walk instead of relying on old recentering.
+        await app!.evaluate(({ BrowserWindow, screen }) => {
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          const area = screen.getPrimaryDisplay().workArea;
+          const bounds = pet.getBounds();
+          pet.setPosition(
+            area.x + Math.round(Math.max(0, area.width - bounds.width) / 2),
+            bounds.y,
+            false,
+          );
+        });
         await menu("Show Mosey");
       };
       const visiblePoint = () =>

@@ -136,7 +136,7 @@ async function start() {
     else {
       behavior.send({ type: "CANCEL" });
       displayed = undefined;
-      positionOnGround();
+      alignGround();
       pet.showInactive();
     }
     synchronizeVisibility();
@@ -253,14 +253,6 @@ async function start() {
     // Lifecycle cancellation owns the pause even if the OS never opened its
     // tracking loop and therefore does not deliver a popup completion callback.
     finishBodyMenu(menu);
-  };
-  const positionOnGround = () => {
-    const ground = screen.getPrimaryDisplay().workArea;
-    const { width, height } = pet.getBounds();
-    pet.setPosition(
-      ground.x + Math.round((ground.width - width) / 2),
-      ground.y + ground.height - height,
-    );
   };
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
