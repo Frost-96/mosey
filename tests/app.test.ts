@@ -434,7 +434,9 @@ async function exercisePet() {
     const ground = await petBounds();
     // Dock/work-area changes can occur while the real app runs. Sample the
     // current floor and pet bounds together, rather than reuse the initial y.
-    const waitForGround = (timeout = 1000) =>
+    // A full-height release includes flutter, falling and renderer/IPC scheduling.
+    // Match the regrab release budget while still requiring the exact floor.
+    const waitForGround = (timeout = 3000) =>
       expect.poll(() => distanceFromGround(app!), { timeout }).toBe(0);
     await window.mouse.move(120, 180);
     await window.mouse.down();
