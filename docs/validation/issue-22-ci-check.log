@@ -1,0 +1,6 @@
+$ pnpm typecheck && pnpm lint && pnpm format:check
+$ tsc --noEmit
+$ eslint .
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
