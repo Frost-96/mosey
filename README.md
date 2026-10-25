@@ -2,7 +2,9 @@
 
 > 状态（2026-10-21）：保留 #3 已实现的点击互动，仅取消“点击宠物后保持原输入框键盘焦点”的验收要求；点击后可能需要重新点击输入框恢复输入。不采用私有 AppKit 焦点适配，其余功能和验收标准保留。
 
-单只柯基的本地 macOS 应用（#13 工程基线、#2 正式待机、#3 清醒点击实现）。Canvas 2D 播放呼吸循环，点击可见身体时随机歪头、伸爪或翻肚，动作期间连点合并、不排队。240 × 240 点透明窗口放在主屏可用区域底部，菜单栏 🐾 提供 **Quit Mosey**。透明区域使用当前帧同源 alpha 切换鼠标穿透；8ms 光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录。见 [#3 证据与限制](docs/validation/issue-3.md)。拖动、自主活动与 Dock 交互尚未实现。
+单只柯基的本地 macOS 应用。清醒时点击可见身体，随机歪头、伸爪或翻肚，连点合并且不排队；拖动可打断动作，松手后扑腾、下落并蹲下落地。柯基平时休息，偶尔散步、伸懒腰或自己玩；清醒活动约两分钟后在下一次休息调度躺下睡觉。睡眠第一次点击只动耳，900ms内第二次点击才醒，拖动立即唤醒。保持静音、无文字、无需照料。见 [#5 行为、素材与验证边界](docs/validation/issue-5.md)。
+
+透明窗口默认240×240点，位于主屏可用区域底部；菜单栏 🐾 提供显示／隐藏、小中大三档大小、开机启动和退出，本体右键菜单提供隐藏与退出。透明区域使用当前帧同源alpha切换鼠标穿透；8ms光标轮询仍有首次进入竞态；点击后不保证保持原工作应用的键盘焦点，这已不属于验收要求。真实桌面观察与剩余时序风险分别记录，见 [#3 证据与限制](docs/validation/issue-3.md)。Dock攀爬尚未实现，下述可选验证入口仍是独立实验。
 
 ## 运行与验证
 
@@ -54,7 +56,7 @@ pnpm test:packaged  # 启动刚生成的真实 .app
 
 主进程在异步启动函数内等待 `app.whenReady()` 初始化，避免 ESM 顶层 await app.whenReady 与 Playwright 初始化加载器相互等待。开发测试仅为 Forge 的首个自动启动槽提供一个临时可执行占位程序，以保持其 Vite 服务器和 watcher 存活；随后由 Playwright 启动**真实且无测试分支的应用入口**。产品代码不识别测试环境变量。该占位程序不模拟渲染、菜单或 Electron API。
 
-素材输入保留在 `src/assets/corgi-idle.png`。`tools/build-assets.ts` 使用 sharp 提取单一稳定姿态，制作同身份呼吸循环、2x PNG 图集及版本化 JSON；制作幅度、脚底锚点和透明边缘处理见 [#2 证据](docs/validation/issue-2.md)。`start` / `build` / `package:mac` 的 pre 脚本自动生成素材；生成物也提交，开发与打包均使用同一结果。开发由 Vite 提供图片 URL，生产通过 import 打包为带 hash 本地资源，随 asar 交付。
+素材输入按动作保留在 `src/assets/corgi-*.png`。`tools/build-assets.ts` 使用 sharp 制作待机、互动、拖动、自由活动及睡眠的2x PNG图集、版本化JSON和同源命中区域；制作幅度、脚底锚点和透明边缘处理见 [#2 证据](docs/validation/issue-2.md)。`start` / `build` / `package:mac` 的 pre 脚本自动生成素材；生成物也提交，开发与打包均使用同一结果。开发由 Vite 提供图片 URL，生产通过 import 打包为带 hash 本地资源，随 asar 交付。
 
 行为模块只依赖 XState 和 TypeScript，主进程分别管理姿态与系统可见性；renderer 按实际经过时间选帧，仅在帧改变时绘制，不可见时停调度。单实例锁在建立窗口／托盘之前获取；重复启动不激活已有窗口。日志只写本地 `~/Library/Logs/Mosey/main.log`，1 MiB 阈值与单份旧文件轮转，不上传，不开启逐帧日志。
 
@@ -70,6 +72,6 @@ GitHub Actions 在官方 arm64 `macos-15` runner 上执行 frozen install、类�
 
 ## 可选 Dock 验证（#14）
 
-默认启动仍只显示待机柯基和菜单栏，不进行屏幕捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
+默认启动显示柯基并运行日常循环，不进行屏幕捕获。菜单栏 🐾 或应用菜单 **Dock validation** 提供 **Start Dock validation (120 seconds)**、**Stop Dock validation**、**Show Dock validation status**，以及 **Operator Dock orientation** 的 bottom / left / right 人工标签。先核对实际 Dock 位置，再选择方向并启动。状态窗显示原生 preflight 的 blocked / capturing / stopped 状态、最新已验证原生报告和可复制的本地日志路径。
 
 此入口是实际 Forge/Vite 应用中的独立实验，尚未提供宠物碰撞、攀爬或固定边界降级。不会主动申请或修改权限；Electron 的 screen 状态与 Swift 子进程自己的 preflight 分别记录，不能相互替代。需要授权时由用户在系统设置中手动操作；最终归属必须以该冻结应用的实际启动链与观察为准。详见 [Electron Dock 验证说明](docs/validation/issue-14-electron.md)。

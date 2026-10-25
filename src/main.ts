@@ -1,3 +1,7 @@
+import settling from "./assets/generated/settling-atlas.json";
+import waking from "./assets/generated/waking-atlas.json";
+import ear from "./assets/generated/ear-atlas.json";
+import sleeping from "./assets/generated/sleeping-atlas.json";
 import walking from "./assets/generated/walking-atlas.json";
 import stretching from "./assets/generated/stretching-atlas.json";
 import playing from "./assets/generated/playing-atlas.json";
@@ -256,6 +260,10 @@ async function start() {
   };
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
+    settling,
+    waking,
+    ear,
+    sleeping,
     idle,
     walking,
     stretching,
