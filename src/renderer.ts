@@ -1,3 +1,9 @@
+import walkingUrl from "./assets/generated/walking-atlas.png";
+import walking from "./assets/generated/walking-atlas.json";
+import stretchingUrl from "./assets/generated/stretching-atlas.png";
+import stretching from "./assets/generated/stretching-atlas.json";
+import playingUrl from "./assets/generated/playing-atlas.png";
+import playing from "./assets/generated/playing-atlas.json";
 import idleUrl from "./assets/generated/idle-atlas.png";
 import tiltUrl from "./assets/generated/tilt-atlas.png";
 import pawUrl from "./assets/generated/paw-atlas.png";
@@ -21,6 +27,9 @@ try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [walking, walkingUrl],
+      [stretching, stretchingUrl],
+      [playing, playingUrl],
       [tilt, tiltUrl],
       [paw, pawUrl],
       [belly, bellyUrl],
@@ -53,6 +62,7 @@ try {
     completed = -1;
   let presentation: Presentation = {
     posture: "resting",
+    direction: "right",
     visibility: "hidden",
     actionId: 0,
     startedAt: Date.now(),
@@ -81,10 +91,15 @@ try {
         remaining -= frame.durationMs;
         index++;
       }
-      const key = `${presentation.actionId}:${index}`;
+      const key = `${presentation.actionId}:${presentation.direction}:${index}`;
       if (key !== previous) {
         const { region, foot } = atlas.frames[index]!;
         context!.clearRect(0, 0, 240, 240);
+        context!.save();
+        if (presentation.direction === "left") {
+          context!.translate(240, 0);
+          context!.scale(-1, 1);
+        }
         context!.drawImage(
           image,
           region.x,
@@ -96,6 +111,7 @@ try {
           region.width / atlas.pixelRatio,
           region.height / atlas.pixelRatio,
         );
+        context!.restore();
         window.mosey.input({
           type: "frame",
           actionId: presentation.actionId,
