@@ -1,0 +1,69 @@
+{
+  "observedFrames": 4,
+  "references": [
+    {
+      "index": 0,
+      "width": 240,
+      "height": 240,
+      "opaque": 23577,
+      "top": 41,
+      "bottom": 239
+    },
+    {
+      "index": 1,
+      "width": 240,
+      "height": 240,
+      "opaque": 23577,
+      "top": 41,
+      "bottom": 239
+    },
+    {
+      "index": 2,
+      "width": 240,
+      "height": 240,
+      "opaque": 23997,
+      "top": 39,
+      "bottom": 239
+    },
+    {
+      "index": 3,
+      "width": 240,
+      "height": 240,
+      "opaque": 23997,
+      "top": 39,
+      "bottom": 239
+    },
+    {
+      "index": 4,
+      "width": 240,
+      "height": 240,
+      "opaque": 23575,
+      "top": 41,
+      "bottom": 239
+    },
+    {
+      "index": 5,
+      "width": 240,
+      "height": 240,
+      "opaque": 23575,
+      "top": 41,
+      "bottom": 239
+    },
+    {
+      "index": 6,
+      "width": 240,
+      "height": 240,
+      "opaque": 23142,
+      "top": 43,
+      "bottom": 239
+    },
+    {
+      "index": 7,
+      "width": 240,
+      "height": 240,
+      "opaque": 23142,
+      "top": 43,
+      "bottom": 239
+    }
+  ]
+}
