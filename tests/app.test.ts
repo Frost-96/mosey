@@ -94,6 +94,10 @@ async function exercisePet() {
   const profile = await realpath(
     await mkdtemp(path.join(os.tmpdir(), "mosey-app-profile-")),
   );
+  await writeFile(
+    path.join(profile, "preferences.json"),
+    JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+  );
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   const errors: string[] = [];

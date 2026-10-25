@@ -169,9 +169,9 @@ test(
       // Calibrate only visible pixels before the first seeded activity; all three
       // initial idle silhouettes face right. Their mirrors are external references.
       for (const [label, side] of [
-        ["Small", 180],
-        ["Medium", 240],
-        ["Large", 300],
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
       ] as const) {
         await choose(label);
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
@@ -272,9 +272,9 @@ test(
           return point;
         });
       for (const [startLabel, endLabel, side] of [
-        ["Small", "Large", 300],
-        ["Large", "Medium", 240],
-        ["Medium", "Small", 180],
+        ["Small", "Large", 240],
+        ["Large", "Medium", 160],
+        ["Medium", "Small", 70],
       ] as const) {
         await choose(startLabel);
         await activity(0.1);
@@ -363,7 +363,7 @@ test(
         });
         const changedRaster = await raster();
         expect(changedRaster.opaque).toBeGreaterThan(
-          2000 * changedRatio * changedRatio,
+          side * side * 0.2 * changedRatio * changedRatio,
         );
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
         await grounded();
@@ -433,7 +433,7 @@ test(
         });
         const restoredRaster = await raster();
         expect(restoredRaster.opaque).toBeGreaterThan(
-          2000 * baseRatio * baseRatio,
+          side * side * 0.2 * baseRatio * baseRatio,
         );
         await expect
           .poll(async () => matches(await pixels(), idle.left), {

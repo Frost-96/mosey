@@ -149,8 +149,14 @@ async function start() {
   let geometryRevision = 0;
   const sizeItem = (): Electron.MenuItemConstructorOptions => ({
     label: "Size",
-    submenu: (["small", "medium", "large"] as const).map((size) => ({
-      label: size[0]!.toUpperCase() + size.slice(1),
+    submenu: (
+      [
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
+      ] as const
+    ).map(([label, size]) => ({
+      label,
       type: "radio",
       checked: preferences.size === size,
       click: () => changeSize(size),
