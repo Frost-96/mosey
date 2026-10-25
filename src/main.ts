@@ -69,6 +69,66 @@ async function start() {
   });
   const quit = () => app.quit();
   let drained = false;
+  let loginError: string | undefined;
+  const setLoginLaunch = (openAtLogin: boolean) => {
+    if (process.platform !== "darwin" || !app.isPackaged) return;
+    loginError = undefined;
+    try {
+      app.setLoginItemSettings({ type: "mainAppService", openAtLogin });
+      const actual = app.getLoginItemSettings({ type: "mainAppService" });
+      const registered = ["enabled", "requires-approval"].includes(
+        actual.status,
+      );
+      if (registered !== openAtLogin)
+        loginError = "Login launch change failed; try System Settings";
+    } catch (error) {
+      loginError = "Login launch change failed; try System Settings";
+      log.warn("Unable to change login item settings", error);
+    }
+    refreshMenus();
+  };
+  const loginItems = (): Electron.MenuItemConstructorOptions[] => {
+    const supported = process.platform === "darwin" && app.isPackaged;
+    let settings: Electron.LoginItemSettings | undefined;
+    try {
+      if (process.platform === "darwin")
+        settings = app.getLoginItemSettings({ type: "mainAppService" });
+    } catch (error) {
+      log.warn("Unable to read login item settings", error);
+    }
+    return [
+      {
+        label: "Launch at Login",
+        type: "checkbox",
+        checked: settings?.status === "enabled" && settings.openAtLogin,
+        enabled: supported && !!settings,
+        // mainAppService resolves this running .app itself. Never register the
+        // development executable or store a JSON preference competing with macOS.
+        click: (item) => setLoginLaunch(item.checked),
+      },
+      ...(settings?.status === "requires-approval"
+        ? [
+            {
+              label: "Cancel Pending Login Launch",
+              click: () => setLoginLaunch(false),
+            },
+          ]
+        : []),
+      ...(loginError ? [{ label: loginError, enabled: false }] : []),
+      ...(!supported || !settings || settings.status === "requires-approval"
+        ? [
+            {
+              label: !supported
+                ? "Login launch requires the packaged macOS app"
+                : !settings
+                  ? "Login launch status unavailable"
+                  : "Allow Mosey in System Settings → General → Login Items",
+              enabled: false,
+            },
+          ]
+        : []),
+    ];
+  };
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
     dismissBodyMenu();
@@ -108,6 +168,7 @@ async function start() {
         {
           label: "Mosey",
           submenu: [
+            ...loginItems(),
             visibilityItem(),
             sizeItem(),
             {
@@ -120,14 +181,13 @@ async function start() {
         diagnostic,
       ]),
     );
-    tray.setContextMenu(
-      Menu.buildFromTemplate([
-        visibilityItem(),
-        sizeItem(),
-        diagnostic,
-        { label: "Quit Mosey", click: quit },
-      ]),
-    );
+    return Menu.buildFromTemplate([
+      visibilityItem(),
+      sizeItem(),
+      ...loginItems(),
+      diagnostic,
+      { label: "Quit Mosey", click: quit },
+    ]);
   };
   app.on("before-quit", (event) => {
     if (!drained) {
@@ -146,6 +206,12 @@ async function start() {
   tray.setToolTip("Mosey");
   const dockValidation = new DockValidation(refreshMenus);
   refreshMenus();
+  // macOS's cached native context menu does not provide a reliable pre-open
+  // callback. Open explicitly so every click reads the current system setting.
+  const openTrayMenu = () => tray.popUpContextMenu(refreshMenus());
+  tray.on("click", openTrayMenu);
+  tray.on("right-click", openTrayMenu);
+  app.on("activate", refreshMenus);
   const area = screen.getPrimaryDisplay().workArea;
   const initialSide = petGeometry(preferences.size).side;
   const pet = new BrowserWindow({

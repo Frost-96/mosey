@@ -128,6 +128,26 @@ async function exercisePet() {
       profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
+    const loginMenu = await app.evaluate(({ Menu, app }) => {
+      const item = Menu.getApplicationMenu()
+        ?.items.find((entry) => entry.label === "Mosey")
+        ?.submenu?.items.find((entry) => entry.label === "Launch at Login");
+      return {
+        exists: !!item,
+        checked: item?.checked,
+        enabled: item?.enabled,
+        actual:
+          app.getLoginItemSettings().status === "enabled" &&
+          app.getLoginItemSettings().openAtLogin,
+        packaged: app.isPackaged,
+      };
+    });
+    expect(loginMenu.exists).toBe(true);
+    expect(loginMenu.checked).toBe(loginMenu.actual);
+    expect(loginMenu.enabled).toBe(
+      loginMenu.packaged && process.platform === "darwin",
+    );
+
     window.on("pageerror", (error) => {
       errors.push(error.message);
       console.error(error.message);
