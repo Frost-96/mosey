@@ -1,60 +1,109 @@
 import idleUrl from "./assets/generated/idle-atlas.png";
-import metadata from "./assets/generated/idle-atlas.json";
+import tiltUrl from "./assets/generated/tilt-atlas.png";
+import pawUrl from "./assets/generated/paw-atlas.png";
+import bellyUrl from "./assets/generated/belly-atlas.png";
+import idle from "./assets/generated/idle-atlas.json";
+import tilt from "./assets/generated/tilt-atlas.json";
+import paw from "./assets/generated/paw-atlas.json";
+import belly from "./assets/generated/belly-atlas.json";
 import { atlasSchema } from "./shared/assets";
 import type { Presentation } from "./shared/contract";
 
 try {
-  const atlas = atlasSchema.parse(metadata);
+  const assets = await Promise.all(
+    [
+      [idle, idleUrl],
+      [tilt, tiltUrl],
+      [paw, pawUrl],
+      [belly, bellyUrl],
+    ].map(async ([metadata, url]) => {
+      const atlas = atlasSchema.parse(metadata);
+      const image = new Image();
+      image.src = String(url);
+      await image.decode();
+      if (image.width !== atlas.width || image.height !== atlas.height)
+        throw new Error("Atlas pixels do not match metadata");
+      return { atlas, image };
+    }),
+  );
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  const image = new Image();
-  image.src = idleUrl;
-  await image.decode();
-  if (image.width !== atlas.width || image.height !== atlas.height)
-    throw new Error("Atlas pixels do not match metadata");
-  // Keep Canvas details here; metadata uses only image-space geometry.
   const scale = window.devicePixelRatio;
   canvas.width = Math.round(240 * scale);
   canvas.height = Math.round(240 * scale);
   canvas.style.width = "240px";
   canvas.style.height = "240px";
   context.scale(scale, scale);
-  const total = atlas.frames.reduce((sum, frame) => sum + frame.durationMs, 0);
-  const started = performance.now();
-  let previous = -1;
-  let scheduled = 0;
-  let presentation: Presentation = { posture: "resting", visibility: "hidden" };
-  function draw(now: number) {
+  let previous = "",
+    scheduled = 0,
+    completed = -1;
+  let presentation: Presentation = {
+    posture: "resting",
+    visibility: "hidden",
+    actionId: 0,
+    startedAt: Date.now(),
+  };
+  function draw() {
     scheduled = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
-    let remaining = (now - started) % total;
-    let index = 0;
-    for (const frame of atlas.frames) {
-      if (remaining < frame.durationMs) break;
-      remaining -= frame.durationMs;
-      index++;
-    }
-    if (index !== previous) {
-      const frame = atlas.frames[index]!;
-      const { region, foot } = frame;
-      context!.clearRect(0, 0, 240, 240);
-      context!.drawImage(
-        image,
-        region.x,
-        region.y,
-        region.width,
-        region.height,
-        120 - foot.x / atlas.pixelRatio,
-        240 - foot.y / atlas.pixelRatio,
-        region.width / atlas.pixelRatio,
-        region.height / atlas.pixelRatio,
-      );
-      previous = index;
+    const { atlas, image } = assets.find(
+      (asset) => asset.atlas.action === presentation.posture,
+    )!;
+    const total = atlas.frames.reduce(
+      (sum, frame) => sum + frame.durationMs,
+      0,
+    );
+    const elapsed = Math.max(0, Date.now() - presentation.startedAt);
+    if (atlas.loop === "once" && elapsed >= total) {
+      if (completed !== presentation.actionId) {
+        completed = presentation.actionId;
+        window.mosey.input({ type: "done", actionId: completed });
+      }
+    } else {
+      let remaining = elapsed % total,
+        index = 0;
+      for (const frame of atlas.frames) {
+        if (remaining < frame.durationMs) break;
+        remaining -= frame.durationMs;
+        index++;
+      }
+      const key = `${presentation.actionId}:${index}`;
+      if (key !== previous) {
+        const { region, foot } = atlas.frames[index]!;
+        context!.clearRect(0, 0, 240, 240);
+        context!.drawImage(
+          image,
+          region.x,
+          region.y,
+          region.width,
+          region.height,
+          120 - foot.x / atlas.pixelRatio,
+          240 - foot.y / atlas.pixelRatio,
+          region.width / atlas.pixelRatio,
+          region.height / atlas.pixelRatio,
+        );
+        window.mosey.input({
+          type: "frame",
+          actionId: presentation.actionId,
+          frame: index,
+        });
+        previous = key;
+      }
     }
     scheduled = requestAnimationFrame(draw);
   }
+  canvas.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = canvas.getBoundingClientRect();
+    window.mosey.input({
+      type: "click",
+      actionId: presentation.actionId,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  });
   function synchronize(value: Presentation) {
     presentation = value;
     if (scheduled) cancelAnimationFrame(scheduled);
