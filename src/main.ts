@@ -9,6 +9,7 @@ import {
   powerMonitor,
 } from "electron";
 import path from "node:path";
+import { PreferencesStore } from "./platform/preferences";
 import { DockValidation } from "./platform/dock-validation";
 import log from "electron-log/main";
 import { createActor } from "xstate";
@@ -39,7 +40,7 @@ else void start();
 async function start() {
   // Retain the native tray for the entire application lifetime.
   const behavior = createActor(petBehavior).start();
-  let visibility: Presentation["visibility"] = "visible";
+  let visibility: Presentation["visibility"] = "hidden";
   log.transports.file.maxSize = 1024 * 1024;
   log.transports.console.level = false;
   log.transports.ipc.level = false;
@@ -49,6 +50,7 @@ async function start() {
   });
   await app.whenReady();
   app.dock?.hide();
+  const preferences = new PreferencesStore(app.getPath("userData"));
   log.info("Mosey starting", {
     version: app.getVersion(),
     electron: process.versions.electron,
@@ -56,6 +58,21 @@ async function start() {
   });
   const quit = () => app.quit();
   let drained = false;
+  const visibilityItem = (): Electron.MenuItemConstructorOptions => ({
+    label: preferences.visibility === "visible" ? "Hide Mosey" : "Show Mosey",
+    click: () => {
+      const next = preferences.visibility === "visible" ? "hidden" : "visible";
+      if (!preferences.setVisibility(next)) return;
+      if (next === "hidden") pet.hide();
+      else {
+        behavior.send({ type: "CANCEL" });
+        displayed = undefined;
+        positionOnGround();
+        pet.showInactive();
+      }
+      refreshMenus();
+    },
+  });
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
       label: "Dock validation",
@@ -66,6 +83,7 @@ async function start() {
         {
           label: "Mosey",
           submenu: [
+            visibilityItem(),
             {
               label: "Quit Mosey",
               accelerator: "CommandOrControl+Q",
@@ -78,6 +96,7 @@ async function start() {
     );
     tray.setContextMenu(
       Menu.buildFromTemplate([
+        visibilityItem(),
         diagnostic,
         { label: "Quit Mosey", click: quit },
       ]),
@@ -122,6 +141,15 @@ async function start() {
     },
   });
   pet.setAlwaysOnTop(true, "floating");
+  pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  const positionOnGround = () => {
+    const ground = screen.getPrimaryDisplay().workArea;
+    const { width, height } = pet.getBounds();
+    pet.setPosition(
+      ground.x + Math.round((ground.width - width) / 2),
+      ground.y + ground.height - height,
+    );
+  };
   pet.setIgnoreMouseEvents(true, { forward: true });
   const atlases = [
     idle,
@@ -212,7 +240,7 @@ async function start() {
     );
   };
   const routePointer = () => {
-    if (pet.isDestroyed()) return;
+    if (pet.isDestroyed() || visibility !== "visible") return;
     const pointer = screen.getCursorScreenPoint();
     const bounds = pet.getBounds();
     const next = !gesture && !hit(pointer.x - bounds.x, pointer.y - bounds.y);
@@ -252,7 +280,7 @@ async function start() {
     return presentation();
   });
   ipcMain.on(channels.input, (event, value: unknown) => {
-    if (!authorized(event)) return;
+    if (!authorized(event) || visibility !== "visible") return;
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
@@ -381,6 +409,10 @@ async function start() {
   pet.webContents.on("render-process-gone", cancelInteraction);
   app.on("before-quit", stopMotion);
   pet.on("show", () => {
+    if (preferences.visibility === "hidden") {
+      pet.hide();
+      return;
+    }
     visibility = "visible";
     startPointerPolling();
     publish();
@@ -391,6 +423,7 @@ async function start() {
     // Immediately release any last opaque region, independent of cursor polling.
     pet.setIgnoreMouseEvents(true, { forward: true });
     ignoring = true;
+    displayed = undefined;
     cancelInteraction();
     publish();
   });
@@ -420,7 +453,9 @@ async function start() {
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.once("ready-to-show", () => pet?.showInactive());
+  pet.once("ready-to-show", () => {
+    if (preferences.visibility === "visible") pet.showInactive();
+  });
   if (devURL) await pet.loadURL(devURL);
   else
     await pet.loadFile(
