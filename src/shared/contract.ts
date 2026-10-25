@@ -82,6 +82,7 @@ export interface PetBridge {
 export const channels = {
   getSettings: "settings:get",
   setSize: "settings:size",
+  previewSize: "settings:preview-size",
   showPet: "settings:show-pet",
   settings: "settings:state",
   getPresentation: "pet:get-presentation",
@@ -105,6 +106,7 @@ export type Settings = z.infer<typeof settingsSchema>;
 export interface SettingsBridge {
   get(): Promise<Settings>;
   setSize(size: number): Promise<Settings>;
+  previewSize(size: number): Promise<Settings>;
   showPet(): Promise<Settings>;
   onChange(listener: (state: Settings) => void): () => void;
 }
