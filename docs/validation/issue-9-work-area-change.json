@@ -1,0 +1,109 @@
+{
+  "sourceRun": "39551781880",
+  "sourceArtifact": "development-size-native.json",
+  "samples": [
+    {
+      "event": "initial",
+      "at": 1792561951795,
+      "bounds": {
+        "x": 362,
+        "y": 406,
+        "width": 300,
+        "height": 300
+      },
+      "visible": false,
+      "loading": true,
+      "workArea": {
+        "x": 0,
+        "y": 25,
+        "width": 1024,
+        "height": 681
+      },
+      "scaleFactor": 1
+    },
+    {
+      "event": "setPosition-before",
+      "at": 1792561952028,
+      "requested": {
+        "x": 362,
+        "y": 407
+      },
+      "bounds": {
+        "x": 362,
+        "y": 406,
+        "width": 300,
+        "height": 300
+      },
+      "visible": false,
+      "loading": true,
+      "workArea": {
+        "x": 0,
+        "y": 25,
+        "width": 1024,
+        "height": 682
+      },
+      "scaleFactor": 1
+    },
+    {
+      "event": "setPosition-after",
+      "at": 1792561952029,
+      "requested": {
+        "x": 362,
+        "y": 407
+      },
+      "bounds": {
+        "x": 362,
+        "y": 407,
+        "width": 300,
+        "height": 300
+      },
+      "visible": false,
+      "loading": true,
+      "workArea": {
+        "x": 0,
+        "y": 25,
+        "width": 1024,
+        "height": 682
+      },
+      "scaleFactor": 1
+    },
+    {
+      "event": "display-metrics-changed",
+      "at": 1792561952029,
+      "bounds": {
+        "x": 362,
+        "y": 407,
+        "width": 300,
+        "height": 300
+      },
+      "visible": false,
+      "loading": true,
+      "workArea": {
+        "x": 0,
+        "y": 25,
+        "width": 1024,
+        "height": 682
+      },
+      "scaleFactor": 1
+    },
+    {
+      "event": "show",
+      "at": 1792561952054,
+      "bounds": {
+        "x": 362,
+        "y": 407,
+        "width": 300,
+        "height": 300
+      },
+      "visible": true,
+      "loading": false,
+      "workArea": {
+        "x": 0,
+        "y": 25,
+        "width": 1024,
+        "height": 682
+      },
+      "scaleFactor": 1
+    }
+  ]
+}
