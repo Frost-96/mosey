@@ -478,6 +478,28 @@ test("body secondary clicks open a native menu and cancel without changing the p
         interval: 25,
       })
       .toBeGreaterThan(140);
+    for (const choice of [0.6, 0.9]) {
+      await app.evaluate((_electron, choice) => {
+        Math.random = () => choice;
+      }, choice);
+      await invoke("Hide Mosey");
+      await invoke("Show Mosey");
+      await expect
+        .poll(async () => idleFrames.has(await pixels()), { interval: 20 })
+        .toBe(false);
+      await openMenu();
+      const activity = { pixels: await pixels(), bounds: await bounds() };
+      await new Promise((resolve) => setTimeout(resolve, 2400));
+      expect(await pixels()).toBe(activity.pixels);
+      expect(await bounds()).toEqual(activity.bounds);
+      await closeMenu();
+      await expect
+        .poll(async () => idleFrames.has(await pixels()), {
+          timeout: 3000,
+          interval: 25,
+        })
+        .toBe(true);
+    }
     await app.evaluate(() => {
       globalThis.setTimeout = Reflect.get(globalThis, "unshortenedTimeout");
     });
@@ -596,6 +618,8 @@ test("body secondary clicks open a native menu and cancel without changing the p
             "falling",
             "landing",
             "walking",
+            "stretching",
+            "playing",
           ],
           dragSecondaryIgnored: true,
           systemSuspendClosesMenu: true,
