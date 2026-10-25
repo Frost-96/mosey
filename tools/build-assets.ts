@@ -75,10 +75,109 @@ await writeFile(
   JSON.stringify(atlas) + "\n",
 );
 
+// One row defines each action's source, pose/timing sequence and playback mode.
+// Pose -1 uses the exact idle pixels for a seamless return to rest.
+const actionConfigs = [
+  {
+    action: "tilt",
+    source: "tilt",
+    loop: "once",
+    sequence: [
+      [-1, 140],
+      [0, 140],
+      [1, 140],
+      [2, 140],
+      [2, 350],
+      [3, 140],
+      [1, 140],
+      [0, 140],
+      [-1, 140],
+    ],
+  },
+  {
+    action: "paw",
+    source: "paw",
+    loop: "once",
+    sequence: [
+      [-1, 140],
+      [0, 140],
+      [1, 140],
+      [2, 140],
+      [2, 350],
+      [3, 140],
+      [1, 140],
+      [0, 140],
+      [-1, 140],
+    ],
+  },
+  {
+    action: "belly",
+    source: "belly",
+    loop: "once",
+    sequence: [
+      [-1, 140],
+      [0, 140],
+      [1, 140],
+      [2, 140],
+      [3, 140],
+      [3, 350],
+      [2, 140],
+      [1, 140],
+      [0, 140],
+      [-1, 140],
+    ],
+  },
+  {
+    action: "dragging",
+    source: "return",
+    loop: "repeat",
+    sequence: [
+      [0, 200],
+      [0, 200],
+      [0, 200],
+      [0, 200],
+      [1, 200],
+      [2, 200],
+      [1, 200],
+      [0, 200],
+    ],
+  },
+  {
+    action: "flutter",
+    source: "return",
+    loop: "once",
+    sequence: [
+      [1, 90],
+      [2, 90],
+      [1, 90],
+      [2, 90],
+    ],
+  },
+  {
+    action: "falling",
+    source: "return",
+    loop: "repeat",
+    sequence: [
+      [0, 140],
+      [1, 140],
+    ],
+  },
+  {
+    action: "landing",
+    source: "return",
+    loop: "once",
+    sequence: [
+      [3, 140],
+      [3, 140],
+      [-1, 140],
+    ],
+  },
+] as const;
+
 // Generated response sheets are 2x2. Normalize each cell to one 2x canvas,
 // preserving its complete silhouette and anchoring the lowest opaque pixel.
-for (const action of ["tilt", "paw", "belly"] as const) {
-  const input = `src/assets/corgi-${action}.png`;
+for (const { action, source, sequence, loop } of actionConfigs) {
+  const input = `src/assets/corgi-${source}.png`;
   const size = await sharp(input).metadata();
   const cellWidth = Math.floor(size.width! / 2);
   const cellHeight = Math.floor(size.height! / 2);
@@ -133,12 +232,7 @@ for (const action of ["tilt", "paw", "belly"] as const) {
   );
   const responseFrames = [];
   const responseLayers = [];
-  // Return through anticipation and the exact idle pixels, avoiding a cut at rest.
-  const sequence =
-    action === "belly"
-      ? [-1, 0, 1, 2, 3, 3, 2, 1, 0, -1]
-      : [-1, 0, 1, 2, 2, 3, 1, 0, -1];
-  for (const [index, pose] of sequence.entries()) {
+  for (const [index, [pose, durationMs]] of sequence.entries()) {
     let raster: Buffer;
     if (pose === -1)
       raster = await sharp("src/assets/generated/idle-atlas.png")
@@ -187,7 +281,7 @@ for (const action of ["tilt", "paw", "belly"] as const) {
     }
     responseFrames.push({
       region: { x: index * 480, y: 0, width: 480, height: 480 },
-      durationMs: index === (action === "belly" ? 5 : 4) ? 350 : 140,
+      durationMs,
       foot: { x: 240, y: 480 },
       hitRows,
     });
@@ -200,7 +294,7 @@ for (const action of ["tilt", "paw", "belly"] as const) {
     width: sequence.length * 480,
     height: 480,
     pixelRatio: 2,
-    loop: "once",
+    loop,
     hitAlphaThreshold: 128,
     frames: responseFrames,
   });
