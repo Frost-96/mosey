@@ -21,6 +21,7 @@ import falling from "./assets/generated/falling-atlas.json";
 import landingUrl from "./assets/generated/landing-atlas.png";
 import landing from "./assets/generated/landing-atlas.json";
 import { atlasSchema } from "./shared/assets";
+import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
 try {
@@ -51,14 +52,13 @@ try {
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  let scale = 0;
-  canvas.style.width = "240px";
-  canvas.style.height = "240px";
   let previous = "",
     frameRequest = 0,
     frameTimer = 0,
     completed = -1;
   let presentation: Presentation = {
+    size: "medium",
+    geometryRevision: 0,
     posture: "resting",
     direction: "right",
     visibility: "hidden",
@@ -79,13 +79,19 @@ try {
   function draw() {
     frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
-    // A new primary display can have a different backing scale without a CSS
-    // size change. Resize on the next visible draw, including after hiding.
-    if (scale !== window.devicePixelRatio) {
-      scale = window.devicePixelRatio;
-      canvas!.width = Math.round(240 * scale);
-      canvas!.height = Math.round(240 * scale);
-      context!.setTransform(scale, 0, 0, scale, 0, 0);
+    const geometry = petGeometry(presentation.size);
+    // A new primary display can change backing scale without changing CSS size.
+    // Check every visible draw, including the first draw after hiding.
+    const ratio = window.devicePixelRatio;
+    if (
+      canvas!.width !== Math.round(geometry.side * ratio) ||
+      canvas!.height !== Math.round(geometry.side * ratio)
+    ) {
+      canvas!.width = Math.round(geometry.side * ratio);
+      canvas!.height = Math.round(geometry.side * ratio);
+      canvas!.style.width = `${geometry.side}px`;
+      canvas!.style.height = `${geometry.side}px`;
+      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
       previous = "";
     }
     const { atlas, image } = assets.find(
@@ -109,13 +115,13 @@ try {
         remaining -= frame.durationMs;
         index++;
       }
-      const key = `${presentation.actionId}:${presentation.direction}:${index}`;
+      const key = `${presentation.geometryRevision}:${presentation.actionId}:${presentation.direction}:${index}`;
       if (key !== previous) {
         const { region, foot } = atlas.frames[index]!;
-        context!.clearRect(0, 0, 240, 240);
+        context!.clearRect(0, 0, geometry.side, geometry.side);
         context!.save();
         if (presentation.direction === "left") {
-          context!.translate(240, 0);
+          context!.translate(geometry.side, 0);
           context!.scale(-1, 1);
         }
         context!.drawImage(
@@ -124,14 +130,15 @@ try {
           region.y,
           region.width,
           region.height,
-          120 - foot.x / atlas.pixelRatio,
-          240 - foot.y / atlas.pixelRatio,
-          region.width / atlas.pixelRatio,
-          region.height / atlas.pixelRatio,
+          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale,
+          geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
+          (region.width / atlas.pixelRatio) * geometry.assetScale,
+          (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
         context!.restore();
         window.mosey.input({
           type: "frame",
+          geometryRevision: presentation.geometryRevision,
           actionId: presentation.actionId,
           frame: index,
         });
@@ -168,6 +175,7 @@ try {
     event.preventDefault();
     window.mosey.input({
       type: "press",
+      geometryRevision: presentation.geometryRevision,
       actionId: presentation.actionId,
       gestureId: gesture.id,
       x: event.clientX - rect.left,
@@ -194,6 +202,8 @@ try {
   canvas.addEventListener("lostpointercapture", () => finish("cancel"));
   window.addEventListener("blur", () => finish("cancel"));
   function synchronize(value: Presentation) {
+    if (value.geometryRevision !== presentation.geometryRevision)
+      finish("cancel");
     presentation = value;
     cancelDrawing();
     requestDraw();
@@ -205,6 +215,7 @@ try {
   });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
+  window.addEventListener("resize", () => synchronize(presentation));
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
   );

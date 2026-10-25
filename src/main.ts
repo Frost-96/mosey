@@ -34,6 +34,7 @@ import dragging from "./assets/generated/dragging-atlas.json";
 import flutter from "./assets/generated/flutter-atlas.json";
 import falling from "./assets/generated/falling-atlas.json";
 import landing from "./assets/generated/landing-atlas.json";
+import { petGeometry, type PetSize } from "./shared/size";
 import { atlasSchema } from "./shared/assets";
 
 // A second launch has no side effects: future hidden intent stays untouched.
@@ -62,6 +63,16 @@ async function start() {
   });
   const quit = () => app.quit();
   let drained = false;
+  let geometryRevision = 0;
+  const sizeItem = (): Electron.MenuItemConstructorOptions => ({
+    label: "Size",
+    submenu: (["small", "medium", "large"] as const).map((size) => ({
+      label: size[0]!.toUpperCase() + size.slice(1),
+      type: "radio",
+      checked: preferences.size === size,
+      click: () => changeSize(size),
+    })),
+  });
   const visibilityItem = (): Electron.MenuItemConstructorOptions => ({
     label: preferences.visibility === "visible" ? "Hide Mosey" : "Show Mosey",
     click: () => {
@@ -88,6 +99,7 @@ async function start() {
           label: "Mosey",
           submenu: [
             visibilityItem(),
+            sizeItem(),
             {
               label: "Quit Mosey",
               accelerator: "CommandOrControl+Q",
@@ -101,6 +113,7 @@ async function start() {
     tray.setContextMenu(
       Menu.buildFromTemplate([
         visibilityItem(),
+        sizeItem(),
         diagnostic,
         { label: "Quit Mosey", click: quit },
       ]),
@@ -124,11 +137,12 @@ async function start() {
   const dockValidation = new DockValidation(refreshMenus);
   refreshMenus();
   const area = screen.getPrimaryDisplay().workArea;
+  const initialSide = petGeometry(preferences.size).side;
   const pet = new BrowserWindow({
-    width: 240,
-    height: 240,
-    x: area.x + Math.round((area.width - 240) / 2),
-    y: area.y + area.height - 240,
+    width: initialSide,
+    height: initialSide,
+    x: area.x + Math.round((area.width - initialSide) / 2),
+    y: area.y + area.height - initialSide,
     frame: false,
     transparent: true,
     resizable: false,
@@ -254,11 +268,18 @@ async function start() {
     const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
     if (!frame || !atlas) return false;
+    const geometry = petGeometry(preferences.size);
     const localX = Math.floor(
-      ((visible.direction === "left" ? 240 - x : x) - 120) * atlas.pixelRatio +
+      (((visible.direction === "left" ? geometry.side - x : x) -
+        geometry.foot.x) /
+        geometry.assetScale) *
+        atlas.pixelRatio +
         frame.foot.x,
     );
-    const localY = Math.floor((y - 240) * atlas.pixelRatio + frame.foot.y);
+    const localY = Math.floor(
+      ((y - geometry.foot.y) / geometry.assetScale) * atlas.pixelRatio +
+        frame.foot.y,
+    );
     return (
       frame.hitRows[localY]?.some(
         ([start, end]) => localX >= start && localX < end,
@@ -298,6 +319,8 @@ async function start() {
       actionId: behavior.getSnapshot().context.actionId,
       startedAt: behavior.getSnapshot().context.startedAt,
       visibility: suspended ? "hidden" : visibility,
+      size: preferences.size,
+      geometryRevision,
     });
   const authorized = (
     event: Electron.IpcMainEvent | Electron.IpcMainInvokeEvent,
@@ -314,6 +337,11 @@ async function start() {
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
+    if (
+      "geometryRevision" in input &&
+      input.geometryRevision !== geometryRevision
+    )
+      return;
     if (input.type === "move") {
       if (
         !gesture ||
@@ -395,6 +423,32 @@ async function start() {
     if (!pet?.isDestroyed())
       pet?.webContents.send(channels.presentation, presentation());
   };
+  const changeSize = (size: PetSize) => {
+    if (size === preferences.size) return;
+    if (!preferences.setSize(size)) {
+      refreshMenus();
+      return;
+    }
+    const old = pet.getBounds();
+    const side = petGeometry(size).side;
+    geometryRevision++;
+    displayed = undefined;
+    pet.setIgnoreMouseEvents(true, { forward: true });
+    ignoring = true;
+    pet.setBounds(
+      {
+        x: old.x + Math.round((old.width - side) / 2),
+        y: old.y + old.height - side,
+        width: side,
+        height: side,
+      },
+      false,
+    );
+    constrain(pet.getBounds().x, pet.getBounds().y);
+    release(true);
+    publish();
+    refreshMenus();
+  };
   behavior.subscribe((snapshot) => {
     if (snapshot.value === "resting" && gesture) {
       behavior.send({ type: "PAUSE" });
@@ -445,7 +499,16 @@ async function start() {
           1,
           (performance.now() - started) / autonomy.walkMs,
         );
-        constrain(origin.x + (destination - origin.x) * progress, origin.y);
+        const bounds = pet.getBounds();
+        const area = screen.getPrimaryDisplay().workArea;
+        // A size change preserves the moving foot, not the old window corner.
+        constrain(
+          origin.x +
+            origin.width / 2 +
+            (destination - origin.x) * progress -
+            bounds.width / 2,
+          area.y + area.height - bounds.height,
+        );
       }, 16);
     } else if (snapshot.value !== "falling" && snapshot.value !== "walking")
       stopMotion();
@@ -457,6 +520,8 @@ async function start() {
       const id = snapshot.context.actionId;
       motionAction = id;
       const origin = pet.getBounds();
+      const footY = origin.y + origin.height;
+      const footX = origin.x + origin.width / 2;
       const started = performance.now();
       // Initial velocity and acceleration in desktop points, adjustable here.
       motion = setInterval(() => {
@@ -469,10 +534,12 @@ async function start() {
           return;
         }
         const seconds = (performance.now() - started) / 1000;
-        const y = origin.y + 180 * seconds + 1800 * seconds * seconds;
+        const bounds = pet.getBounds();
+        const y =
+          footY - bounds.height + 180 * seconds + 1800 * seconds * seconds;
         const area = screen.getPrimaryDisplay().workArea;
         const ground = area.y + area.height - pet.getBounds().height;
-        constrain(origin.x, y);
+        constrain(footX - bounds.width / 2, y);
         if (y >= ground) {
           stopMotion();
           behavior.send({ type: "LANDED", actionId: id });
