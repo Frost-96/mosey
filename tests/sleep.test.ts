@@ -62,6 +62,21 @@ test(
           return (bottom - top + 1) / devicePixelRatio;
         });
       await expect.poll(height, { timeout: 5000 }).toBeGreaterThan(180);
+      const waitForSleep = async () => {
+        // Settling is already short enough to pass the silhouette check, but
+        // a click there intentionally wakes immediately. Wait at the renderer
+        // contract before exercising the sleeping pet's two-click rule.
+        await expect
+          .poll(
+            () =>
+              pet.evaluate(
+                async () => (await window.mosey.getPresentation()).posture,
+              ),
+            { timeout: 3500 },
+          )
+          .toBe("sleeping");
+        await expect.poll(height).toBeLessThan(160);
+      };
       const idleFrames = new Set<string>();
       const idleUntil = Date.now() + 2200;
       while (Date.now() < idleUntil) {
@@ -78,7 +93,7 @@ test(
         ) =>
           timeout(
             callback,
-            delay && delay >= 10000 ? 500 : delay,
+            delay && delay >= 10000 ? 1200 : delay,
             ...args,
           )) as typeof setTimeout;
       });
@@ -101,9 +116,7 @@ test(
         const now = Date.now;
         Date.now = () => now() + 180000;
       });
-      await expect
-        .poll(height, { timeout: 3500, interval: 50 })
-        .toBeLessThan(160);
+      await waitForSleep();
       const mode = packaged ? "packaged" : "development";
       await mkdir("test-results", { recursive: true });
       const screenshot = (name: string) =>
@@ -137,8 +150,7 @@ test(
           const now = Date.now;
           Date.now = () => now() + 180000;
         });
-        await new Promise((resolve) => setTimeout(resolve, 1700));
-        await expect.poll(height).toBeLessThan(160);
+        await waitForSleep();
       };
       const sleepingFrames = new Set<string>();
       await new Promise((resolve) => setTimeout(resolve, 350));
@@ -291,8 +303,6 @@ test(
       // Sleeping and ear feedback both yield immediately to the existing drag.
       for (const source of ["sleep", "ear", "waking"]) {
         await enterSleep();
-        if (source !== "sleep") await click();
-        if (source === "waking") await click();
         await app.evaluate(({ BrowserWindow, screen }) => {
           const pet = BrowserWindow.getAllWindows()[0]!;
           const area = screen.getPrimaryDisplay().workArea;
@@ -305,6 +315,11 @@ test(
             false,
           );
         });
+        // Deliver native hover from the old window placement before CDP takes
+        // capture; a late native event can cancel the synthetic held pointer.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (source !== "sleep") await click();
+        if (source === "waking") await click();
         const ground = await bounds();
         const point = await body();
         await pet.mouse.move(point.x, point.y);
@@ -369,7 +384,7 @@ test(
             input:
               "Playwright directed window input; native menu tracking intercepted; suspend/resume events simulated",
             timing:
-              "long rest delays shortened to500ms; active lifespan advanced180s at external Date.now boundary; frames and click windows use real elapsed time",
+              "long rest delays shortened to1200ms; active lifespan advanced180s at external Date.now boundary; sleep entry synchronized through renderer contract; frames and click windows use real elapsed time",
           },
           null,
           2,
