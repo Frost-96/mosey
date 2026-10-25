@@ -234,6 +234,21 @@ async function start() {
     rendererState === "failed"
       ? [{ label: "Retry Mosey", click: () => void loadPet() }]
       : [];
+  const sizeItem = (): Electron.MenuItemConstructorOptions => ({
+    label: "Pet Size",
+    submenu: (
+      [
+        ["Small", 70],
+        ["Medium", 160],
+        ["Large", 240],
+      ] as const
+    ).map(([label, size]) => ({
+      label,
+      type: "checkbox",
+      checked: liveSize === size,
+      click: () => changeSize(size),
+    })),
+  });
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
       label: "Dock validation",
@@ -273,6 +288,7 @@ async function start() {
           submenu: [
             ...recoveryItems(),
             visibilityItem(),
+            sizeItem(),
             settingsItem(),
             ...dockItems(),
             {
@@ -288,6 +304,7 @@ async function start() {
     return Menu.buildFromTemplate([
       ...recoveryItems(),
       visibilityItem(),
+      sizeItem(),
       settingsItem(),
       ...dockItems(),
       diagnostic,
@@ -759,6 +776,7 @@ async function start() {
       publish();
       const menu = Menu.buildFromTemplate([
         { label: "Hide Mosey", click: () => setVisibility("hidden") },
+        sizeItem(),
         { label: "Quit Mosey", click: quit },
       ]);
       bodyMenu = menu;
@@ -872,6 +890,7 @@ async function start() {
     } else failedSize = undefined;
     if (size === liveSize) {
       publishSettings();
+      refreshMenus();
       return;
     }
     liveSize = size;

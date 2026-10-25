@@ -140,7 +140,7 @@ async function exercisePet() {
     );
     expect(menuLabels).toContain("设置…");
     expect(menuLabels).not.toContain("Launch at Login");
-    expect(menuLabels).not.toContain("Size");
+    expect(menuLabels).toContain("Pet Size");
 
     window.on("pageerror", (error) => {
       errors.push(error.message);
