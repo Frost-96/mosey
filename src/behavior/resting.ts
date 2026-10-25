@@ -26,6 +26,8 @@ export const petBehavior = setup({
     },
     events: {} as
       | { type: "CLICK" }
+      | { type: "CLIMB" }
+      | { type: "DROP" }
       | { type: "PAUSE" }
       | { type: "FACE"; direction: "left" | "right" }
       | { type: "RESUME" }
@@ -88,6 +90,8 @@ export const petBehavior = setup({
     RESUME: { target: ".resting", actions: ["rest", "wakeCycle"] },
     CANCEL: { target: ".resting", actions: ["rest", "wakeCycle"] },
     DRAG_START: { target: ".dragging", actions: ["rest", "wakeCycle"] },
+    CLIMB: { target: ".climbing", actions: ["rest", "wakeCycle"] },
+    DROP: { target: ".falling", actions: "rest" },
   },
   states: {
     paused: {},
@@ -124,6 +128,12 @@ export const petBehavior = setup({
       on: {
         CLICK: { target: "choosing", actions: "begin" },
         DONE: { guard: "currentAction", target: "resting", actions: "rest" },
+      },
+    },
+    climbing: {
+      on: {
+        LANDED: { guard: "currentAction", target: "landing", actions: "rest" },
+        CLICK: { target: "choosing", actions: "begin" },
       },
     },
     dragging: { on: { RELEASE: { target: "flutter", actions: "rest" } } },

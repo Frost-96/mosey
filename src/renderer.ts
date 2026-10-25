@@ -1,3 +1,5 @@
+import climbingUrl from "./assets/generated/climbing-atlas.png";
+import climbing from "./assets/generated/climbing-atlas.json";
 import settlingUrl from "./assets/generated/settling-atlas.png";
 import settling from "./assets/generated/settling-atlas.json";
 import wakingUrl from "./assets/generated/waking-atlas.png";
@@ -36,6 +38,7 @@ try {
   const assets = await Promise.all(
     [
       [idle, idleUrl],
+      [climbing, climbingUrl],
       [sleeping, sleepingUrl],
       [settling, settlingUrl],
       [waking, wakingUrl],
