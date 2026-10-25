@@ -37,6 +37,9 @@ function signature(file: string) {
 }
 export class DockValidation {
   private child?: ChildProcessWithoutNullStreams;
+  get running() {
+    return this.child !== undefined;
+  }
   private window?: BrowserWindow;
   private state = "Not started";
   private lastHTML = "";

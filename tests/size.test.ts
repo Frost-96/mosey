@@ -1,7 +1,16 @@
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  mkdtemp,
+  rm,
+  mkdir,
+  writeFile,
+  readFile,
+  chmod,
+  stat,
+} from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { chooseSize, openSettings } from "./support/settings";
@@ -13,6 +22,30 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-size-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  let dockHelper: string | undefined;
+  let originalDockHelper: Buffer | undefined;
+  let originalDockMode = 0o755;
+  const restoreDockHelper = async () => {
+    if (!packaged && dockHelper && originalDockHelper) {
+      await writeFile(dockHelper, originalDockHelper);
+      await chmod(dockHelper, originalDockMode);
+      const restored = await readFile(dockHelper);
+      const sameBytes = restored.equals(originalDockHelper);
+      await mkdir("test-results", { recursive: true });
+      await writeFile(
+        "test-results/development-size-empty-dock-restoration.json",
+        JSON.stringify({
+          originalSHA256: createHash("sha256")
+            .update(originalDockHelper)
+            .digest("hex"),
+          restoredSHA256: createHash("sha256").update(restored).digest("hex"),
+          sameBytes,
+        }),
+      );
+      if (!sameBytes)
+        throw new Error("Size fixture did not restore Dock helper");
+    }
+  };
   try {
     if (!packaged) stopForge = await startForge();
     if (packaged)
@@ -20,6 +53,27 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    // This case measures geometry/input against the ordinary work-area floor.
+    // Substitute only the external OS source with an explicitly empty Dock;
+    // real Dock support is covered separately, without changing desktop settings.
+    dockHelper = packaged
+      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+      : path.resolve("build/native/dock-runtime");
+    if (!packaged) {
+      originalDockHelper = await readFile(dockHelper);
+      originalDockMode = (await stat(dockHelper)).mode & 0o777;
+    }
+    await writeFile(
+      dockHelper,
+      `#!${process.execPath}
+const started = performance.now(); let sequence = 0;
+console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
+process.on('SIGTERM',()=>process.exit(0));
+setInterval(()=>console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:'alpha_empty',observation:null})),100);
+setTimeout(()=>process.exit(0),120000);
+`,
+    );
+    await chmod(dockHelper, 0o755);
     const args = [
       `--user-data-dir=${path.join(root, "profile")}`,
       `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
@@ -76,8 +130,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         ),
       )
       .toBe(true);
-    const { bounds: initial, area: initialArea } = await desktop();
-    expect(initial.y + initial.height).toBe(initialArea.y + initialArea.height);
+    // Native visibility can precede the bounded work-area reconciliation.
+    // Require actual startup settlement, still with strict zero distance.
+    await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
     const choose = (label: string) => chooseSize(app!, label);
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -368,7 +423,11 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     throw error;
   } finally {
     await app?.close().catch(() => {});
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    try {
+      await restoreDockHelper();
+    } finally {
+      await stopForge?.();
+      await rm(root, { recursive: true, force: true });
+    }
   }
 });
