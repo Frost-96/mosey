@@ -358,6 +358,21 @@ async function start() {
     const area = screen.getPrimaryDisplay().workArea;
     constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
   };
+  const reconcileGround = () => {
+    // The live work area can change before its native notification arrives.
+    // Keep grounded poses on that floor without touching captured or moving pets.
+    if (gesture || motion !== undefined) return;
+    const posture = behavior.getSnapshot().value;
+    if (
+      posture === "dragging" ||
+      posture === "flutter" ||
+      posture === "falling"
+    )
+      return;
+    const area = screen.getPrimaryDisplay().workArea;
+    const bounds = pet.getBounds();
+    if (bounds.y + bounds.height !== area.y + area.height) alignGround();
+  };
   const cancelInteraction = () => {
     dismissBodyMenu();
     const cancelledGesture = gesture;
@@ -826,7 +841,7 @@ async function start() {
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   // Some packaged macOS launches update native visibility without delivering
-  // show/hide notifications. Reconcile explicit operations too; delayed or
+  // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
   const synchronizeVisibility = () => {
     if (preferences.visibility === "hidden" && pet.isVisible()) pet.hide();
@@ -849,6 +864,17 @@ async function start() {
   };
   pet.on("show", synchronizeVisibility);
   pet.on("hide", synchronizeVisibility);
+  // Native hide/show and work-area events can be omitted or coalesced. Keep a
+  // bounded lifecycle check even when hidden; expensive pointer polling still
+  // stops while hidden. Idempotent visibility updates preserve active actions.
+  const nativeStatePoll = setInterval(() => {
+    if (pet.isDestroyed()) return;
+    synchronizeVisibility();
+    if (visibility === "visible" && !suspended && !bodyMenu) reconcileGround();
+  }, 50);
+  const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
+  pet.once("closed", stopNativeStatePolling);
+  app.once("before-quit", stopNativeStatePolling);
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
     ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
     : undefined;
