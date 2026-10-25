@@ -15,6 +15,8 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("settings owns presets, reuses its window and preserves hidden intent and failed targets", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-"));
   let app: ElectronApplication | undefined;
+  let applicationProcess:
+    ReturnType<ElectronApplication["process"]> | undefined;
   let stop: (() => Promise<void>) | undefined;
   let settings: Page | undefined;
   const profile = path.join(root, "profile");
@@ -35,7 +37,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .catch(() => {});
     // Vitest's test timeout does not unwind an outstanding Playwright call.
     // Release only this test's process so its pending calls and finally settle.
-    const child = app?.process();
+    const child = applicationProcess;
     if (child?.exitCode === null && child.signalCode === null)
       child.kill("SIGTERM");
   });
@@ -77,21 +79,12 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       });
     await stage("launch");
     app = await launch();
+    applicationProcess = app.process();
     await stage("first window");
     await app.firstWindow();
     expect((await petState()).bounds.width).toBe(160);
     await stage("open settings");
-    await invoke("设置…");
-    await expect
-      .poll(() =>
-        app!
-          .windows()
-          .find((w) => new URL(w.url()).searchParams.has("settings")),
-      )
-      .toBeTruthy();
-    settings = app
-      .windows()
-      .find((w) => new URL(w.url()).searchParams.has("settings"))!;
+    settings = await openSettings(app);
     await expect
       .poll(() =>
         settings!
@@ -237,6 +230,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await app.close();
     await stage("restart");
     app = await launch();
+    applicationProcess = app.process();
     await stage("restart first window");
     await app.firstWindow();
     expect((await petState()).bounds.width).toBe(160);
