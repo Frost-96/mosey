@@ -6,6 +6,7 @@ import {
   nativeImage,
   screen,
   ipcMain,
+  powerMonitor,
 } from "electron";
 import path from "node:path";
 import { DockValidation } from "./platform/dock-validation";
@@ -25,6 +26,10 @@ import idle from "./assets/generated/idle-atlas.json";
 import tilt from "./assets/generated/tilt-atlas.json";
 import paw from "./assets/generated/paw-atlas.json";
 import belly from "./assets/generated/belly-atlas.json";
+import dragging from "./assets/generated/dragging-atlas.json";
+import flutter from "./assets/generated/flutter-atlas.json";
+import falling from "./assets/generated/falling-atlas.json";
+import landing from "./assets/generated/landing-atlas.json";
 import { atlasSchema } from "./shared/assets";
 
 // A second launch has no side effects: future hidden intent stays untouched.
@@ -118,20 +123,84 @@ async function start() {
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setIgnoreMouseEvents(true, { forward: true });
-  const atlases = [idle, tilt, paw, belly].map((value) =>
-    atlasSchema.parse(value),
-  );
-  let displayed: { actionId: number; frame: number } | undefined;
+  const atlases = [
+    idle,
+    tilt,
+    paw,
+    belly,
+    dragging,
+    flutter,
+    falling,
+    landing,
+  ].map((value) => atlasSchema.parse(value));
+  // Pointer identity outlives posture/action transitions during a captured gesture.
+  let gesture:
+    | {
+        id: number;
+        x: number;
+        y: number;
+        originX: number;
+        originY: number;
+        dragged: boolean;
+      }
+    | undefined;
+  let motion: ReturnType<typeof setInterval> | undefined;
+  let motionAction = -1;
+  const stopMotion = () => {
+    if (motion !== undefined) clearInterval(motion);
+    motion = undefined;
+    motionAction = -1;
+  };
+  const constrain = (x: number, y: number) => {
+    const area = screen.getPrimaryDisplay().workArea;
+    const bounds = pet.getBounds();
+    pet.setPosition(
+      Math.round(
+        Math.max(
+          area.x,
+          Math.min(x, area.x + Math.max(0, area.width - bounds.width)),
+        ),
+      ),
+      Math.round(
+        Math.max(
+          area.y,
+          Math.min(y, area.y + Math.max(0, area.height - bounds.height)),
+        ),
+      ),
+      false,
+    );
+  };
+  const alignGround = () => {
+    const area = screen.getPrimaryDisplay().workArea;
+    constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
+  };
+  const cancelInteraction = () => {
+    gesture = undefined;
+    stopMotion();
+    behavior.send({ type: "CANCEL" });
+    if (!pet.isDestroyed()) alignGround();
+  };
+  const release = (cancelled: boolean) => {
+    if (!gesture) return;
+    const dragged = gesture.dragged;
+    gesture = undefined;
+    if (dragged) behavior.send({ type: "RELEASE" });
+    else if (!cancelled) behavior.send({ type: "CLICK" });
+  };
+  let displayed:
+    | {
+        actionId: number;
+        frame: number;
+        posture: Presentation["posture"];
+      }
+    | undefined;
   let ignoring = true;
   const hit = (x: number, y: number) => {
-    const snapshot = behavior.getSnapshot();
-    if (
-      !displayed ||
-      displayed.actionId !== snapshot.context.actionId ||
-      visibility !== "visible"
-    )
-      return false;
-    const atlas = atlases.find((value) => value.action === snapshot.value);
+    // Until the next draw report, the previous pose is still what the user sees.
+    // Behavior transitions must not create an ungrabbable frame between poses.
+    if (!displayed || visibility !== "visible") return false;
+    const visible = displayed;
+    const atlas = atlases.find((value) => value.action === visible.posture);
     const frame = atlas?.frames[displayed.frame];
     if (!frame || !atlas) return false;
     const localX = Math.floor((x - 120) * atlas.pixelRatio + frame.foot.x);
@@ -146,7 +215,7 @@ async function start() {
     if (pet.isDestroyed()) return;
     const pointer = screen.getCursorScreenPoint();
     const bounds = pet.getBounds();
-    const next = !hit(pointer.x - bounds.x, pointer.y - bounds.y);
+    const next = !gesture && !hit(pointer.x - bounds.x, pointer.y - bounds.y);
     if (next !== ignoring) {
       pet.setIgnoreMouseEvents(next, { forward: true });
       ignoring = next;
@@ -187,16 +256,65 @@ async function start() {
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
-    if (input.actionId !== behavior.getSnapshot().context.actionId) return;
+    if (input.type === "move") {
+      if (
+        !gesture ||
+        gesture.id !== input.gestureId ||
+        visibility !== "visible"
+      )
+        return;
+      const dx = input.screenX - gesture.x,
+        dy = input.screenY - gesture.y;
+      if (!gesture.dragged && Math.hypot(dx, dy) >= 5) {
+        gesture.dragged = true;
+        stopMotion();
+        behavior.send({ type: "DRAG_START" });
+      }
+      if (gesture.dragged)
+        constrain(gesture.originX + dx, gesture.originY + dy);
+      return;
+    }
+    if (input.type === "release" || input.type === "cancel") {
+      if (gesture?.id === input.gestureId) release(input.type === "cancel");
+      routePointer();
+      return;
+    }
+    if (
+      !("actionId" in input) ||
+      (input.actionId !== behavior.getSnapshot().context.actionId &&
+        (input.type !== "press" || input.actionId !== displayed?.actionId))
+    )
+      return;
     if (input.type === "frame") {
       const atlas = atlases.find(
         (value) => value.action === behavior.getSnapshot().value,
       );
       if (!atlas?.frames[input.frame]) return;
-      displayed = { actionId: input.actionId, frame: input.frame };
+      displayed = {
+        actionId: input.actionId,
+        frame: input.frame,
+        posture: atlas.action,
+      };
       routePointer();
-    } else if (input.type === "click") {
-      if (hit(input.x, input.y)) behavior.send({ type: "CLICK" });
+    } else if (input.type === "press") {
+      if (gesture || !hit(input.x, input.y)) return;
+      const bounds = pet.getBounds();
+      const returning = ["flutter", "falling", "landing"].includes(
+        String(behavior.getSnapshot().value),
+      );
+      gesture = {
+        id: input.gestureId,
+        x: input.screenX,
+        y: input.screenY,
+        originX: bounds.x,
+        originY: bounds.y,
+        dragged: returning,
+      };
+      if (returning) {
+        stopMotion();
+        behavior.send({ type: "DRAG_START" });
+      }
+      routePointer();
     } else behavior.send({ type: "DONE", actionId: input.actionId });
   });
   ipcMain.on(channels.assetError, (event, value: unknown) => {
@@ -208,7 +326,60 @@ async function start() {
     if (!pet?.isDestroyed())
       pet?.webContents.send(channels.presentation, presentation());
   };
-  behavior.subscribe(publish);
+  behavior.subscribe((snapshot) => {
+    // Rendering chooses poses by time. Only the main process moves the window.
+    if (snapshot.value !== "falling") stopMotion();
+    else if (motionAction !== snapshot.context.actionId) {
+      stopMotion();
+      const id = snapshot.context.actionId;
+      motionAction = id;
+      const origin = pet.getBounds();
+      const started = performance.now();
+      // Initial velocity and acceleration in desktop points, adjustable here.
+      motion = setInterval(() => {
+        if (
+          pet.isDestroyed() ||
+          gesture ||
+          behavior.getSnapshot().context.actionId !== id
+        ) {
+          stopMotion();
+          return;
+        }
+        const seconds = (performance.now() - started) / 1000;
+        const y = origin.y + 180 * seconds + 1800 * seconds * seconds;
+        const area = screen.getPrimaryDisplay().workArea;
+        const ground = area.y + area.height - pet.getBounds().height;
+        constrain(origin.x, y);
+        if (y >= ground) {
+          stopMotion();
+          behavior.send({ type: "LANDED", actionId: id });
+        }
+      }, 16);
+    }
+    publish();
+  });
+  powerMonitor.on("suspend", cancelInteraction);
+  powerMonitor.on("lock-screen", cancelInteraction);
+  screen.on("display-metrics-changed", cancelInteraction);
+  screen.on("display-added", cancelInteraction);
+  screen.on("display-removed", cancelInteraction);
+  pet.on("unresponsive", cancelInteraction);
+  pet.on("blur", () => {
+    release(true);
+    routePointer();
+  });
+  pet.on("closed", () => {
+    gesture = undefined;
+    stopMotion();
+    powerMonitor.off("suspend", cancelInteraction);
+    powerMonitor.off("lock-screen", cancelInteraction);
+    screen.off("display-metrics-changed", cancelInteraction);
+    screen.off("display-added", cancelInteraction);
+    screen.off("display-removed", cancelInteraction);
+  });
+  pet.webContents.on("did-start-loading", cancelInteraction);
+  pet.webContents.on("render-process-gone", cancelInteraction);
+  app.on("before-quit", stopMotion);
   pet.on("show", () => {
     visibility = "visible";
     startPointerPolling();
@@ -220,7 +391,7 @@ async function start() {
     // Immediately release any last opaque region, independent of cursor polling.
     pet.setIgnoreMouseEvents(true, { forward: true });
     ignoring = true;
-    behavior.send({ type: "CANCEL" });
+    cancelInteraction();
     publish();
   });
   const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL

@@ -7,6 +7,8 @@ import os from "node:os";
 import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+// Keep the 1x reload regression reproducible on Retina development machines.
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test.runIf(packaged)(
   "packaged app starts a renderer without an inspector bootstrap",
   async () => {
@@ -123,12 +125,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       packaged
         ? {
             timeout: 20000,
+            args: [scaleArgument],
             executablePath: path.join(
               packagedRoot!,
               "Mosey.app/Contents/MacOS/Mosey",
             ),
           }
-        : { args: ["."], timeout: 20000 },
+        : { args: [".", scaleArgument], timeout: 20000 },
     );
     const window = await app.firstWindow({ timeout: 15000 });
     window.on("pageerror", (error) => {
@@ -276,6 +279,13 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     const pixels = () =>
       window.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
+        // Earlier silhouette assertions read the original canvas. Observe each
+        // replacement through the same readback path: at 1x, differing readback
+        // histories round interpolated edge alpha differently after reload.
+        // Keep exact image equality; do not hide a changed pose with tolerance.
+        canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height);
         return canvas.toDataURL();
       });
     const idleFrames = new Set<string>();
@@ -337,6 +347,234 @@ test("a real app displays one animated corgi and quits from its menu", async () 
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 2500 })
       .toBe(true);
+    // Public whole-application seam: directed pointer input, rendered pixels,
+    // and the actual desktop window bounds (not behavior context).
+    // Playwright directs events without moving the physical OS cursor. Keep
+    // ordinary drag paths away from that cursor, so its real buttons=0 events
+    // do not cancel a synthetic held pointer when the window moves beneath it.
+    const placeAwayFromPhysicalCursor = () =>
+      app!.evaluate(({ BrowserWindow, screen }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const area = screen.getPrimaryDisplay().workArea;
+        const bounds = pet.getBounds();
+        const pointer = screen.getCursorScreenPoint();
+        const x =
+          pointer.x >= area.x + area.width / 2
+            ? area.x
+            : area.x + area.width - bounds.width;
+        pet.setPosition(x, bounds.y, false);
+      });
+    await placeAwayFromPhysicalCursor();
+    const petBounds = () =>
+      app!.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]!.getBounds(),
+      );
+    const ground = await petBounds();
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(180, 80, { steps: 5 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 50);
+    await window.mouse.up();
+    await expect
+      .poll(async () => (await petBounds()).y, { timeout: 4000 })
+      .toBe(ground.y);
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
+      .toBe(true);
+    // Landing ends with idle pixels before its final completion. Establish
+    // sustained visible idle, then observe the click response before grabbing.
+    for (let sample = 0; sample < 3; sample++) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(idleFrames.has(await pixels())).toBe(true);
+    }
+    // Hold longer than the interrupted click response: its eventual completion
+    // must not release or move the held pet.
+    await window.mouse.click(120, 180);
+    await expect
+      .poll(async () => idleFrames.has(await pixels()), {
+        timeout: 1500,
+        interval: 20,
+      })
+      .toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, -100, { steps: 6 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 200);
+    const held = await petBounds();
+    expect(idleFrames.has(await pixels())).toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    expect(await petBounds()).toEqual(held);
+    await window.screenshot({
+      path: `test-results/${packaged ? "packaged" : "development"}-held.png`,
+      omitBackground: true,
+    });
+    await window.mouse.up();
+    await new Promise((resolve) => setTimeout(resolve, 180));
+    expect(await petBounds()).toEqual(held);
+    expect(idleFrames.has(await pixels())).toBe(false);
+    await window.screenshot({
+      path: `test-results/${packaged ? "packaged" : "development"}-flutter.png`,
+      omitBackground: true,
+    });
+    await expect
+      .poll(async () => (await petBounds()).y, { interval: 10 })
+      .toBeGreaterThan(held.y + 20);
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await window.screenshot({
+      path: `test-results/${packaged ? "packaged" : "development"}-landing.png`,
+      omitBackground: true,
+    });
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    for (const phase of ["immediate", "flutter", "falling", "landing"]) {
+      await window.mouse.move(120, 180);
+      await window.mouse.down();
+      await window.mouse.move(120, -120, { steps: 5 });
+      await expect
+        .poll(async () => (await petBounds()).y)
+        .toBeLessThan(ground.y - 200);
+      const elevated = await petBounds();
+      await window.mouse.up();
+      if (phase === "flutter")
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      else if (phase === "falling")
+        await expect
+          .poll(async () => (await petBounds()).y, { interval: 10 })
+          .toBeGreaterThan(elevated.y + 20);
+      else if (phase === "landing")
+        await expect
+          .poll(async () => (await petBounds()).y, { interval: 10 })
+          .toBe(ground.y);
+      // Use the visible body as the input target even when the pose changes.
+      const point = await window.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const pixels = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        const ratio = devicePixelRatio;
+        let best = Infinity,
+          x = 120,
+          y = 180;
+        for (let py = 0; py < canvas.height; py++)
+          for (let px = 0; px < canvas.width; px++) {
+            const distance = (px / ratio - 120) ** 2 + (py / ratio - 180) ** 2;
+            if (
+              pixels[(py * canvas.width + px) * 4 + 3] > 127 &&
+              distance < best
+            ) {
+              best = distance;
+              x = px / ratio;
+              y = py / ratio;
+            }
+          }
+        return { x, y };
+      });
+      await window.mouse.move(point.x, point.y);
+      await window.mouse.down();
+      await new Promise((resolve) => setTimeout(resolve, 70));
+      const recaptured = await petBounds();
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      expect(await petBounds(), `regrab during ${phase} stays held`).toEqual(
+        recaptured,
+      );
+      expect(
+        idleFrames.has(await pixels()),
+        `regrab during ${phase} draws held pose`,
+      ).toBe(false);
+      await window.mouse.up();
+      await expect
+        .poll(async () => (await petBounds()).y, { timeout: 3000 })
+        .toBe(ground.y);
+      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    }
+    // Browser pointer-capture loss is a real input cancellation event; subsequent
+    // directed mouse movement must not keep moving the pet or trigger a click.
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, -120, { steps: 5 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 200);
+    await window.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      // Mouse pointer ID is specified by the browser, observed via pointer events.
+      canvas.addEventListener(
+        "pointermove",
+        (event) => {
+          if (canvas.hasPointerCapture(event.pointerId))
+            canvas.releasePointerCapture(event.pointerId);
+        },
+        { once: true },
+      );
+    });
+    await window.mouse.move(121, -120);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await window.mouse.move(500, -300);
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    const cancelled = await petBounds();
+    await window.mouse.move(-500, -500);
+    await window.mouse.up();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(await petBounds()).toEqual(cancelled);
+    expect(idleFrames.has(await pixels())).toBe(true);
+    // Hiding during capture cancels immediately; old pointerup cannot restart it.
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, 0, { steps: 4 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 100);
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.hide(),
+    );
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]!.showInactive(),
+    );
+    await window.mouse.up();
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    // The visible desktop window stays within the primary work area even when
+    // captured input travels far beyond it, then releases at the same floor.
+    const area = await app.evaluate(
+      ({ screen }) => screen.getPrimaryDisplay().workArea,
+    );
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(10000, -10000);
+    await expect
+      .poll(async () => (await petBounds()).x)
+      .toBe(area.x + area.width - ground.width);
+    expect((await petBounds()).y).toBe(area.y);
+    await window.mouse.up();
+    await expect
+      .poll(async () => (await petBounds()).y, { timeout: 4000 })
+      .toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    if (!packaged) {
+      await placeAwayFromPhysicalCursor();
+      await window.mouse.move(120, 180);
+      await window.mouse.down();
+      await window.mouse.move(120, 0, { steps: 4 });
+      await expect
+        .poll(async () => (await petBounds()).y)
+        .toBeLessThan(ground.y - 100);
+      await window.evaluate(() => location.reload());
+      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await expect
+        .poll(async () => idleFrames.has(await pixels()), { timeout: 5000 })
+        .toBe(true);
+      const reloaded = await petBounds();
+      await window.mouse.move(500, -500);
+      await window.mouse.up();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(await petBounds()).toEqual(reloaded);
+      expect(idleFrames.has(await pixels())).toBe(true);
+    }
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
