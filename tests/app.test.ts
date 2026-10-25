@@ -589,6 +589,211 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       expect(await petBounds()).toEqual(reloaded);
       expect(idleFrames.has(await pixels())).toBe(true);
     }
+    // A busy renderer can queue release and immediate re-grab before either
+    // main-process presentation returns. Use public DOM pointer input in one
+    // renderer task to preserve that ordering, with a real active mouse pointer.
+    await placeAwayFromPhysicalCursor();
+    await window.evaluate(() => {
+      document.querySelector("canvas")!.addEventListener(
+        "pointerdown",
+        (event) => {
+          document.documentElement.dataset.rapidPointer = String(
+            (event as PointerEvent).pointerId,
+          );
+        },
+        { once: true },
+      );
+    });
+    await window.mouse.move(120, 180);
+    await window.mouse.down();
+    await window.mouse.move(120, -120, { steps: 5 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeLessThan(ground.y - 200);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const rapidHeld = await petBounds();
+    await window.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      const pointerId = Number(document.documentElement.dataset.rapidPointer);
+      const options = {
+        pointerId,
+        pointerType: "mouse",
+        button: 0,
+        clientX: 120,
+        clientY: 180,
+        screenX: globalThis.screenX + 120,
+        screenY: globalThis.screenY + 180,
+        bubbles: true,
+      };
+      canvas.dispatchEvent(
+        new PointerEvent("pointerup", { ...options, buttons: 0 }),
+      );
+      canvas.dispatchEvent(
+        new PointerEvent("pointerdown", { ...options, buttons: 1 }),
+      );
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(
+      await window.evaluate(() =>
+        document
+          .querySelector("canvas")!
+          .hasPointerCapture(
+            Number(document.documentElement.dataset.rapidPointer),
+          ),
+      ),
+    ).toBe(true);
+    expect(await petBounds()).toEqual(rapidHeld);
+    await window.mouse.move(120, 260, { steps: 3 });
+    await expect
+      .poll(async () => (await petBounds()).y)
+      .toBeGreaterThan(rapidHeld.y + 40);
+    await window.mouse.up();
+    await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    // Inject only Electron's external display boundary. Actual renderer, IPC,
+    // pointer capture, drawing and native window placement remain in use.
+    const recoverOnDisplayChange = (event: string) =>
+      app!.evaluate(({ screen, BrowserWindow }, event) => {
+        const original = screen.getPrimaryDisplay;
+        const display = original();
+        const area = display.workArea;
+        screen.getPrimaryDisplay = () => ({
+          ...display,
+          id: display.id + 1,
+          workArea: {
+            x: area.x + 40,
+            y: area.y + 40,
+            width: area.width - 80,
+            height: area.height - 80,
+          },
+        });
+        try {
+          screen.emit(event, {}, screen.getPrimaryDisplay(), [
+            "workArea",
+            "scaleFactor",
+          ]);
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          return { bounds: pet.getBounds(), visible: pet.isVisible() };
+        } finally {
+          screen.getPrimaryDisplay = original;
+        }
+      }, event);
+    for (const [phase, event] of [
+      ["idle", "display-metrics-changed"],
+      ["pressed", "display-metrics-changed"],
+      ["dragging", "display-metrics-changed"],
+      ["flutter", "display-added"],
+      ["falling", "display-removed"],
+    ]) {
+      if (phase === "pressed") {
+        // Landing ends with idle pixels before it becomes ordinary resting.
+        // Establish the same sustained idle condition as the earlier click
+        // interruption test before exercising the drag threshold.
+        for (let sample = 0; sample < 3; sample++) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          expect(idleFrames.has(await pixels())).toBe(true);
+        }
+      }
+      await placeAwayFromPhysicalCursor();
+      const before = await petBounds();
+      if (phase !== "idle") {
+        await window.evaluate(() => {
+          document.querySelector("canvas")!.addEventListener(
+            "pointerdown",
+            (event) => {
+              document.documentElement.dataset.topologyPointer = String(
+                (event as PointerEvent).pointerId,
+              );
+            },
+            { once: true },
+          );
+        });
+        await window.mouse.move(120, 180);
+        await window.mouse.down();
+        if (phase === "pressed") {
+          // Stay below the drag threshold: resting→resting still invalidates
+          // this accepted press and must release its browser capture.
+          await window.mouse.move(121, 180);
+          expect(await petBounds()).toEqual(before);
+        } else {
+          await window.mouse.move(120, -120, { steps: 5 });
+          await expect
+            .poll(async () => (await petBounds()).y)
+            .toBeLessThan(ground.y - 200);
+          const elevated = await petBounds();
+          if (phase !== "dragging") await window.mouse.up();
+          if (phase === "flutter")
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          if (phase === "falling")
+            await expect
+              .poll(async () => (await petBounds()).y, { interval: 10 })
+              .toBeGreaterThan(elevated.y + 20);
+        }
+      }
+      const recovered = await recoverOnDisplayChange(event!);
+      expect(recovered.visible, phase).toBe(true);
+      expect(recovered.bounds, phase).toEqual({
+        x: before.x === area.x ? area.x + 40 : area.x + area.width - 280,
+        y: ground.y - 40,
+        width: 240,
+        height: 240,
+      });
+      if (phase === "dragging" || phase === "pressed") {
+        await expect
+          .poll(() =>
+            window.evaluate(() =>
+              document
+                .querySelector("canvas")!
+                .hasPointerCapture(
+                  Number(document.documentElement.dataset.topologyPointer),
+                ),
+            ),
+          )
+          .toBe(false);
+      }
+      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      // Old held-pointer movement/release cannot revive the cancelled drag.
+      await window.mouse.move(500, -500);
+      await window.mouse.up();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(await petBounds(), phase).toEqual(recovered.bounds);
+      expect(idleFrames.has(await pixels()), phase).toBe(true);
+      // New input must still grab the freshly drawn body at its new position.
+      await window.mouse.move(120, 180);
+      await window.mouse.down();
+      await window.mouse.move(120, 100, { steps: 3 });
+      await expect
+        .poll(async () => (await petBounds()).y)
+        .toBeLessThan(recovered.bounds.y - 40);
+      await window.mouse.up();
+      await expect.poll(async () => (await petBounds()).y).toBe(ground.y);
+      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    }
+    // Preserve the actual manual hide choice while the display topology changes.
+    const invokeVisibility = (label: string) =>
+      app!.evaluate(({ Menu }, label) => {
+        const item = Menu.getApplicationMenu()
+          ?.items.find((entry) => entry.label === "Mosey")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+        item.click();
+      }, label);
+    await invokeVisibility("Hide Mosey");
+    expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
+      false,
+    );
+    await app.evaluate(({ screen }) => {
+      screen.emit("display-metrics-changed", {}, screen.getPrimaryDisplay(), [
+        "workArea",
+      ]);
+    });
+    expect(
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]!.isVisible(),
+      ),
+    ).toBe(false);
+    await invokeVisibility("Show Mosey");
+    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
