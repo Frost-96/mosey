@@ -1,3 +1,6 @@
+import climbing from "./assets/generated/climbing-atlas.json";
+import { DockRuntime, type DockObservation } from "./platform/dock-runtime";
+import { dockSupport } from "./behavior/dock-support";
 import settling from "./assets/generated/settling-atlas.json";
 import waking from "./assets/generated/waking-atlas.json";
 import ear from "./assets/generated/ear-atlas.json";
@@ -79,6 +82,12 @@ async function start() {
   });
   const quit = () => app.quit();
   let drained = false;
+  let requestedCaptureMode: "product" | "diagnostic" = "product";
+  let captureRevision = 0;
+  const reserveCapture = (mode: "product" | "diagnostic") => {
+    requestedCaptureMode = mode;
+    return ++captureRevision;
+  };
   let loginError: string | undefined;
   const loginState = (): Settings["login"] => {
     if (process.platform !== "darwin" || !app.isPackaged)
@@ -205,6 +214,21 @@ async function start() {
         preferences.visibility === "visible" ? "hidden" : "visible",
       ),
   });
+  const dockItems = (): Electron.MenuItemConstructorOptions[] => [
+    { label: dockRuntime.status, enabled: false },
+    {
+      label: "Retry Dock interaction",
+      click: () => {
+        const revision = reserveCapture("product");
+        void Promise.all([
+          dockRuntime.stop(),
+          dockValidation.stop("product Dock interaction requested"),
+        ]).then(() => {
+          if (revision === captureRevision) startDock();
+        });
+      },
+    },
+  ];
   const recoveryItems = (): Electron.MenuItemConstructorOptions[] =>
     rendererState === "failed"
       ? [{ label: "Retry Mosey", click: () => void loadPet() }]
@@ -212,7 +236,34 @@ async function start() {
   const refreshMenus = () => {
     const diagnostic: Electron.MenuItemConstructorOptions = {
       label: "Dock validation",
-      submenu: dockValidation.menu(),
+      submenu: dockValidation.menu().map((item) =>
+        item.label === "Start Dock validation (120 seconds)"
+          ? {
+              ...item,
+              click: () => {
+                const revision = reserveCapture("diagnostic");
+                void dockRuntime.stop().then(() => {
+                  if (
+                    !quitting &&
+                    requestedCaptureMode === "diagnostic" &&
+                    revision === captureRevision
+                  )
+                    return dockValidation.start();
+                });
+              },
+            }
+          : item.label === "Stop Dock validation"
+            ? {
+                ...item,
+                click: () => {
+                  const revision = reserveCapture("product");
+                  void dockValidation.stop("user stop").then(() => {
+                    if (revision === captureRevision) startDock();
+                  });
+                },
+              }
+            : item,
+      ),
     };
     Menu.setApplicationMenu(
       Menu.buildFromTemplate([
@@ -222,6 +273,7 @@ async function start() {
             ...recoveryItems(),
             visibilityItem(),
             settingsItem(),
+            ...dockItems(),
             {
               label: "Quit Mosey",
               accelerator: "CommandOrControl+Q",
@@ -236,6 +288,7 @@ async function start() {
       ...recoveryItems(),
       visibilityItem(),
       settingsItem(),
+      ...dockItems(),
       diagnostic,
       { label: "Quit Mosey", click: quit },
     ]);
@@ -244,7 +297,10 @@ async function start() {
     quitting = true;
     if (!drained) {
       event.preventDefault();
-      void dockValidation.stop("application quit").finally(() => {
+      void Promise.all([
+        dockValidation.stop("application quit"),
+        dockRuntime.stop(),
+      ]).finally(() => {
         drained = true;
         app.quit();
       });
@@ -258,7 +314,6 @@ async function start() {
   tray.setTitle("🐾");
   tray.setToolTip("Mosey");
   const dockValidation = new DockValidation(refreshMenus);
-  refreshMenus();
   // macOS's cached native context menu does not provide a reliable pre-open
   // callback. Open explicitly so every click reads the current system setting.
   const openTrayMenu = () => tray.popUpContextMenu(refreshMenus());
@@ -300,6 +355,7 @@ async function start() {
     if (!pet.isDestroyed()) {
       publish();
       routePointer();
+      reconcileDock();
     }
   };
   const dismissBodyMenu = () => {
@@ -317,6 +373,7 @@ async function start() {
     ear,
     sleeping,
     idle,
+    climbing,
     walking,
     stretching,
     playing,
@@ -328,6 +385,40 @@ async function start() {
     falling,
     landing,
   ].map((value) => atlasSchema.parse(value));
+  // Bottom support uses the common horizontal projection across every frame
+  // and both facings. Pose changes alone cannot lose and regain that contact.
+  const frameContacts = atlases.flatMap((atlas) =>
+    atlas.frames.map((frame) => {
+      const runs = frame.hitRows.flat();
+      if (!runs.length) return undefined;
+      return {
+        left:
+          (Math.min(...runs.map(([start]) => start)) - frame.foot.x) /
+          atlas.pixelRatio,
+        right:
+          (Math.max(...runs.map(([, end]) => end)) - frame.foot.x) /
+          atlas.pixelRatio,
+      };
+    }),
+  );
+  const contactLeft = Math.max(
+    ...frameContacts.map((contact) =>
+      contact ? Math.max(contact.left, -contact.right) : Infinity,
+    ),
+  );
+  const contactRight = Math.min(
+    ...frameContacts.map((contact) =>
+      contact ? Math.min(contact.right, -contact.left) : -Infinity,
+    ),
+  );
+  const bottomContact =
+    Number.isFinite(contactLeft) &&
+    Number.isFinite(contactRight) &&
+    contactLeft < contactRight
+      ? { left: contactLeft, right: contactRight }
+      : undefined;
+  if (!bottomContact)
+    log.error("Pet atlases have no stable horizontal bottom Dock contact");
   // Pointer identity outlives posture/action transitions during a captured gesture.
   let gesture:
     | {
@@ -365,14 +456,152 @@ async function start() {
       false,
     );
   };
+  let dockObservation: DockObservation | null = null;
+  // Only an observed overlapping bottom edge owns vertical support. A null or
+  // pending capture report cannot turn an unrelated desktop position into a drop.
+  let dockSupported = false;
+  let dockPendingAt: number | undefined;
+  let dockPendingSince: number | undefined;
+  let dockMovementDelay = 0;
+  let dockPendingTimer: ReturnType<typeof setTimeout> | undefined;
+  const movementNow = () =>
+    (dockPendingAt ?? timeline.now()) - dockMovementDelay;
+  const finishDockPending = () => {
+    if (dockPendingAt !== undefined)
+      dockMovementDelay += timeline.now() - dockPendingAt;
+    dockPendingAt = undefined;
+    clearTimeout(dockPendingTimer);
+    dockPendingTimer = undefined;
+  };
+  const bodyAt = (x: number, y: number) => {
+    const geometry = petGeometry(liveSize);
+    // Use the pose actually drawn, including facing, until its next frame
+    // report. This is the same alpha mask and foot transform as input routing.
+    const atlas =
+      atlases.find((value) => value.action === displayed?.posture) ??
+      atlases.find((value) => value.action === "resting")!;
+    const frame = atlas.frames[displayed?.frame ?? 0] ?? atlas.frames[0]!;
+    const runs = frame.hitRows.flat();
+    const localLeft = Math.min(...runs.map(([start]) => start));
+    const localRight = Math.max(...runs.map(([, end]) => end));
+    const top = frame.hitRows.findIndex((row) => row.length > 0);
+    const left =
+      geometry.foot.x +
+      ((localLeft - frame.foot.x) / atlas.pixelRatio) * geometry.assetScale;
+    const right =
+      geometry.foot.x +
+      ((localRight - frame.foot.x) / atlas.pixelRatio) * geometry.assetScale;
+    const mirrored = displayed?.direction === "left";
+    return {
+      left: x + (mirrored ? geometry.side - right : left),
+      right: x + (mirrored ? geometry.side - left : right),
+      top:
+        y +
+        geometry.foot.y +
+        ((top - frame.foot.y) / atlas.pixelRatio) * geometry.assetScale,
+      bottom: y + geometry.foot.y,
+    };
+  };
+  const supportAt = (x: number, y: number) => {
+    const area = screen.getPrimaryDisplay().workArea;
+    const floor = area.y + area.height;
+    const body = bodyAt(x, y);
+    if (dockObservation?.orientation === "bottom") {
+      if (!bottomContact) return { footY: floor, shiftX: 0 };
+      const geometry = petGeometry(liveSize);
+      body.left =
+        x + geometry.foot.x + bottomContact.left * geometry.assetScale;
+      body.right =
+        x + geometry.foot.x + bottomContact.right * geometry.assetScale;
+    }
+    // Side avoidance retains the actual painted extent; input still uses alpha.
+    return dockSupport(dockObservation, body, floor);
+  };
+  const reconcileDock = () => {
+    if (
+      pet.isDestroyed() ||
+      visibility !== "visible" ||
+      suspended ||
+      bodyMenu ||
+      dockPendingAt !== undefined ||
+      gesture
+    )
+      return;
+    const posture = String(behavior.getSnapshot().value);
+    if (
+      ["paused", "dragging", "flutter", "falling", "climbing"].includes(posture)
+    )
+      return;
+    const bounds = pet.getBounds();
+    const support = supportAt(bounds.x, bounds.y);
+    if (support.shiftX) constrain(bounds.x + support.shiftX, bounds.y);
+    const area = screen.getPrimaryDisplay().workArea;
+    const supported = support.footY < area.y + area.height - 1;
+    const lostSupport = dockSupported && !supported;
+    dockSupported = supported;
+    if (!supported && !lostSupport) return;
+    const footY = bounds.y + bounds.height;
+    if (support.footY < footY - 1) behavior.send({ type: "CLIMB" });
+    else if (support.footY > footY + 1) behavior.send({ type: "DROP" });
+  };
+  let dockStatus = "";
+  const dockRuntime = new DockRuntime((observation) => {
+    const geometryChanged = dockObservation !== null || observation !== null;
+    const wasPending = dockPendingAt !== undefined;
+    dockObservation = observation;
+    const pending = dockRuntime.processingFrame;
+    if (pending) {
+      dockPendingSince ??= performance.now();
+      // A new complete frame invalidates the old edge immediately. Briefly
+      // hold the current position while its worker finishes; never move using
+      // that old geometry. The bounded hold cannot mask a stuck producer.
+      if (
+        performance.now() - dockPendingSince < 250 &&
+        dockPendingAt === undefined
+      ) {
+        dockPendingAt = timeline.now();
+        dockPendingTimer = setTimeout(() => {
+          finishDockPending();
+          reconcileDock();
+        }, 250);
+      }
+    } else {
+      dockPendingSince = undefined;
+      finishDockPending();
+    }
+    // Repeated unavailable reports do not own desktop placement. Only a
+    // capability change (or an ended pending frame) may initiate Dock motion.
+    if (geometryChanged || (wasPending && !pending)) reconcileDock();
+    if (dockStatus !== dockRuntime.status) {
+      dockStatus = dockRuntime.status;
+      refreshMenus();
+    }
+  });
+  const startDock = () => {
+    if (
+      !quitting &&
+      requestedCaptureMode === "product" &&
+      rendererState === "ready" &&
+      visibility === "visible" &&
+      !suspended &&
+      !dockValidation.running
+    )
+      dockRuntime.start();
+  };
+  refreshMenus();
   const alignGround = () => {
     const area = screen.getPrimaryDisplay().workArea;
-    constrain(pet.getBounds().x, area.y + area.height - pet.getBounds().height);
+    const bounds = pet.getBounds();
+    const support = supportAt(bounds.x, bounds.y);
+    constrain(
+      bounds.x + support.shiftX,
+      Math.min(area.y + area.height, support.footY) - bounds.height,
+    );
   };
   const reconcileGround = () => {
     // The live work area can change before its native notification arrives.
     // Keep grounded poses on that floor without touching captured or moving pets.
-    if (gesture || motion !== undefined) return;
+    if (gesture || motion !== undefined || dockPendingAt !== undefined) return;
     const posture = behavior.getSnapshot().value;
     if (
       posture === "dragging" ||
@@ -380,9 +609,9 @@ async function start() {
       posture === "falling"
     )
       return;
-    const area = screen.getPrimaryDisplay().workArea;
     const bounds = pet.getBounds();
-    if (bounds.y + bounds.height !== area.y + area.height) alignGround();
+    const support = supportAt(bounds.x, bounds.y);
+    if (bounds.y + bounds.height !== support.footY) alignGround();
   };
   const cancelInteraction = () => {
     dismissBodyMenu();
@@ -393,10 +622,12 @@ async function start() {
         gestureId: cancelledGesture.id,
       });
     stopMotion();
+    // Establish the new stable location before publishing resting: otherwise
+    // its Dock reconciliation can start a new climb from the old location.
+    if (!pet.isDestroyed()) alignGround();
     behavior.send({
       type: visibility === "visible" && !suspended ? "CANCEL" : "PAUSE",
     });
-    if (!pet.isDestroyed()) alignGround();
   };
   const release = (cancelled: boolean) => {
     if (!gesture) return;
@@ -602,7 +833,7 @@ async function start() {
         behavior.send({ type: "CANCEL" });
       }
       const bounds = pet.getBounds();
-      const returning = ["flutter", "falling", "landing"].includes(
+      const returning = ["flutter", "falling", "landing", "climbing"].includes(
         String(behavior.getSnapshot().value),
       );
       gesture = {
@@ -660,6 +891,13 @@ async function start() {
     );
     constrain(pet.getBounds().x, pet.getBounds().y);
     release(true);
+    if (
+      ["climbing", "falling"].includes(String(behavior.getSnapshot().value))
+    ) {
+      stopMotion();
+      behavior.send({ type: "DROP" });
+    }
+    reconcileDock();
     publish();
     publishSettings();
     refreshMenus();
@@ -730,7 +968,6 @@ async function start() {
       stopMotion();
       const id = snapshot.context.actionId;
       motionAction = id;
-      alignGround();
       const origin = pet.getBounds();
       const area = screen.getPrimaryDisplay().workArea;
       let direction = snapshot.context.direction === "left" ? -1 : 1;
@@ -754,9 +991,13 @@ async function start() {
           area.x + Math.max(0, area.width - origin.width),
         ),
       );
-      const started = timeline.now();
+      const started = movementNow();
+      const originFootX = origin.x + origin.width / 2;
+      let previousFootX = originFootX;
+      let avoidanceOffset = 0;
       motion = setInterval(() => {
-        if (timeline.pausedAt !== undefined) return;
+        if (timeline.pausedAt !== undefined || dockPendingAt !== undefined)
+          return;
         if (
           pet.isDestroyed() ||
           gesture ||
@@ -766,20 +1007,73 @@ async function start() {
           return stopMotion();
         const progress = Math.min(
           1,
-          (timeline.now() - started) / autonomy.walkMs,
+          (movementNow() - started) / autonomy.walkMs,
         );
         const bounds = pet.getBounds();
-        const area = screen.getPrimaryDisplay().workArea;
         // A size change preserves the moving foot, not the old window corner.
-        constrain(
-          origin.x +
-            origin.width / 2 +
-            (destination - origin.x) * progress -
-            bounds.width / 2,
-          area.y + area.height - bounds.height,
-        );
+        // Preserve both corrections applied by this tick and any newer native
+        // contour that moved the window between ticks. Keep the fractional
+        // original path so integer window rounding cannot accumulate drift.
+        avoidanceOffset += bounds.x + bounds.width / 2 - previousFootX;
+        const x =
+          originFootX +
+          (destination - origin.x) * progress -
+          bounds.width / 2 +
+          avoidanceOffset;
+        const support = supportAt(x, bounds.y);
+        constrain(x + support.shiftX, bounds.y);
+        const moved = pet.getBounds();
+        avoidanceOffset += moved.x - Math.round(x);
+        previousFootX = moved.x + moved.width / 2;
+        reconcileDock();
       }, 16);
-    } else if (snapshot.value !== "falling" && snapshot.value !== "walking")
+    } else if (
+      snapshot.value === "climbing" &&
+      motionAction !== snapshot.context.actionId
+    ) {
+      stopMotion();
+      const id = snapshot.context.actionId;
+      motionAction = id;
+      const started = movementNow();
+      const climbDurationMs = climbing.frames.reduce(
+        (total, frame) => total + frame.durationMs,
+        0,
+      );
+      let last = started;
+      motion = setInterval(() => {
+        if (timeline.pausedAt !== undefined || dockPendingAt !== undefined) {
+          last = movementNow();
+          return;
+        }
+        if (
+          pet.isDestroyed() ||
+          gesture ||
+          visibility !== "visible" ||
+          behavior.getSnapshot().context.actionId !== id
+        )
+          return stopMotion();
+        const now = movementNow();
+        const step = Math.min(50, now - last) * 0.11;
+        last = now;
+        const bounds = pet.getBounds();
+        const target = supportAt(bounds.x, bounds.y).footY;
+        const footY = bounds.y + bounds.height;
+        if (target > footY + 1) {
+          behavior.send({ type: "DROP" });
+          return;
+        }
+        const next = Math.max(target, footY - step);
+        constrain(bounds.x, next - bounds.height);
+        if (next <= target + 1 && now - started >= climbDurationMs) {
+          stopMotion();
+          behavior.send({ type: "LANDED", actionId: id });
+        }
+      }, 16);
+    } else if (
+      snapshot.value !== "falling" &&
+      snapshot.value !== "walking" &&
+      snapshot.value !== "climbing"
+    )
       stopMotion();
     else if (
       snapshot.value === "falling" &&
@@ -790,11 +1084,11 @@ async function start() {
       motionAction = id;
       const origin = pet.getBounds();
       const footY = origin.y + origin.height;
-      const footX = origin.x + origin.width / 2;
-      const started = timeline.now();
+      const started = movementNow();
       // Initial velocity and acceleration in desktop points, adjustable here.
       motion = setInterval(() => {
-        if (timeline.pausedAt !== undefined) return;
+        if (timeline.pausedAt !== undefined || dockPendingAt !== undefined)
+          return;
         if (
           pet.isDestroyed() ||
           gesture ||
@@ -803,13 +1097,17 @@ async function start() {
           stopMotion();
           return;
         }
-        const seconds = (timeline.now() - started) / 1000;
+        const seconds = (movementNow() - started) / 1000;
         const bounds = pet.getBounds();
         const y =
           footY - bounds.height + 180 * seconds + 1800 * seconds * seconds;
-        const area = screen.getPrimaryDisplay().workArea;
-        const ground = area.y + area.height - pet.getBounds().height;
-        constrain(footX - bounds.width / 2, y);
+        const ground = supportAt(bounds.x, y).footY - bounds.height;
+        if (ground < bounds.y - 1) {
+          behavior.send({ type: "CLIMB" });
+          return;
+        }
+        const support = supportAt(bounds.x, y);
+        constrain(bounds.x + support.shiftX, Math.min(y, ground));
         if (y >= ground) {
           stopMotion();
           behavior.send({ type: "LANDED", actionId: id });
@@ -817,10 +1115,16 @@ async function start() {
       }, 16);
     }
     publish();
+    if (snapshot.value === "resting") reconcileDock();
   });
   const pause = () => {
     dismissBodyMenu();
     suspended = true;
+    dockSupported = false;
+    dockPendingSince = undefined;
+    finishDockPending();
+    void dockRuntime.stop();
+    dockObservation = null;
     stopPointerPolling();
     cancelInteraction();
     behavior.send({ type: "PAUSE" });
@@ -829,15 +1133,36 @@ async function start() {
     suspended = false;
     alignGround();
     startPointerPolling();
-    if (visibility === "visible") behavior.send({ type: "RESUME" });
+    if (visibility === "visible") {
+      behavior.send({ type: "RESUME" });
+      startDock();
+    }
   };
   powerMonitor.on("suspend", pause);
   powerMonitor.on("lock-screen", pause);
   powerMonitor.on("resume", resume);
   powerMonitor.on("unlock-screen", resume);
-  screen.on("display-metrics-changed", cancelInteraction);
-  screen.on("display-added", cancelInteraction);
-  screen.on("display-removed", cancelInteraction);
+  const displayChanged = () => {
+    dockSupported = false;
+    dockPendingSince = undefined;
+    dockObservation = null;
+    finishDockPending();
+    cancelInteraction();
+    void dockRuntime.stop().then(() => {
+      if (!pet.isDestroyed() && visibility === "visible" && !suspended)
+        startDock();
+    });
+  };
+  const displayMetricsChanged = (
+    _event: Electron.Event,
+    _display: Electron.Display,
+    changedMetrics: string[],
+  ) => {
+    if (changedMetrics.length > 0) displayChanged();
+  };
+  screen.on("display-metrics-changed", displayMetricsChanged);
+  screen.on("display-added", displayChanged);
+  screen.on("display-removed", displayChanged);
   pet.on("unresponsive", cancelInteraction);
   pet.on("blur", () => {
     release(true);
@@ -850,13 +1175,14 @@ async function start() {
     powerMonitor.off("resume", resume);
     powerMonitor.off("unlock-screen", resume);
     powerMonitor.off("lock-screen", pause);
-    screen.off("display-metrics-changed", cancelInteraction);
-    screen.off("display-added", cancelInteraction);
-    screen.off("display-removed", cancelInteraction);
+    screen.off("display-metrics-changed", displayMetricsChanged);
+    screen.off("display-added", displayChanged);
+    screen.off("display-removed", displayChanged);
   });
   pet.webContents.on("did-start-loading", cancelInteraction);
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
+  app.on("before-quit", finishDockPending);
   // Some packaged macOS launches update native visibility without delivering
   // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
@@ -871,8 +1197,16 @@ async function start() {
     visibility = next;
     if (next === "visible") {
       behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
-      if (!suspended) startPointerPolling();
+      if (!quitting && !suspended) {
+        startPointerPolling();
+        startDock();
+      }
     } else {
+      dockSupported = false;
+      dockPendingSince = undefined;
+      finishDockPending();
+      void dockRuntime.stop();
+      dockObservation = null;
       stopPointerPolling();
       // Immediately release any last opaque region, independent of cursor polling.
       pet.setIgnoreMouseEvents(true, { forward: true });
