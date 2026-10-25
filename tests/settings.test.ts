@@ -109,7 +109,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .items.find((x) => x.label === "Mosey")!
           .submenu!.items.map((x) => x.label),
       ),
-    ).not.toContain("Size");
+    ).toContain("Pet Size");
     await stage("validate IPC boundaries");
     expect(
       await settings.evaluate(() =>

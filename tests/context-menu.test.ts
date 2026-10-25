@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { openSettings, closeSettings } from "./support/settings";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 // Exercise the CI 1x raster path on Retina developer machines too.
@@ -218,7 +219,22 @@ test("body secondary clicks open a native menu and cancel without changing the p
         (item: { label: string }) => item.label,
       ),
     );
-    expect(labels).toEqual(["Hide Mosey", "Quit Mosey"]);
+    expect(labels).toContain("Pet Size");
+    expect(labels).not.toContain("Dock validation");
+    expect(
+      await app.evaluate(() =>
+        Reflect.get(globalThis, "menus")[0]
+          .items.find((item: { label: string }) => item.label === "Pet Size")
+          .submenu.items.map((item: { label: string; checked: boolean }) => ({
+            label: item.label,
+            checked: item.checked,
+          })),
+      ),
+    ).toEqual([
+      { label: "Small", checked: false },
+      { label: "Medium", checked: false },
+      { label: "Large", checked: true },
+    ]);
     await closeMenu();
     await expect.poll(pixels, { timeout: 2000 }).not.toBe(await pixels());
     // Keep actual native show/items/cancel above. Long pause/progress assertions
@@ -247,6 +263,75 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await pet.mouse.click(5, 5, { button: "right" });
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(await menuCount()).toBe(2);
+    for (const [label, side] of [
+      ["Small", 70],
+      ["Medium", 160],
+      ["Large", 240],
+    ] as const) {
+      await openMenu();
+      const before = await bounds();
+      await app.evaluate((_electron, label) => {
+        Reflect.get(globalThis, "menus")
+          .at(-1)
+          .items.find((item: { label: string }) => item.label === "Pet Size")
+          .submenu.items.find((item: { label: string }) => item.label === label)
+          .click();
+      }, label);
+      await closeMenu();
+      await expect.poll(async () => (await bounds()).width).toBe(side);
+      const after = await bounds();
+      expect(after.x + side / 2).toBe(before.x + before.width / 2);
+      expect(after.y + side).toBe(before.y + before.height);
+      expect(
+        await app.evaluate(({ Menu }) =>
+          Menu.getApplicationMenu()!
+            .items.find((item) => item.label === "Mosey")!
+            .submenu!.items.find((item) => item.label === "Pet Size")!
+            .submenu!.items.filter((item) => item.checked)
+            .map((item) => item.label),
+        ),
+      ).toEqual([label]);
+      await expect.poll(pixels).not.toBe(await pixels());
+      await openMenu();
+      expect(
+        await app.evaluate(() =>
+          Reflect.get(globalThis, "menus")
+            .at(-1)
+            .items.find((item: { label: string }) => item.label === "Pet Size")
+            .submenu.items.filter((item: { checked: boolean }) => item.checked)
+            .map((item: { label: string }) => item.label),
+        ),
+      ).toEqual([label]);
+      await closeMenu();
+    }
+    const settings = await openSettings(app);
+    const slider = settings.getByRole("slider", { name: "宠物大小" });
+    await slider.focus();
+    await settings.keyboard.press("Home");
+    for (let step = 0; step < 4; step++)
+      await settings.keyboard.press("ArrowRight");
+    await settings.keyboard.press("Tab");
+    await expect.poll(() => slider.inputValue()).toBe("110");
+    await closeSettings(app);
+    await openMenu();
+    expect(
+      await app.evaluate(() =>
+        Reflect.get(globalThis, "menus")
+          .at(-1)
+          .items.find((item: { label: string }) => item.label === "Pet Size")
+          .submenu.items.some((item: { checked: boolean }) => item.checked),
+      ),
+    ).toBe(false);
+    await closeMenu();
+    await app.evaluate(({ Menu }) =>
+      Menu.getApplicationMenu()!
+        .items.find((item) => item.label === "Mosey")!
+        .submenu!.items.find((item) => item.label === "Pet Size")!
+        .submenu!.items.find((item) => item.label === "Large")!
+        .click(),
+    );
+    await invoke("Hide Mosey");
+    await invoke("Show Mosey");
     // A native Control-click must not enter the ordinary left-button gesture.
     await openMenu(true);
     await closeMenu();
@@ -363,9 +448,30 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await new Promise((resolve) => setTimeout(resolve, 2900));
     expect((await pixels()) === walking.pixels).toBe(true);
     expect(await bounds()).toEqual(walking.bounds);
+    await app.evaluate(() =>
+      Reflect.get(globalThis, "menus")
+        .at(-1)
+        .items.find((item: { label: string }) => item.label === "Pet Size")
+        .submenu.items.find(
+          (item: { label: string }) => item.label === "Medium",
+        )
+        .click(),
+    );
     await closeMenu();
     const justResumed = await bounds();
-    expect(Math.abs(justResumed.x - walking.bounds.x)).toBeLessThan(20);
+    expect(justResumed.width).toBe(160);
+    expect(
+      Math.abs(
+        justResumed.x + 80 - walking.bounds.x - walking.bounds.width / 2,
+      ),
+    ).toBeLessThan(20);
+    await app.evaluate(({ Menu }) =>
+      Menu.getApplicationMenu()!
+        .items.find((item) => item.label === "Mosey")!
+        .submenu!.items.find((item) => item.label === "Pet Size")!
+        .submenu!.items.find((item) => item.label === "Large")!
+        .click(),
+    );
     await expect
       .poll(async () => Math.abs((await bounds()).x - walkOrigin.x), {
         timeout: 3000,
@@ -432,6 +538,18 @@ test("body secondary clicks open a native menu and cancel without changing the p
       .toBe(true);
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     await openMenu();
+    await app.evaluate(() =>
+      Reflect.get(globalThis, "menus")
+        .at(-1)
+        .items.find((item: { label: string }) => item.label === "Pet Size")
+        .submenu.items.find(
+          (item: { label: string }) => item.label === "Medium",
+        )
+        .click(),
+    );
+    await closeMenu();
+    await expect.poll(pixels).not.toBe(await pixels());
+    await openMenu();
     const exited = app.waitForEvent("close");
     await app
       .evaluate(() => {
@@ -443,6 +561,25 @@ test("body secondary clicks open a native menu and cancel without changing the p
       .catch(() => {});
     await exited;
     app = undefined;
+    app = await electron.launch(
+      packaged
+        ? {
+            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
+          }
+        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
+    );
+    await app.firstWindow();
+    expect((await bounds()).width).toBe(160);
+    expect(
+      await app.evaluate(({ Menu }) =>
+        Menu.getApplicationMenu()!
+          .items.find((item) => item.label === "Mosey")!
+          .submenu!.items.find((item) => item.label === "Pet Size")!
+          .submenu!.items.filter((item) => item.checked)
+          .map((item) => item.label),
+      ),
+    ).toEqual(["Medium"]);
     await mkdir("test-results", { recursive: true });
     await writeFile(
       `test-results/${packaged ? "packaged" : "development"}-menu.json`,
