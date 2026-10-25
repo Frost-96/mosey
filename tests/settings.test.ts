@@ -102,7 +102,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .items.find((x) => x.label === "Mosey")!
           .submenu!.items.map((x) => x.label),
       ),
-    ).not.toContain("Launch at Login");
+    ).toContain("Launch at Login");
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
