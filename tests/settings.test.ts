@@ -84,7 +84,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .items.find((x) => x.label === "Mosey")!
           .submenu!.items.map((x) => x.label),
       ),
-    ).toContain("Launch at Login");
+    ).not.toContain("Launch at Login");
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
@@ -125,7 +125,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await mkdir(file);
     await settings.getByRole("button", { name: "大", exact: true }).click();
     await expect
-      .poll(() => settings!.getByRole("alert").textContent())
+      .poll(() => settings!.locator(".error [role=alert]").textContent())
       .toContain("保存失败");
     expect((await petState()).bounds.width).toBe(70);
     await mkdir("docs/validation", { recursive: true });
@@ -134,10 +134,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         .locator("body")
         .evaluate((element) => getComputedStyle(element).overflowY),
     ).toBe("auto");
-    const loginNote = settings.getByText(
-      "请通过菜单中的 Launch at Login 管理。",
-      { exact: true },
-    );
+    const loginNote = settings.getByRole("region", { name: "开机启动" });
     await loginNote.scrollIntoViewIfNeeded();
     expect(
       await loginNote.evaluate((element) => {
@@ -161,7 +158,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await mkdir(file);
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await expect
-      .poll(() => settings!.getByRole("alert").isVisible())
+      .poll(() => settings!.locator(".error [role=alert]").isVisible())
       .toBe(true);
     await rm(file, { recursive: true });
     await settings.evaluate(() => {
@@ -170,7 +167,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     });
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
     await expect
-      .poll(() => settings!.getByRole("alert").isVisible())
+      .poll(() => settings!.locator(".error [role=alert]").isVisible())
       .toBe(false);
 
     await settings.getByRole("button", { name: "小", exact: true }).click();
@@ -192,13 +189,9 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         .locator("main")
         .evaluate((element) => getComputedStyle(element).paddingLeft),
     ).toBe("32px");
-    expect(
-      await settings
-        .locator("main")
-        .evaluate(
-          (element) => element.getBoundingClientRect().bottom <= innerHeight,
-        ),
-    ).toBe(true);
+    await settings
+      .getByRole("region", { name: "开机启动" })
+      .scrollIntoViewIfNeeded();
     await settings.screenshot({
       path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-settings.png`,
     });

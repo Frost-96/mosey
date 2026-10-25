@@ -7,6 +7,7 @@ import {
   presentationSchema,
   type PetBridge,
   settingsSchema,
+  loginLaunchRequestSchema,
   type SettingsBridge,
 } from "./shared/contract";
 const bridge: PetBridge = {
@@ -57,6 +58,19 @@ const settingsBridge: SettingsBridge = {
   },
   async showPet() {
     return settingsSchema.parse(await ipcRenderer.invoke(channels.showPet));
+  },
+  async setLoginLaunch(enabled) {
+    return settingsSchema.parse(
+      await ipcRenderer.invoke(
+        channels.setLoginLaunch,
+        loginLaunchRequestSchema.parse(enabled),
+      ),
+    );
+  },
+  async openLoginSettings() {
+    return settingsSchema.parse(
+      await ipcRenderer.invoke(channels.openLoginSettings),
+    );
   },
   onChange(listener) {
     const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {
