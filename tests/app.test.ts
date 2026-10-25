@@ -200,6 +200,40 @@ test("a real app displays one animated corgi and quits from its menu", async () 
       ).toBe("same-document");
       expect(await opaquePixelCount()).toBeGreaterThan(5000);
     }
+    // External display-scale stimulus against the real renderer. CDP emulates
+    // DPR only; this is not evidence of changing physical display hardware.
+    const changedRatio =
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1") === 2 ? 1 : 2;
+    const displaySession = await window.context().newCDPSession(window);
+    await displaySession.send("Emulation.setDeviceMetricsOverride", {
+      width: 240,
+      height: 240,
+      deviceScaleFactor: changedRatio,
+      mobile: false,
+    });
+    await expect
+      .poll(() =>
+        window.evaluate(() => ({
+          ratio: devicePixelRatio,
+          width: document.querySelector("canvas")!.width,
+          height: document.querySelector("canvas")!.height,
+        })),
+      )
+      .toEqual({
+        ratio: changedRatio,
+        width: 240 * changedRatio,
+        height: 240 * changedRatio,
+      });
+    expect(await opaquePixelCount()).toBeGreaterThan(
+      changedRatio === 2 ? 20000 : 5000,
+    );
+    await displaySession.send("Emulation.clearDeviceMetricsOverride");
+    await expect
+      .poll(() =>
+        window.evaluate(() => document.querySelector("canvas")!.width),
+      )
+      .toBe(240 * Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"));
+    await displaySession.detach();
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(
       app.process().spawnfile,
