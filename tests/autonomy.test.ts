@@ -2,7 +2,7 @@ import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import os from "node:os";
@@ -44,21 +44,155 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
     );
     const pet = await app.firstWindow();
+    // Bounded public-boundary diagnostics only. These do not change menu
+    // selection, timing expectations or the asserted visibility intent.
+    await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app, screen }) => {
+      const trace: unknown[] = [];
+      const snapshot = (event: string, detail?: unknown) => {
+        trace.push({
+          event,
+          detail,
+          pointer: screen.getCursorScreenPoint(),
+          at: performance.now(),
+          wall: Date.now(),
+          applicationHidden: app.isHidden(),
+          menus: Menu.getApplicationMenu()?.items.map((item) => ({
+            label: item.label,
+            role: item.role,
+            items: item.submenu?.items.map((child) => ({
+              label: child.label,
+              role: child.role,
+            })),
+          })),
+          windows: BrowserWindow.getAllWindows().map((window) => ({
+            id: window.id,
+            visible: window.isVisible(),
+            bounds: window.getBounds(),
+          })),
+        });
+        if (trace.length > 128) trace.shift();
+      };
+      const setMenu = Menu.setApplicationMenu.bind(Menu);
+      Menu.setApplicationMenu = (menu) => {
+        setMenu(menu);
+        snapshot("setApplicationMenu");
+      };
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.on("move", () => snapshot("move"));
+        window.on("show", () => snapshot("show"));
+        window.on("hide", () => snapshot("hide"));
+        window.on("blur", () => snapshot("blur"));
+        window.on("focus", () => snapshot("focus"));
+      }
+      screen.on("display-metrics-changed", (_event, display, changed) =>
+        snapshot("display-metrics-changed", { display, changed }),
+      );
+      screen.on("display-added", (_event, display) =>
+        snapshot("display-added", display),
+      );
+      screen.on("display-removed", (_event, display) =>
+        snapshot("display-removed", display),
+      );
+      powerMonitor.on("suspend", () => snapshot("suspend"));
+      powerMonitor.on("resume", () => snapshot("resume"));
+      powerMonitor.on("lock-screen", () => snapshot("lock-screen"));
+      powerMonitor.on("unlock-screen", () => snapshot("unlock-screen"));
+      Object.assign(globalThis, { autonomyMenuTrace: trace });
+      snapshot("observe");
+    });
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const invoke = (label: string) =>
-      app!.evaluate(
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
-      );
+      app!.evaluate(async ({ Menu, BrowserWindow, app }, label) => {
+        const menu = Menu.getApplicationMenu();
+        const item = menu?.items
+          .find((entry) => entry.label === "Mosey")
+          ?.submenu?.items.find((entry) => entry.label === label);
+        if (!item)
+          throw new Error(
+            JSON.stringify({
+              requested: label,
+              menus: menu?.items.map((entry) => ({
+                label: entry.label,
+                role: entry.role,
+                items: entry.submenu?.items.map((child) => ({
+                  label: child.label,
+                  role: child.role,
+                })),
+              })),
+              hidden: app.isHidden(),
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                visible: window.isVisible(),
+                bounds: window.getBounds(),
+              })),
+            }),
+          );
+        // Cocoa delivers the public hide/show event after the menu callback.
+        // Wait for that boundary before positioning or driving the pet; an
+        // in-flight visibility transition can otherwise replace setup geometry.
+        const target = BrowserWindow.getAllWindows()[0]!;
+        const event =
+          label === "Hide Mosey"
+            ? "hide"
+            : label === "Show Mosey"
+              ? "show"
+              : undefined;
+        if (!event) {
+          item.click();
+          return;
+        }
+        await new Promise<void>((resolve, reject) => {
+          const settled = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          const timer = setTimeout(() => {
+            if (event === "hide") target.removeListener("hide", settled);
+            else target.removeListener("show", settled);
+            reject(new Error(`No public ${event} event after ${label}`));
+          }, 5000);
+          if (event === "hide") target.once("hide", settled);
+          else target.once("show", settled);
+          item.click();
+        });
+      }, label);
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
+    await pet.evaluate(() => {
+      const trace: unknown[] = [];
+      Reflect.set(window, "autonomyInputTrace", trace);
+      for (const type of [
+        "pointerdown",
+        "pointerup",
+        "pointermove",
+        "pointercancel",
+        "gotpointercapture",
+        "lostpointercapture",
+      ]) {
+        window.addEventListener(
+          type,
+          (event) => {
+            const pointer = event as PointerEvent;
+            trace.push({
+              type,
+              at: performance.now(),
+              wall: Date.now(),
+              buttons: pointer.buttons,
+              button: pointer.button,
+              pointerId: pointer.pointerId,
+              clientX: pointer.clientX,
+              clientY: pointer.clientY,
+              screenX: pointer.screenX,
+              screenY: pointer.screenY,
+            });
+            if (trace.length > 128) trace.shift();
+          },
+          true,
+        );
+      }
+    });
     const pixels = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -371,6 +505,37 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
   } catch (error) {
     checkpoint("failure");
     await mkdir("test-results", { recursive: true });
+    const externalState = await app
+      ?.evaluate(({ Menu, BrowserWindow, app }) => ({
+        applicationHidden: app.isHidden(),
+        menus: Menu.getApplicationMenu()?.items.map((item) => ({
+          label: item.label,
+          role: item.role,
+          items: item.submenu?.items.map((child) => ({
+            label: child.label,
+            role: child.role,
+          })),
+        })),
+        windows: BrowserWindow.getAllWindows().map((window) => ({
+          id: window.id,
+          visible: window.isVisible(),
+          bounds: window.getBounds(),
+        })),
+        trace: Reflect.get(globalThis, "autonomyMenuTrace"),
+      }))
+      .catch((failure: unknown) => ({ unavailable: String(failure) }));
+    const inputTrace = await app
+      ?.windows()[0]
+      ?.evaluate(() => Reflect.get(window, "autonomyInputTrace"))
+      .catch((failure: unknown) => ({ unavailable: String(failure) }));
+    const preferences = await readFile(
+      path.join(root, "profile/preferences.json"),
+      "utf8",
+    ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
+    await writeFile(
+      `test-results/failure-${packaged ? "packaged" : "development"}-autonomy-state.json`,
+      JSON.stringify({ externalState, inputTrace, preferences }, null, 2),
+    );
     await app
       ?.windows()[0]
       ?.screenshot({
