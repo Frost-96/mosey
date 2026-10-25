@@ -57,10 +57,57 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
         ({ app }) =>
           app.getLoginItemSettings({ type: "mainAppService" }).status,
       );
-      await settings!
-        .getByRole("region", { name: "开机启动" })
-        .getByRole("checkbox")
-        .click();
+      const pet = app!
+        .windows()
+        .find((page) => !new URL(page.url()).searchParams.has("settings"))!;
+      await app!.evaluate(({ Menu }) => {
+        // Keep native tracking deterministic; the real system service is untouched.
+        Menu.prototype.popup = function (options) {
+          Reflect.set(globalThis, "loginBodyMenu", this);
+          Reflect.set(this, "trackingCallback", options?.callback);
+        };
+      });
+      const point = await pet.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const { data, width, height } = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height);
+        for (let y = Math.floor(height * 0.65); y < height - 8; y++)
+          for (let x = Math.floor(width * 0.4); x < width - 8; x++)
+            if (
+              [0, -4, 4].every((dy) =>
+                [0, -4, 4].every(
+                  (dx) => data[((y + dy) * width + x + dx) * 4 + 3]! > 250,
+                ),
+              )
+            )
+              return {
+                x: (x + 0.5) / devicePixelRatio,
+                y: (y + 0.5) / devicePixelRatio,
+              };
+        throw new Error("No body interior");
+      });
+      await pet.mouse.click(point.x, point.y, { button: "right" });
+      await expect
+        .poll(() =>
+          app!.evaluate(() => !!Reflect.get(globalThis, "loginBodyMenu")),
+        )
+        .toBe(true);
+      const checked = await app!.evaluate(
+        () =>
+          Reflect.get(globalThis, "loginBodyMenu").items.find(
+            (item: { label: string }) => item.label === "Launch at Login",
+          ).checked,
+      );
+      expect(checked).toBe(previous === "enabled");
+      await app!.evaluate(() => {
+        const menu = Reflect.get(globalThis, "loginBodyMenu");
+        menu.items
+          .find((item: { label: string }) => item.label === "Launch at Login")
+          .click();
+        Reflect.get(menu, "trackingCallback")?.();
+        Reflect.set(globalThis, "loginBodyMenu", undefined);
+      });
       await expect
         .poll(() =>
           app!.evaluate(

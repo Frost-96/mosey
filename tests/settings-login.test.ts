@@ -41,7 +41,7 @@ test("login settings explain availability and follow system approval, failure an
           .items.find((item) => item.label === "Mosey")!
           .submenu!.items.map((item) => item.label),
       ),
-    ).not.toContain("Launch at Login");
+    ).toContain("Launch at Login");
     // Controlled results at the OS boundary; all product paths remain real Electron UI/IPC.
     await app.evaluate(({ app, shell }) => {
       Object.defineProperty(app, "isPackaged", {
@@ -81,7 +81,12 @@ test("login settings explain availability and follow system approval, failure an
     await expect
       .poll(() => login.getByRole("checkbox").isDisabled())
       .toBe(false);
-    await login.getByRole("checkbox").click();
+    await app.evaluate(({ Menu }) =>
+      Menu.getApplicationMenu()!
+        .items.find((item) => item.label === "Mosey")!
+        .submenu!.items.find((item) => item.label === "Launch at Login")!
+        .click(),
+    );
     await expect.poll(() => login.textContent()).toContain("等待批准");
     expect(await login.getByRole("checkbox").isChecked()).toBe(false);
     await login.getByRole("button", { name: "打开系统设置" }).click();
