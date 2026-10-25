@@ -51,12 +51,9 @@ try {
   if (!canvas) throw new Error("Pet canvas is absent");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D is unavailable");
-  const scale = window.devicePixelRatio;
-  canvas.width = Math.round(240 * scale);
-  canvas.height = Math.round(240 * scale);
+  let scale = 0;
   canvas.style.width = "240px";
   canvas.style.height = "240px";
-  context.scale(scale, scale);
   let previous = "",
     frameRequest = 0,
     frameTimer = 0,
@@ -82,6 +79,15 @@ try {
   function draw() {
     frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
+    // A new primary display can have a different backing scale without a CSS
+    // size change. Resize on the next visible draw, including after hiding.
+    if (scale !== window.devicePixelRatio) {
+      scale = window.devicePixelRatio;
+      canvas!.width = Math.round(240 * scale);
+      canvas!.height = Math.round(240 * scale);
+      context!.setTransform(scale, 0, 0, scale, 0, 0);
+      previous = "";
+    }
     const { atlas, image } = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
     )!;
