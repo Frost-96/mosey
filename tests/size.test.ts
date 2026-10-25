@@ -61,7 +61,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
           }),
         { timeout: 10000 },
       )
-      .toBeGreaterThan(5000);
+      .toBeGreaterThan(1500);
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
@@ -100,9 +100,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         return canvas.toDataURL();
       });
     for (const [label, side] of [
-      ["Small", 180],
-      ["Large", 300],
-      ["Medium", 240],
+      ["Small", 70],
+      ["Large", 240],
+      ["Medium", 160],
     ] as const) {
       const before = await desktop();
       await choose(label);
@@ -137,7 +137,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
             return {
               width: canvas.getBoundingClientRect().width,
               bottom: Math.round((bottom + 1) / devicePixelRatio),
-              visible: opaque > 2000,
+              visible: opaque > 200,
             };
           }),
         )
@@ -245,12 +245,12 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     // Resize a captured pet in the air: preserve the physical foot, release the
     // old capture, and let the return finish with the new ground geometry.
     const beforeLift = await bounds();
-    await pet.mouse.move(120, 180);
+    await pet.mouse.move(80, 120);
     await pet.mouse.down();
     // One client-space move makes one 150-DIP screen-space displacement.
     // Interpolated client moves would compound as the native window follows,
     // reaching the work-area ceiling on smaller CI displays.
-    await pet.mouse.move(120, 30);
+    await pet.mouse.move(80, -30);
     await expect
       .poll(async () => (await bounds()).y)
       .toBeLessThan(beforeLift.y - 100);
@@ -271,7 +271,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     // Measure the resize itself in one main-process turn. Separate driver
     // round trips include legitimate falling motion under scheduler load.
     const { before: falling, after: resizedFalling } = await choose("Small");
-    expect(resizedFalling.width).toBe(180);
+    expect(resizedFalling.width).toBe(70);
     expect(resizedFalling.x + resizedFalling.width / 2).toBe(
       falling.x + falling.width / 2,
     );
@@ -288,7 +288,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),
@@ -308,7 +308,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
           }),
         { timeout: 10000 },
       )
-      .toBeGreaterThan(5000);
+      .toBeGreaterThan(1500);
     // Restart must recompute the current primary floor; its work area may
     // legitimately differ from the previous process by even one desktop point.
     const { bounds: stable, area: restoredArea } = await desktop();
@@ -322,7 +322,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),
@@ -337,7 +337,7 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
     await choose("Small");
-    expect((await bounds()).width).toBe(300);
+    expect((await bounds()).width).toBe(240);
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()

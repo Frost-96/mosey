@@ -23,6 +23,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     console.log(`[autonomy-progress] ${entry}`);
   };
   try {
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+    );
     if (!packaged) stopForge = await startForge();
     else
       execFileSync("/usr/bin/ditto", [
