@@ -6,11 +6,11 @@ import { atlasSchema } from "../src/shared/assets.ts";
 
 const integer = z.number().int().nonnegative();
 const configuration = z.record(
-  z.enum(["resting", "walking"]),
+  atlasSchema.shape.action,
   z.strictObject({
     source: z.string().regex(/^source\/[a-z0-9-]+\.png$/),
     scale: z.number().positive(),
-    loop: z.literal("repeat"),
+    loop: z.enum(["repeat", "once"]),
     frames: z
       .array(
         z.strictObject({
@@ -22,6 +22,11 @@ const configuration = z.record(
           }),
           foot: z.strictObject({ x: integer, y: integer }),
           durationMs: integer.positive(),
+          source: z
+            .string()
+            .regex(/^source\/[a-z0-9-]+\.png$/)
+            .optional(),
+          scale: z.number().positive().optional(),
         }),
       )
       .min(1),
@@ -32,12 +37,19 @@ const actions = configuration.parse(
   JSON.parse(await readFile(`${directory}/processing.json`, "utf8")),
 );
 await mkdir("src/assets/generated/whale", { recursive: true });
+const sourceScales = new Map<string, number>();
 for (const [action, config] of Object.entries(actions)) {
   const frames = [];
   const layers = [];
   for (const [index, input] of config.frames.entries()) {
     const region = input.region;
-    const cell = await sharp(`${directory}/${config.source}`)
+    const source = input.source ?? config.source;
+    const scale = input.scale ?? config.scale;
+    const previousScale = sourceScales.get(source);
+    if (previousScale !== undefined && previousScale !== scale)
+      throw new Error(`Inconsistent fixed source scale for ${source}`);
+    sourceScales.set(source, scale);
+    const cell = await sharp(`${directory}/${source}`)
       .extract({
         left: region.x,
         top: region.y,
@@ -64,10 +76,10 @@ for (const [action, config] of Object.entries(actions)) {
       }
     if (right < left || bottom < top)
       throw new Error(`Empty whale ${action} frame ${index}`);
-    const width = Math.round((right - left + 1) * config.scale);
-    const height = Math.round((bottom - top + 1) * config.scale);
-    const targetLeft = Math.round(240 + (left - input.foot.x) * config.scale);
-    const targetTop = Math.round(480 + (top - input.foot.y) * config.scale);
+    const width = Math.round((right - left + 1) * scale);
+    const height = Math.round((bottom - top + 1) * scale);
+    const targetLeft = Math.round(240 + (left - input.foot.x) * scale);
+    const targetTop = Math.round(480 + (top - input.foot.y) * scale);
     if (
       targetLeft < 0 ||
       targetTop < 0 ||

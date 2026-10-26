@@ -10,13 +10,16 @@ import path from "node:path";
 import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
+const characterArguments = whale ? ["--character-sample=whale"] : [];
+const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("autonomous activities stay grounded, yield to interaction and pause without catch-up", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-autonomy-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   await mkdir("test-results", { recursive: true });
-  const tracePath = `test-results/${packaged ? "packaged" : "development"}-autonomy-progress.jsonl`;
+  const tracePath = `test-results/${evidence}-autonomy-progress.jsonl`;
   await writeFile(tracePath, "");
   const checkpoint = (stage: string) => {
     const entry = JSON.stringify({ stage, at: performance.now() });
@@ -39,9 +42,20 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
+            args: [
+              ...characterArguments,
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
           }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
+        : {
+            args: [
+              ".",
+              ...characterArguments,
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
+          },
     );
     const pet = await app.firstWindow();
     // Bounded public-boundary diagnostics only. These do not change menu
@@ -228,7 +242,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       .toBe(true);
     const idleFrames = new Set<string>();
     const observedIdle = new Set<string>();
-    const idleUntil = Date.now() + 2200;
+    const idleUntil = Date.now() + (whale ? 3100 : 2200);
     while (Date.now() < idleUntil) {
       const painted = await pixels();
       observedIdle.add(painted);
@@ -254,7 +268,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     for (const [index, url] of [...idleFrames].entries()) {
       const buffer = Buffer.from(url.split(",")[1]!, "base64");
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-autonomy-idle-${index}.png`,
+        `test-results/${evidence}-autonomy-idle-${index}.png`,
         buffer,
       );
       const image = PNG.sync.read(buffer);
@@ -278,7 +292,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       });
     }
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-autonomy-baseline.json`,
+      `test-results/${evidence}-autonomy-baseline.json`,
       JSON.stringify(
         { observedFrames: observedIdle.size, references },
         null,
@@ -311,7 +325,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       })
       .toBeGreaterThan(15);
     await pet.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-walking.png`,
+      path: `test-results/${evidence}-walking.png`,
       omitBackground: true,
     });
     checkpoint("walking-screenshot-complete");
@@ -383,7 +397,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       await new Promise((resolve) => setTimeout(resolve, 450));
       expect(idleFrames.has(await pixels())).toBe(false);
       await pet.screenshot({
-        path: `test-results/${packaged ? "packaged" : "development"}-${action}.png`,
+        path: `test-results/${evidence}-${action}.png`,
         omitBackground: true,
       });
       checkpoint(`${action}-screenshot-complete`);
@@ -450,7 +464,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     });
     await expect
       .poll(async () => (await bounds()).x, { timeout: 4500, interval: 50 })
-      .toBeGreaterThan(edge.x + 140);
+      .toBeGreaterThan(edge.x + (whale ? 100 : 140));
     await expect
       .poll(async () => idleFrames.has(await pixels()), {
         timeout: 2000,
@@ -460,7 +474,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     const destination = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 300));
     expect(await bounds()).toEqual(destination);
-    expect(destination.x).toBeLessThanOrEqual(edge.x + 150);
+    expect(destination.x).toBeLessThanOrEqual(edge.x + (whale ? 126 : 150));
     expect(destination.y).toBe(edge.y);
     await invoke("Hide Mosey");
     const hidden = await bounds();
@@ -476,13 +490,13 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     expect(await bounds()).toEqual(held);
     const heldPixels = await pixels();
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-autonomy-held-canvas.png`,
+      `test-results/${evidence}-autonomy-held-canvas.png`,
       Buffer.from(heldPixels.split(",")[1]!, "base64"),
     );
     expect(idleFrames.has(heldPixels)).toBe(true);
     await pet.mouse.up();
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-autonomy.json`,
+      `test-results/${evidence}-autonomy.json`,
       JSON.stringify(
         {
           origin,
@@ -533,13 +547,13 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       "utf8",
     ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
     await writeFile(
-      `test-results/failure-${packaged ? "packaged" : "development"}-autonomy-state.json`,
+      `test-results/failure-${evidence}-autonomy-state.json`,
       JSON.stringify({ externalState, inputTrace, preferences }, null, 2),
     );
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-autonomy.png`,
+        path: `test-results/failure-${evidence}-autonomy.png`,
         timeout: 3000,
       })
       .catch(() => {});

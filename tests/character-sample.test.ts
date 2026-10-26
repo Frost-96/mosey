@@ -5,12 +5,13 @@ import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { distanceFromGround } from "./support/ground";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 const evidence = `${packaged ? "packaged" : "development"}${scaleFactor === "1" ? "" : `-${scaleFactor}x`}`;
 
-test("isolated whale sample paints one blue character, walks on the ground and preserves visibility and size", async () => {
+test("isolated whale paints one character, walks, yields to dragging and returns to the ground", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-whale-sample-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
@@ -169,6 +170,20 @@ test("isolated whale sample paints one blue character, walks on the ground and p
     }
     // Directed input checks that hit geometry follows the painted whale. Actual
     // cross-application pointer routing remains a separate desktop acceptance.
+    await app.evaluate(({ BrowserWindow, screen }) => {
+      const pet = BrowserWindow.getAllWindows()[0]!;
+      const area = screen.getPrimaryDisplay().workArea;
+      const pointer = screen.getCursorScreenPoint();
+      pet.setPosition(
+        pointer.x >= area.x + area.width / 2
+          ? area.x
+          : area.x + area.width - pet.getBounds().width,
+        pet.getBounds().y,
+        false,
+      );
+    });
+    // Let native hover settle before directed capture starts at its new location.
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const body = await pet.evaluate(() => {
       const canvas = document.querySelector("canvas")!;
       const data = canvas
@@ -190,8 +205,13 @@ test("isolated whale sample paints one blue character, walks on the ground and p
     const held = (await windowState())[0]!.bounds;
     await pet.mouse.move(body.x, body.y - 30, { steps: 3 });
     await new Promise((resolve) => setTimeout(resolve, 150));
-    expect((await windowState())[0]!.bounds).toEqual(held);
+    await expect
+      .poll(async () => (await windowState())[0]!.bounds.y)
+      .toBeLessThan(held.y - 20);
     await pet.mouse.up();
+    await expect
+      .poll(() => distanceFromGround(app!), { timeout: 5000 })
+      .toBe(0);
     for (const [label, size] of [
       ["Small", 70],
       ["Large", 240],
