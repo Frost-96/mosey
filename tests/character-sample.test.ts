@@ -7,6 +7,8 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
+const evidence = `${packaged ? "packaged" : "development"}${scaleFactor === "1" ? "" : `-${scaleFactor}x`}`;
 
 test("isolated whale sample paints one blue character, walks on the ground and preserves visibility and size", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-whale-sample-"));
@@ -28,7 +30,7 @@ test("isolated whale sample paints one blue character, walks on the ground and p
     const args = [
       "--character-sample=whale",
       `--user-data-dir=${root}/profile`,
-      "--force-device-scale-factor=1",
+      `--force-device-scale-factor=${scaleFactor}`,
     ];
     app = await electron.launch(
       packaged
@@ -97,7 +99,7 @@ test("isolated whale sample paints one blue character, walks on the ground and p
     }
     expect(idle.size).toBeGreaterThan(1);
     await pet.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-whale-idle.png`,
+      path: `test-results/${evidence}-whale-idle.png`,
       omitBackground: true,
     });
     const menu = (label: string) =>
@@ -141,7 +143,7 @@ test("isolated whale sample paints one blue character, walks on the ground and p
     expect(moving.width).toBe(160);
     expect(idle.has((await painted()).pixels)).toBe(false);
     await pet.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-whale-walking.png`,
+      path: `test-results/${evidence}-whale-walking.png`,
       omitBackground: true,
     });
     if (process.env.MOSEY_RECORD_SAMPLE === "1") {
@@ -157,7 +159,7 @@ test("isolated whale sample paints one blue character, walks on the ground and p
         await new Promise((resolve) => setTimeout(resolve, 33));
       }
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-whale-recording.json`,
+        `test-results/${evidence}-whale-recording.json`,
         JSON.stringify({
           scope:
             "Real Electron canvas and native window bounds sampled at recorded elapsed times; not a desktop screen recording.",
@@ -178,7 +180,8 @@ test("isolated whale sample paints one blue character, walks on the ground and p
           Math.floor(canvas.width / 2) - radius,
           Math.floor(canvas.width / 2) + radius,
         ])
-          if (data[(y * canvas.width + x) * 4 + 3]! >= 128) return { x, y };
+          if (data[(y * canvas.width + x) * 4 + 3]! >= 128)
+            return { x: x / devicePixelRatio, y: y / devicePixelRatio };
       }
       throw new Error("No visible body at the sampled row");
     });
@@ -209,7 +212,7 @@ test("isolated whale sample paints one blue character, walks on the ground and p
         .toBeGreaterThan(size === 70 ? 100 : 1000);
       expect(await windowState()).toHaveLength(1);
       await pet.screenshot({
-        path: `test-results/${packaged ? "packaged" : "development"}-whale-${size}.png`,
+        path: `test-results/${evidence}-whale-${size}.png`,
         omitBackground: true,
       });
     }

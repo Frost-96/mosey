@@ -1,4 +1,6 @@
 import { atlasSchema, type Atlas } from "./assets";
+import { z } from "zod";
+import { petSizeSchema } from "./size";
 import idle from "../assets/generated/idle-atlas.json";
 import climbing from "../assets/generated/climbing-atlas.json";
 import sleeping from "../assets/generated/sleeping-atlas.json";
@@ -18,6 +20,13 @@ import landing from "../assets/generated/landing-atlas.json";
 import whaleIdle from "../assets/generated/whale/idle-atlas.json";
 import whaleWalking from "../assets/generated/whale/walking-atlas.json";
 import whaleMotion from "../assets/characters/whale/motion.json";
+
+const walkingMotionSchema = z.strictObject({
+  cycleDistancePixels: z.number().positive(),
+  cyclesPerWalk: z.number().int().positive(),
+  pixelRatio: z.number().positive(),
+  referenceWindowSize: petSizeSchema,
+});
 
 export type CharacterId = "corgi" | "whale";
 
@@ -53,15 +62,14 @@ export function characterDirectory(character: CharacterId): string {
 
 export function characterWalk(character: CharacterId) {
   if (character === "corgi") return undefined;
+  const motion = walkingMotionSchema.parse(whaleMotion);
+  const atlas = atlasSchema.parse(whaleWalking);
   return {
     durationMs:
-      whaleWalking.frames.reduce(
-        (total, frame) => total + frame.durationMs,
-        0,
-      ) * whaleMotion.cyclesPerWalk,
+      atlas.frames.reduce((total, frame) => total + frame.durationMs, 0) *
+      motion.cyclesPerWalk,
     distance:
-      (whaleMotion.cycleDistancePixels / whaleMotion.pixelRatio) *
-      whaleMotion.cyclesPerWalk,
-    referenceWindowSize: whaleMotion.referenceWindowSize,
+      (motion.cycleDistancePixels / motion.pixelRatio) * motion.cyclesPerWalk,
+    referenceWindowSize: motion.referenceWindowSize,
   };
 }
