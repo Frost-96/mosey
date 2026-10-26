@@ -7,7 +7,7 @@
   "main": ".vite/build/main.mjs",
   "packageManager": "pnpm@12.11.2",
   "engines": {
-    "node": "24.18.0",
+    "node": "24.22.1",
     "pnpm": "12.11.2"
   },
   "scripts": {
