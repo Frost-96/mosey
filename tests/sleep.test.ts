@@ -11,6 +11,16 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const characterArguments = whale ? ["--character-sample=whale"] : [];
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
+const recording =
+  whale && process.env.MOSEY_RECORD_SAMPLE === "1"
+    ? {
+        recordVideo: {
+          dir: "test-results/whale-sleep-video",
+          size: { width: 240, height: 240 },
+          fps: 60,
+        },
+      }
+    : {};
 test(
   "sleep preserves the two-click window, drag priority and lifecycle cancellation",
   { timeout: 120000 },
@@ -34,9 +44,11 @@ test(
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+              ...recording,
               args: [...characterArguments, `--user-data-dir=${root}/profile`],
             }
           : {
+              ...recording,
               args: [
                 ".",
                 ...characterArguments,
