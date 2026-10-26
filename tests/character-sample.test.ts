@@ -103,6 +103,54 @@ test("isolated whale paints one character, walks, yields to dragging and returns
       path: `test-results/${evidence}-whale-idle.png`,
       omitBackground: true,
     });
+    const responseFrames = new Set<string>();
+    for (const [choice, response] of [
+      [0.1, "curious"],
+      [0.4, "wave"],
+      [0.9, "greeting"],
+    ] as const) {
+      await app.evaluate((_electron, choice) => {
+        Math.random = () => choice;
+      }, choice);
+      const point = await pet.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const data = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        const y = Math.floor(canvas.height * 0.65);
+        for (
+          let x = Math.floor(canvas.width * 0.4);
+          x < canvas.width * 0.6;
+          x++
+        )
+          if (data[(y * canvas.width + x) * 4 + 3]! >= 200)
+            return { x: x / devicePixelRatio, y: y / devicePixelRatio };
+        throw new Error("No painted body for click");
+      });
+      await pet.mouse.click(point.x, point.y);
+      await expect
+        .poll(async () => idle.has((await painted()).pixels), {
+          timeout: 1000,
+          interval: 20,
+        })
+        .toBe(false);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      responseFrames.add((await painted()).pixels);
+      await pet.screenshot({
+        path: `test-results/${evidence}-whale-${response}.png`,
+        omitBackground: true,
+      });
+      for (let click = 0; click < 3; click++)
+        await pet.mouse.click(point.x, point.y);
+      await expect
+        .poll(async () => idle.has((await painted()).pixels), {
+          timeout: 2500,
+          interval: 30,
+        })
+        .toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    expect(responseFrames.size).toBe(3);
     const menu = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
