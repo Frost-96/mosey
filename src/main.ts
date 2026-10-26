@@ -43,9 +43,9 @@ else void start();
 async function start() {
   // This phase intentionally offers no normal-use character setting. An explicit
   // isolated profile is mandatory so sample sessions never alter real preferences.
-  const sampleOnly = process.argv.includes("--character-sample=whale");
+  const whalePreview = process.argv.includes("--character-sample=whale");
   if (
-    sampleOnly &&
+    whalePreview &&
     !process.argv.some(
       (argument) =>
         argument.startsWith("--user-data-dir=") &&
@@ -58,14 +58,14 @@ async function start() {
     app.quit();
     return;
   }
-  const character: CharacterId = sampleOnly ? "whale" : "corgi";
+  const character: CharacterId = whalePreview ? "whale" : "corgi";
   const atlases = characterAssets(character);
   const walk = characterWalk(character);
   // Retain the native tray for the entire application lifetime.
   const timeline = new Timeline();
   const behavior = createActor(petBehavior, {
     clock: timeline,
-    input: { now: timeline.now, sampleOnly, walkDurationMs: walk?.durationMs },
+    input: { now: timeline.now, walkDurationMs: walk?.durationMs },
   }).start();
   let bodyMenu: Menu | undefined;
   let visibility: Presentation["visibility"] = "hidden";
@@ -222,34 +222,22 @@ async function start() {
         preferences.visibility === "visible" ? "hidden" : "visible",
       ),
   });
-  const dockItems = (): Electron.MenuItemConstructorOptions[] =>
-    sampleOnly
-      ? [
-          {
-            label: "鲸鱼娘样片：仅待机／行走，其他动作尚未制作",
-            enabled: false,
-          },
-        ]
-      : [
-          {
-            id: "dock-runtime-status",
-            label: dockRuntime.status,
-            enabled: false,
-          },
-          {
-            label: "Retry Dock interaction",
-            click: () => {
-              const revision = reserveCapture("product");
-              dockRuntime.resetRecoveryBudget();
-              void Promise.all([
-                dockRuntime.stop(),
-                dockValidation.stop("product Dock interaction requested"),
-              ]).then(() => {
-                if (revision === captureRevision) startDock();
-              });
-            },
-          },
-        ];
+  const dockItems = (): Electron.MenuItemConstructorOptions[] => [
+    { id: "dock-runtime-status", label: dockRuntime.status, enabled: false },
+    {
+      label: "Retry Dock interaction",
+      click: () => {
+        const revision = reserveCapture("product");
+        dockRuntime.resetRecoveryBudget();
+        void Promise.all([
+          dockRuntime.stop(),
+          dockValidation.stop("product Dock interaction requested"),
+        ]).then(() => {
+          if (revision === captureRevision) startDock();
+        });
+      },
+    },
+  ];
   const recoveryItems = (): Electron.MenuItemConstructorOptions[] =>
     rendererState === "failed"
       ? [{ label: "Retry Mosey", click: () => void loadPet() }]
@@ -309,7 +297,6 @@ async function start() {
       const revision = ++menuRevision;
       const diagnostic: Electron.MenuItemConstructorOptions = {
         label: "Dock validation",
-        enabled: !sampleOnly,
         submenu: dockValidation.menu().map((item) =>
           item.label === "Start Dock validation (120 seconds)"
             ? {
@@ -318,7 +305,6 @@ async function start() {
                   const revision = reserveCapture("diagnostic");
                   void dockRuntime.stop().then(() => {
                     if (
-                      !sampleOnly &&
                       !quitting &&
                       requestedCaptureMode === "diagnostic" &&
                       revision === captureRevision
@@ -411,7 +397,7 @@ async function start() {
   const area = screen.getPrimaryDisplay().workArea;
   const initialSide = petGeometry(liveSize).side;
   const pet = new BrowserWindow({
-    title: sampleOnly ? "Mosey 鲸鱼娘样片（仅待机与行走）" : "Mosey",
+    title: "Mosey",
     width: initialSide,
     height: initialSide,
     x: area.x + Math.round((area.width - initialSide) / 2),
@@ -594,7 +580,6 @@ async function start() {
       gesture
     )
       return;
-    if (sampleOnly) return;
     const posture = String(behavior.getSnapshot().value);
     if (
       ["paused", "dragging", "flutter", "falling", "climbing"].includes(posture)
@@ -647,7 +632,6 @@ async function start() {
   });
   const startDock = () => {
     if (
-      !sampleOnly &&
       !quitting &&
       requestedCaptureMode === "product" &&
       rendererState === "ready" &&
@@ -862,7 +846,7 @@ async function start() {
         return;
       const dx = input.screenX - gesture.x,
         dy = input.screenY - gesture.y;
-      if (!sampleOnly && !gesture.dragged && Math.hypot(dx, dy) >= 5) {
+      if (!gesture.dragged && Math.hypot(dx, dy) >= 5) {
         gesture.dragged = true;
         stopMotion();
         behavior.send({ type: "DRAG_START" });

@@ -17,6 +17,9 @@ import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
+const characterArguments = whale ? ["--character-sample=whale"] : [];
+const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 // Only the OS capture producer is substituted. The actual Electron window,
 // behavior, renderer, atlas hit masks, native protocol and motion all run.
 test("Dock support follows visible overlap, yields to dragging, avoids sides and respects hidden intent", async () => {
@@ -61,9 +64,15 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [...characterArguments, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : {
+            args: [
+              ".",
+              ...characterArguments,
+              `--user-data-dir=${root}/profile`,
+            ],
+          },
     );
     applicationProcess = app.process();
     applicationProcess.stderr?.on("data", (bytes: Buffer) => {
@@ -335,7 +344,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         return canvas.toDataURL();
       });
     const idleFrames = new Set<string>();
-    const idleUntil = Date.now() + 2200;
+    const idleUntil = Date.now() + (whale ? 3100 : 2200);
     while (Date.now() < idleUntil) {
       idleFrames.add(await pixels());
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -594,7 +603,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       })
       .toBe(floor - 75);
     await pet.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-dock-supported.png`,
+      path: `test-results/${evidence}-dock-supported.png`,
       omitBackground: true,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -902,7 +911,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     }
     await mkdir("test-results", { recursive: true });
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-dock.json`,
+      `test-results/${evidence}-dock.json`,
       JSON.stringify(
         {
           display,
@@ -1074,7 +1083,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       }))
       .catch((failure: unknown) => ({ unavailable: String(failure) }));
     await writeFile(
-      `test-results/failure-${packaged ? "packaged" : "development"}-dock-navigation.json`,
+      `test-results/failure-${evidence}-dock-navigation.json`,
       JSON.stringify(
         {
           runtimeProvenance,
@@ -1090,7 +1099,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-dock.png`,
+        path: `test-results/failure-${evidence}-dock.png`,
         timeout: 3000,
       })
       .catch(() => {});
@@ -1149,9 +1158,15 @@ test("real Dock helper clears its capability and exits when transport stops or t
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [...characterArguments, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : {
+            args: [
+              ".",
+              ...characterArguments,
+              `--user-data-dir=${root}/profile`,
+            ],
+          },
     );
     const pet = await app.firstWindow();
     await pet.locator("canvas").waitFor();
@@ -1241,7 +1256,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
       await expect.poll(() => alive(restarted), { timeout: 4000 }).toBe(false);
     await mkdir("test-results", { recursive: true });
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-real-dock.json`,
+      `test-results/${evidence}-real-dock.json`,
       JSON.stringify(
         {
           initialStatus,
@@ -1261,7 +1276,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-real-dock.png`,
+        path: `test-results/failure-${evidence}-real-dock.png`,
         timeout: 3000,
       })
       .catch(() => {});
@@ -1270,7 +1285,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
     try {
       await mkdir("test-results", { recursive: true });
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-real-dock-readiness.json`,
+        `test-results/${evidence}-real-dock-readiness.json`,
         JSON.stringify(readiness, null, 2),
       );
     } finally {

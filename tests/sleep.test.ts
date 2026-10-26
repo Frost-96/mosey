@@ -8,6 +8,9 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
+const characterArguments = whale ? ["--character-sample=whale"] : [];
+const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 test(
   "sleep preserves the two-click window, drag priority and lifecycle cancellation",
   { timeout: 120000 },
@@ -31,9 +34,15 @@ test(
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${root}/profile`],
+              args: [...characterArguments, `--user-data-dir=${root}/profile`],
             }
-          : { args: [".", `--user-data-dir=${root}/profile`] },
+          : {
+              args: [
+                ".",
+                ...characterArguments,
+                `--user-data-dir=${root}/profile`,
+              ],
+            },
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
@@ -78,7 +87,7 @@ test(
         await expect.poll(height).toBeLessThan(160);
       };
       const idleFrames = new Set<string>();
-      const idleUntil = Date.now() + 2200;
+      const idleUntil = Date.now() + (whale ? 3100 : 2200);
       while (Date.now() < idleUntil) {
         idleFrames.add(await pixels());
         await new Promise((resolve) => setTimeout(resolve, 80));
@@ -117,7 +126,7 @@ test(
         Date.now = () => now() + 180000;
       });
       await waitForSleep();
-      const mode = packaged ? "packaged" : "development";
+      const mode = evidence;
       await mkdir("test-results", { recursive: true });
       const screenshot = (name: string) =>
         pet.screenshot({
@@ -183,13 +192,20 @@ test(
         await pet.mouse.click(point.x, point.y);
       };
       await screenshot("breathing");
+      const beforeFirstClick = await pixels();
       await click();
       const firstClickAt = Date.now();
       await expect
-        .poll(async () => sleepingFrames.has(await pixels()), {
-          timeout: 300,
-          interval: 20,
-        })
+        .poll(
+          async () =>
+            whale
+              ? (await pixels()) === beforeFirstClick
+              : sleepingFrames.has(await pixels()),
+          {
+            timeout: 300,
+            interval: 20,
+          },
+        )
         .toBe(false);
       expect(await height()).toBeLessThan(160);
       await click();
@@ -395,7 +411,7 @@ test(
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-sleep.png`,
+          path: `test-results/failure-${evidence}-sleep.png`,
         })
         .catch(() => {});
       throw error;

@@ -17,7 +17,6 @@ import dragging from "../assets/generated/dragging-atlas.json";
 import flutter from "../assets/generated/flutter-atlas.json";
 import falling from "../assets/generated/falling-atlas.json";
 import landing from "../assets/generated/landing-atlas.json";
-import whaleIdle from "../assets/generated/whale/idle-atlas.json";
 import whaleWalking from "../assets/generated/whale/walking-atlas.json";
 import whaleMotion from "../assets/characters/whale/motion.json";
 
@@ -31,7 +30,7 @@ const walkingMotionSchema = z.strictObject({
 export type CharacterId = "corgi" | "whale";
 
 // One internal entry point supplies both drawing and transparent hit geometry.
-// Whale is intentionally incomplete: no fallback silently supplies missing poses.
+// A complete action set is mandatory; no fallback silently supplies missing poses.
 const metadata = {
   corgi: [
     idle,
@@ -51,10 +50,22 @@ const metadata = {
     falling,
     landing,
   ],
-  whale: [whaleIdle, whaleWalking],
+  whale: Object.values(
+    import.meta.glob("../assets/generated/whale/*-atlas.json", {
+      eager: true,
+      import: "default",
+    }),
+  ),
 };
 export function characterAssets(character: CharacterId): Atlas[] {
-  return metadata[character].map((value) => atlasSchema.parse(value));
+  const atlases = metadata[character].map((value) => atlasSchema.parse(value));
+  const actions = new Set(atlases.map((atlas) => atlas.action));
+  if (
+    actions.size !== atlases.length ||
+    atlasSchema.shape.action.options.some((action) => !actions.has(action))
+  )
+    throw new Error(`Incomplete or duplicate actions for ${character}`);
+  return atlases;
 }
 export function characterDirectory(character: CharacterId): string {
   return character === "corgi" ? "" : "whale/";
