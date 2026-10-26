@@ -526,6 +526,8 @@ test(
               false,
             );
           });
+          // Let native hover from relocation settle before starting CDP capture.
+          await new Promise((resolve) => setTimeout(resolve, 100));
           const point = await visiblePoint();
           const ground = await desktop();
           await pet.mouse.move(point.x, point.y);
@@ -633,9 +635,26 @@ test(
       );
     } catch (error) {
       await mkdir("test-results", { recursive: true });
+      const failureState = await app
+        ?.evaluate(({ Menu, BrowserWindow }) => ({
+          menus: Menu.getApplicationMenu()?.items.map((item) => ({
+            label: item.label,
+            items: item.submenu?.items.map((entry) => entry.label),
+          })),
+          windows: BrowserWindow.getAllWindows().map((window) => ({
+            title: window.getTitle(),
+            visible: window.isVisible(),
+            bounds: window.getBounds(),
+          })),
+        }))
+        .catch(() => undefined);
       await writeFile(
         `test-results/failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
-        JSON.stringify({ diagnostics, settingsEvents }, null, 2),
+        JSON.stringify(
+          { error: String(error), failureState, diagnostics, settingsEvents },
+          null,
+          2,
+        ),
       );
       await app
         ?.windows()[0]

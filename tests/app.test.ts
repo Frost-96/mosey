@@ -57,6 +57,19 @@ test.runIf(packaged)(
         .map((line) => /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line))
         .filter((match) => match && Number(match[2]) === child.pid);
     try {
+      // Both shipped Swift helpers target macOS 15. LaunchServices must reject
+      // older hosts before starting a partially functional application.
+      expect(
+        execFileSync(
+          "/usr/libexec/PlistBuddy",
+          [
+            "-c",
+            "Print :LSMinimumSystemVersion",
+            path.join(bundle, "Contents/Info.plist"),
+          ],
+          { encoding: "utf8" },
+        ).trim(),
+      ).toBe("15.0");
       await expect
         .poll(
           () => {

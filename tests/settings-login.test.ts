@@ -127,10 +127,10 @@ test("login settings explain availability and follow system approval, failure an
     await login.getByRole("checkbox").click();
     await expect.poll(() => login.textContent()).toContain("已关闭");
     expect(await login.getByRole("alert").isVisible()).toBe(false);
-    await mkdir("docs/validation", { recursive: true });
+    await mkdir("test-results", { recursive: true });
     await settings.screenshot({
       fullPage: true,
-      path: `docs/validation/issue-33-${packaged ? "packaged" : "development"}-controlled-login.png`,
+      path: `test-results/settings-login-${packaged ? "packaged" : "development"}-controlled.png`,
     });
   } finally {
     await app?.close();

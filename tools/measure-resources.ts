@@ -1,0 +1,419 @@
+import { _electron, type ElectronApplication } from "playwright";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { parseArgs } from "node:util";
+
+// Opt-in observation of the shipped app. No thresholds, fake clocks, native
+// substitutes, or product hooks. Playwright input is not physical input evidence.
+const { values } = parseArgs({
+  options: {
+    seconds: { type: "string", default: "60" },
+    "growth-seconds": { type: "string", default: "300" },
+    app: { type: "string", default: "out/Mosey-darwin-arm64/Mosey.app" },
+    output: { type: "string" },
+  },
+});
+const seconds = Number(values.seconds);
+const growthSeconds = Number(values["growth-seconds"]);
+if (
+  !Number.isInteger(seconds) ||
+  seconds < 10 ||
+  seconds > 3600 ||
+  !Number.isInteger(growthSeconds) ||
+  growthSeconds < 0 ||
+  growthSeconds > 86400
+)
+  throw new Error("Use --seconds 10..3600 and --growth-seconds 0..86400");
+const bundle = path.resolve(values.app);
+const output = path.resolve(
+  values.output ?? `test-results/resources-${Date.now()}`,
+);
+await mkdir(output, { recursive: true });
+const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-resources-"));
+const command = (file: string, args: string[]) =>
+  execFileSync(file, args, { encoding: "utf8" }).trim();
+const digest = async (file: string) =>
+  createHash("sha256")
+    .update(await readFile(file))
+    .digest("hex");
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function processTree(root: number) {
+  const rows = command("/bin/ps", ["-axo", "pid=,ppid=,rss=,time=,comm="])
+    .split("\n")
+    .map((line) => {
+      const match = /^\s*(\d+)\s+(\d+)\s+(\d+)\s+([\d:.]+)\s+(.+)$/.exec(line);
+      if (!match) throw new Error(`Unrecognized ps row: ${line}`);
+      const cpuSeconds = match[4]
+        .split(":")
+        .reduce((total, part) => total * 60 + Number(part), 0);
+      return {
+        pid: Number(match[1]),
+        parent: Number(match[2]),
+        rssKiB: Number(match[3]),
+        cpuSeconds,
+        executable: path.basename(match[5]),
+      };
+    });
+  const owned = new Set([root]);
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const row of rows) {
+      if (owned.has(row.parent) && !owned.has(row.pid)) {
+        owned.add(row.pid);
+        changed = true;
+      }
+    }
+  }
+  return rows.filter((row) => owned.has(row.pid));
+}
+
+interface Sample {
+  phase: string;
+  elapsedSeconds: number;
+  intervalSeconds: number;
+  posture: string;
+  actionId: number;
+  stablePosture: boolean;
+  visibility: string;
+  dockStatus: string | undefined;
+  cpuPercentOneCore: number;
+  rssMiB: number;
+  processes: ReturnType<typeof processTree>;
+  drawing: { count: number; gapsMs: number[]; inputToDrawMs: number[] };
+}
+const samples: Sample[] = [];
+function summarize(group: Sample[]) {
+  const latency = group
+    .flatMap((sample) => sample.drawing.inputToDrawMs)
+    .sort((a, b) => a - b);
+  const elapsed = group.reduce(
+    (sum, sample) => sum + sample.intervalSeconds,
+    0,
+  );
+  return {
+    samples: group.length,
+    measuredSeconds: elapsed,
+    cpuPercentOneCoreMean: elapsed
+      ? group.reduce(
+          (sum, sample) =>
+            sum + sample.cpuPercentOneCore * sample.intervalSeconds,
+          0,
+        ) / elapsed
+      : null,
+    rssMiBFirst: group[0]?.rssMiB ?? null,
+    rssMiBLast: group.at(-1)?.rssMiB ?? null,
+    rssMiBMax: group.length
+      ? Math.max(...group.map((sample) => sample.rssMiB))
+      : null,
+    inputSamples: latency.length,
+    inputToDrawMsP95: latency.length
+      ? latency[Math.ceil(latency.length * 0.95) - 1]
+      : null,
+    draws: group.reduce((sum, sample) => sum + sample.drawing.count, 0),
+    postures: [...new Set(group.map((sample) => sample.posture))],
+    dockStatuses: [...new Set(group.map((sample) => sample.dockStatus))],
+  };
+}
+const report: Record<string, unknown> = {
+  startedAt: new Date().toISOString(),
+  parameters: { seconds, growthSeconds, bundle },
+  budget: "pending user confirmation",
+  methods: {
+    cpu: "Delta of ps cumulative CPU time over wall time, summed over the app process tree including Swift helpers; 100% is one core. Exited children between samples can be missed; ps time resolution is 10 ms.",
+    memory:
+      "Sum of process-tree RSS; shared pages may be counted more than once. This is not unique physical footprint.",
+    input:
+      "Renderer pointerdown dispatch to next Canvas drawImage, driven by Playwright. Excludes physical input, compositor and display latency; not a real-input acceptance result.",
+    drawing:
+      "Canvas draw intervals, not display FPS. Idle animation deliberately redraws infrequently; these gaps are not dropped frames.",
+    overhead:
+      "Playwright inspector attached, one sample per second; ps and probe overhead included. No concurrent test suite should run.",
+    posture:
+      "Posture summaries include only intervals whose action ID and visibility stayed unchanged at both endpoints; phase summaries include transitions.",
+    growth:
+      "Undisturbed visible session after other phases; reports endpoints only, not proof of a leak or long-term stability.",
+  },
+  energy: {
+    status: "not measured",
+    reason:
+      "No per-app energy instrument used; CPU is not an energy measurement.",
+  },
+  droppedFrames: {
+    status: "not measured",
+    reason:
+      "Requires compositor/display measurement; Canvas calls alone do not establish presentation.",
+  },
+  samples,
+};
+let app: ElectronApplication | undefined;
+try {
+  report.artifact = {
+    asarSHA256: await digest(path.join(bundle, "Contents/Resources/app.asar")),
+    nativeSHA256: await digest(
+      path.join(bundle, "Contents/Resources/native/dock-runtime"),
+    ),
+    minimumSystemVersion: command("/usr/libexec/PlistBuddy", [
+      "-c",
+      "Print :LSMinimumSystemVersion",
+      path.join(bundle, "Contents/Info.plist"),
+    ]),
+  };
+  report.host = {
+    macOS: command("/usr/bin/sw_vers", ["-productVersion"]),
+    build: command("/usr/bin/sw_vers", ["-buildVersion"]),
+    model: command("/usr/sbin/sysctl", ["-n", "hw.model"]),
+    chip: command("/usr/sbin/sysctl", ["-n", "machdep.cpu.brand_string"]),
+    memoryBytes: Number(command("/usr/sbin/sysctl", ["-n", "hw.memsize"])),
+    powerSource: command("/usr/bin/pmset", ["-g", "batt"]),
+  };
+  app = await _electron.launch({
+    executablePath: path.join(bundle, "Contents/MacOS/Mosey"),
+    args: [`--user-data-dir=${profile}`],
+    cwd: profile,
+    env: {
+      HOME: os.homedir(),
+      PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+      TMPDIR: os.tmpdir(),
+    },
+  });
+  const child = app.process();
+  const pid = child.pid!;
+  const pet = await app.firstWindow();
+  await pet.waitForFunction(() => {
+    const canvas = document.querySelector("canvas");
+    return (
+      canvas &&
+      canvas
+        .getContext("2d")!
+        .getImageData(0, 0, canvas.width, canvas.height)
+        .data.some((value, index) => index % 4 === 3 && value > 127)
+    );
+  });
+  report.runtime = await app.evaluate(({ app, screen }) => ({
+    versions: process.versions,
+    packaged: app.isPackaged,
+    displays: screen
+      .getAllDisplays()
+      .map(({ bounds, workArea, scaleFactor, displayFrequency }) => ({
+        bounds,
+        workArea,
+        scaleFactor,
+        displayFrequency,
+      })),
+  }));
+  await pet.evaluate(() => {
+    const probe = {
+      count: 0,
+      gapsMs: [] as number[],
+      inputToDrawMs: [] as number[],
+    };
+    Reflect.set(window, "resourceProbe", probe);
+    let last = 0;
+    let pressed: number | undefined;
+    window.addEventListener(
+      "pointerdown",
+      () => {
+        pressed = performance.now();
+      },
+      true,
+    );
+    const draw = CanvasRenderingContext2D.prototype.drawImage;
+    Reflect.set(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+      function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+        const now = performance.now();
+        probe.count++;
+        if (last) probe.gapsMs.push(now - last);
+        if (pressed !== undefined) {
+          probe.inputToDrawMs.push(now - pressed);
+          pressed = undefined;
+        }
+        last = now;
+        return Reflect.apply(draw, this, args);
+      },
+    );
+  });
+  const menu = (label: string) =>
+    app!.evaluate(({ Menu }, label) => {
+      const item = Menu.getApplicationMenu()!
+        .items.find((item) => item.label === "Mosey")!
+        .submenu!.items.find((item) => item.label === label);
+      if (!item) throw new Error(`Missing menu item: ${label}`);
+      item.click();
+    }, label);
+  const started = performance.now();
+  let previousAt = started;
+  let previous = processTree(pid);
+  for (const [phase, duration] of [
+    ["undisturbed", seconds],
+    ["interaction", seconds],
+    ["dragging", seconds],
+    ["hidden", seconds],
+    ["growth", growthSeconds],
+  ] as const) {
+    if (!duration) continue;
+    console.log(`Resource phase: ${phase}, ${duration}s`);
+    if (phase === "dragging") {
+      // Begin on a fresh resting frame, not a moving reaction's transparent area.
+      await menu("Hide Mosey");
+      await menu("Show Mosey");
+      await pause(600);
+      await pet.mouse.move(80, 120);
+      await pet.mouse.down();
+      // Move sideways before lifting so the native cursor is less likely to
+      // cross the moving window and cancel Chromium's synthetic capture.
+      await pet.mouse.move(180, 120, { steps: 6 });
+      await pet.mouse.move(80, -80, { steps: 6 });
+    } else if (phase === "hidden") {
+      await pet.mouse.up();
+      await menu("Hide Mosey");
+    } else if (phase === "growth") await menu("Show Mosey");
+    // Exclude menu/gesture setup from the next phase's CPU and draw counters.
+    await pet.evaluate(() => {
+      const probe = Reflect.get(window, "resourceProbe") as Sample["drawing"];
+      probe.count = 0;
+      probe.gapsMs.length = 0;
+      probe.inputToDrawMs.length = 0;
+    });
+    previous = processTree(pid);
+    previousAt = performance.now();
+    let previousPresentation: { actionId: number; visibility: string } =
+      await pet.evaluate(() => window.mosey.getPresentation());
+    const phaseStarted = performance.now();
+    let step = 0;
+    while (performance.now() - phaseStarted < duration * 1000) {
+      if (phase === "interaction" && step % 2 === 0)
+        await pet.mouse.click(80, 120);
+      if (phase === "dragging") await pet.mouse.move(step % 2 ? 85 : 75, 80);
+      await pause(1000);
+      const at = performance.now();
+      const processes = processTree(pid);
+      const intervalSeconds = (at - previousAt) / 1000;
+      const cpuDelta = processes.reduce(
+        (sum, row) =>
+          sum +
+          Math.max(
+            0,
+            row.cpuSeconds -
+              (previous.find((old) => old.pid === row.pid)?.cpuSeconds ?? 0),
+          ),
+        0,
+      );
+      const state = await pet.evaluate(async () => {
+        const state = await window.mosey.getPresentation();
+        const probe = Reflect.get(window, "resourceProbe") as Sample["drawing"];
+        const drawing = {
+          count: probe.count,
+          gapsMs: probe.gapsMs.splice(0),
+          inputToDrawMs: probe.inputToDrawMs.splice(0),
+        };
+        probe.count = 0;
+        return {
+          posture: state.posture,
+          actionId: state.actionId,
+          visibility: state.visibility,
+          drawing,
+        };
+      });
+      if (phase === "dragging" && state.posture !== "dragging")
+        throw new Error(
+          `Dragging sample lost its gesture (${state.posture}); repeat without interacting with the desktop`,
+        );
+      if (phase === "hidden" && state.visibility !== "hidden")
+        throw new Error("Hidden sample became visible");
+      samples.push({
+        phase,
+        elapsedSeconds: (at - started) / 1000,
+        intervalSeconds,
+        ...state,
+        stablePosture:
+          state.actionId === previousPresentation.actionId &&
+          state.visibility === previousPresentation.visibility,
+        dockStatus: await app.evaluate(
+          ({ Menu }) =>
+            Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
+              ?.label,
+        ),
+        cpuPercentOneCore: (cpuDelta / intervalSeconds) * 100,
+        rssMiB: processes.reduce((sum, row) => sum + row.rssKiB, 0) / 1024,
+        processes,
+      });
+      previous = processes;
+      previousAt = at;
+      previousPresentation = state;
+      step++;
+    }
+    await writeFile(
+      path.join(output, "resources.json"),
+      JSON.stringify(report, null, 2) + "\n",
+    );
+  }
+  const knownPids = new Set(
+    samples.flatMap((sample) => sample.processes.map((row) => row.pid)),
+  );
+  await app.close();
+  app = undefined;
+  report.exitCode = child.exitCode;
+  const remaining = () =>
+    [...knownPids].filter((pid) => {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  const cleanupDeadline = performance.now() + 5000;
+  while (remaining().length && performance.now() < cleanupDeadline)
+    await pause(100);
+  const remainingPids = remaining();
+  report.remainingPids = remainingPids;
+  if (child.exitCode !== 0 || remainingPids.length)
+    throw new Error(
+      "Measured application did not exit cleanly; see exitCode and remainingPids",
+    );
+  report.completed = true;
+} catch (error) {
+  report.completed = false;
+  report.error = String(error);
+  await app
+    ?.windows()[0]
+    ?.screenshot({ path: path.join(output, "failure.png"), timeout: 3000 })
+    .catch(() => {});
+  process.exitCode = 1;
+} finally {
+  await app?.close().catch(() => {});
+  report.finishedAt = new Date().toISOString();
+  report.summary = Object.fromEntries(
+    [...new Set(samples.map((sample) => sample.phase))].map((phase) => [
+      phase,
+      summarize(samples.filter((sample) => sample.phase === phase)),
+    ]),
+  );
+  const stableSamples = samples.filter((sample) => sample.stablePosture);
+  report.byPosture = Object.fromEntries(
+    [
+      ...new Set(
+        stableSamples.map((sample) => `${sample.visibility}:${sample.posture}`),
+      ),
+    ].map((key) => [
+      key,
+      summarize(
+        stableSamples.filter(
+          (sample) => `${sample.visibility}:${sample.posture}` === key,
+        ),
+      ),
+    ]),
+  );
+  await writeFile(
+    path.join(output, "resources.json"),
+    JSON.stringify(report, null, 2) + "\n",
+  );
+  await rm(profile, { recursive: true, force: true });
+  console.log(path.join(output, "resources.json"));
+}

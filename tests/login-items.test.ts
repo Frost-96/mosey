@@ -67,26 +67,35 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
           Reflect.set(this, "trackingCallback", options?.callback);
         };
       });
-      const point = await pet.evaluate(() => {
-        const canvas = document.querySelector("canvas")!;
-        const { data, width, height } = canvas
-          .getContext("2d")!
-          .getImageData(0, 0, canvas.width, canvas.height);
-        for (let y = Math.floor(height * 0.65); y < height - 8; y++)
-          for (let x = Math.floor(width * 0.4); x < width - 8; x++)
-            if (
-              [0, -4, 4].every((dy) =>
-                [0, -4, 4].every(
-                  (dx) => data[((y + dy) * width + x + dx) * 4 + 3]! > 250,
-                ),
+      // Settings readiness can precede pet atlas decoding and the first frame.
+      // Wait for the same opaque body area that the click must actually hit.
+      await pet.waitForLoadState("load");
+      const body = await pet.waitForFunction(
+        () => {
+          const canvas = document.querySelector("canvas")!;
+          const { data, width, height } = canvas
+            .getContext("2d")!
+            .getImageData(0, 0, canvas.width, canvas.height);
+          for (let y = Math.floor(height * 0.65); y < height - 8; y++)
+            for (let x = Math.floor(width * 0.4); x < width - 8; x++)
+              if (
+                [0, -4, 4].every((dy) =>
+                  [0, -4, 4].every(
+                    (dx) => data[((y + dy) * width + x + dx) * 4 + 3]! > 250,
+                  ),
+                )
               )
-            )
-              return {
-                x: (x + 0.5) / devicePixelRatio,
-                y: (y + 0.5) / devicePixelRatio,
-              };
-        throw new Error("No body interior");
-      });
+                return {
+                  x: (x + 0.5) / devicePixelRatio,
+                  y: (y + 0.5) / devicePixelRatio,
+                };
+          return undefined;
+        },
+        undefined,
+        { timeout: 10000 },
+      );
+      const point = (await body.jsonValue())!;
+      await body.dispose();
       await pet.mouse.click(point.x, point.y, { button: "right" });
       await expect
         .poll(() =>

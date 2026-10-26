@@ -148,7 +148,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .poll(() => settings!.locator(".error [role=alert]").textContent())
       .toContain("保存失败");
     expect((await petState()).bounds.width).toBe(70);
-    await mkdir("docs/validation", { recursive: true });
+    await mkdir("test-results", { recursive: true });
     expect(
       await settings
         .locator("body")
@@ -165,7 +165,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await stage("save-error screenshot");
     await settings.screenshot({
       fullPage: true,
-      path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-save-error.png`,
+      path: `test-results/settings-${packaged ? "packaged" : "development"}-save-error.png`,
     });
     await stage("retry failed size");
     await rm(file, { recursive: true });
@@ -196,7 +196,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await settings.getByRole("button", { name: "中（默认）" }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
-    await mkdir("docs/validation", { recursive: true });
+    await mkdir("test-results", { recursive: true });
     expect(
       await settings
         .locator("body")
@@ -217,7 +217,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .scrollIntoViewIfNeeded();
     await stage("settings screenshot");
     await settings.screenshot({
-      path: `docs/validation/issue-31-${packaged ? "packaged" : "development"}-settings.png`,
+      path: `test-results/settings-${packaged ? "packaged" : "development"}.png`,
     });
     await stage("close settings");
     await settings.close();

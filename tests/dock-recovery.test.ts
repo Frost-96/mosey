@@ -390,6 +390,15 @@ setInterval(()=>{
           .click();
       }, label);
     if (initial.startupSilence) {
+      // A spawned OS process can be visible to ps before its JS entry writes
+      // the first ledger record. Wait for that observable fixture boundary.
+      await expect
+        .poll(
+          async () =>
+            (await ledger()).some((record) => record.event === "spawn"),
+          { timeout: 5000 },
+        )
+        .toBe(true);
       const first = (await ledger()).find((record) => record.event === "spawn");
       expect(first).toBeDefined();
       await expect

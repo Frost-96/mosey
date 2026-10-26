@@ -365,6 +365,8 @@ test("body secondary clicks open a native menu and cancel without changing the p
         pet.getBounds().y,
       );
     });
+    // Let native hover from relocation settle before starting CDP capture.
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const ground = await bounds();
     await pet.mouse.move(120, 180);
     await pet.mouse.down();
