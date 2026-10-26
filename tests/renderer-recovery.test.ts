@@ -226,9 +226,31 @@ test.each([
         );
       const crash = () =>
         app!.evaluate(({ BrowserWindow }) => {
-          BrowserWindow.getAllWindows()
-            .find((window) => window.getTitle() === "Mosey")!
-            .webContents.forcefullyCrashRenderer();
+          const contents = BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey",
+          )!.webContents;
+          // The crash request can return before the renderer exits. A snapshot
+          // of !isCrashed && !isLoading can then describe the old renderer, and
+          // a pixel read sent to it can hang across the subsequent reload.
+          // Observe the actual exit before polling the replacement's readiness.
+          return new Promise<void>((resolve, reject) => {
+            const exited = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+            const timer = setTimeout(() => {
+              contents.off("render-process-gone", exited);
+              reject(new Error("Renderer did not exit after crash request"));
+            }, 5000);
+            contents.once("render-process-gone", exited);
+            try {
+              contents.forcefullyCrashRenderer();
+            } catch (error) {
+              clearTimeout(timer);
+              contents.off("render-process-gone", exited);
+              reject(error);
+            }
+          });
         });
       // Exercise real held and released gestures, plus a hidden renderer.
       if (phase === "hidden") await invoke("Hide Mosey");

@@ -283,40 +283,42 @@ async function start() {
       ...(login.error ? [{ label: login.error, enabled: false }] : []),
     ];
   };
-  const refreshMenus = () => {
-    const diagnostic: Electron.MenuItemConstructorOptions = {
-      label: "Dock validation",
-      submenu: dockValidation.menu().map((item) =>
-        item.label === "Start Dock validation (120 seconds)"
-          ? {
-              ...item,
-              click: () => {
-                const revision = reserveCapture("diagnostic");
-                void dockRuntime.stop().then(() => {
-                  if (
-                    !quitting &&
-                    requestedCaptureMode === "diagnostic" &&
-                    revision === captureRevision
-                  )
-                    return dockValidation.start();
-                });
-              },
-            }
-          : item.label === "Stop Dock validation"
+  let menuRevision = 0;
+  const refreshMenus = (): Menu => {
+    for (;;) {
+      const revision = ++menuRevision;
+      const diagnostic: Electron.MenuItemConstructorOptions = {
+        label: "Dock validation",
+        submenu: dockValidation.menu().map((item) =>
+          item.label === "Start Dock validation (120 seconds)"
             ? {
                 ...item,
                 click: () => {
-                  const revision = reserveCapture("product");
-                  void dockValidation.stop("user stop").then(() => {
-                    if (revision === captureRevision) startDock();
+                  const revision = reserveCapture("diagnostic");
+                  void dockRuntime.stop().then(() => {
+                    if (
+                      !quitting &&
+                      requestedCaptureMode === "diagnostic" &&
+                      revision === captureRevision
+                    )
+                      return dockValidation.start();
                   });
                 },
               }
-            : item,
-      ),
-    };
-    Menu.setApplicationMenu(
-      Menu.buildFromTemplate([
+            : item.label === "Stop Dock validation"
+              ? {
+                  ...item,
+                  click: () => {
+                    const revision = reserveCapture("product");
+                    void dockValidation.stop("user stop").then(() => {
+                      if (revision === captureRevision) startDock();
+                    });
+                  },
+                }
+              : item,
+        ),
+      };
+      const applicationMenu = Menu.buildFromTemplate([
         {
           label: "Mosey",
           submenu: [
@@ -334,18 +336,25 @@ async function start() {
           ],
         },
         diagnostic,
-      ]),
-    );
-    return Menu.buildFromTemplate([
-      ...recoveryItems(),
-      visibilityItem(),
-      sizeItem(),
-      ...loginItems(),
-      settingsItem(),
-      ...dockItems(),
-      diagnostic,
-      { label: "Quit Mosey", click: quit },
-    ]);
+      ]);
+      const trayMenu = Menu.buildFromTemplate([
+        ...recoveryItems(),
+        visibilityItem(),
+        sizeItem(),
+        ...loginItems(),
+        settingsItem(),
+        ...dockItems(),
+        diagnostic,
+        { label: "Quit Mosey", click: quit },
+      ]);
+      // Native menu construction and installation can admit newer commands.
+      // Rebuild from the latest choices if a nested refresh superseded this one;
+      // neither the application menu nor the returned tray menu may go stale.
+      if (revision !== menuRevision) continue;
+      Menu.setApplicationMenu(applicationMenu);
+      if (revision !== menuRevision) continue;
+      return trayMenu;
+    }
   };
   app.on("before-quit", (event) => {
     quitting = true;
