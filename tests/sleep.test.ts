@@ -204,21 +204,39 @@ test(
         await pet.mouse.click(point.x, point.y);
       };
       await screenshot("breathing");
+      if (whale) {
+        // Synchronize at a newly painted ordinary sleep frame. Its next normal
+        // change is 1000ms away, so a short reaction cannot be a coincident tick.
+        const previous = await pixels();
+        await expect
+          .poll(pixels, { timeout: 1500, interval: 10 })
+          .not.toBe(previous);
+      }
       const beforeFirstClick = await pixels();
       await click();
       const firstClickAt = Date.now();
-      await expect
-        .poll(
-          async () =>
-            whale
-              ? (await pixels()) === beforeFirstClick
-              : sleepingFrames.has(await pixels()),
-          {
+      if (whale) {
+        let previous = beforeFirstClick;
+        let transitions = 0;
+        await expect
+          .poll(
+            async () => {
+              const current = await pixels();
+              if (current !== previous) transitions++;
+              previous = current;
+              return transitions;
+            },
+            { timeout: 300, interval: 10 },
+          )
+          .toBeGreaterThanOrEqual(2);
+      } else {
+        await expect
+          .poll(async () => sleepingFrames.has(await pixels()), {
             timeout: 300,
             interval: 20,
-          },
-        )
-        .toBe(false);
+          })
+          .toBe(false);
+      }
       expect(await height()).toBeLessThan(160);
       await click();
       const rapidGap = Date.now() - firstClickAt;
