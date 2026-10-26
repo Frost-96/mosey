@@ -1,3 +1,4 @@
+import { createHitRows } from "./asset-hit-rows.ts";
 import sharp from "sharp";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { z } from "zod";
@@ -86,20 +87,7 @@ for (const [action, config] of Object.entries(actions)) {
       .png()
       .toBuffer();
     const pixels = await sharp(raster).raw().toBuffer();
-    const hitRows: [number, number][][] = [];
-    for (let y = 0; y < 480; y++) {
-      const runs: [number, number][] = [];
-      let start = -1;
-      for (let x = 0; x <= 480; x++) {
-        const opaque = x < 480 && pixels[(y * 480 + x) * 4 + 3]! >= 128;
-        if (opaque && start < 0) start = x;
-        if (!opaque && start >= 0) {
-          runs.push([start, x]);
-          start = -1;
-        }
-      }
-      hitRows.push(runs);
-    }
+    const hitRows = createHitRows(pixels, 480, 480);
     frames.push({
       region: { x: index * 480, y: 0, width: 480, height: 480 },
       durationMs: input.durationMs,
