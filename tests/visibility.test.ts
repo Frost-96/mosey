@@ -207,16 +207,20 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     const recovered = await app.firstWindow();
     await recovered.waitForLoadState("load");
     await expect.poll(visible).toBe(true);
+    // Recovery is another cold renderer: load and native visibility can precede
+    // atlas decoding. Keep the same first-paint allowance as initial startup.
     await expect
-      .poll(() =>
-        recovered.evaluate(() => {
-          const canvas = document.querySelector("canvas")!;
-          return Array.from(
-            canvas
-              .getContext("2d")!
-              .getImageData(0, 0, canvas.width, canvas.height).data,
-          ).filter((value, i) => i % 4 === 3 && value > 127).length;
-        }),
+      .poll(
+        () =>
+          recovered.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            return Array.from(
+              canvas
+                .getContext("2d")!
+                .getImageData(0, 0, canvas.width, canvas.height).data,
+            ).filter((value, i) => i % 4 === 3 && value > 127).length;
+          }),
+        { timeout: 10000 },
       )
       .toBeGreaterThan(5000);
     const logPath = await app.evaluate(({ app }) =>
