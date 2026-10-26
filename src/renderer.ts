@@ -1,62 +1,24 @@
-import climbingUrl from "./assets/generated/climbing-atlas.png";
-import climbing from "./assets/generated/climbing-atlas.json";
-import settlingUrl from "./assets/generated/settling-atlas.png";
-import settling from "./assets/generated/settling-atlas.json";
-import wakingUrl from "./assets/generated/waking-atlas.png";
-import waking from "./assets/generated/waking-atlas.json";
-import earUrl from "./assets/generated/ear-atlas.png";
-import ear from "./assets/generated/ear-atlas.json";
-import sleepingUrl from "./assets/generated/sleeping-atlas.png";
-import sleeping from "./assets/generated/sleeping-atlas.json";
-import walkingUrl from "./assets/generated/walking-atlas.png";
-import walking from "./assets/generated/walking-atlas.json";
-import stretchingUrl from "./assets/generated/stretching-atlas.png";
-import stretching from "./assets/generated/stretching-atlas.json";
-import playingUrl from "./assets/generated/playing-atlas.png";
-import playing from "./assets/generated/playing-atlas.json";
-import idleUrl from "./assets/generated/idle-atlas.png";
-import tiltUrl from "./assets/generated/tilt-atlas.png";
-import pawUrl from "./assets/generated/paw-atlas.png";
-import bellyUrl from "./assets/generated/belly-atlas.png";
-import idle from "./assets/generated/idle-atlas.json";
-import tilt from "./assets/generated/tilt-atlas.json";
-import paw from "./assets/generated/paw-atlas.json";
-import belly from "./assets/generated/belly-atlas.json";
-import draggingUrl from "./assets/generated/dragging-atlas.png";
-import dragging from "./assets/generated/dragging-atlas.json";
-import flutterUrl from "./assets/generated/flutter-atlas.png";
-import flutter from "./assets/generated/flutter-atlas.json";
-import fallingUrl from "./assets/generated/falling-atlas.png";
-import falling from "./assets/generated/falling-atlas.json";
-import landingUrl from "./assets/generated/landing-atlas.png";
-import landing from "./assets/generated/landing-atlas.json";
-import { atlasSchema } from "./shared/assets";
+import { characterAssets, characterDirectory } from "./shared/characters";
 import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
 try {
+  const initial = await window.mosey.getPresentation();
+  const urls = import.meta.glob("./assets/generated/**/*.png", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  });
   const assets = await Promise.all(
-    [
-      [idle, idleUrl],
-      [climbing, climbingUrl],
-      [sleeping, sleepingUrl],
-      [settling, settlingUrl],
-      [waking, wakingUrl],
-      [ear, earUrl],
-      [walking, walkingUrl],
-      [stretching, stretchingUrl],
-      [playing, playingUrl],
-      [tilt, tiltUrl],
-      [paw, pawUrl],
-      [belly, bellyUrl],
-      [dragging, draggingUrl],
-      [flutter, flutterUrl],
-      [falling, fallingUrl],
-      [landing, landingUrl],
-    ].map(async ([metadata, url]) => {
-      const atlas = atlasSchema.parse(metadata);
+    characterAssets(initial.character).map(async (atlas) => {
       const image = new Image();
-      image.src = String(url);
+      const url =
+        urls[
+          `./assets/generated/${characterDirectory(initial.character)}${atlas.image}`
+        ];
+      if (typeof url !== "string")
+        throw new Error(`Missing ${initial.character} ${atlas.action} image`);
+      image.src = url;
       await image.decode();
       if (image.width !== atlas.width || image.height !== atlas.height)
         throw new Error("Atlas pixels do not match metadata");
@@ -71,15 +33,7 @@ try {
     frameRequest = 0,
     frameTimer = 0,
     completed = -1;
-  let presentation: Presentation = {
-    size: 160,
-    geometryRevision: 0,
-    posture: "resting",
-    direction: "right",
-    visibility: "hidden",
-    actionId: 0,
-    startedAt: Date.now(),
-  };
+  let presentation: Presentation = initial;
   function cancelDrawing() {
     clearTimeout(frameTimer);
     cancelAnimationFrame(frameRequest);
@@ -113,9 +67,14 @@ try {
       context!.setTransform(ratio, 0, 0, ratio, 0, 0);
       previous = "";
     }
-    const { atlas, image } = assets.find(
+    const asset = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
-    )!;
+    );
+    if (!asset)
+      throw new Error(
+        `Unsupported ${presentation.character} action: ${presentation.posture}`,
+      );
+    const { atlas, image } = asset;
     const total = atlas.frames.reduce(
       (sum, frame) => sum + frame.durationMs,
       0,

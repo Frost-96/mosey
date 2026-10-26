@@ -1,0 +1,373 @@
+{
+  "version": 1,
+  "purpose": "preview-only",
+  "generation": "built-in image_gen",
+  "reference": "B / schrieeeffer Shenshen Pet",
+  "size": 110,
+  "visibleHeight": 90.29166666666667,
+  "actions": {
+    "idle": {
+      "image": "assets/idle-hd.png",
+      "cell": 512,
+      "nativeHeight": 445,
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 271.004033509153,
+            "y": 483
+          },
+          "bounds": {
+            "x": 108,
+            "y": 38,
+            "width": 353,
+            "height": 445
+          },
+          "facePixelCount": 3223
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 258.84674447174444,
+            "y": 483
+          },
+          "bounds": {
+            "x": 97,
+            "y": 38,
+            "width": 342,
+            "height": 445
+          },
+          "facePixelCount": 3256
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 240.42221489782466,
+            "y": 483
+          },
+          "bounds": {
+            "x": 80,
+            "y": 37,
+            "width": 351,
+            "height": 446
+          },
+          "facePixelCount": 3034
+        },
+        {
+          "region": {
+            "x": 0,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 271.7210365853659,
+            "y": 474
+          },
+          "bounds": {
+            "x": 107,
+            "y": 29,
+            "width": 353,
+            "height": 445
+          },
+          "facePixelCount": 5904
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 258.57445501995704,
+            "y": 474
+          },
+          "bounds": {
+            "x": 93,
+            "y": 29,
+            "width": 353,
+            "height": 445
+          },
+          "facePixelCount": 3257
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 242.1629513343799,
+            "y": 474
+          },
+          "bounds": {
+            "x": 75,
+            "y": 29,
+            "width": 372,
+            "height": 445
+          },
+          "facePixelCount": 3185
+        }
+      ]
+    },
+    "walk": {
+      "image": "assets/walk-hd.png",
+      "cell": 512,
+      "nativeHeight": 478,
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 355.4799160671463,
+            "y": 492
+          },
+          "bounds": {
+            "x": 102,
+            "y": 13,
+            "width": 352,
+            "height": 479
+          },
+          "facePixelCount": 3336
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 326.13811821471654,
+            "y": 493
+          },
+          "bounds": {
+            "x": 80,
+            "y": 14,
+            "width": 342,
+            "height": 479
+          },
+          "facePixelCount": 3316
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 302.9866787768695,
+            "y": 493
+          },
+          "bounds": {
+            "x": 48,
+            "y": 14,
+            "width": 352,
+            "height": 479
+          },
+          "facePixelCount": 3303
+        },
+        {
+          "region": {
+            "x": 0,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 360.46539792387546,
+            "y": 479
+          },
+          "bounds": {
+            "x": 99,
+            "y": 8,
+            "width": 361,
+            "height": 471
+          },
+          "facePixelCount": 3468
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 332.8958971218616,
+            "y": 485
+          },
+          "bounds": {
+            "x": 77,
+            "y": 8,
+            "width": 355,
+            "height": 477
+          },
+          "facePixelCount": 3266
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 304.51176470588234,
+            "y": 485
+          },
+          "bounds": {
+            "x": 47,
+            "y": 8,
+            "width": 356,
+            "height": 477
+          },
+          "facePixelCount": 3400
+        }
+      ]
+    },
+    "wave": {
+      "image": "assets/wave-hd.png",
+      "cell": 512,
+      "nativeHeight": 432,
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 265.40648614609574,
+            "y": 483
+          },
+          "bounds": {
+            "x": 102,
+            "y": 49,
+            "width": 345,
+            "height": 434
+          },
+          "facePixelCount": 3176
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 258.0923707440101,
+            "y": 483
+          },
+          "bounds": {
+            "x": 96,
+            "y": 48,
+            "width": 342,
+            "height": 435
+          },
+          "facePixelCount": 3172
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 0,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 250.86620870134118,
+            "y": 483
+          },
+          "bounds": {
+            "x": 89,
+            "y": 48,
+            "width": 344,
+            "height": 435
+          },
+          "facePixelCount": 3057
+        },
+        {
+          "region": {
+            "x": 0,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 266.84182557049076,
+            "y": 461
+          },
+          "bounds": {
+            "x": 98,
+            "y": 31,
+            "width": 353,
+            "height": 430
+          },
+          "facePixelCount": 3199
+        },
+        {
+          "region": {
+            "x": 512,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 258.0146144278607,
+            "y": 461
+          },
+          "bounds": {
+            "x": 93,
+            "y": 31,
+            "width": 347,
+            "height": 430
+          },
+          "facePixelCount": 3216
+        },
+        {
+          "region": {
+            "x": 1024,
+            "y": 512,
+            "width": 512,
+            "height": 512
+          },
+          "anchor": {
+            "x": 251.8785105711581,
+            "y": 461
+          },
+          "bounds": {
+            "x": 85,
+            "y": 31,
+            "width": 350,
+            "height": 430
+          },
+          "facePixelCount": 3169
+        }
+      ]
+    }
+  }
+}

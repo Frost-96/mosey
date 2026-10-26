@@ -1,0 +1,224 @@
+{
+  "resting": {
+    "source": "source/idle-v1.png",
+    "scale": 0.95,
+    "loop": "repeat",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 1500
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 224,
+          "y": 425
+        },
+        "durationMs": 400
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 220,
+          "y": 425
+        },
+        "durationMs": 60
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 218,
+          "y": 425
+        },
+        "durationMs": 45
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 228,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 224,
+          "y": 426
+        },
+        "durationMs": 45
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 221,
+          "y": 425
+        },
+        "durationMs": 60
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 217,
+          "y": 425
+        },
+        "durationMs": 600
+      }
+    ]
+  },
+  "walking": {
+    "source": "source/walk-v2.png",
+    "scale": 0.95,
+    "loop": "repeat",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 308,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 282,
+          "y": 433
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 263,
+          "y": 433
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 261,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 310,
+          "y": 424
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 284,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 273,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 260,
+          "y": 421
+        },
+        "durationMs": 90
+      }
+    ]
+  }
+}

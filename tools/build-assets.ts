@@ -451,3 +451,5 @@ for (const { action, source, sequence, loop } of actionConfigs) {
     JSON.stringify(response) + "\n",
   );
 }
+
+await import("./build-whale-assets.ts");
