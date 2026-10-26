@@ -13,9 +13,15 @@ export const autonomy = {
 };
 export const petBehavior = setup({
   types: {
-    input: {} as { now: () => number },
+    input: {} as {
+      now: () => number;
+      sampleOnly?: boolean;
+      walkDurationMs?: number;
+    },
     context: {} as {
       now: () => number;
+      sampleOnly: boolean;
+      walkDurationMs: number;
       actionId: number;
       startedAt: number;
       lastClickAt: number;
@@ -40,15 +46,17 @@ export const petBehavior = setup({
   delays: {
     restDelay: () =>
       autonomy.restMinMs + Math.random() * autonomy.restVariationMs,
-    walkDuration: () => autonomy.walkMs,
+    walkDuration: ({ context }) => context.walkDurationMs,
   },
   guards: {
     wakeClick: ({ context }) =>
       context.sleepClickAt !== undefined &&
       context.now() - context.sleepClickAt <= wakeClickWindowMs,
     readyToSleep: ({ context }) =>
+      !context.sampleOnly &&
       context.now() - context.awakeSince >= autonomy.awakeMs,
     freshClick: ({ context }) =>
+      !context.sampleOnly &&
       context.now() - context.lastClickAt >= clickMergeIntervalMs,
     currentAction: ({ context, event }) =>
       (event.type === "DONE" || event.type === "LANDED") &&
@@ -75,6 +83,8 @@ export const petBehavior = setup({
   id: "pet",
   context: ({ input }) => ({
     now: input.now,
+    sampleOnly: input.sampleOnly ?? false,
+    walkDurationMs: input.walkDurationMs ?? autonomy.walkMs,
     actionId: 0,
     startedAt: input.now(),
     lastClickAt: 0,
@@ -102,7 +112,7 @@ export const petBehavior = setup({
       })),
       always: [
         {
-          guard: ({ context }) => context.choice < 0.45,
+          guard: ({ context }) => context.sampleOnly || context.choice < 0.45,
           target: "walking",
           actions: "rest",
         },

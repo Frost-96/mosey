@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { petSizeSchema } from "./size";
 export const presentationSchema = z.strictObject({
+  character: z.enum(["corgi", "whale"]),
   size: petSizeSchema,
   geometryRevision: z.number().int().nonnegative(),
   posture: z.enum([

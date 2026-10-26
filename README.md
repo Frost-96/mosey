@@ -30,6 +30,15 @@ python3 tests/native/test-dock-live.py build/native/dock-live
 pnpm measure:resources --seconds 60 --growth-seconds 300
 ```
 
+鲸鱼娘阶段样片仅支持待机与行走，尚未开放正式角色选择。使用临时偏好目录启动本地打包样片：
+
+```sh
+sample_profile=$(mktemp -d /tmp/mosey-whale-sample.XXXXXX)
+out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey --character-sample=whale --user-data-dir="$sample_profile"
+```
+
+样片暂不触发点击反馈、拖拽、睡眠或 Dock 动作；透明命中、身体右键菜单、大小和显示／隐藏仍可检查。普通启动继续使用完整柯基。样片造型与流畅度确认由 [#48](https://github.com/Frost-96/mosey/issues/48) 跟踪。
+
 资源测量支持 `--app /绝对路径/Mosey.app` 和 `--output test-results/新目录`；输出目录必须尚不存在，避免覆盖证据。报告记录包与测量工具的哈希、进程成本、Dock 捕获状态和每分钟的持续运行数据，每 30 秒保存一次原始样本。测量完成不代表性能达标；无有效 Dock 捕获时不能据此判断 Dock 交互成本，预算与验收结论仍记录在 #11。
 
 ## 使用与权限
