@@ -30,6 +30,8 @@ python3 tests/native/test-dock-live.py build/native/dock-live
 pnpm measure:resources --seconds 60 --growth-seconds 300
 ```
 
+资源测量支持 `--app /绝对路径/Mosey.app` 和 `--output test-results/新目录`；输出目录必须尚不存在，避免覆盖证据。报告记录包与测量工具的哈希、进程成本、Dock 捕获状态和每分钟的持续运行数据，每 30 秒保存一次原始样本。测量完成不代表性能达标；无有效 Dock 捕获时不能据此判断 Dock 交互成本，预算与验收结论仍记录在 #11。
+
 ## 使用与权限
 
 菜单栏 🐾 提供设置、显示／隐藏和退出。关闭设置窗口后宠物继续运行；隐藏意图跨重启保留，重开后没有角色时先检查菜单栏。开机启动在设置中启用，状态以 macOS 实际设置为准。
