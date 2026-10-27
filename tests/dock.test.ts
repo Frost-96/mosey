@@ -18,7 +18,6 @@ import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
-const characterArguments = whale ? ["--character-sample=whale"] : [];
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 // Only the OS capture producer is substituted. The actual Electron window,
 // behavior, renderer, atlas hit masks, native protocol and motion all run.
@@ -58,20 +57,21 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     await mkdir(path.join(root, "profile"), { recursive: true });
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, visibility: "visible", size: 240 }),
+      JSON.stringify({
+        version: 3,
+        character: whale ? "whale" : "corgi",
+        visibility: "visible",
+        size: 240,
+      }),
     );
     app = await electron.launch(
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [...characterArguments, `--user-data-dir=${root}/profile`],
+            args: [`--user-data-dir=${root}/profile`],
           }
         : {
-            args: [
-              ".",
-              ...characterArguments,
-              `--user-data-dir=${root}/profile`,
-            ],
+            args: [".", `--user-data-dir=${root}/profile`],
           },
     );
     applicationProcess = app.process();
@@ -1158,14 +1158,10 @@ test("real Dock helper clears its capability and exits when transport stops or t
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [...characterArguments, `--user-data-dir=${root}/profile`],
+            args: [`--user-data-dir=${root}/profile`],
           }
         : {
-            args: [
-              ".",
-              ...characterArguments,
-              `--user-data-dir=${root}/profile`,
-            ],
+            args: [".", `--user-data-dir=${root}/profile`],
           },
     );
     const pet = await app.firstWindow();

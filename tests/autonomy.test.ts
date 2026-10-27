@@ -11,7 +11,6 @@ import { PNG } from "pngjs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
-const characterArguments = whale ? ["--character-sample=whale"] : [];
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("autonomous activities stay grounded, yield to interaction and pause without catch-up", async () => {
@@ -30,7 +29,12 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     await mkdir(path.join(root, "profile"), { recursive: true });
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+      JSON.stringify({
+        version: 3,
+        character: whale ? "whale" : "corgi",
+        size: 240,
+        visibility: "visible",
+      }),
     );
     if (!packaged) stopForge = await startForge();
     else
@@ -42,19 +46,10 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [
-              ...characterArguments,
-              scaleArgument,
-              `--user-data-dir=${root}/profile`,
-            ],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
         : {
-            args: [
-              ".",
-              ...characterArguments,
-              scaleArgument,
-              `--user-data-dir=${root}/profile`,
-            ],
+            args: [".", scaleArgument, `--user-data-dir=${root}/profile`],
           },
     );
     const pet = await app.firstWindow();

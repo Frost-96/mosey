@@ -11,7 +11,7 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 const evidence = `${packaged ? "packaged" : "development"}${scaleFactor === "1" ? "" : `-${scaleFactor}x`}`;
 
-test("isolated whale paints one character, walks, yields to dragging and returns to the ground", async () => {
+test("selected whale paints one character, walks, yields to dragging and returns to the ground", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-whale-sample-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
@@ -20,7 +20,12 @@ test("isolated whale paints one character, walks, yields to dragging and returns
     await mkdir(path.join(root, "profile"));
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, size: 160, visibility: "visible" }),
+      JSON.stringify({
+        version: 3,
+        character: "whale",
+        size: 160,
+        visibility: "visible",
+      }),
     );
     if (!packaged) stopForge = await startForge();
     else
@@ -29,7 +34,6 @@ test("isolated whale paints one character, walks, yields to dragging and returns
         path.join(root, "Mosey.app"),
       ]);
     const args = [
-      "--character-sample=whale",
       `--user-data-dir=${root}/profile`,
       `--force-device-scale-factor=${scaleFactor}`,
     ];

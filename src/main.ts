@@ -145,7 +145,13 @@ async function start() {
   let liveSize = preferences.size;
   let settingsRevision = 0;
   let pendingCharacter:
-    (CharacterPreparation & { phase: "loading" | "waiting" }) | undefined;
+    | (CharacterPreparation & {
+        phase: "loading" | "waiting";
+        assets: ReturnType<typeof characterAssets>;
+        contact: { left: number; right: number } | undefined;
+        walk: ReturnType<typeof characterWalk>;
+      })
+    | undefined;
   let failedCharacter: Settings["failedCharacter"];
   let characterRequest = 0;
   let preparationTimer: ReturnType<typeof setTimeout> | undefined;
@@ -1009,9 +1015,11 @@ async function start() {
     )
       return;
     const bounds = pet.getBounds();
-    const nextAtlases = characterAssets(request.character);
-    const nextContact = contactFor(nextAtlases);
-    const nextWalk = characterWalk(request.character);
+    const {
+      assets: nextAtlases,
+      contact: nextContact,
+      walk: nextWalk,
+    } = request;
     // Both shapes must already share this support. A switch never teleports to
     // a different floor or a wider Dock contour to make the new shape fit.
     for (const support of [
@@ -1099,7 +1107,11 @@ async function start() {
     failedCharacter = undefined;
     const request = ++characterRequest;
     if (target !== character) {
+      const assets = characterAssets(target);
       pendingCharacter = {
+        assets,
+        contact: contactFor(assets),
+        walk: characterWalk(target),
         request,
         generation: rendererGeneration,
         character: target,

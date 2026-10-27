@@ -180,7 +180,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       JSON.parse(
         await readFile(path.join(profile, "preferences.json"), "utf8"),
       ),
-    ).toMatchObject({ version: 2, visibility: "visible", size: 240 });
+    ).toMatchObject({
+      version: 3,
+      character: "whale",
+      visibility: "visible",
+      size: 240,
+    });
     // A failed atomic commit must keep the recovered hidden intent and menu choice.
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));

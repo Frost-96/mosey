@@ -59,7 +59,7 @@ const select = async (size: number, commit = true) => {
       : window.moseySettings.previewSize(size));
     if (request === operation) render(result);
   } catch {
-    if (request === operation) {
+    if (!retired && request === operation) {
       communicationFailure = size;
       document.querySelector(".error [role=alert]")!.textContent =
         "无法确认保存结果，请重试。";
@@ -123,11 +123,13 @@ function receive(next: Settings) {
 }
 const unsubscribe = window.moseySettings.onChange(receive);
 void window.moseySettings.get().then(receive);
+let characterOperation = 0;
 const chooseCharacter = async (target: Settings["character"]) => {
+  const request = ++characterOperation;
   try {
     receive(await window.moseySettings.setCharacter(target));
   } catch {
-    if (retired) return;
+    if (retired || request !== characterOperation) return;
     document.querySelector<HTMLElement>("#character-error")!.hidden = false;
     document.querySelector("#character-error [role=alert]")!.textContent =
       "无法确认角色切换结果，请重新选择。";

@@ -18,7 +18,12 @@ test("diagnostic status keeps the latest Retry during a native permission query"
     await mkdir(path.join(root, "profile"));
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, visibility: "hidden", size: 160 }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        visibility: "hidden",
+        size: 160,
+      }),
     );
     if (!packaged) stopForge = await startForge();
     app = await electron.launch(

@@ -1,7 +1,7 @@
 import { test, expect, afterAll } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile, chmod } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
@@ -397,6 +397,236 @@ test("a held and falling pet keeps its old character until landing, then uses th
       .poll(async () => (await bounds()).y)
       .toBeLessThan(ground.y - 30);
     await pet.mouse.up();
+  } finally {
+    await f.close();
+  }
+});
+
+test("renderer recovery retires a pending preparation and permits an explicit retry without showing a hidden pet", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "corgi",
+    size: 160,
+    visibility: "hidden",
+  });
+  try {
+    const { app, pet } = await f.launch();
+    const settings = await openSettings(app);
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
+    const id = await app.evaluate(
+      ({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows().find((w) => w.getTitle() === "Mosey")!.id,
+    );
+    await app.evaluate(({ session }, origin) => {
+      Reflect.set(globalThis, "holdCharacterImages", true);
+      session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+        const url = new URL(details.url);
+        const allowed =
+          url.protocol === "file:" ||
+          url.protocol === "data:" ||
+          url.origin === origin ||
+          (url.protocol === "ws:" && url.host === new URL(origin).host);
+        if (!allowed) return callback({ cancel: true });
+        if (
+          details.resourceType === "image" &&
+          Reflect.get(globalThis, "holdCharacterImages")
+        )
+          return;
+        callback({ cancel: false });
+      });
+    }, new URL(pet.url()).origin);
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toContain("正在准备");
+    await app.evaluate(({ BrowserWindow }) => {
+      Reflect.set(globalThis, "holdCharacterImages", false);
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() === "Mosey")!
+        .webContents.forcefullyCrashRenderer();
+    });
+    await expect
+      .poll(() => settings.locator("#character-error").textContent())
+      .toContain("角色切换未完成");
+    const actual = () =>
+      app.evaluate(async ({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
+        return {
+          id: pet.id,
+          visible: pet.isVisible(),
+          label: await pet.webContents.executeJavaScript(
+            'document.querySelector("canvas")?.getAttribute("aria-label")',
+          ),
+        };
+      });
+    await expect
+      .poll(actual, { timeout: 10000 })
+      .toEqual({ id, visible: false, label: "柯基 · 待机" });
+    await settings.getByRole("button", { name: "重试角色" }).click();
+    await expect
+      .poll(actual, { timeout: 10000 })
+      .toEqual({ id, visible: false, label: "鲸鱼娘 · 待机" });
+  } finally {
+    await f.close();
+  }
+});
+
+test("walking switches preserve left facing and ground placement at both end sizes", async () => {
+  for (const size of [70, 240]) {
+    const f = await fixture({
+      version: 3,
+      character: "whale",
+      size,
+      visibility: "hidden",
+    });
+    try {
+      const { app, pet } = await f.launch();
+      const settings = await openSettings(app);
+      await app.evaluate(() => {
+        Math.random = () => 0.1;
+        const original = globalThis.setTimeout;
+        Reflect.set(globalThis, "restoreRestClock", () => {
+          globalThis.setTimeout = original;
+        });
+        globalThis.setTimeout = ((
+          callback: (...args: unknown[]) => void,
+          delay?: number,
+          ...args: unknown[]
+        ) =>
+          original(
+            callback,
+            delay && delay >= 18000 ? 100 : delay,
+            ...args,
+          )) as typeof setTimeout;
+      });
+      await settings
+        .getByRole("button", { name: "显示宠物", exact: true })
+        .click();
+      await expect
+        .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+        .toBe("鲸鱼娘 · 走路");
+      const before = await pet.evaluate(() => window.mosey.getPresentation());
+      expect(before.direction).toBe("left");
+      await app.evaluate(() => Reflect.get(globalThis, "restoreRestClock")());
+      const bounds = () =>
+        app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .getBounds(),
+        );
+      const old = await bounds();
+      await settings
+        .getByRole("combobox", { name: "角色" })
+        .selectOption("corgi");
+      await expect
+        .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+          timeout: 5000,
+        })
+        .toBe("柯基 · 待机");
+      const next = await pet.evaluate(() => window.mosey.getPresentation());
+      expect(next.direction).toBe("left");
+      expect(next.size).toBe(size);
+      const actual = await bounds();
+      expect(actual.y + actual.height).toBe(old.y + old.height);
+      expect(actual.width).toBe(size);
+      // Preparation may take a few real walking frames; it cannot recenter the
+      // pet. The saved placement remains within one ordinary walk's distance.
+      expect(Math.abs(actual.x - old.x)).toBeLessThan(130);
+    } finally {
+      await f.close();
+    }
+  }
+});
+
+test("a switch waits through climbing and commits on observed Dock support without descending", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "whale",
+    size: 160,
+    visibility: "visible",
+  });
+  const observation = path.join(f.root, "dock.json");
+  const helper = packaged
+    ? path.join(f.root, "Mosey.app/Contents/Resources/native/dock-runtime")
+    : path.resolve("build/native/dock-runtime");
+  await writeFile(observation, "null");
+  await writeFile(
+    helper,
+    `#!${process.execPath}\nconst fs = require('node:fs'); const started = performance.now(); let sequence=0; console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));setInterval(()=>{const observation=JSON.parse(fs.readFileSync(${JSON.stringify(observation)},'utf8')); console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:observation?'current':'alpha_empty',observation}));},50);`,
+  );
+  await chmod(helper, 0o755);
+  try {
+    const { app, pet } = await f.launch();
+    const settings = await openSettings(app);
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("鲸鱼娘 · 待机");
+    const native = () =>
+      app.evaluate(({ BrowserWindow, screen }) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
+        return {
+          id: pet.id,
+          bounds: pet.getBounds(),
+          display: screen.getPrimaryDisplay(),
+        };
+      });
+    const old = await native();
+    const floor = old.display.workArea.y + old.display.workArea.height;
+    const top = floor - 80;
+    await writeFile(
+      observation,
+      JSON.stringify({
+        orientation: "bottom",
+        primaryDisplayID: old.display.id,
+        bounds: {
+          x: old.bounds.x,
+          y: top,
+          width: 160,
+          height: old.display.bounds.y + old.display.bounds.height - top,
+        },
+        contour: Array.from({ length: 160 }, (_, i) => ({
+          axis: old.bounds.x + i,
+          inward: top,
+        })),
+      }),
+    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 5000,
+      })
+      .toBe("鲸鱼娘 · 攀爬");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toContain("等待宠物站稳");
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toContain(
+      "鲸鱼娘",
+    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 5000,
+      })
+      .toBe("柯基 · 待机");
+    const next = await native();
+    expect(next.id).toBe(old.id);
+    expect(next.bounds).toEqual({ ...old.bounds, y: top - old.bounds.height });
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("鲸鱼娘 · 待机");
+    expect((await native()).bounds).toEqual(next.bounds);
   } finally {
     await f.close();
   }

@@ -110,7 +110,12 @@ async function exercisePet() {
   );
   await writeFile(
     path.join(profile, "preferences.json"),
-    JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+    JSON.stringify({
+      version: 3,
+      character: "corgi",
+      size: 240,
+      visibility: "visible",
+    }),
   );
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
