@@ -416,6 +416,29 @@ test.each([
             .webContents.isCrashed(),
         ),
       ).toBe(true);
+      if (phase === "preview") {
+        // Manual Retry starts a fresh renderer too. Exercise cold image loads
+        // at the network boundary so cached local atlases cannot hide the race.
+        await app.evaluate(({ BrowserWindow }) => {
+          const contents = BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey",
+          )!.webContents;
+          Reflect.set(globalThis, "recoveryDelayedImages", 0);
+          contents.session.webRequest.onBeforeRequest((details, callback) => {
+            if (
+              details.webContentsId === contents.id &&
+              details.resourceType === "image"
+            ) {
+              Reflect.set(
+                globalThis,
+                "recoveryDelayedImages",
+                Reflect.get(globalThis, "recoveryDelayedImages") + 1,
+              );
+              setTimeout(() => callback({ cancel: false }), 2000);
+            } else callback({ cancel: false });
+          });
+        });
+      }
       await invoke("Retry Mosey");
       await expect
         .poll(() =>
@@ -429,7 +452,17 @@ test.each([
         .toBe(true);
       expect(await visible()).toBe(false);
       await invoke("Show Mosey");
-      await expect.poll(drawn).toBeGreaterThan(1500);
+      // Match startup and automatic recovery's existing cold-paint allowance.
+      await expect.poll(drawn, { timeout: 10000 }).toBeGreaterThan(1500);
+      expect(await visible()).toBe(true);
+      if (phase === "preview")
+        await app.evaluate(({ BrowserWindow }) => {
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey")!
+            .webContents.session.webRequest.onBeforeRequest(null);
+          if (Reflect.get(globalThis, "recoveryDelayedImages") < 1)
+            throw new Error("Cold recovery did not request an image");
+        });
       await expect.poll(() => distanceFromGround(app!)).toBe(0);
       const logPath = await app.evaluate(({ app }) =>
         process
