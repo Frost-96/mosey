@@ -1,6 +1,7 @@
+import { appendFileSync, mkdirSync } from "node:fs";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
-import { test, expect } from "vitest";
+import { test, expect, onTestFailed } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -25,10 +26,45 @@ test(
   "sleep preserves the two-click window, drag priority and lifecycle cancellation",
   { timeout: 120000 },
   async () => {
+    mkdirSync("test-results/sleep-timeout", { recursive: true });
+    const started = performance.now();
+    const progress = `test-results/sleep-timeout/repro-${process.env.MOSEY_REPRO_RUN ?? "1"}.jsonl`;
+    const mark = (stage: string, detail?: unknown) =>
+      appendFileSync(
+        progress,
+        JSON.stringify({
+          stage,
+          elapsed: performance.now() - started,
+          detail,
+        }) + "\n",
+      );
+    mark("prepare");
     const root = await mkdtemp(path.join(os.tmpdir(), "mosey-sleep-"));
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     let restoreDockCapture: (() => Promise<void>) | undefined;
+    onTestFailed(() => {
+      mark("test-failed");
+      const child = app?.process();
+      if (child?.pid && child.exitCode === null && child.signalCode === null) {
+        try {
+          execFileSync(
+            "/usr/bin/sample",
+            [
+              String(child.pid),
+              "1",
+              "1",
+              "-file",
+              path.resolve(
+                `test-results/sleep-timeout/repro-${process.env.MOSEY_REPRO_RUN ?? "1"}-sample.txt`,
+              ),
+            ],
+            { timeout: 5000, stdio: "ignore" },
+          );
+        } catch {}
+        child.kill("SIGKILL");
+      }
+    });
     try {
       await mkdir(path.join(root, "profile"), { recursive: true });
       await writeFile(
@@ -51,6 +87,7 @@ test(
           ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
           : path.resolve("build/native/dock-runtime"),
       );
+      mark("launch");
       app = await electron.launch(
         packaged
           ? {
@@ -63,10 +100,13 @@ test(
               args: [".", `--user-data-dir=${root}/profile`],
             },
       );
+      mark("first-window");
       const pet = await app.firstWindow();
+      mark("network-idle");
       await pet.waitForLoadState("networkidle");
-      const menu = (label: "Hide Mosey" | "Show Mosey") =>
-        app!.evaluate(async ({ Menu, BrowserWindow }, label) => {
+      const menu = (label: "Hide Mosey" | "Show Mosey") => {
+        mark(label);
+        return app!.evaluate(async ({ Menu, BrowserWindow }, label) => {
           const pet = BrowserWindow.getAllWindows()[0]!;
           const event = label === "Hide Mosey" ? "hide" : "show";
           await new Promise<void>((resolve, reject) => {
@@ -87,6 +127,7 @@ test(
               .click();
           });
         }, label);
+      };
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -111,8 +152,10 @@ test(
               }
           return (bottom - top + 1) / devicePixelRatio;
         });
+      mark("initial-pixels");
       await expect.poll(height, { timeout: 5000 }).toBeGreaterThan(180);
       const waitForSleep = async () => {
+        mark("wait-sleep");
         // Settling is already short enough to pass the silhouette check, but
         // a click there intentionally wakes immediately. Wait at the renderer
         // contract before exercising the sleeping pet's two-click rule.
@@ -159,6 +202,7 @@ test(
           })
           .toBe(true);
       };
+      mark("idle-frames");
       const idleFrames = new Set<string>();
       const idleUntil = Date.now() + (whale ? 3100 : 2200);
       while (Date.now() < idleUntil) {
@@ -194,11 +238,13 @@ test(
       await waitForSleep();
       const mode = evidence;
       await mkdir("test-results", { recursive: true });
-      const screenshot = (name: string) =>
-        pet.screenshot({
+      const screenshot = (name: string) => {
+        mark(`screenshot-${name}`);
+        return pet.screenshot({
           path: `test-results/${mode}-sleep-${name}.png`,
           omitBackground: true,
         });
+      };
       const bounds = () =>
         app!.evaluate(({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()[0]!.getBounds(),
@@ -219,6 +265,7 @@ test(
         });
         await waitForSleep();
       };
+      mark("sleeping-frames");
       const sleepingFrames = new Set<string>();
       await new Promise((resolve) => setTimeout(resolve, 350));
       const sleepingUntil = Date.now() + (whale ? 6200 : 2600);
@@ -366,6 +413,7 @@ test(
 
       // Sleeping and ear feedback both yield immediately to the existing drag.
       for (const source of ["sleep", "ear", "waking"]) {
+        mark(`drag-${source}`);
         await enterSleep();
         await app.evaluate(({ BrowserWindow, screen }) => {
           const pet = BrowserWindow.getAllWindows()[0]!;
@@ -455,6 +503,9 @@ test(
         ),
       );
     } catch (error) {
+      mark("caught-error", String(error));
+      console.error("[DEBUG-sleep-ci] caught", error);
+      mark("failure-screenshot");
       await mkdir("test-results", { recursive: true });
       await app
         ?.windows()[0]
@@ -464,9 +515,11 @@ test(
         .catch(() => {});
       throw error;
     } finally {
+      mark("close");
       await app?.close().catch(() => {});
       await restoreDockCapture?.();
       await stopForge?.();
+      mark("remove-profile");
       await rm(root, { recursive: true, force: true });
     }
   },
