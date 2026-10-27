@@ -46,7 +46,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
           disabled: result.system.status === "requires-approval",
         });
       if (result.system.status === "requires-approval")
-        expect(await login.textContent()).toContain("等待批准");
+        await expect.poll(() => login.textContent()).toContain("等待批准");
       evidence.push(result);
       return result;
     };

@@ -209,7 +209,7 @@ test("login settings explain availability and follow system approval, failure an
           }),
       );
     }, old);
-    const reopened = await openSettings(app);
+    const reopened = await openSettings(app, { waitForInitialState: false });
     const reopenedLogin = reopened.getByRole("region", { name: "开机启动" });
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "loginTestStatus", "not-registered");

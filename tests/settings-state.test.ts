@@ -104,7 +104,7 @@ test("settings protects edits while independently merging IPC results and notifi
         Reflect.get(window.webContents, "notifySettingsTest")(next);
       });
     }, initial);
-    const settings = await openSettings(app);
+    const settings = await openSettings(app, { waitForInitialState: false });
     expect(original.isClosed()).toBe(true);
     const notify = (next: Settings) =>
       app!.evaluate(
@@ -277,7 +277,7 @@ test("settings protects edits while independently merging IPC results and notifi
     expect(await count("settings:size")).toBe(7);
     expect(await settings.locator("main").count()).toBe(0);
     await closeSettings(app);
-    const reopened = await openSettings(app);
+    const reopened = await openSettings(app, { waitForInitialState: false });
     const newReads = (await count("settings:get")) - reads;
     for (let i = 0; i < newReads; i++)
       await finish("settings:get", initial, true);
