@@ -1,11 +1,17 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { useLoginSettings } from "./settings-login-state";
+import type { Settings } from "./shared/contract";
 
-function LoginSettings() {
-  const { login, busy, setEnabled, openSystemSettings } = useLoginSettings(
-    window.moseySettings,
-  );
+interface LoginSettingsProps {
+  login: Settings["login"];
+  busy: boolean;
+  setEnabled(enabled: boolean): void;
+  openSystemSettings(): void;
+}
+export function LoginSettings({
+  login,
+  busy,
+  setEnabled,
+  openSystemSettings,
+}: LoginSettingsProps) {
   const awaitingApproval = login.status === "requires-approval";
   return (
     <section aria-labelledby="login-heading">
@@ -55,25 +61,4 @@ function LoginSettings() {
       </button>
     </section>
   );
-}
-
-// A host has one owner even when development reloads or a caller remounts it.
-const mounts = new WeakMap<HTMLElement, () => void>();
-export function attachLoginSettings(host: HTMLElement) {
-  mounts.get(host)?.();
-  const root = createRoot(host);
-  root.render(
-    <StrictMode>
-      <LoginSettings />
-    </StrictMode>,
-  );
-  const dispose = () => {
-    if (mounts.get(host) !== dispose) return;
-    mounts.delete(host);
-    window.removeEventListener("pagehide", dispose);
-    root.unmount();
-  };
-  mounts.set(host, dispose);
-  window.addEventListener("pagehide", dispose, { once: true });
-  return dispose;
 }
