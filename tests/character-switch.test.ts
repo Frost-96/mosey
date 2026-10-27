@@ -685,31 +685,9 @@ test("a switch waits through climbing and commits on observed Dock support witho
     const old = await native();
     const floor = old.display.workArea.y + old.display.workArea.height;
     const top = floor - 80;
-    await writeFile(
-      observation,
-      JSON.stringify({
-        orientation: "bottom",
-        primaryDisplayID: old.display.id,
-        bounds: {
-          x: old.bounds.x,
-          y: top,
-          width: 160,
-          height: old.display.bounds.y + old.display.bounds.height - top,
-        },
-        contour: Array.from({ length: 160 }, (_, i) => ({
-          axis: old.bounds.x + i,
-          inward: top,
-        })),
-      }),
-    );
-    await expect
-      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
-        timeout: 5000,
-      })
-      .toBe("鲸鱼娘 · 攀爬");
-    // Keep the actual climb in progress while cold target images prepare.
-    // Control only the system clock and image requests, then let real motion
-    // finish against the observed Dock; never force behavior or position.
+    // Hold time before presenting the Dock so slow UI observation cannot miss
+    // the real climb. Images still prepare on real time; restore motion after
+    // readiness without forcing behavior or position.
     await app.evaluate(({ BrowserWindow }) => {
       const now = Date.now;
       const heldAt = now();
@@ -735,6 +713,28 @@ test("a switch waits through climbing and commits on observed Dock support witho
         } else callback({ cancel: false });
       });
     });
+    await writeFile(
+      observation,
+      JSON.stringify({
+        orientation: "bottom",
+        primaryDisplayID: old.display.id,
+        bounds: {
+          x: old.bounds.x,
+          y: top,
+          width: 160,
+          height: old.display.bounds.y + old.display.bounds.height - top,
+        },
+        contour: Array.from({ length: 160 }, (_, i) => ({
+          axis: old.bounds.x + i,
+          inward: top,
+        })),
+      }),
+    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 5000,
+      })
+      .toBe("鲸鱼娘 · 攀爬");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("corgi");
