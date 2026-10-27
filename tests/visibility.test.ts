@@ -1,5 +1,5 @@
 import { startForge } from "./support/forge";
-import { test, expect } from "vitest";
+import { test, expect, onTestFailed } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import {
@@ -12,16 +12,19 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync } from "node:fs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
 test("manual visibility survives restart, duplicate launches and damaged preferences", async () => {
   const started = performance.now();
+  const evidence = packaged ? "packaged" : "development";
+  const progressFile = `test-results/${evidence}-visibility-progress.jsonl`;
+  await mkdir("test-results", { recursive: true });
+  await writeFile(progressFile, "");
   const mark = (stage: string) => {
-    mkdirSync("test-results", { recursive: true });
     appendFileSync(
-      "test-results/visibility-debug.jsonl",
+      progressFile,
       JSON.stringify({ stage, elapsed: performance.now() - started }) + "\n",
     );
   };
@@ -30,6 +33,34 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
   let stopForge: (() => Promise<void>) | undefined;
   let duplicate: ChildProcess | undefined;
   let app: ElectronApplication | undefined;
+  let applicationProcess: ChildProcess | undefined;
+  let launches = 0;
+  onTestFailed(async () => {
+    mark("test-failed");
+    const child = applicationProcess;
+    if (child?.exitCode === null && child.signalCode === null) {
+      // A Vitest deadline does not unwind a pending Playwright call. Preserve
+      // the native stack before releasing only this test's application process.
+      try {
+        execFileSync(
+          "/usr/bin/sample",
+          [
+            String(child.pid),
+            "1",
+            "1",
+            "-file",
+            path.resolve(`test-results/${evidence}-visibility-process.txt`),
+          ],
+          { timeout: 5000, stdio: "ignore" },
+        );
+      } catch {
+        // The process may have exited before sampling starts.
+      }
+      child.kill("SIGKILL");
+    }
+    if (duplicate?.exitCode === null && duplicate.signalCode === null)
+      duplicate.kill("SIGKILL");
+  });
   try {
     if (!packaged) stopForge = await startForge();
     if (packaged) {
@@ -38,8 +69,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         path.join(root, "Mosey.app"),
       ]);
     }
-    const launch = () =>
-      electron.launch(
+    const launch = async () => {
+      mark(`launch-${++launches}`);
+      const launched = await electron.launch(
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
@@ -47,6 +79,23 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
             }
           : { args: [".", `--user-data-dir=${profile}`] },
       );
+      applicationProcess = launched.process();
+      mark(`launch-${launches}-complete`);
+      return launched;
+    };
+    const close = async () => {
+      mark(`close-${launches}`);
+      await app!.close();
+      mark(`close-${launches}-complete`);
+    };
+    const waitForDocument = async () => {
+      mark(`window-${launches}`);
+      const window = await app!.firstWindow();
+      mark(`document-${launches}`);
+      await window.waitForLoadState("load");
+      mark(`document-${launches}-complete`);
+      return window;
+    };
     await mkdir(profile, { recursive: true });
     await writeFile(
       path.join(profile, "preferences.json"),
@@ -60,22 +109,24 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     mark("initial-launch");
     app = await launch();
     mark("initial-window");
-    const pet = await app.firstWindow();
+    const pet = await waitForDocument();
     const visible = () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.isVisible(),
       );
-    const invoke = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
+    const invoke = async (label: string) => {
+      mark(label);
+      await app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
           ?.items.find((item) => item.label === "Mosey")
           ?.submenu?.items.find((item) => item.label === label);
         if (!item) throw new Error(`Missing menu item: ${label}`);
         item.click();
       }, label);
+      mark(`${label}-complete`);
+    };
     // Native visibility can precede the initial renderer document commit.
     // Wait for that document, then its actual drawing, before sampling frames.
-    await pet.waitForLoadState("load");
     await expect
       .poll(
         () =>
@@ -156,9 +207,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await invoke("Hide Mosey");
     await expect.poll(visible).toBe(false);
     mark("restart-hidden");
-    await app.close();
+    await close();
     app = await launch();
-    await (await app.firstWindow()).waitForLoadState("load");
+    await waitForDocument();
     expect(await visible()).toBe(false);
     mark("duplicate");
     duplicate = spawn(
@@ -186,18 +237,18 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       )
       .toBe(true);
     expect(await pet.isClosed()).toBe(true);
-    await app.close();
+    await close();
     app = undefined;
     mark("corrupt-primary");
     // A completed backup must survive an interrupted temporary write and a corrupt primary.
     await writeFile(path.join(profile, "preferences.json"), "{broken");
     await writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1');
     app = await launch();
-    await (await app.firstWindow()).waitForLoadState("load");
+    await waitForDocument();
     expect(await visible()).toBe(false);
     await invoke("Show Mosey");
     await expect.poll(visible).toBe(true);
-    await app.close();
+    await close();
     app = undefined;
     expect(
       JSON.parse(
@@ -214,13 +265,13 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));
     app = await launch();
-    await (await app.firstWindow()).waitForLoadState("load");
+    await waitForDocument();
     expect(await visible()).toBe(false);
     await invoke("Show Mosey");
     expect(await visible()).toBe(false);
     // The menu still offers Show because no durable change succeeded.
     await invoke("Show Mosey");
-    await app.close();
+    await close();
     app = undefined;
     mark("both-invalid");
     // If neither primary nor backup validates, defaults leave a visible, usable pet.
@@ -234,8 +285,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       "broken backup",
     );
     app = await launch();
-    const recovered = await app.firstWindow();
-    await recovered.waitForLoadState("load");
+    const recovered = await waitForDocument();
     await expect.poll(visible).toBe(true);
     // Recovery is another cold renderer: load and native visibility can precede
     // atlas decoding. Keep the same first-paint allowance as initial startup.
