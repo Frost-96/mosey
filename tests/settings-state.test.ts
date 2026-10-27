@@ -40,7 +40,20 @@ test("settings protects edits while independently merging IPC results and notifi
     };
     // Control only the IPC boundary: the page, React lifecycle and sandboxed
     // preload remain real. Held responses model transport reordering.
-    await app.evaluate(({ ipcMain, BrowserWindow }, initial) => {
+    await app.evaluate(({ app, ipcMain, BrowserWindow }, initial) => {
+      // Isolate outgoing IPC notifications too, so native focus timing cannot
+      // race the deliberately failed/held initial reads below.
+      app.on("browser-window-created", (_event, window) => {
+        const send = window.webContents.send.bind(window.webContents);
+        Reflect.set(
+          window.webContents,
+          "notifySettingsTest",
+          (next: typeof initial) => send("settings:state", next),
+        );
+        window.webContents.send = (channel, ...args) => {
+          if (channel !== "settings:state") send(channel, ...args);
+        };
+      });
       const calls: { channel: string; value: unknown }[] = [];
       const pending: {
         channel: string;
@@ -52,6 +65,7 @@ test("settings protects edits while independently merging IPC results and notifi
         "settings:preview-size",
         "settings:size",
         "settings:login-launch",
+        "settings:character",
       ]) {
         ipcMain.removeHandler(channel);
         ipcMain.handle(channel, (_event, value: unknown) => {
@@ -84,9 +98,10 @@ test("settings protects edits while independently merging IPC results and notifi
         },
       );
       Reflect.set(globalThis, "notifySettings", (next: typeof initial) => {
-        BrowserWindow.getAllWindows()
-          .find((window) => window.getTitle() === "Mosey 设置")!
-          .webContents.send("settings:state", next);
+        const window = BrowserWindow.getAllWindows().find(
+          (window) => window.getTitle() === "Mosey 设置",
+        )!;
+        Reflect.get(window.webContents, "notifySettingsTest")(next);
       });
     }, initial);
     const settings = await openSettings(app);
@@ -196,6 +211,11 @@ test("settings protects edits while independently merging IPC results and notifi
     expect(await settings.locator(".error").textContent()).toContain(
       "无法确认保存结果",
     );
+    await mkdir("test-results", { recursive: true });
+    await settings.screenshot({
+      fullPage: true,
+      path: `test-results/settings-state-${packaged ? "packaged" : "development"}-transport-error.png`,
+    });
     await settings.getByRole("button", { name: "重试", exact: true }).click();
     await expect.poll(() => count("settings:size")).toBe(5);
     expect(
@@ -258,10 +278,27 @@ test("settings protects edits while independently merging IPC results and notifi
     expect(await settings.locator("main").count()).toBe(0);
     await closeSettings(app);
     const reopened = await openSettings(app);
+    const newReads = (await count("settings:get")) - reads;
+    for (let i = 0; i < newReads; i++)
+      await finish("settings:get", initial, true);
+    await expect
+      .poll(() => reopened.locator(".error").textContent())
+      .toContain("无法读取大小设置");
     await notify({ ...initial, revision: 1014, size: 140 });
     await expect
       .poll(() => reopened.locator("output").textContent())
       .toBe("140");
+    expect(await reopened.locator(".error").isVisible()).toBe(false);
+    await reopened.getByRole("combobox").selectOption("whale");
+    await finish("settings:character", initial, true);
+    await expect
+      .poll(() => reopened.locator("#character-error").textContent())
+      .toContain("无法确认角色切换结果");
+    await notify({ ...initial, revision: 1015, size: 140, character: "whale" });
+    await expect
+      .poll(() => reopened.getByRole("combobox").inputValue())
+      .toBe("whale");
+    expect(await reopened.locator("#character-error").isVisible()).toBe(false);
     await mkdir("test-results", { recursive: true });
     await reopened.screenshot({
       fullPage: true,

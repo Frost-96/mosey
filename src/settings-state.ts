@@ -52,6 +52,7 @@ export function useSettings(bridge: SettingsBridge) {
     let characterOperation = 0;
     let visibilityOperation = 0;
     let sizeError: string | undefined;
+    let sizeReadError: string | undefined;
     let retrySize: number | undefined;
     let characterError: string | undefined;
     let keyboardCommit: ReturnType<typeof setTimeout> | undefined;
@@ -68,7 +69,7 @@ export function useSettings(bridge: SettingsBridge) {
           editSize,
           sizeBusy,
           loginBusy,
-          sizeError,
+          sizeError: sizeError ?? sizeReadError,
           characterError,
         });
     };
@@ -76,6 +77,7 @@ export function useSettings(bridge: SettingsBridge) {
       if (retired) return;
       if ((!region || region === "size") && next.revision >= revisions.size) {
         revisions.size = next.revision;
+        sizeReadError = undefined;
         settings = {
           ...settings,
           size: next.size,
@@ -92,6 +94,7 @@ export function useSettings(bridge: SettingsBridge) {
         next.revision >= revisions.character
       ) {
         revisions.character = next.revision;
+        characterError = undefined;
         settings = {
           ...settings,
           character: next.character,
@@ -175,6 +178,7 @@ export function useSettings(bridge: SettingsBridge) {
     };
     const setCharacter = async (character: Settings["character"]) => {
       const request = ++characterOperation;
+      const startedAtRevision = revisions.character;
       characterError = undefined;
       render();
       try {
@@ -182,7 +186,11 @@ export function useSettings(bridge: SettingsBridge) {
         if (!retired && request === characterOperation)
           receive(next, "character");
       } catch {
-        if (!retired && request === characterOperation) {
+        if (
+          !retired &&
+          request === characterOperation &&
+          revisions.character === startedAtRevision
+        ) {
           characterError = "无法确认角色切换结果，请重新选择。";
           render();
         }
@@ -237,7 +245,7 @@ export function useSettings(bridge: SettingsBridge) {
       .catch((error) => {
         if (retired) return;
         if (revisions.size === -1)
-          sizeError = "无法读取大小设置，请重新打开设置。";
+          sizeReadError = "无法读取大小设置，请重新打开设置。";
         if (revisions.login === -1)
           settings = {
             ...settings,
