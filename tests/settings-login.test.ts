@@ -166,11 +166,9 @@ test("login settings explain availability and follow system approval, failure an
     await expect
       .poll(() => login.getByRole("checkbox").isDisabled())
       .toBe(true);
-    await settings.evaluate(() => {
-      document
-        .querySelector("#login-enabled")!
-        .dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    // Real pointer activation through the label must not submit again while
+    // its checkbox is disabled (React checkbox changes are click-driven).
+    await login.locator("label").click({ force: true });
     expect(
       await app.evaluate(() => Reflect.get(globalThis, "loginPendingCalls")),
     ).toBe(1);
