@@ -12,10 +12,19 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { appendFileSync, mkdirSync } from "node:fs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
 test("manual visibility survives restart, duplicate launches and damaged preferences", async () => {
+  const started = performance.now();
+  const mark = (stage: string) => {
+    mkdirSync("test-results", { recursive: true });
+    appendFileSync(
+      "test-results/visibility-debug.jsonl",
+      JSON.stringify({ stage, elapsed: performance.now() - started }) + "\n",
+    );
+  };
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-visibility-"));
   const profile = path.join(root, "profile");
   let stopForge: (() => Promise<void>) | undefined;
@@ -48,7 +57,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         size: 240,
       }),
     );
+    mark("initial-launch");
     app = await launch();
+    mark("initial-window");
     const pet = await app.firstWindow();
     const visible = () =>
       app!.evaluate(({ BrowserWindow }) =>
@@ -81,7 +92,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       .toBeGreaterThan(5000);
     await expect.poll(visible).toBe(true);
     // Initial Vite dependency optimization may reload the development document.
+    mark("network-idle");
     await pet.waitForLoadState("networkidle");
+    mark("animation");
     const pixels = () =>
       pet.evaluate(() => document.querySelector("canvas")!.toDataURL());
     const idleFrames = new Set<string>();
@@ -121,6 +134,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await expect
       .poll(async () => idleFrames.has(await pixels()), { interval: 30 })
       .toBe(false);
+    mark("hide");
     await invoke("Hide Mosey");
     await expect.poll(visible).toBe(false);
     await new Promise((resolve) => setTimeout(resolve, 150));
@@ -130,6 +144,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const afterHidden = await counts();
     expect(afterHidden).toEqual(stopped);
+    mark("show");
     await invoke("Show Mosey");
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Restoring must remain inactive and return to idle rather than resume the response.
@@ -140,10 +155,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     ).toBe(false);
     await invoke("Hide Mosey");
     await expect.poll(visible).toBe(false);
+    mark("restart-hidden");
     await app.close();
     app = await launch();
     await (await app.firstWindow()).waitForLoadState("load");
     expect(await visible()).toBe(false);
+    mark("duplicate");
     duplicate = spawn(
       app.process().spawnfile,
       [...(packaged ? [] : ["."]), `--user-data-dir=${profile}`],
@@ -171,6 +188,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     expect(await pet.isClosed()).toBe(true);
     await app.close();
     app = undefined;
+    mark("corrupt-primary");
     // A completed backup must survive an interrupted temporary write and a corrupt primary.
     await writeFile(path.join(profile, "preferences.json"), "{broken");
     await writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1');
@@ -191,6 +209,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       visibility: "visible",
       size: 240,
     });
+    mark("failed-commit");
     // A failed atomic commit must keep the recovered hidden intent and menu choice.
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));
@@ -203,6 +222,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await invoke("Show Mosey");
     await app.close();
     app = undefined;
+    mark("both-invalid");
     // If neither primary nor backup validates, defaults leave a visible, usable pet.
     await rm(path.join(profile, "preferences.json"), { recursive: true });
     await writeFile(
@@ -276,9 +296,11 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     }
     throw error;
   } finally {
+    mark("cleanup");
     if (duplicate?.exitCode === null) duplicate.kill();
     await app?.close().catch(() => {});
     await stopForge?.();
     await rm(root, { recursive: true, force: true });
+    mark("done");
   }
 });

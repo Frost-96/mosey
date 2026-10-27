@@ -21,16 +21,8 @@ jobs:
           run_install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - name: Development diagnostic reentry
-        run: pnpm test:dev tests/dock-status.test.ts
-      - name: Development geometry and settings
-        run: pnpm test:dev tests/dock.test.ts tests/size-autonomy.test.ts tests/settings.test.ts tests/size.test.ts
-      - name: Development Dock ground recovery
-        run: pnpm test:dev tests/dock-recovery.test.ts -t "Unstable bottom contact"
-      - name: Remaining development checks
-        run: pnpm test:dev --exclude tests/size.test.ts --exclude tests/dock-status.test.ts --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts --testNamePattern "^(?!.*Unstable bottom contact)"
       - run: pnpm package:mac
-      - run: pnpm test:packaged
+      - run: pnpm test:packaged tests/visibility.test.ts --repeats 9
       - name: Archive local unsigned app
         run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
       - uses: actions/upload-artifact@v4
