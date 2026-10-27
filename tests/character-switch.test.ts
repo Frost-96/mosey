@@ -48,6 +48,23 @@ async function fixture(preferences?: unknown) {
     );
     const pet = await app.firstWindow();
     await pet.locator("canvas").waitFor();
+    // The HTML canvas exists before the renderer's asynchronous atlas decode.
+    // Observe the public presentation even for hidden profiles; only visible
+    // pets must have painted pixels before a scenario can sample or grab them.
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 15000,
+      })
+      .toMatch(/^(鲸鱼娘|柯基) · /);
+    const visible = await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((window) => window.getTitle() === "Mosey")!
+        .isVisible(),
+    );
+    if (visible)
+      await expect
+        .poll(() => paintedCharacter(pet), { timeout: 15000 })
+        .toMatch(/^(whale|corgi)$/);
     return { app, pet };
   };
   return {
