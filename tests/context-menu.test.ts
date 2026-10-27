@@ -19,7 +19,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await mkdir(path.join(root, "profile"), { recursive: true });
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        size: 240,
+        visibility: "visible",
+      }),
     );
     if (!packaged) stopForge = await startForge();
     else

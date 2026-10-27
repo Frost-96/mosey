@@ -67,7 +67,8 @@ test.each([
       await writeFile(
         path.join(root, "preferences.json"),
         JSON.stringify({
-          version: 2,
+          version: 3,
+          character: "corgi",
           visibility: visible ? "hidden" : "visible",
           size: 160,
         }),

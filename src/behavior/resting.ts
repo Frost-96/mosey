@@ -29,6 +29,7 @@ export const petBehavior = setup({
       direction: "left" | "right";
     },
     events: {} as
+      | { type: "CHARACTER"; walkDurationMs: number; paused: boolean }
       | { type: "CLICK" }
       | { type: "CLIMB" }
       | { type: "DROP" }
@@ -90,6 +91,25 @@ export const petBehavior = setup({
   }),
   initial: "paused",
   on: {
+    CHARACTER: [
+      {
+        guard: ({ event }) => event.paused,
+        target: ".paused",
+        actions: [
+          "rest",
+          "wakeCycle",
+          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+        ],
+      },
+      {
+        target: ".resting",
+        actions: [
+          "rest",
+          "wakeCycle",
+          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+        ],
+      },
+    ],
     FACE: { actions: assign(({ event }) => ({ direction: event.direction })) },
     PAUSE: { target: ".paused", actions: "rest" },
     RESUME: { target: ".resting", actions: ["rest", "wakeCycle"] },

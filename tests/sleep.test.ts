@@ -10,7 +10,6 @@ import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
-const characterArguments = whale ? ["--character-sample=whale"] : [];
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const recording =
   whale && process.env.MOSEY_RECORD_SAMPLE === "1"
@@ -34,7 +33,12 @@ test(
       await mkdir(path.join(root, "profile"), { recursive: true });
       await writeFile(
         path.join(root, "profile/preferences.json"),
-        JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+        JSON.stringify({
+          version: 3,
+          character: whale ? "whale" : "corgi",
+          size: 240,
+          visibility: "visible",
+        }),
       );
       if (!packaged) stopForge = await startForge();
       else
@@ -52,15 +56,11 @@ test(
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
               ...recording,
-              args: [...characterArguments, `--user-data-dir=${root}/profile`],
+              args: [`--user-data-dir=${root}/profile`],
             }
           : {
               ...recording,
-              args: [
-                ".",
-                ...characterArguments,
-                `--user-data-dir=${root}/profile`,
-              ],
+              args: [".", `--user-data-dir=${root}/profile`],
             },
       );
       const pet = await app.firstWindow();

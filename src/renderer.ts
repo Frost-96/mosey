@@ -1,4 +1,8 @@
-import { characterAssets, characterDirectory } from "./shared/characters";
+import {
+  characterAssets,
+  characterDirectory,
+  type CharacterId,
+} from "./shared/characters";
 import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
@@ -9,21 +13,44 @@ try {
     import: "default",
     query: "?url",
   });
-  const assets = await Promise.all(
-    characterAssets(initial.character).map(async (atlas) => {
-      const image = new Image();
-      const url =
-        urls[
-          `./assets/generated/${characterDirectory(initial.character)}${atlas.image}`
-        ];
-      if (typeof url !== "string")
-        throw new Error(`Missing ${initial.character} ${atlas.action} image`);
-      image.src = url;
-      await image.decode();
-      if (image.width !== atlas.width || image.height !== atlas.height)
-        throw new Error("Atlas pixels do not match metadata");
-      return { atlas, image };
-    }),
+  const loadAssets = (character: CharacterId) =>
+    Promise.all(
+      characterAssets(character).map(async (atlas) => {
+        const image = new Image();
+        const url =
+          urls[
+            `./assets/generated/${characterDirectory(character)}${atlas.image}`
+          ];
+        if (typeof url !== "string")
+          throw new Error(`Missing ${character} ${atlas.action} image`);
+        image.src = url;
+        await image.decode();
+        if (image.width !== atlas.width || image.height !== atlas.height)
+          throw new Error("Atlas pixels do not match metadata");
+        return { atlas, image };
+      }),
+    );
+  const prepared = new Map<
+    CharacterId,
+    Awaited<ReturnType<typeof loadAssets>>
+  >();
+  let assets = await loadAssets(initial.character);
+  prepared.set(initial.character, assets);
+  let retired = false;
+  const unsubscribePreparation = window.mosey.onPrepareCharacter(
+    async (request) => {
+      try {
+        const candidate =
+          prepared.get(request.character) ??
+          (await loadAssets(request.character));
+        if (retired) return;
+        prepared.set(request.character, candidate);
+        window.mosey.characterPrepared({ ...request, success: true });
+      } catch {
+        if (!retired)
+          window.mosey.characterPrepared({ ...request, success: false });
+      }
+    },
   );
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Pet canvas is absent");
@@ -206,7 +233,36 @@ try {
     if (value.geometryRevision !== presentation.geometryRevision)
       finish("cancel");
     if (value.frozenAt !== undefined) completed = -1;
+    if (value.character !== presentation.character) {
+      const candidate = prepared.get(value.character);
+      if (!candidate)
+        throw new Error("Character was not prepared before commit");
+      assets = candidate;
+      previous = "";
+    }
     presentation = value;
+    const actionNames: Record<Presentation["posture"], string> = {
+      resting: "待机",
+      sleeping: "睡觉",
+      ear: "睡眠回应",
+      waking: "醒来",
+      settling: "入睡",
+      walking: "走路",
+      stretching: "伸展",
+      playing: "玩耍",
+      tilt: "歪头",
+      paw: "回应",
+      belly: "放松",
+      dragging: "拖拽",
+      flutter: "扑腾",
+      falling: "下落",
+      landing: "落地",
+      climbing: "攀爬",
+    };
+    canvas!.setAttribute(
+      "aria-label",
+      `${value.character === "whale" ? "鲸鱼娘" : "柯基"} · ${actionNames[value.posture]}`,
+    );
     cancelDrawing();
     requestDraw();
   }
@@ -217,6 +273,7 @@ try {
   });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
+  window.mosey.assetsReady();
   window.addEventListener("resize", () => synchronize(presentation));
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
@@ -224,7 +281,9 @@ try {
   window.addEventListener(
     "pagehide",
     () => {
+      retired = true;
       finish("cancel");
+      unsubscribePreparation();
       unsubscribe();
       unsubscribeCancellation();
       cancelDrawing();

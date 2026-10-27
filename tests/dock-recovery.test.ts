@@ -139,7 +139,8 @@ setInterval(()=>{
     await writeFile(
       path.join(root, "profile/preferences.json"),
       JSON.stringify({
-        version: 2,
+        version: 3,
+        character: "corgi",
         visibility: initial.startupSilence ? "hidden" : "visible",
         size: 240,
       }),

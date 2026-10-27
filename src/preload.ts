@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from "electron";
 import {
   assetErrorSchema,
+  characterSchema,
+  characterPreparationSchema,
+  characterPreparedSchema,
   inputSchema,
   gestureCancellationSchema,
   channels,
@@ -11,6 +14,23 @@ import {
   type SettingsBridge,
 } from "./shared/contract";
 const bridge: PetBridge = {
+  onPrepareCharacter(listener) {
+    const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {
+      const parsed = characterPreparationSchema.safeParse(value);
+      if (parsed.success) listener(parsed.data);
+    };
+    ipcRenderer.on(channels.prepareCharacter, receive);
+    return () => ipcRenderer.removeListener(channels.prepareCharacter, receive);
+  },
+  characterPrepared(result) {
+    ipcRenderer.send(
+      channels.characterPrepared,
+      characterPreparedSchema.parse(result),
+    );
+  },
+  assetsReady() {
+    ipcRenderer.send(channels.assetsReady);
+  },
   input(event) {
     ipcRenderer.send(channels.input, inputSchema.parse(event));
   },
@@ -43,6 +63,14 @@ const bridge: PetBridge = {
 contextBridge.exposeInMainWorld("mosey", bridge);
 
 const settingsBridge: SettingsBridge = {
+  async setCharacter(character) {
+    return settingsSchema.parse(
+      await ipcRenderer.invoke(
+        channels.setCharacter,
+        characterSchema.parse(character),
+      ),
+    );
+  },
   async get() {
     return settingsSchema.parse(await ipcRenderer.invoke(channels.getSettings));
   },

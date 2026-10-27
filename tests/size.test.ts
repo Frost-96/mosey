@@ -74,6 +74,16 @@ setTimeout(()=>process.exit(0),120000);
 `,
     );
     await chmod(dockHelper, 0o755);
+    await mkdir(path.join(root, "profile"), { recursive: true });
+    await writeFile(
+      path.join(root, "profile/preferences.json"),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        size: 160,
+        visibility: "visible",
+      }),
+    );
     const args = [
       `--user-data-dir=${path.join(root, "profile")}`,
       `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,

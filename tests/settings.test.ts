@@ -236,7 +236,8 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     expect((await petState()).bounds.width).toBe(160);
     expect((await petState()).visible).toBe(false);
     expect(JSON.parse(await readFile(file, "utf8"))).toEqual({
-      version: 2,
+      version: 3,
+      character: "whale",
       size: 160,
       visibility: "hidden",
     });
@@ -358,7 +359,8 @@ test("old presets and hidden intent migrate durably, recover backup and accept n
       await app.close();
       app = undefined;
       expect(JSON.parse(await readFile(file, "utf8"))).toEqual({
-        version: 2,
+        version: 3,
+        character: "whale",
         visibility: "hidden",
         size,
       });

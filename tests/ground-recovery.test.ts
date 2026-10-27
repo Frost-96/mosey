@@ -23,7 +23,12 @@ test.each([
     try {
       await writeFile(
         path.join(root, "preferences.json"),
-        JSON.stringify({ version: 2, size, visibility: "visible" }),
+        JSON.stringify({
+          version: 3,
+          character: "corgi",
+          size,
+          visibility: "visible",
+        }),
       );
       if (!packaged) stop = await startForge();
       else
