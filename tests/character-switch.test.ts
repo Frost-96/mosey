@@ -456,6 +456,7 @@ test("a held and falling pet keeps its old character until landing, then uses th
     ).toBe("corgi");
     // The same directed input now grabs corgi pixels, proving that replacing
     // images also replaced main-process hit geometry without another window.
+    await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
     const next = await pet.evaluate((oldMask) => {
       const canvas = document.querySelector("canvas")!;
       const data = canvas

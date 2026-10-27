@@ -41,7 +41,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await mkdir(profile, { recursive: true });
     await writeFile(
       path.join(profile, "preferences.json"),
-      JSON.stringify({ version: 1, visibility: "visible", size: "large" }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        visibility: "visible",
+        size: 240,
+      }),
     );
     app = await launch();
     const pet = await app.firstWindow();
@@ -182,7 +187,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       ),
     ).toMatchObject({
       version: 3,
-      character: "whale",
+      character: "corgi",
       visibility: "visible",
       size: 240,
     });
