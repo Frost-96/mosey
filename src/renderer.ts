@@ -16,18 +16,25 @@ try {
   const loadAssets = (character: CharacterId) =>
     Promise.all(
       characterAssets(character).map(async (atlas) => {
-        const image = new Image();
-        const url =
-          urls[
-            `./assets/generated/${characterDirectory(character)}${atlas.image}`
-          ];
-        if (typeof url !== "string")
-          throw new Error(`Missing ${character} ${atlas.action} image`);
-        image.src = url;
-        await image.decode();
-        if (image.width !== atlas.width || image.height !== atlas.height)
-          throw new Error("Atlas pixels do not match metadata");
-        return { atlas, image };
+        const loadImage = async (filename: string) => {
+          const image = new Image();
+          const url =
+            urls[
+              `./assets/generated/${characterDirectory(character)}${filename}`
+            ];
+          if (typeof url !== "string")
+            throw new Error(`Missing ${character} ${atlas.action} image`);
+          image.src = url;
+          await image.decode();
+          if (image.width !== atlas.width || image.height !== atlas.height)
+            throw new Error("Atlas pixels do not match metadata");
+          return image;
+        };
+        const [image, leftImage] = await Promise.all([
+          loadImage(atlas.image),
+          atlas.leftImage ? loadImage(atlas.leftImage) : undefined,
+        ]);
+        return { atlas, image, leftImage };
       }),
     );
   const prepared = new Map<
@@ -101,7 +108,7 @@ try {
       throw new Error(
         `Unsupported ${presentation.character} action: ${presentation.posture}`,
       );
-    const { atlas, image } = asset;
+    const { atlas, image, leftImage } = asset;
     const total = atlas.frames.reduce(
       (sum, frame) => sum + frame.durationMs,
       0,
@@ -131,19 +138,23 @@ try {
         const { region, foot } = atlas.frames[index]!;
         context!.clearRect(0, 0, geometry.side, geometry.side);
         context!.save();
-        if (presentation.direction === "left") {
+        const authoredLeft = presentation.direction === "left" && leftImage;
+        if (presentation.direction === "left" && !authoredLeft) {
           context!.translate(geometry.side, 0);
           context!.scale(-1, 1);
         }
+        const width = (region.width / atlas.pixelRatio) * geometry.assetScale;
+        const x =
+          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale;
         context!.drawImage(
-          image,
+          authoredLeft || image,
           region.x,
           region.y,
           region.width,
           region.height,
-          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale,
+          authoredLeft ? geometry.side - x - width : x,
           geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
-          (region.width / atlas.pixelRatio) * geometry.assetScale,
+          width,
           (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
         context!.restore();

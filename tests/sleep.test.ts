@@ -122,10 +122,42 @@ test(
               pet.evaluate(
                 async () => (await window.mosey.getPresentation()).posture,
               ),
-            { timeout: 3500 },
+            { timeout: 5500 },
           )
           .toBe("sleeping");
-        await expect.poll(height).toBeLessThan(160);
+        if (whale) await expect.poll(height).toBeGreaterThan(160);
+        else await expect.poll(height).toBeLessThan(160);
+      };
+      const posture = () =>
+        pet.evaluate(
+          async () => (await window.mosey.getPresentation()).posture,
+        );
+      const waitForVisibleRest = async () => {
+        await expect
+          .poll(() =>
+            pet.evaluate(async () => {
+              const current = await window.mosey.getPresentation();
+              return (
+                !document.hidden &&
+                current.visibility === "visible" &&
+                current.posture === "resting"
+              );
+            }),
+          )
+          .toBe(true);
+      };
+      const assertAsleep = async () => {
+        expect(["sleeping", "ear"]).toContain(await posture());
+        if (whale) expect(await height()).toBeGreaterThan(160);
+        else expect(await height()).toBeLessThan(160);
+      };
+      const assertAwake = async () => {
+        await expect
+          .poll(async () => idleFrames.has(await pixels()), {
+            timeout: 3000,
+            interval: 30,
+          })
+          .toBe(true);
       };
       const idleFrames = new Set<string>();
       const idleUntil = Date.now() + (whale ? 3100 : 2200);
@@ -149,6 +181,7 @@ test(
       });
       await menu("Hide Mosey");
       await menu("Show Mosey");
+      await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
       await app.evaluate(() => {
         const now = Date.now;
@@ -173,6 +206,7 @@ test(
       const enterSleep = async () => {
         await menu("Hide Mosey");
         await menu("Show Mosey");
+        await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
         await app!.evaluate(() => {
@@ -187,13 +221,15 @@ test(
       };
       const sleepingFrames = new Set<string>();
       await new Promise((resolve) => setTimeout(resolve, 350));
-      const sleepingUntil = Date.now() + 2600;
+      const sleepingUntil = Date.now() + (whale ? 6200 : 2600);
+      const sleepingBounds = await bounds();
       while (Date.now() < sleepingUntil) {
         sleepingFrames.add(await pixels());
-        expect(await height()).toBeLessThan(160);
+        await assertAsleep();
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
       expect(sleepingFrames.size).toBeGreaterThan(1);
+      expect(await bounds()).toEqual(sleepingBounds);
       const body = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -216,72 +252,44 @@ test(
         await pet.mouse.click(point.x, point.y);
       };
       await screenshot("breathing");
-      if (whale) {
-        // Synchronize at a newly painted ordinary sleep frame. Its next normal
-        // change is 1000ms away, so a short reaction cannot be a coincident tick.
-        const previous = await pixels();
-        await expect
-          .poll(pixels, { timeout: 1500, interval: 10 })
-          .not.toBe(previous);
-      }
-      const beforeFirstClick = await pixels();
       await click();
       const firstClickAt = Date.now();
-      if (whale) {
-        let previous = beforeFirstClick;
-        let transitions = 0;
-        await expect
-          .poll(
-            async () => {
-              const current = await pixels();
-              if (current !== previous) transitions++;
-              previous = current;
-              return transitions;
-            },
-            { timeout: 300, interval: 10 },
-          )
-          .toBeGreaterThanOrEqual(2);
-      } else {
-        await expect
-          .poll(async () => sleepingFrames.has(await pixels()), {
-            timeout: 300,
-            interval: 20,
-          })
-          .toBe(false);
-      }
-      expect(await height()).toBeLessThan(160);
+      await expect.poll(posture, { timeout: 250, interval: 10 }).toBe("ear");
+      await expect
+        .poll(async () => sleepingFrames.has(await pixels()), {
+          timeout: 300,
+          interval: 10,
+        })
+        .toBe(false);
+      await assertAsleep();
       await click();
       const rapidGap = Date.now() - firstClickAt;
       expect(rapidGap).toBeLessThan(350);
       await new Promise((resolve) => setTimeout(resolve, 250));
       await screenshot("waking");
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // The 500ms ear animation finishes before the 900ms click deadline.
       // Its return to sleeping must still retain the first click.
       await enterSleep();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 650));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 700));
       await screenshot("standing");
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // A click outside the 900ms window is a new first click, never a wake.
       await enterSleep();
       await click();
       await screenshot("ear");
       await new Promise((resolve) => setTimeout(resolve, 1150));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       await click();
       const outsideUntil = Date.now() + 1100;
       while (Date.now() < outsideUntil) {
-        expect(await height()).toBeLessThan(160);
+        await assertAsleep();
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
@@ -328,14 +336,14 @@ test(
       await freezeMenu();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 120));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       const point = await body();
       await pet.mouse.click(point.x, point.y, { button: "right" });
       await expect
         .poll(() => app!.evaluate(() => !!Reflect.get(globalThis, "sleepMenu")))
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 150));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       const frozen = await pixels();
       const stationary = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -354,9 +362,7 @@ test(
       await new Promise((resolve) => setTimeout(resolve, 350));
       await click();
       await freezeMenu();
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // Sleeping and ear feedback both yield immediately to the existing drag.
       for (const source of ["sleep", "ear", "waking"]) {

@@ -74,9 +74,21 @@
       "transparent_background": true,
       "prompt": "Use case: precise-object-edit. Edit this eight-frame transparent whale-girl sprite sheet. Preserve EVERY character pose, face, outfit, body size, hair, tail, grid layout and transparent background exactly. The supine lying-flat-on-her-back sleep is correct. Change ONLY the nose bubbles in the last three frames: make them much SMALLER and subtler. The largest bubble (bottom row third cell) should be only about one fifth of the face width, roughly30px diameter in this1774px-wide sheet, instead of the current oversized balloon. Medium bubble bottom-right about22px diameter. Tiny bubble bottom row second cell about14px diameter. Preserve translucent pale blue fill, blue-white outline, small highlight and a short tapered connection directly to the nose tip. Each bubble originates from the SAME nose position; change radius without moving the attachment point. No bubble should cover an eye or forehead; it should extend upward from nose without obscuring the face. Do not add anything else. Maintain real transparent alpha.",
       "actualDimensions": [1774, 887],
+      "status": "superseded-retained-for-provenance",
+      "date": "2026-10-27",
+      "userChange": "睡觉改为仰面平躺，鼻尖有小泡泡",
+      "supersededBy": "source/sleep-dozing-v1.png"
+    },
+    {
+      "id": "sleep-dozing",
+      "output": "source/sleep-dozing-v1.png",
+      "inputs": ["source/idle-v1.png"],
+      "transparent_background": true,
+      "prompt": "Use case: identity-preserve. Edit the attached approved idle sprite sheet into an eight-frame sleep animation sheet for this exact chibi whale girl desktop pet. Preserve identity exactly: same blue gradient long hair, whale tail, white maid headband, navy-and-white dress with blue whale emblem, same proportions, line art and shading.\nTransparent background. Exactly 4 columns by 2 rows, eight equal-size cells, left to right then top to bottom, with generous transparent gutters and headroom. Same camera and character scale across ALL frames; full character and all bubbles inside each cell. Front three-quarter view matching reference. Character stays upright in a soft drowsy resting pose, NOT lying down.\nFrames 1–4 are a continuous slow falling-asleep transition: 1 eyes open same idle pose; 2 eyelids gently half lowered and head slightly bowed; 3 eyelids nearly closed, head naturally tilted a little downward and shoulders lowering; 4 both eyes fully peacefully closed, head gently bowed and body center of gravity slightly sunk with relaxed softly bent knees. Subtle change only, no dramatic squat or collapse.\nFrames 5–8 maintain this exact peacefully dozing pose, closed eyes and gently bowed head, with very slight relaxed buoyant variations in hair/tail suggesting floating on calm water. Body size and structure remain constant. Above the head appear TWO or THREE small translucent pale blue sleep bubbles containing legible text \"Zzz\", rising gently diagonally upward over these four frames. Bubble sizes small and restrained, fine dark-blue outlines and readable Zzz. Keep all bubbles visible inside cell and clear of character head. No bubble at nose. No water, floor, bed, pillow, scenery, grid lines, frame numbers or captions. Only the character and the requested Zzz sleep bubbles. Do not add exaggerated snoring or open mouth. The sleepy sequence should feel extremely calm and ocean-like.",
+      "actualDimensions": [1774, 887],
       "status": "adopted-for-local-validation",
       "date": "2026-10-27",
-      "userChange": "睡觉改为仰面平躺，鼻尖有小泡泡"
+      "userChange": "双眼缓缓闭合、头自然微垂、重心轻沉打瞌睡，头顶2–3个向上Zzz气泡，极缓上下微浮海洋感；替代仰躺鼻泡"
     }
   ],
   "rejected": [
