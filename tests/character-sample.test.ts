@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
@@ -15,6 +16,7 @@ test("isolated whale paints one character, walks, yields to dragging and returns
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-whale-sample-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  let restoreDockCapture: (() => Promise<void>) | undefined;
   await mkdir("test-results", { recursive: true });
   try {
     await mkdir(path.join(root, "profile"));
@@ -33,6 +35,11 @@ test("isolated whale paints one character, walks, yields to dragging and returns
       `--user-data-dir=${root}/profile`,
       `--force-device-scale-factor=${scaleFactor}`,
     ];
+    restoreDockCapture = await emptyDockCapture(
+      packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+        : path.resolve("build/native/dock-runtime"),
+    );
     app = await electron.launch(
       packaged
         ? {
@@ -287,6 +294,7 @@ test("isolated whale paints one character, walks, yields to dragging and returns
     expect(errors).toEqual([]);
   } finally {
     await app?.close().catch(() => {});
+    await restoreDockCapture?.();
     await stopForge?.();
     await rm(root, { recursive: true, force: true });
   }
