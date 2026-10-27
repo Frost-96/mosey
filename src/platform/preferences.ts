@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { characterSchema } from "../shared/contract";
 import { petSizeSchema, type PetSize } from "../shared/size";
 import {
   closeSync,
@@ -13,7 +14,8 @@ import path from "node:path";
 import log from "electron-log/main";
 
 const schema = z.strictObject({
-  version: z.literal(2),
+  version: z.literal(3),
+  character: characterSchema,
   visibility: z.enum(["visible", "hidden"]),
   size: petSizeSchema.default(160),
 });
@@ -29,17 +31,24 @@ export class PreferencesStore {
     this.file = path.join(directory, "preferences.json");
     this.value = this.read(this.file) ??
       this.read(`${this.file}.bak`) ?? {
-        version: 2,
+        version: 3,
+        character: "whale",
         visibility: "visible",
         size: 160,
       };
     if (this.migrationNeeded) this.save(this.value, "migration");
+  }
+  get character() {
+    return this.value.character;
   }
   get visibility() {
     return this.value.visibility;
   }
   get size() {
     return this.value.size;
+  }
+  setCharacter(character: Preferences["character"]): boolean {
+    return this.save({ ...this.value, character }, "character");
   }
   setSize(size: PetSize): boolean {
     return this.save({ ...this.value, size }, "size");
@@ -57,10 +66,22 @@ export class PreferencesStore {
       if (legacy.success) {
         this.migrationNeeded = true;
         return {
-          version: 2,
+          version: 3,
+          character: "whale",
           visibility: legacy.data.visibility,
           size: { small: 70, medium: 160, large: 240 }[legacy.data.size],
         };
+      }
+      const previous = z
+        .strictObject({
+          version: z.literal(2),
+          visibility: z.enum(["visible", "hidden"]),
+          size: petSizeSchema.default(160),
+        })
+        .safeParse(raw);
+      if (previous.success) {
+        this.migrationNeeded = true;
+        return { ...previous.data, version: 3, character: "whale" };
       }
       return schema.parse(raw);
     } catch (error) {

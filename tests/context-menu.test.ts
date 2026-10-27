@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -15,11 +16,17 @@ test("body secondary clicks open a native menu and cancel without changing the p
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-menu-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  let restoreDock: (() => Promise<void>) | undefined;
   try {
     await mkdir(path.join(root, "profile"), { recursive: true });
     await writeFile(
       path.join(root, "profile/preferences.json"),
-      JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        size: 240,
+        visibility: "visible",
+      }),
     );
     if (!packaged) stopForge = await startForge();
     else
@@ -27,6 +34,11 @@ test("body secondary clicks open a native menu and cancel without changing the p
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    restoreDock = await emptyDockCapture(
+      packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+        : path.resolve("build/native/dock-runtime"),
+    );
     app = await electron.launch(
       packaged
         ? {
@@ -652,6 +664,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
       ?.evaluate(() => Reflect.get(globalThis, "menus")?.at(-1)?.closePopup())
       .catch(() => {});
     await app?.close().catch(() => {});
+    await restoreDock?.();
     await stopForge?.();
     await rm(root, { recursive: true, force: true });
   }

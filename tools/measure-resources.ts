@@ -1,10 +1,18 @@
 import { _electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { fileURLToPath } from "node:url";
 
 // Opt-in observation of the shipped app. No thresholds, fake clocks, native
 // substitutes, or product hooks. Playwright input is not physical input evidence.
@@ -31,7 +39,9 @@ const bundle = path.resolve(values.app);
 const output = path.resolve(
   values.output ?? `test-results/resources-${Date.now()}`,
 );
-await mkdir(output, { recursive: true });
+await mkdir(path.dirname(output), { recursive: true });
+// A run is evidence for one artifact; never silently replace an earlier report.
+await mkdir(output);
 const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-resources-"));
 const command = (file: string, args: string[]) =>
   execFileSync(file, args, { encoding: "utf8" }).trim();
@@ -74,15 +84,19 @@ function processTree(root: number) {
 interface Sample {
   phase: string;
   elapsedSeconds: number;
+  phaseElapsedSeconds: number;
   intervalSeconds: number;
   posture: string;
   actionId: number;
   stablePosture: boolean;
   visibility: string;
   dockStatus: string | undefined;
+  stableDockStatus: boolean;
   cpuPercentOneCore: number;
   rssMiB: number;
-  processes: ReturnType<typeof processTree>;
+  processes: (ReturnType<typeof processTree>[number] & {
+    cpuSecondsDelta: number;
+  })[];
   drawing: { count: number; gapsMs: number[]; inputToDrawMs: number[] };
 }
 const samples: Sample[] = [];
@@ -109,6 +123,37 @@ function summarize(group: Sample[]) {
     rssMiBMax: group.length
       ? Math.max(...group.map((sample) => sample.rssMiB))
       : null,
+    byExecutable: Object.fromEntries(
+      [
+        ...new Set(
+          group.flatMap((sample) => sample.processes.map((p) => p.executable)),
+        ),
+      ].map((executable) => {
+        const processes = group.flatMap((sample) =>
+          sample.processes.filter((p) => p.executable === executable),
+        );
+        return [
+          executable,
+          {
+            observedPids: [...new Set(processes.map((p) => p.pid))],
+            cpuPercentOneCoreMean: elapsed
+              ? (processes.reduce((sum, p) => sum + p.cpuSecondsDelta, 0) /
+                  elapsed) *
+                100
+              : null,
+            rssMiBMax: Math.max(
+              0,
+              ...group.map(
+                (sample) =>
+                  sample.processes
+                    .filter((p) => p.executable === executable)
+                    .reduce((sum, p) => sum + p.rssKiB, 0) / 1024,
+              ),
+            ),
+          },
+        ];
+      }),
+    ),
     inputSamples: latency.length,
     inputToDrawMsP95: latency.length
       ? latency[Math.ceil(latency.length * 0.95) - 1]
@@ -119,6 +164,8 @@ function summarize(group: Sample[]) {
   };
 }
 const report: Record<string, unknown> = {
+  schemaVersion: 2,
+  completed: false,
   startedAt: new Date().toISOString(),
   parameters: { seconds, growthSeconds, bundle },
   budget: "pending user confirmation",
@@ -135,7 +182,8 @@ const report: Record<string, unknown> = {
     posture:
       "Posture summaries include only intervals whose action ID and visibility stayed unchanged at both endpoints; phase summaries include transitions.",
     growth:
-      "Undisturbed visible session after other phases; reports endpoints only, not proof of a leak or long-term stability.",
+      "Undisturbed visible session after other phases, summarized in 60-second buckets. Samples are assigned by interval end; a bucket may be partial. RSS changes do not prove a leak or long-term stability.",
+    dock: "Dock status sampled from the application menu. Group only intervals with matching endpoint statuses; unseen transitions are possible. Active-status samples are not visual contour or physical Dock acceptance.",
   },
   energy: {
     status: "not measured",
@@ -149,8 +197,20 @@ const report: Record<string, unknown> = {
   },
   samples,
 };
+async function saveReport() {
+  const file = path.join(output, "resources.json");
+  // An interrupted write must leave the previous complete checkpoint readable.
+  await writeFile(`${file}.tmp`, JSON.stringify(report, null, 2) + "\n");
+  await rename(`${file}.tmp`, file);
+}
 let app: ElectronApplication | undefined;
 try {
+  report.measurementTool = {
+    sourceSHA256: await digest(fileURLToPath(import.meta.url)),
+    node: process.versions.node,
+    // These identify the measurement environment, not the packaged app's source.
+    dependencyLockSHA256: await digest(path.resolve("pnpm-lock.yaml")),
+  };
   report.artifact = {
     asarSHA256: await digest(path.join(bundle, "Contents/Resources/app.asar")),
     nativeSHA256: await digest(
@@ -205,6 +265,9 @@ try {
         displayFrequency,
       })),
   }));
+  report.initialPresentation = await pet.evaluate(() =>
+    window.mosey.getPresentation(),
+  );
   await pet.evaluate(() => {
     const probe = {
       count: 0,
@@ -247,6 +310,12 @@ try {
       item.click();
     }, label);
   const started = performance.now();
+  const dockStatus = () =>
+    app!.evaluate(
+      ({ Menu }) =>
+        Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
+          ?.label,
+    );
   let previousAt = started;
   let previous = processTree(pid);
   for (const [phase, duration] of [
@@ -284,7 +353,9 @@ try {
     previousAt = performance.now();
     let previousPresentation: { actionId: number; visibility: string } =
       await pet.evaluate(() => window.mosey.getPresentation());
+    let previousDockStatus = await dockStatus();
     const phaseStarted = performance.now();
+    let nextCheckpoint = phaseStarted + 30000;
     let step = 0;
     while (performance.now() - phaseStarted < duration * 1000) {
       if (phase === "interaction" && step % 2 === 0)
@@ -292,16 +363,17 @@ try {
       if (phase === "dragging") await pet.mouse.move(step % 2 ? 85 : 75, 80);
       await pause(1000);
       const at = performance.now();
-      const processes = processTree(pid);
+      const processes = processTree(pid).map((row) => ({
+        ...row,
+        cpuSecondsDelta: Math.max(
+          0,
+          row.cpuSeconds -
+            (previous.find((old) => old.pid === row.pid)?.cpuSeconds ?? 0),
+        ),
+      }));
       const intervalSeconds = (at - previousAt) / 1000;
       const cpuDelta = processes.reduce(
-        (sum, row) =>
-          sum +
-          Math.max(
-            0,
-            row.cpuSeconds -
-              (previous.find((old) => old.pid === row.pid)?.cpuSeconds ?? 0),
-          ),
+        (sum, row) => sum + row.cpuSecondsDelta,
         0,
       );
       const state = await pet.evaluate(async () => {
@@ -326,19 +398,18 @@ try {
         );
       if (phase === "hidden" && state.visibility !== "hidden")
         throw new Error("Hidden sample became visible");
+      const currentDockStatus = await dockStatus();
       samples.push({
         phase,
         elapsedSeconds: (at - started) / 1000,
+        phaseElapsedSeconds: (at - phaseStarted) / 1000,
         intervalSeconds,
         ...state,
         stablePosture:
           state.actionId === previousPresentation.actionId &&
           state.visibility === previousPresentation.visibility,
-        dockStatus: await app.evaluate(
-          ({ Menu }) =>
-            Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
-              ?.label,
-        ),
+        dockStatus: currentDockStatus,
+        stableDockStatus: currentDockStatus === previousDockStatus,
         cpuPercentOneCore: (cpuDelta / intervalSeconds) * 100,
         rssMiB: processes.reduce((sum, row) => sum + row.rssKiB, 0) / 1024,
         processes,
@@ -346,12 +417,17 @@ try {
       previous = processes;
       previousAt = at;
       previousPresentation = state;
+      previousDockStatus = currentDockStatus;
       step++;
+      if (at >= nextCheckpoint) {
+        await saveReport();
+        console.log(
+          `Resource checkpoint: ${phase}, ${Math.round((at - phaseStarted) / 1000)}s`,
+        );
+        nextCheckpoint = at + 30000;
+      }
     }
-    await writeFile(
-      path.join(output, "resources.json"),
-      JSON.stringify(report, null, 2) + "\n",
-    );
+    await saveReport();
   }
   const knownPids = new Set(
     samples.flatMap((sample) => sample.processes.map((row) => row.pid)),
@@ -395,6 +471,48 @@ try {
       summarize(samples.filter((sample) => sample.phase === phase)),
     ]),
   );
+  const stableDockSamples = samples.filter((sample) => sample.stableDockStatus);
+  report.byDockStatus = Object.fromEntries(
+    [
+      ...new Set(
+        stableDockSamples.map((sample) => sample.dockStatus ?? "Unknown"),
+      ),
+    ].map((status) => [
+      status,
+      summarize(
+        stableDockSamples.filter(
+          (sample) => (sample.dockStatus ?? "Unknown") === status,
+        ),
+      ),
+    ]),
+  );
+  const activeDockSamples = stableDockSamples.filter(
+    (sample) => sample.dockStatus === "Dock interaction active",
+  );
+  report.dockCoverage = {
+    activeStatusSamples: activeDockSamples.length,
+    activeStatusSeconds: activeDockSamples.reduce(
+      (sum, sample) => sum + sample.intervalSeconds,
+      0,
+    ),
+    conclusion: activeDockSamples.length
+      ? "Active capture status observed; visual geometry and sustained capture still require separate evidence."
+      : "No stable active-capture interval observed; this run does not measure the cost of working Dock interaction.",
+  };
+  const growth = samples.filter((sample) => sample.phase === "growth");
+  report.growthWindows = [
+    ...new Set(
+      growth.map((sample) => Math.floor(sample.phaseElapsedSeconds / 60)),
+    ),
+  ].map((minute) => ({
+    fromSeconds: minute * 60,
+    toSeconds: (minute + 1) * 60,
+    ...summarize(
+      growth.filter(
+        (sample) => Math.floor(sample.phaseElapsedSeconds / 60) === minute,
+      ),
+    ),
+  }));
   const stableSamples = samples.filter((sample) => sample.stablePosture);
   report.byPosture = Object.fromEntries(
     [
@@ -410,10 +528,7 @@ try {
       ),
     ]),
   );
-  await writeFile(
-    path.join(output, "resources.json"),
-    JSON.stringify(report, null, 2) + "\n",
-  );
+  await saveReport();
   await rm(profile, { recursive: true, force: true });
   console.log(path.join(output, "resources.json"));
 }

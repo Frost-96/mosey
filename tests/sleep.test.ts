@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -8,6 +9,18 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
+const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
+const recording =
+  whale && process.env.MOSEY_RECORD_SAMPLE === "1"
+    ? {
+        recordVideo: {
+          dir: "test-results/whale-sleep-video",
+          size: { width: 240, height: 240 },
+          fps: 60,
+        },
+      }
+    : {};
 test(
   "sleep preserves the two-click window, drag priority and lifecycle cancellation",
   { timeout: 120000 },
@@ -15,11 +28,17 @@ test(
     const root = await mkdtemp(path.join(os.tmpdir(), "mosey-sleep-"));
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
+    let restoreDockCapture: (() => Promise<void>) | undefined;
     try {
       await mkdir(path.join(root, "profile"), { recursive: true });
       await writeFile(
         path.join(root, "profile/preferences.json"),
-        JSON.stringify({ version: 2, size: 240, visibility: "visible" }),
+        JSON.stringify({
+          version: 3,
+          character: whale ? "whale" : "corgi",
+          size: 240,
+          visibility: "visible",
+        }),
       );
       if (!packaged) stopForge = await startForge();
       else
@@ -27,16 +46,47 @@ test(
           path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
           path.join(root, "Mosey.app"),
         ]);
+      restoreDockCapture = await emptyDockCapture(
+        packaged
+          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+          : path.resolve("build/native/dock-runtime"),
+      );
       app = await electron.launch(
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+              ...recording,
               args: [`--user-data-dir=${root}/profile`],
             }
-          : { args: [".", `--user-data-dir=${root}/profile`] },
+          : {
+              ...recording,
+              args: [".", `--user-data-dir=${root}/profile`],
+            },
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
+      const menu = (label: "Hide Mosey" | "Show Mosey") =>
+        app!.evaluate(async ({ Menu, BrowserWindow }, label) => {
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          const event = label === "Hide Mosey" ? "hide" : "show";
+          await new Promise<void>((resolve, reject) => {
+            const settled = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+            const timer = setTimeout(() => {
+              if (event === "hide") pet.removeListener("hide", settled);
+              else pet.removeListener("show", settled);
+              reject(new Error(`No public ${event} event after ${label}`));
+            }, 5000);
+            if (event === "hide") pet.once("hide", settled);
+            else pet.once("show", settled);
+            Menu.getApplicationMenu()!
+              .items.find((item) => item.label === "Mosey")!
+              .submenu!.items.find((item) => item.label === label)!
+              .click();
+          });
+        }, label);
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -72,13 +122,45 @@ test(
               pet.evaluate(
                 async () => (await window.mosey.getPresentation()).posture,
               ),
-            { timeout: 3500 },
+            { timeout: 5500 },
           )
           .toBe("sleeping");
-        await expect.poll(height).toBeLessThan(160);
+        if (whale) await expect.poll(height).toBeGreaterThan(160);
+        else await expect.poll(height).toBeLessThan(160);
+      };
+      const posture = () =>
+        pet.evaluate(
+          async () => (await window.mosey.getPresentation()).posture,
+        );
+      const waitForVisibleRest = async () => {
+        await expect
+          .poll(() =>
+            pet.evaluate(async () => {
+              const current = await window.mosey.getPresentation();
+              return (
+                !document.hidden &&
+                current.visibility === "visible" &&
+                current.posture === "resting"
+              );
+            }),
+          )
+          .toBe(true);
+      };
+      const assertAsleep = async () => {
+        expect(["sleeping", "ear"]).toContain(await posture());
+        if (whale) expect(await height()).toBeGreaterThan(160);
+        else expect(await height()).toBeLessThan(160);
+      };
+      const assertAwake = async () => {
+        await expect
+          .poll(async () => idleFrames.has(await pixels()), {
+            timeout: 3000,
+            interval: 30,
+          })
+          .toBe(true);
       };
       const idleFrames = new Set<string>();
-      const idleUntil = Date.now() + 2200;
+      const idleUntil = Date.now() + (whale ? 3100 : 2200);
       while (Date.now() < idleUntil) {
         idleFrames.add(await pixels());
         await new Promise((resolve) => setTimeout(resolve, 80));
@@ -97,16 +179,9 @@ test(
             ...args,
           )) as typeof setTimeout;
       });
-      await app.evaluate(({ Menu }) => {
-        const submenu = Menu.getApplicationMenu()!.items.find(
-          (i) => i.label === "Mosey",
-        )!.submenu!;
-        submenu.items.find((i) => i.label === "Hide Mosey")!.click();
-        Menu.getApplicationMenu()!
-          .items.find((i) => i.label === "Mosey")!
-          .submenu!.items.find((i) => i.label === "Show Mosey")!
-          .click();
-      });
+      await menu("Hide Mosey");
+      await menu("Show Mosey");
+      await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
       await app.evaluate(() => {
         const now = Date.now;
@@ -117,7 +192,7 @@ test(
         Date.now = () => now() + 180000;
       });
       await waitForSleep();
-      const mode = packaged ? "packaged" : "development";
+      const mode = evidence;
       await mkdir("test-results", { recursive: true });
       const screenshot = (name: string) =>
         pet.screenshot({
@@ -128,18 +203,10 @@ test(
         app!.evaluate(({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()[0]!.getBounds(),
         );
-      const menu = (label: string) =>
-        app!.evaluate(
-          ({ Menu }, label) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => i.label === label)!
-              .click(),
-          label,
-        );
       const enterSleep = async () => {
         await menu("Hide Mosey");
         await menu("Show Mosey");
+        await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
         await app!.evaluate(() => {
@@ -154,13 +221,15 @@ test(
       };
       const sleepingFrames = new Set<string>();
       await new Promise((resolve) => setTimeout(resolve, 350));
-      const sleepingUntil = Date.now() + 2600;
+      const sleepingUntil = Date.now() + (whale ? 6200 : 2600);
+      const sleepingBounds = await bounds();
       while (Date.now() < sleepingUntil) {
         sleepingFrames.add(await pixels());
-        expect(await height()).toBeLessThan(160);
+        await assertAsleep();
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
       expect(sleepingFrames.size).toBeGreaterThan(1);
+      expect(await bounds()).toEqual(sleepingBounds);
       const body = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -185,45 +254,42 @@ test(
       await screenshot("breathing");
       await click();
       const firstClickAt = Date.now();
+      await expect.poll(posture, { timeout: 250, interval: 10 }).toBe("ear");
       await expect
         .poll(async () => sleepingFrames.has(await pixels()), {
           timeout: 300,
-          interval: 20,
+          interval: 10,
         })
         .toBe(false);
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       await click();
       const rapidGap = Date.now() - firstClickAt;
       expect(rapidGap).toBeLessThan(350);
       await new Promise((resolve) => setTimeout(resolve, 250));
       await screenshot("waking");
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // The 500ms ear animation finishes before the 900ms click deadline.
       // Its return to sleeping must still retain the first click.
       await enterSleep();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 650));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 700));
       await screenshot("standing");
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // A click outside the 900ms window is a new first click, never a wake.
       await enterSleep();
       await click();
       await screenshot("ear");
       await new Promise((resolve) => setTimeout(resolve, 1150));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       await click();
       const outsideUntil = Date.now() + 1100;
       while (Date.now() < outsideUntil) {
-        expect(await height()).toBeLessThan(160);
+        await assertAsleep();
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
@@ -270,14 +336,14 @@ test(
       await freezeMenu();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 120));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       const point = await body();
       await pet.mouse.click(point.x, point.y, { button: "right" });
       await expect
         .poll(() => app!.evaluate(() => !!Reflect.get(globalThis, "sleepMenu")))
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 150));
-      expect(await height()).toBeLessThan(160);
+      await assertAsleep();
       const frozen = await pixels();
       const stationary = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -296,9 +362,7 @@ test(
       await new Promise((resolve) => setTimeout(resolve, 350));
       await click();
       await freezeMenu();
-      await expect
-        .poll(height, { timeout: 2500, interval: 30 })
-        .toBeGreaterThan(180);
+      await assertAwake();
 
       // Sleeping and ear feedback both yield immediately to the existing drag.
       for (const source of ["sleep", "ear", "waking"]) {
@@ -395,12 +459,13 @@ test(
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-sleep.png`,
+          path: `test-results/failure-${evidence}-sleep.png`,
         })
         .catch(() => {});
       throw error;
     } finally {
       await app?.close().catch(() => {});
+      await restoreDockCapture?.();
       await stopForge?.();
       await rm(root, { recursive: true, force: true });
     }

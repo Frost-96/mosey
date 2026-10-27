@@ -16,7 +16,12 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await mkdir(profile, { recursive: true });
     await writeFile(
       path.join(profile, "preferences.json"),
-      JSON.stringify({ version: 2, size: 160, visibility: "visible" }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        size: 160,
+        visibility: "visible",
+      }),
     );
     if (!packaged) stop = await startForge();
     else

@@ -41,7 +41,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     await mkdir(profile, { recursive: true });
     await writeFile(
       path.join(profile, "preferences.json"),
-      JSON.stringify({ version: 1, visibility: "visible", size: "large" }),
+      JSON.stringify({
+        version: 3,
+        character: "corgi",
+        visibility: "visible",
+        size: 240,
+      }),
     );
     app = await launch();
     const pet = await app.firstWindow();
@@ -180,7 +185,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       JSON.parse(
         await readFile(path.join(profile, "preferences.json"), "utf8"),
       ),
-    ).toMatchObject({ version: 2, visibility: "visible", size: 240 });
+    ).toMatchObject({
+      version: 3,
+      character: "corgi",
+      visibility: "visible",
+      size: 240,
+    });
     // A failed atomic commit must keep the recovered hidden intent and menu choice.
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));

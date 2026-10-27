@@ -1,0 +1,15 @@
+{
+  "source/idle-v1.png": "104365025f3210509c39ae071e76b6f9e57d14b5f61ad1632db22948534fe78a",
+  "source/walk-v2.png": "44483eb2f38852b2cd8eee05ec1d16b33da781b6e4b11611adca6791ab26ced4",
+  "reference/idle-hd.png": "53211da703bb0376a5d387e3318aa86b3e6ac3c8b4551b0c272b9e3715ee45d2",
+  "reference/walk-hd.png": "36344b9af9d9c5bd63063805a6ba4f609b470b072ab95a53767161633684f9aa",
+  "reference/wave-hd.png": "773b47f02f371ec2ccc9d0e4ab9ad1b2dcc53a7fbdb5cad5e95140d6a0d9dd47",
+  "source/ground-v1.png": "363f2fa910a5375cc4fac8744817587081448e4130a8b42f5a0d5f041efa55b1",
+  "source/leisure-v1.png": "9a1a52c6ac5e2422efb2ab37e9c39fc6de65fc6af477ebd06cd7445d307bd729",
+  "source/motion-v1.png": "559c1ea02680224587c15349dacf9b24957169eab74f141f5c0746bb3ea0d565",
+  "source/reactions-v2.png": "71712928b50c0ed008379f35d30efbe39b76ddfbc0740fcb1904f8f59232a11c",
+  "source/sleep-v1.png": "0b224389f53d1f3b6c1491f3d501bf397cedb0b65ec822969fe7aabecc6605f1",
+  "source/sleep-supine-v1.png": "c739edcacbca30fcdd29c65e47aa4f36a6af916595afcea5d903777509bdb67f",
+  "source/sleep-supine-v2.png": "255ae45daeac7cc7df248419fad321ab441202009b76983eaffe12ebf19f82a0",
+  "source/sleep-dozing-v1.png": "f54732bf13fe57d68eb0327bd97cf29ea89eeef5195dab5d7a0c5f35389e65ee"
+}

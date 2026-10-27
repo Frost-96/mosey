@@ -1,67 +1,63 @@
-import climbingUrl from "./assets/generated/climbing-atlas.png";
-import climbing from "./assets/generated/climbing-atlas.json";
-import settlingUrl from "./assets/generated/settling-atlas.png";
-import settling from "./assets/generated/settling-atlas.json";
-import wakingUrl from "./assets/generated/waking-atlas.png";
-import waking from "./assets/generated/waking-atlas.json";
-import earUrl from "./assets/generated/ear-atlas.png";
-import ear from "./assets/generated/ear-atlas.json";
-import sleepingUrl from "./assets/generated/sleeping-atlas.png";
-import sleeping from "./assets/generated/sleeping-atlas.json";
-import walkingUrl from "./assets/generated/walking-atlas.png";
-import walking from "./assets/generated/walking-atlas.json";
-import stretchingUrl from "./assets/generated/stretching-atlas.png";
-import stretching from "./assets/generated/stretching-atlas.json";
-import playingUrl from "./assets/generated/playing-atlas.png";
-import playing from "./assets/generated/playing-atlas.json";
-import idleUrl from "./assets/generated/idle-atlas.png";
-import tiltUrl from "./assets/generated/tilt-atlas.png";
-import pawUrl from "./assets/generated/paw-atlas.png";
-import bellyUrl from "./assets/generated/belly-atlas.png";
-import idle from "./assets/generated/idle-atlas.json";
-import tilt from "./assets/generated/tilt-atlas.json";
-import paw from "./assets/generated/paw-atlas.json";
-import belly from "./assets/generated/belly-atlas.json";
-import draggingUrl from "./assets/generated/dragging-atlas.png";
-import dragging from "./assets/generated/dragging-atlas.json";
-import flutterUrl from "./assets/generated/flutter-atlas.png";
-import flutter from "./assets/generated/flutter-atlas.json";
-import fallingUrl from "./assets/generated/falling-atlas.png";
-import falling from "./assets/generated/falling-atlas.json";
-import landingUrl from "./assets/generated/landing-atlas.png";
-import landing from "./assets/generated/landing-atlas.json";
-import { atlasSchema } from "./shared/assets";
+import {
+  characterAssets,
+  characterDirectory,
+  type CharacterId,
+} from "./shared/characters";
 import { petGeometry } from "./shared/size";
 import type { Presentation } from "./shared/contract";
 
 try {
-  const assets = await Promise.all(
-    [
-      [idle, idleUrl],
-      [climbing, climbingUrl],
-      [sleeping, sleepingUrl],
-      [settling, settlingUrl],
-      [waking, wakingUrl],
-      [ear, earUrl],
-      [walking, walkingUrl],
-      [stretching, stretchingUrl],
-      [playing, playingUrl],
-      [tilt, tiltUrl],
-      [paw, pawUrl],
-      [belly, bellyUrl],
-      [dragging, draggingUrl],
-      [flutter, flutterUrl],
-      [falling, fallingUrl],
-      [landing, landingUrl],
-    ].map(async ([metadata, url]) => {
-      const atlas = atlasSchema.parse(metadata);
-      const image = new Image();
-      image.src = String(url);
-      await image.decode();
-      if (image.width !== atlas.width || image.height !== atlas.height)
-        throw new Error("Atlas pixels do not match metadata");
-      return { atlas, image };
-    }),
+  const initial = await window.mosey.getPresentation();
+  const urls = import.meta.glob("./assets/generated/**/*.png", {
+    eager: true,
+    import: "default",
+    query: "?url",
+  });
+  const loadAssets = (character: CharacterId) =>
+    Promise.all(
+      characterAssets(character).map(async (atlas) => {
+        const loadImage = async (filename: string) => {
+          const image = new Image();
+          const url =
+            urls[
+              `./assets/generated/${characterDirectory(character)}${filename}`
+            ];
+          if (typeof url !== "string")
+            throw new Error(`Missing ${character} ${atlas.action} image`);
+          image.src = url;
+          await image.decode();
+          if (image.width !== atlas.width || image.height !== atlas.height)
+            throw new Error("Atlas pixels do not match metadata");
+          return image;
+        };
+        const [image, leftImage] = await Promise.all([
+          loadImage(atlas.image),
+          atlas.leftImage ? loadImage(atlas.leftImage) : undefined,
+        ]);
+        return { atlas, image, leftImage };
+      }),
+    );
+  const prepared = new Map<
+    CharacterId,
+    Awaited<ReturnType<typeof loadAssets>>
+  >();
+  let assets = await loadAssets(initial.character);
+  prepared.set(initial.character, assets);
+  let retired = false;
+  const unsubscribePreparation = window.mosey.onPrepareCharacter(
+    async (request) => {
+      try {
+        const candidate =
+          prepared.get(request.character) ??
+          (await loadAssets(request.character));
+        if (retired) return;
+        prepared.set(request.character, candidate);
+        window.mosey.characterPrepared({ ...request, success: true });
+      } catch {
+        if (!retired)
+          window.mosey.characterPrepared({ ...request, success: false });
+      }
+    },
   );
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Pet canvas is absent");
@@ -71,15 +67,7 @@ try {
     frameRequest = 0,
     frameTimer = 0,
     completed = -1;
-  let presentation: Presentation = {
-    size: 160,
-    geometryRevision: 0,
-    posture: "resting",
-    direction: "right",
-    visibility: "hidden",
-    actionId: 0,
-    startedAt: Date.now(),
-  };
+  let presentation: Presentation = initial;
   function cancelDrawing() {
     clearTimeout(frameTimer);
     cancelAnimationFrame(frameRequest);
@@ -113,9 +101,14 @@ try {
       context!.setTransform(ratio, 0, 0, ratio, 0, 0);
       previous = "";
     }
-    const { atlas, image } = assets.find(
+    const asset = assets.find(
       (asset) => asset.atlas.action === presentation.posture,
-    )!;
+    );
+    if (!asset)
+      throw new Error(
+        `Unsupported ${presentation.character} action: ${presentation.posture}`,
+      );
+    const { atlas, image, leftImage } = asset;
     const total = atlas.frames.reduce(
       (sum, frame) => sum + frame.durationMs,
       0,
@@ -145,19 +138,23 @@ try {
         const { region, foot } = atlas.frames[index]!;
         context!.clearRect(0, 0, geometry.side, geometry.side);
         context!.save();
-        if (presentation.direction === "left") {
+        const authoredLeft = presentation.direction === "left" && leftImage;
+        if (presentation.direction === "left" && !authoredLeft) {
           context!.translate(geometry.side, 0);
           context!.scale(-1, 1);
         }
+        const width = (region.width / atlas.pixelRatio) * geometry.assetScale;
+        const x =
+          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale;
         context!.drawImage(
-          image,
+          authoredLeft || image,
           region.x,
           region.y,
           region.width,
           region.height,
-          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale,
+          authoredLeft ? geometry.side - x - width : x,
           geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
-          (region.width / atlas.pixelRatio) * geometry.assetScale,
+          width,
           (region.height / atlas.pixelRatio) * geometry.assetScale,
         );
         context!.restore();
@@ -247,7 +244,36 @@ try {
     if (value.geometryRevision !== presentation.geometryRevision)
       finish("cancel");
     if (value.frozenAt !== undefined) completed = -1;
+    if (value.character !== presentation.character) {
+      const candidate = prepared.get(value.character);
+      if (!candidate)
+        throw new Error("Character was not prepared before commit");
+      assets = candidate;
+      previous = "";
+    }
     presentation = value;
+    const actionNames: Record<Presentation["posture"], string> = {
+      resting: "待机",
+      sleeping: "睡觉",
+      ear: "睡眠回应",
+      waking: "醒来",
+      settling: "入睡",
+      walking: "走路",
+      stretching: "伸展",
+      playing: "玩耍",
+      tilt: "歪头",
+      paw: "回应",
+      belly: "放松",
+      dragging: "拖拽",
+      flutter: "扑腾",
+      falling: "下落",
+      landing: "落地",
+      climbing: "攀爬",
+    };
+    canvas!.setAttribute(
+      "aria-label",
+      `${value.character === "whale" ? "鲸鱼娘" : "柯基"} · ${actionNames[value.posture]}`,
+    );
     cancelDrawing();
     requestDraw();
   }
@@ -258,6 +284,7 @@ try {
   });
   const unsubscribe = window.mosey.onPresentation(synchronize);
   synchronize(await window.mosey.getPresentation());
+  window.mosey.assetsReady();
   window.addEventListener("resize", () => synchronize(presentation));
   document.addEventListener("visibilitychange", () =>
     synchronize(presentation),
@@ -265,7 +292,9 @@ try {
   window.addEventListener(
     "pagehide",
     () => {
+      retired = true;
       finish("cancel");
+      unsubscribePreparation();
       unsubscribe();
       unsubscribeCancellation();
       cancelDrawing();

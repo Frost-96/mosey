@@ -9,6 +9,7 @@ export default tseslint.config(
       "out/**",
       "test-results/**",
       "build/**",
+      "release/**",
     ],
   },
   js.configs.recommended,

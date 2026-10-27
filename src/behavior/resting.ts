@@ -13,9 +13,13 @@ export const autonomy = {
 };
 export const petBehavior = setup({
   types: {
-    input: {} as { now: () => number },
+    input: {} as {
+      now: () => number;
+      walkDurationMs?: number;
+    },
     context: {} as {
       now: () => number;
+      walkDurationMs: number;
       actionId: number;
       startedAt: number;
       lastClickAt: number;
@@ -25,6 +29,7 @@ export const petBehavior = setup({
       direction: "left" | "right";
     },
     events: {} as
+      | { type: "CHARACTER"; walkDurationMs: number; paused: boolean }
       | { type: "CLICK" }
       | { type: "CLIMB" }
       | { type: "DROP" }
@@ -40,7 +45,7 @@ export const petBehavior = setup({
   delays: {
     restDelay: () =>
       autonomy.restMinMs + Math.random() * autonomy.restVariationMs,
-    walkDuration: () => autonomy.walkMs,
+    walkDuration: ({ context }) => context.walkDurationMs,
   },
   guards: {
     wakeClick: ({ context }) =>
@@ -75,6 +80,7 @@ export const petBehavior = setup({
   id: "pet",
   context: ({ input }) => ({
     now: input.now,
+    walkDurationMs: input.walkDurationMs ?? autonomy.walkMs,
     actionId: 0,
     startedAt: input.now(),
     lastClickAt: 0,
@@ -85,6 +91,25 @@ export const petBehavior = setup({
   }),
   initial: "paused",
   on: {
+    CHARACTER: [
+      {
+        guard: ({ event }) => event.paused,
+        target: ".paused",
+        actions: [
+          "rest",
+          "wakeCycle",
+          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+        ],
+      },
+      {
+        target: ".resting",
+        actions: [
+          "rest",
+          "wakeCycle",
+          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+        ],
+      },
+    ],
     FACE: { actions: assign(({ event }) => ({ direction: event.direction })) },
     PAUSE: { target: ".paused", actions: "rest" },
     RESUME: { target: ".resting", actions: ["rest", "wakeCycle"] },

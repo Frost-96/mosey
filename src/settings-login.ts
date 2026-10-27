@@ -7,7 +7,15 @@ export function attachLoginSettings() {
   const loginToggle =
     document.querySelector<HTMLInputElement>("#login-enabled")!;
   let loginBusy = false;
+  let revision = -1;
+  let retired = false;
+  const receive = (next: Settings) => {
+    if (retired || next.revision < revision) return;
+    revision = next.revision;
+    renderLogin(next.login);
+  };
   const renderLogin = (login: Settings["login"]) => {
+    if (retired) return;
     loginState = login;
     loginToggle.checked = login.status === "enabled";
     loginToggle.disabled =
@@ -39,7 +47,7 @@ export function attachLoginSettings() {
     loginBusy = true;
     renderLogin(loginState);
     try {
-      renderLogin((await action()).login);
+      receive(await action());
     } catch (error) {
       renderLogin({
         ...loginState,
@@ -67,11 +75,19 @@ export function attachLoginSettings() {
       () => void loginAction(() => window.moseySettings.openLoginSettings()),
     );
 
-  window.moseySettings.onChange((next) => renderLogin(next.login));
+  const unsubscribe = window.moseySettings.onChange(receive);
+  window.addEventListener(
+    "pagehide",
+    () => {
+      retired = true;
+      unsubscribe();
+    },
+    { once: true },
+  );
   renderLogin(loginState);
   void window.moseySettings
     .get()
-    .then((next) => renderLogin(next.login))
+    .then(receive)
     .catch((error) =>
       renderLogin({
         status: "unavailable",
