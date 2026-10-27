@@ -63,7 +63,9 @@ test(
             ],
             { timeout: 5000, stdio: "ignore" },
           );
-        } catch {}
+        } catch {
+          // Sampling is best effort if this process exits before the probe.
+        }
         child.kill("SIGKILL");
       }
     });
