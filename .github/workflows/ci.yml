@@ -30,7 +30,7 @@ jobs:
       - name: Remaining development checks
         run: pnpm test:dev --exclude tests/size.test.ts --exclude tests/dock-status.test.ts --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts --testNamePattern "^(?!.*Unstable bottom contact)"
       - run: pnpm package:mac
-      - run: pnpm test:packaged
+      - run: pnpm test:packaged --sequence.sequencer ./tests/support/sleep-ci-order.ts
       - name: Archive local unsigned app
         run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
       - uses: actions/upload-artifact@v4
