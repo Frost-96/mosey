@@ -1,5 +1,9 @@
 import { test, expect, afterAll } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
+import {
+  _electron as electron,
+  type ElectronApplication,
+  type Page,
+} from "playwright";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, mkdir, writeFile, chmod } from "node:fs/promises";
 import path from "node:path";
@@ -56,6 +60,33 @@ async function fixture(preferences?: unknown) {
       await rm(root, { recursive: true, force: true });
     },
   };
+}
+
+// An independent image-identity observation: the whale has blue hair/clothes;
+// corgi is warm orange. No atlas metadata or redraw implementation is used.
+async function paintedCharacter(page: Page) {
+  return page.evaluate(() => {
+    const canvas = document.querySelector("canvas")!;
+    const pixels = canvas
+      .getContext("2d")!
+      .getImageData(0, 0, canvas.width, canvas.height).data;
+    let opaque = 0,
+      blue = 0,
+      warm = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3]! < 128) continue;
+      opaque++;
+      const r = pixels[i]!,
+        g = pixels[i + 1]!,
+        b = pixels[i + 2]!;
+      if (b > r + 25 && b > g + 10) blue++;
+      if (r > b + 40 && r > g + 15 && g > b + 10) warm++;
+    }
+    if (opaque < 500) return "blank";
+    if (blue / opaque > 0.35 && warm / opaque < 0.1) return "whale";
+    if (warm / opaque > 0.4 && blue / opaque < 0.05) return "corgi";
+    return "unknown";
+  });
 }
 
 test("new and legacy profiles choose whale while retaining size and hidden intent", async () => {
@@ -200,9 +231,9 @@ test("failed persistence keeps the actual and saved character, and retries the f
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
       .toBe("corgi");
-    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
-      "柯基 · 待机",
-    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
   } finally {
     await f.close();
   }
@@ -213,7 +244,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     version: 3,
     character: "corgi",
     size: 240,
-    visibility: "hidden",
+    visibility: "visible",
   });
   try {
     let { app, pet } = await f.launch();
@@ -221,6 +252,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("柯基 · 待机");
+    await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
     // Substitute only the image transport boundary, retaining the app's URL
     // allowlist. Delayed callbacks belong to the test's Electron session.
     await app.evaluate(({ session }, origin) => {
@@ -255,9 +287,10 @@ test("image failure and a superseded delayed response cannot replace the newest 
         timeout: 10000,
       })
       .toContain("素材加载失败");
-    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
-      "柯基 · 待机",
-    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
+    expect(await paintedCharacter(pet)).toBe("corgi");
     await app.evaluate(() => {
       Reflect.get(globalThis, "imageTransport").mode = "hold";
     });
@@ -289,15 +322,16 @@ test("image failure and a superseded delayed response cannot replace the newest 
     // Let the obsolete decode rejection reach the real main process.
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(await settings.locator("#character-error").isVisible()).toBe(false);
-    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
-      "柯基 · 待机",
-    );
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
     await app.close();
     ({ app, pet } = await f.launch());
     settings = await openSettings(app);
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
       .toBe("corgi");
+    await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("whale");
@@ -306,6 +340,29 @@ test("image failure and a superseded delayed response cannot replace the newest 
         timeout: 10000,
       })
       .toBe("鲸鱼娘 · 待机");
+    await expect.poll(() => paintedCharacter(pet)).toBe("whale");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect.poll(() => paintedCharacter(pet)).toBe("whale");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .evaluate((element: HTMLSelectElement) => {
+        for (const target of ["corgi", "whale", "whale"]) {
+          element.value = target;
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(await paintedCharacter(pet)).toBe("whale");
+    expect(await settings.locator("#character-error").isVisible()).toBe(false);
+    expect(await settings.locator("#character-status").textContent()).toBe(
+      "当前角色：鲸鱼娘",
+    );
   } finally {
     await f.close();
   }
@@ -357,6 +414,16 @@ test("a held and falling pet keeps its old character until landing, then uses th
               return { x: x / devicePixelRatio, y: y / devicePixelRatio };
         throw new Error("No painted pet body");
       });
+    const oldMask = await pet.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      const data = canvas
+        .getContext("2d")!
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      let mask = "";
+      for (let i = 3; i < data.length; i += 4)
+        mask += data[i]! >= 128 ? "1" : "0";
+      return mask;
+    });
     const ground = await bounds();
     const point = await body();
     await pet.mouse.move(point.x, point.y);
@@ -389,7 +456,24 @@ test("a held and falling pet keeps its old character until landing, then uses th
     ).toBe("corgi");
     // The same directed input now grabs corgi pixels, proving that replacing
     // images also replaced main-process hit geometry without another window.
-    const next = await body();
+    const next = await pet.evaluate((oldMask) => {
+      const canvas = document.querySelector("canvas")!;
+      const data = canvas
+        .getContext("2d")!
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      for (let y = 4; y < canvas.height - 4; y++)
+        for (let x = 4; x < canvas.width - 4; x++) {
+          const pixel = y * canvas.width + x;
+          if (
+            data[pixel * 4 + 3]! >= 240 &&
+            oldMask[pixel] === "0" &&
+            oldMask[pixel - 3] === "0" &&
+            oldMask[pixel + 3] === "0"
+          )
+            return { x: x / devicePixelRatio, y: y / devicePixelRatio };
+        }
+      throw new Error("No new corgi-only painted hit region");
+    }, oldMask);
     await pet.mouse.move(next.x, next.y);
     await pet.mouse.down();
     await pet.mouse.move(next.x, next.y - 60, { steps: 3 });
@@ -558,7 +642,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
   await writeFile(observation, "null");
   await writeFile(
     helper,
-    `#!${process.execPath}\nconst fs = require('node:fs'); const started = performance.now(); let sequence=0; console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));setInterval(()=>{const observation=JSON.parse(fs.readFileSync(${JSON.stringify(observation)},'utf8')); console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:observation?'current':'alpha_empty',observation}));},50);`,
+    `#!${process.execPath}\nimport fs from 'node:fs'; const started = performance.now(); let sequence=0; console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));setInterval(()=>{const observation=JSON.parse(fs.readFileSync(${JSON.stringify(observation)},'utf8')); console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:observation?'current':'alpha_empty',observation}));},50);`,
   );
   await chmod(helper, 0o755);
   try {
