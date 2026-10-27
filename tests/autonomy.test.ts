@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
 import { test, expect } from "vitest";
@@ -18,6 +19,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-autonomy-"));
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  let restoreDockCapture: (() => Promise<void>) | undefined;
   await mkdir("test-results", { recursive: true });
   const tracePath = `test-results/${evidence}-autonomy-progress.jsonl`;
   await writeFile(tracePath, "");
@@ -38,6 +40,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    restoreDockCapture = await emptyDockCapture(
+      packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+        : path.resolve("build/native/dock-runtime"),
+    );
     app = await electron.launch(
       packaged
         ? {
@@ -560,6 +567,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     throw error;
   } finally {
     await app?.close().catch(() => {});
+    await restoreDockCapture?.();
     await stopForge?.();
     await rm(root, { recursive: true, force: true });
   }

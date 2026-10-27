@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
@@ -114,6 +115,7 @@ async function exercisePet() {
   );
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
+  let restoreDockCapture: (() => Promise<void>) | undefined;
   const errors: string[] = [];
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
@@ -127,6 +129,14 @@ async function exercisePet() {
         path.join(packagedRoot, "Mosey.app"),
       ]);
     }
+    restoreDockCapture = await emptyDockCapture(
+      packaged
+        ? path.join(
+            packagedRoot!,
+            "Mosey.app/Contents/Resources/native/dock-runtime",
+          )
+        : path.resolve("build/native/dock-runtime"),
+    );
     app = await electron.launch(
       packaged
         ? {
@@ -1059,6 +1069,7 @@ async function exercisePet() {
       }
     }
     await app?.close().catch(() => {});
+    await restoreDockCapture?.();
     await stopForge?.();
     if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
     await rm(profile, { recursive: true, force: true });
