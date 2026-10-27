@@ -2,6 +2,8 @@
 
 一只生活在 macOS 桌面上的宠物，可选择鲸鱼娘或柯基。它会自主活动、睡觉，并对点击和拖动作出反应；日常运行离线、静音，无账号或在线 AI。
 
+使用 TypeScript 与 Electron；设置页由 React 渲染，桌面宠物使用 Canvas 2D，行为由 XState 管理，平台能力集中在主进程与原生适配层。
+
 ## 开发与运行
 
 在 Apple Silicon Mac 上准备 Xcode Command Line Tools，并使用 [package.json](package.json) 指定的 Node 和 pnpm 版本：

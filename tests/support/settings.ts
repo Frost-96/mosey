@@ -1,6 +1,9 @@
 import { expect } from "vitest";
 import type { ElectronApplication, Page } from "playwright";
-export async function openSettings(app: ElectronApplication) {
+export async function openSettings(
+  app: ElectronApplication,
+  { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
+) {
   await app.evaluate(({ Menu }) => {
     Menu.getApplicationMenu()!
       .items.find((item) => item.label === "Mosey")!
@@ -47,6 +50,12 @@ export async function openSettings(app: ElectronApplication) {
       { timeout: 15000 },
     )
     .toBe(true);
+  // React can paint controls before the first settings snapshot arrives. Most
+  // callers need confirmed settings; ordering tests explicitly inspect loading.
+  if (waitForInitialState)
+    await page!
+      .getByText("正在读取系统状态…", { exact: true })
+      .waitFor({ state: "hidden", timeout: 15000 });
   return page!;
 }
 export async function closeSettings(app: ElectronApplication) {

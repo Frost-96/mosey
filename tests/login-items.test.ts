@@ -31,14 +31,22 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
         executable: process.execPath,
       }));
       const login = settings!.getByRole("region", { name: "开机启动" });
+      // Unchecked also matches the initial loading view. Wait for both fields
+      // together so a pending read cannot masquerade as confirmed system state.
       await expect
-        .poll(() => login.getByRole("checkbox").isChecked())
-        .toBe(result.system.status === "enabled" && result.system.openAtLogin);
-      expect(await login.getByRole("checkbox").isDisabled()).toBe(
-        result.system.status === "requires-approval",
-      );
+        .poll(() =>
+          login.getByRole("checkbox").evaluate((input: HTMLInputElement) => ({
+            checked: input.checked,
+            disabled: input.disabled,
+          })),
+        )
+        .toEqual({
+          checked:
+            result.system.status === "enabled" && result.system.openAtLogin,
+          disabled: result.system.status === "requires-approval",
+        });
       if (result.system.status === "requires-approval")
-        expect(await login.textContent()).toContain("等待批准");
+        await expect.poll(() => login.textContent()).toContain("等待批准");
       evidence.push(result);
       return result;
     };

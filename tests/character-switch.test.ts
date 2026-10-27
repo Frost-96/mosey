@@ -456,7 +456,9 @@ test("a held and falling pet keeps its old character until landing, then uses th
         element.dispatchEvent(new Event("change", { bubbles: true }));
       });
     await expect
-      .poll(() => settings.locator("#character-status").textContent())
+      .poll(() => settings.locator("#character-status").textContent(), {
+        timeout: 10000,
+      })
       .toContain("等待宠物站稳");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toContain(
       "鲸鱼娘",
@@ -683,6 +685,34 @@ test("a switch waits through climbing and commits on observed Dock support witho
     const old = await native();
     const floor = old.display.workArea.y + old.display.workArea.height;
     const top = floor - 80;
+    // Hold time before presenting the Dock so slow UI observation cannot miss
+    // the real climb. Images still prepare on real time; restore motion after
+    // readiness without forcing behavior or position.
+    await app.evaluate(({ BrowserWindow }) => {
+      const now = Date.now;
+      const heldAt = now();
+      Date.now = () => heldAt;
+      Reflect.set(globalThis, "restoreClimbClock", () => {
+        Date.now = now;
+      });
+      Reflect.set(globalThis, "climbDelayedImages", 0);
+      const contents = BrowserWindow.getAllWindows().find(
+        (window) => window.getTitle() === "Mosey",
+      )!.webContents;
+      contents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (
+          details.webContentsId === contents.id &&
+          details.resourceType === "image"
+        ) {
+          Reflect.set(
+            globalThis,
+            "climbDelayedImages",
+            Reflect.get(globalThis, "climbDelayedImages") + 1,
+          );
+          setTimeout(() => callback({ cancel: false }), 2000);
+        } else callback({ cancel: false });
+      });
+    });
     await writeFile(
       observation,
       JSON.stringify({
@@ -709,11 +739,21 @@ test("a switch waits through climbing and commits on observed Dock support witho
       .getByRole("combobox", { name: "角色" })
       .selectOption("corgi");
     await expect
-      .poll(() => settings.locator("#character-status").textContent())
+      .poll(() => settings.locator("#character-status").textContent(), {
+        timeout: 10000,
+      })
       .toContain("等待宠物站稳");
-    expect(await pet.locator("canvas").getAttribute("aria-label")).toContain(
-      "鲸鱼娘",
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
+      "鲸鱼娘 · 攀爬",
     );
+    await app.evaluate(({ BrowserWindow }) => {
+      Reflect.get(globalThis, "restoreClimbClock")();
+      BrowserWindow.getAllWindows()
+        .find((window) => window.getTitle() === "Mosey")!
+        .webContents.session.webRequest.onBeforeRequest(null);
+      if (Reflect.get(globalThis, "climbDelayedImages") < 1)
+        throw new Error("Cold character preparation did not request an image");
+    });
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 5000,
