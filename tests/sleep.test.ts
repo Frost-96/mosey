@@ -28,7 +28,7 @@ test(
   async () => {
     mkdirSync("test-results/sleep-timeout", { recursive: true });
     const started = performance.now();
-    const progress = `test-results/sleep-timeout/repro-${process.env.MOSEY_REPRO_RUN ?? "1"}.jsonl`;
+    const progress = `test-results/sleep-timeout/${evidence}-${process.env.MOSEY_REPRO_RUN ?? "full"}.jsonl`;
     const mark = (stage: string, detail?: unknown) =>
       appendFileSync(
         progress,
@@ -41,11 +41,13 @@ test(
     mark("prepare");
     const root = await mkdtemp(path.join(os.tmpdir(), "mosey-sleep-"));
     let app: ElectronApplication | undefined;
+    let applicationProcess:
+      ReturnType<ElectronApplication["process"]> | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     let restoreDockCapture: (() => Promise<void>) | undefined;
     onTestFailed(() => {
       mark("test-failed");
-      const child = app?.process();
+      const child = applicationProcess;
       if (child?.pid && child.exitCode === null && child.signalCode === null) {
         try {
           execFileSync(
@@ -56,7 +58,7 @@ test(
               "1",
               "-file",
               path.resolve(
-                `test-results/sleep-timeout/repro-${process.env.MOSEY_REPRO_RUN ?? "1"}-sample.txt`,
+                `test-results/sleep-timeout/${evidence}-${process.env.MOSEY_REPRO_RUN ?? "full"}-sample.txt`,
               ),
             ],
             { timeout: 5000, stdio: "ignore" },
@@ -100,6 +102,7 @@ test(
               args: [".", `--user-data-dir=${root}/profile`],
             },
       );
+      applicationProcess = app.process();
       mark("first-window");
       const pet = await app.firstWindow();
       mark("network-idle");
