@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -27,6 +28,7 @@ test(
     const root = await mkdtemp(path.join(os.tmpdir(), "mosey-sleep-"));
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
+    let restoreDockCapture: (() => Promise<void>) | undefined;
     try {
       await mkdir(path.join(root, "profile"), { recursive: true });
       await writeFile(
@@ -44,6 +46,11 @@ test(
           path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
           path.join(root, "Mosey.app"),
         ]);
+      restoreDockCapture = await emptyDockCapture(
+        packaged
+          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+          : path.resolve("build/native/dock-runtime"),
+      );
       app = await electron.launch(
         packaged
           ? {
@@ -58,6 +65,28 @@ test(
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
+      const menu = (label: "Hide Mosey" | "Show Mosey") =>
+        app!.evaluate(async ({ Menu, BrowserWindow }, label) => {
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          const event = label === "Hide Mosey" ? "hide" : "show";
+          await new Promise<void>((resolve, reject) => {
+            const settled = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+            const timer = setTimeout(() => {
+              if (event === "hide") pet.removeListener("hide", settled);
+              else pet.removeListener("show", settled);
+              reject(new Error(`No public ${event} event after ${label}`));
+            }, 5000);
+            if (event === "hide") pet.once("hide", settled);
+            else pet.once("show", settled);
+            Menu.getApplicationMenu()!
+              .items.find((item) => item.label === "Mosey")!
+              .submenu!.items.find((item) => item.label === label)!
+              .click();
+          });
+        }, label);
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
@@ -118,16 +147,8 @@ test(
             ...args,
           )) as typeof setTimeout;
       });
-      await app.evaluate(({ Menu }) => {
-        const submenu = Menu.getApplicationMenu()!.items.find(
-          (i) => i.label === "Mosey",
-        )!.submenu!;
-        submenu.items.find((i) => i.label === "Hide Mosey")!.click();
-        Menu.getApplicationMenu()!
-          .items.find((i) => i.label === "Mosey")!
-          .submenu!.items.find((i) => i.label === "Show Mosey")!
-          .click();
-      });
+      await menu("Hide Mosey");
+      await menu("Show Mosey");
       await new Promise((resolve) => setTimeout(resolve, 150));
       await app.evaluate(() => {
         const now = Date.now;
@@ -148,15 +169,6 @@ test(
       const bounds = () =>
         app!.evaluate(({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()[0]!.getBounds(),
-        );
-      const menu = (label: string) =>
-        app!.evaluate(
-          ({ Menu }, label) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => i.label === label)!
-              .click(),
-          label,
         );
       const enterSleep = async () => {
         await menu("Hide Mosey");
@@ -447,6 +459,7 @@ test(
       throw error;
     } finally {
       await app?.close().catch(() => {});
+      await restoreDockCapture?.();
       await stopForge?.();
       await rm(root, { recursive: true, force: true });
     }
