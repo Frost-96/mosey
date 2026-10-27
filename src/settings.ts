@@ -3,7 +3,7 @@ import { attachLoginSettings } from "./settings-login";
 document.documentElement.dataset.page = "settings";
 document.querySelector<HTMLLinkElement>("#settings-style")!.media = "all";
 document.title = "Mosey 设置";
-document.body.innerHTML = `<main><h1>设置</h1><section aria-labelledby="pet-heading"><h2 id="pet-heading">宠物</h2><div class="pet-card"><label>角色 <select id="character"><option value="whale">鲸鱼娘</option><option value="corgi">柯基</option></select></label></div><p id="character-status" aria-live="polite"></p><div id="character-error" hidden><p role="alert"></p><button id="character-retry">重试角色</button></div></section><section aria-labelledby="size-heading"><h2 id="size-heading">大小</h2><p>当前大小 <output aria-live="polite"></output></p><div class="presets"><button data-size="70">小</button><button data-size="160">中（默认）</button><button data-size="240">大</button></div><input type="range" aria-label="宠物大小" min="70" max="240" step="10" value="160"><p class="hint">窗口边长，以 DIP 为单位。</p><div class="hidden-notice" hidden>宠物已隐藏 <button id="show">显示宠物</button></div><div class="error" hidden><p role="alert">保存失败，已保留上次保存的大小。</p><button id="retry">重试</button></div></section><section aria-labelledby="login-heading"><h2 id="login-heading">开机启动</h2><label><input id="login-enabled" type="checkbox"> 登录后启动 Mosey</label><p id="login-status" aria-live="polite">正在读取系统状态…</p><p id="login-reason" class="hint" hidden></p><p id="login-error" role="alert" hidden></p><button id="login-cancel" hidden>取消待批准请求</button><button id="login-system" hidden>打开系统设置</button></section></main>`;
+document.body.innerHTML = `<main><h1>设置</h1><section aria-labelledby="pet-heading"><h2 id="pet-heading">宠物</h2><div class="pet-card"><label>角色 <select id="character"><option value="whale">鲸鱼娘</option><option value="corgi">柯基</option></select></label></div><p id="character-status" aria-live="polite"></p><div id="character-error" hidden><p role="alert"></p><button id="character-retry">重试角色</button></div></section><section aria-labelledby="size-heading"><h2 id="size-heading">大小</h2><p>当前大小 <output aria-live="polite"></output></p><div class="presets"><button data-size="70">小</button><button data-size="160">中（默认）</button><button data-size="240">大</button></div><input type="range" aria-label="宠物大小" min="70" max="240" step="10" value="160"><p class="hint">窗口边长，以 DIP 为单位。</p><div class="hidden-notice" hidden>宠物已隐藏 <button id="show">显示宠物</button></div><div class="error" hidden><p role="alert">保存失败，已保留上次保存的大小。</p><button id="retry">重试</button></div></section><div id="login-settings"></div></main>`;
 let state: Settings;
 let operation = 0;
 let retired = false;
@@ -154,4 +154,7 @@ window.addEventListener(
   { once: true },
 );
 
-attachLoginSettings();
+const detachLoginSettings = attachLoginSettings(
+  document.querySelector<HTMLElement>("#login-settings")!,
+);
+if (import.meta.hot) import.meta.hot.dispose(detachLoginSettings);
