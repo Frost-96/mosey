@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { waitForPetVisibility } from "./support/visibility";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
@@ -65,28 +66,19 @@ test(
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
-      const menu = (label: "Hide Mosey" | "Show Mosey") =>
-        app!.evaluate(async ({ Menu, BrowserWindow }, label) => {
-          const pet = BrowserWindow.getAllWindows()[0]!;
-          const event = label === "Hide Mosey" ? "hide" : "show";
-          await new Promise<void>((resolve, reject) => {
-            const settled = () => {
-              clearTimeout(timer);
-              resolve();
-            };
-            const timer = setTimeout(() => {
-              if (event === "hide") pet.removeListener("hide", settled);
-              else pet.removeListener("show", settled);
-              reject(new Error(`No public ${event} event after ${label}`));
-            }, 5000);
-            if (event === "hide") pet.once("hide", settled);
-            else pet.once("show", settled);
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === label)!
-              .click();
-          });
+      const menu = async (label: "Hide Mosey" | "Show Mosey") => {
+        await app!.evaluate(({ Menu }, label) => {
+          Menu.getApplicationMenu()!
+            .items.find((item) => item.label === "Mosey")!
+            .submenu!.items.find((item) => item.label === label)!
+            .click();
         }, label);
+        await waitForPetVisibility(
+          app!,
+          pet,
+          label === "Hide Mosey" ? "hidden" : "visible",
+        );
+      };
       const pixels = () =>
         pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!;
