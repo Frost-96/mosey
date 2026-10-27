@@ -20,6 +20,9 @@ import { Timeline } from "./behavior/timeline";
 import { petBehavior, autonomy } from "./behavior/resting";
 import {
   assetErrorSchema,
+  characterSchema,
+  characterPreparedSchema,
+  type CharacterPreparation,
   channels,
   emptyRequestSchema,
   loginLaunchRequestSchema,
@@ -41,26 +44,12 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else void start();
 
 async function start() {
-  // This phase intentionally offers no normal-use character setting. An explicit
-  // isolated profile is mandatory so sample sessions never alter real preferences.
-  const whalePreview = process.argv.includes("--character-sample=whale");
-  if (
-    whalePreview &&
-    !process.argv.some(
-      (argument) =>
-        argument.startsWith("--user-data-dir=") &&
-        path.isAbsolute(argument.slice("--user-data-dir=".length)),
-    )
-  ) {
-    console.error(
-      "Whale sample requires an isolated --user-data-dir=<absolute path>",
-    );
-    app.quit();
-    return;
-  }
-  const character: CharacterId = whalePreview ? "whale" : "corgi";
-  const atlases = characterAssets(character);
-  const walk = characterWalk(character);
+  await app.whenReady();
+  app.dock?.hide();
+  const preferences = new PreferencesStore(app.getPath("userData"));
+  let character: CharacterId = preferences.character;
+  let atlases = characterAssets(character);
+  let walk = characterWalk(character);
   // Retain the native tray for the entire application lifetime.
   const timeline = new Timeline();
   const behavior = createActor(petBehavior, {
@@ -80,9 +69,6 @@ async function start() {
   app.on("will-quit", () => {
     behavior.stop();
   });
-  await app.whenReady();
-  app.dock?.hide();
-  const preferences = new PreferencesStore(app.getPath("userData"));
   log.info("Mosey starting", {
     version: app.getVersion(),
     electron: process.versions.electron,
@@ -157,7 +143,21 @@ async function start() {
   let settingsWindow: BrowserWindow | undefined;
   let failedSize: PetSize | undefined;
   let liveSize = preferences.size;
-  const settingsState = () => ({
+  let settingsRevision = 0;
+  let pendingCharacter:
+    (CharacterPreparation & { phase: "loading" | "waiting" }) | undefined;
+  let failedCharacter: Settings["failedCharacter"];
+  let characterRequest = 0;
+  let preparationTimer: ReturnType<typeof setTimeout> | undefined;
+  let rendererAssetsReady = false;
+  const settingsState = (): Settings => ({
+    revision: ++settingsRevision,
+    character,
+    pendingCharacter: pendingCharacter && {
+      target: pendingCharacter.character,
+      phase: pendingCharacter.phase,
+    },
+    failedCharacter,
     size: liveSize,
     visibility: preferences.visibility,
     failedSize,
@@ -440,38 +440,38 @@ async function start() {
   pet.setIgnoreMouseEvents(true, { forward: true });
   // Bottom support uses the common horizontal projection across every frame
   // and both facings. Pose changes alone cannot lose and regain that contact.
-  const frameContacts = atlases.flatMap((atlas) =>
-    atlas.frames.map((frame) => {
-      const runs = frame.hitRows.flat();
-      if (!runs.length) return undefined;
-      return {
-        left:
-          (Math.min(...runs.map(([start]) => start)) - frame.foot.x) /
-          atlas.pixelRatio,
-        right:
-          (Math.max(...runs.map(([, end]) => end)) - frame.foot.x) /
-          atlas.pixelRatio,
-      };
-    }),
-  );
-  const contactLeft = Math.max(
-    ...frameContacts.map((contact) =>
-      contact ? Math.max(contact.left, -contact.right) : Infinity,
-    ),
-  );
-  const contactRight = Math.min(
-    ...frameContacts.map((contact) =>
-      contact ? Math.min(contact.right, -contact.left) : -Infinity,
-    ),
-  );
-  const bottomContact =
-    Number.isFinite(contactLeft) &&
-    Number.isFinite(contactRight) &&
-    contactLeft < contactRight
+  const contactFor = (candidates: typeof atlases) => {
+    const frameContacts = candidates.flatMap((atlas) =>
+      atlas.frames.map((frame) => {
+        const runs = frame.hitRows.flat();
+        if (!runs.length) return undefined;
+        return {
+          left:
+            (Math.min(...runs.map(([start]) => start)) - frame.foot.x) /
+            atlas.pixelRatio,
+          right:
+            (Math.max(...runs.map(([, end]) => end)) - frame.foot.x) /
+            atlas.pixelRatio,
+        };
+      }),
+    );
+    const contactLeft = Math.max(
+      ...frameContacts.map((contact) =>
+        contact ? Math.max(contact.left, -contact.right) : Infinity,
+      ),
+    );
+    const contactRight = Math.min(
+      ...frameContacts.map((contact) =>
+        contact ? Math.min(contact.right, -contact.left) : -Infinity,
+      ),
+    );
+    return Number.isFinite(contactLeft) &&
+      Number.isFinite(contactRight) &&
+      contactLeft < contactRight
       ? { left: contactLeft, right: contactRight }
       : undefined;
-  if (!bottomContact)
-    log.error("Pet atlases have no stable horizontal bottom Dock contact");
+  };
+  let bottomContact = contactFor(atlases);
   // Pointer identity outlives posture/action transitions during a captured gesture.
   let gesture:
     | {
@@ -526,14 +526,19 @@ async function start() {
     clearTimeout(dockPendingTimer);
     dockPendingTimer = undefined;
   };
-  const bodyAt = (x: number, y: number) => {
+  const bodyAt = (
+    x: number,
+    y: number,
+    candidates = atlases,
+    pose = displayed,
+  ) => {
     const geometry = petGeometry(liveSize);
     // Use the pose actually drawn, including facing, until its next frame
     // report. This is the same alpha mask and foot transform as input routing.
     const atlas =
-      atlases.find((value) => value.action === displayed?.posture) ??
-      atlases.find((value) => value.action === "resting")!;
-    const frame = atlas.frames[displayed?.frame ?? 0] ?? atlas.frames[0]!;
+      candidates.find((value) => value.action === pose?.posture) ??
+      candidates.find((value) => value.action === "resting")!;
+    const frame = atlas.frames[pose?.frame ?? 0] ?? atlas.frames[0]!;
     const runs = frame.hitRows.flat();
     const localLeft = Math.min(...runs.map(([start]) => start));
     const localRight = Math.max(...runs.map(([, end]) => end));
@@ -544,7 +549,8 @@ async function start() {
     const right =
       geometry.foot.x +
       ((localRight - frame.foot.x) / atlas.pixelRatio) * geometry.assetScale;
-    const mirrored = displayed?.direction === "left";
+    const mirrored =
+      (pose?.direction ?? behavior.getSnapshot().context.direction) === "left";
     return {
       left: x + (mirrored ? geometry.side - right : left),
       right: x + (mirrored ? geometry.side - left : right),
@@ -555,17 +561,32 @@ async function start() {
       bottom: y + geometry.foot.y,
     };
   };
-  const supportAt = (x: number, y: number) => {
+  const supportAt = (
+    x: number,
+    y: number,
+    candidates = atlases,
+    contact = bottomContact,
+  ) => {
     const area = screen.getPrimaryDisplay().workArea;
     const floor = area.y + area.height;
-    const body = bodyAt(x, y);
+    const body = bodyAt(
+      x,
+      y,
+      candidates,
+      candidates === atlases
+        ? displayed
+        : {
+            posture: "resting",
+            frame: 0,
+            direction: behavior.getSnapshot().context.direction,
+            actionId: 0,
+          },
+    );
     if (dockObservation?.orientation === "bottom") {
-      if (!bottomContact) return { footY: floor, shiftX: 0 };
+      if (!contact) return { footY: floor, shiftX: 0 };
       const geometry = petGeometry(liveSize);
-      body.left =
-        x + geometry.foot.x + bottomContact.left * geometry.assetScale;
-      body.right =
-        x + geometry.foot.x + bottomContact.right * geometry.assetScale;
+      body.left = x + geometry.foot.x + contact.left * geometry.assetScale;
+      body.right = x + geometry.foot.x + contact.right * geometry.assetScale;
     }
     // Side avoidance retains the actual painted extent; input still uses alpha.
     return dockSupport(dockObservation, body, floor);
@@ -959,10 +980,137 @@ async function start() {
     publishSettings();
     refreshMenus();
   };
+  const failCharacter = (
+    reason: NonNullable<Settings["failedCharacter"]>["reason"],
+  ) => {
+    if (!pendingCharacter) return;
+    failedCharacter = { target: pendingCharacter.character, reason };
+    pendingCharacter = undefined;
+    clearTimeout(preparationTimer);
+    preparationTimer = undefined;
+    publishSettings();
+  };
+  const commitCharacter = () => {
+    const request = pendingCharacter;
+    if (
+      !request ||
+      request.phase !== "waiting" ||
+      rendererState !== "ready" ||
+      request.generation !== rendererGeneration ||
+      pet.isDestroyed() ||
+      quitting ||
+      suspended ||
+      gesture ||
+      bodyMenu ||
+      dockPendingAt !== undefined ||
+      ["dragging", "flutter", "falling", "landing", "climbing"].includes(
+        String(behavior.getSnapshot().value),
+      )
+    )
+      return;
+    const bounds = pet.getBounds();
+    const nextAtlases = characterAssets(request.character);
+    const nextContact = contactFor(nextAtlases);
+    const nextWalk = characterWalk(request.character);
+    // Both shapes must already share this support. A switch never teleports to
+    // a different floor or a wider Dock contour to make the new shape fit.
+    for (const support of [
+      supportAt(bounds.x, bounds.y),
+      supportAt(bounds.x, bounds.y, nextAtlases, nextContact),
+    ]) {
+      if (
+        Math.abs(support.footY - bounds.y - bounds.height) > 1 ||
+        support.shiftX
+      )
+        return;
+    }
+    // No asynchronous gap between final validation, durable commit, and apply.
+    if (!preferences.setCharacter(request.character))
+      return failCharacter("save");
+    pendingCharacter = undefined;
+    failedCharacter = undefined;
+    stopMotion();
+    character = request.character;
+    atlases = nextAtlases;
+    walk = nextWalk;
+    bottomContact = nextContact;
+    geometryRevision++;
+    displayed = undefined;
+    pet.setIgnoreMouseEvents(true, { forward: true });
+    ignoring = true;
+    behavior.send({
+      type: "CHARACTER",
+      walkDurationMs: walk?.durationMs ?? autonomy.walkMs,
+      paused: visibility !== "visible",
+    });
+    publishSettings();
+  };
+  const prepareCharacter = () => {
+    if (
+      !pendingCharacter ||
+      pendingCharacter.phase !== "loading" ||
+      !rendererAssetsReady ||
+      rendererState !== "ready"
+    )
+      return;
+    const { request, generation, character } = pendingCharacter;
+    pet.webContents.send(channels.prepareCharacter, {
+      request,
+      generation,
+      character,
+    });
+  };
+  ipcMain.on(channels.assetsReady, (event, value: unknown) => {
+    if (!authorized(event) || !emptyRequestSchema.safeParse(value).success)
+      return;
+    rendererAssetsReady = true;
+    prepareCharacter();
+  });
+  ipcMain.on(channels.characterPrepared, (event, value: unknown) => {
+    if (!authorized(event)) return;
+    const result = characterPreparedSchema.safeParse(value);
+    if (
+      !result.success ||
+      !pendingCharacter ||
+      pendingCharacter.phase !== "loading" ||
+      result.data.request !== pendingCharacter.request ||
+      result.data.generation !== rendererGeneration ||
+      result.data.character !== pendingCharacter.character
+    )
+      return;
+    clearTimeout(preparationTimer);
+    preparationTimer = undefined;
+    if (!result.data.success) return failCharacter("load");
+    pendingCharacter.phase = "waiting";
+    publishSettings();
+    commitCharacter();
+  });
   const settingsAuthorized = (event: Electron.IpcMainInvokeEvent) =>
     settingsWindow &&
     event.sender === settingsWindow.webContents &&
     event.senderFrame === settingsWindow.webContents.mainFrame;
+  ipcMain.handle(channels.setCharacter, (event, value: unknown) => {
+    if (!settingsAuthorized(event))
+      throw new Error("Untrusted character request");
+    const target = characterSchema.parse(value);
+    clearTimeout(preparationTimer);
+    preparationTimer = undefined;
+    pendingCharacter = undefined;
+    failedCharacter = undefined;
+    const request = ++characterRequest;
+    if (target !== character) {
+      pendingCharacter = {
+        request,
+        generation: rendererGeneration,
+        character: target,
+        phase: "loading",
+      };
+      preparationTimer = setTimeout(() => failCharacter("load"), 15000);
+      prepareCharacter();
+    }
+    publishSettings();
+    return settingsState();
+  });
   ipcMain.handle(channels.getSettings, (event, value: unknown) => {
     if (!settingsAuthorized(event))
       throw new Error("Untrusted settings request");
@@ -1246,6 +1394,10 @@ async function start() {
   app.on("before-quit", dismissBodyMenu);
   app.on("before-quit", stopMotion);
   app.on("before-quit", finishDockPending);
+  app.on("before-quit", () => {
+    clearTimeout(preparationTimer);
+    pendingCharacter = undefined;
+  });
   // Some packaged macOS launches update native visibility without delivering
   // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
@@ -1289,6 +1441,7 @@ async function start() {
     if (pet.isDestroyed()) return;
     synchronizeVisibility();
     if (visibility === "visible" && !suspended && !bodyMenu) reconcileGround();
+    commitCharacter();
   }, 50);
   const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
   pet.once("closed", stopNativeStatePolling);
@@ -1310,7 +1463,9 @@ async function start() {
     // Hide and release native hit regions before any reload. Hidden intent is
     // a preference, so this operational hide must never write PreferencesStore.
     rendererState = "loading";
+    rendererAssetsReady = false;
     rendererGeneration++;
+    failCharacter("recovery");
     stopPointerPolling();
     displayed = undefined;
     pet.setIgnoreMouseEvents(true, { forward: true });
@@ -1381,6 +1536,7 @@ async function start() {
   pet.webContents.on("did-finish-load", () => {
     if (quitting || rendererState !== "loading") return;
     rendererState = "ready";
+    prepareCharacter();
     alignGround();
     if (preferences.visibility === "visible") pet.showInactive();
     synchronizeVisibility();

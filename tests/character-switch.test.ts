@@ -1,0 +1,403 @@
+import { test, expect, afterAll } from "vitest";
+import { _electron as electron, type ElectronApplication } from "playwright";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { startForge } from "./support/forge";
+import { emptyDockCapture } from "./support/empty-dock";
+import { openSettings } from "./support/settings";
+const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+let stop: (() => Promise<void>) | undefined;
+afterAll(async () => {
+  await stop?.();
+});
+async function fixture(preferences?: unknown) {
+  if (!packaged && !stop) stop = await startForge();
+  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-character-"));
+  const profile = path.join(root, "profile");
+  await mkdir(profile);
+  if (preferences)
+    await writeFile(
+      path.join(profile, "preferences.json"),
+      JSON.stringify(preferences),
+    );
+  if (packaged)
+    execFileSync("/usr/bin/ditto", [
+      path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+      path.join(root, "Mosey.app"),
+    ]);
+  const restoreDock = await emptyDockCapture(
+    packaged
+      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+      : path.resolve("build/native/dock-runtime"),
+  );
+  let app: ElectronApplication;
+  const launch = async () => {
+    app = await electron.launch(
+      packaged
+        ? {
+            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+            args: [`--user-data-dir=${profile}`],
+          }
+        : { args: [".", `--user-data-dir=${profile}`] },
+    );
+    const pet = await app.firstWindow();
+    await pet.locator("canvas").waitFor();
+    return { app, pet };
+  };
+  return {
+    root,
+    profile,
+    launch,
+    async close() {
+      await app?.close().catch(() => {});
+      await restoreDock();
+      await rm(root, { recursive: true, force: true });
+    },
+  };
+}
+
+test("new and legacy profiles choose whale while retaining size and hidden intent", async () => {
+  for (const previous of [
+    undefined,
+    { version: 1, size: "large", visibility: "hidden" },
+    { version: 2, size: 70, visibility: "hidden" },
+  ]) {
+    const f = await fixture(previous);
+    try {
+      const { app, pet } = await f.launch();
+      const settings = await openSettings(app);
+      await expect
+        .poll(() =>
+          settings.getByRole("combobox", { name: "角色" }).inputValue(),
+        )
+        .toBe("whale");
+      await expect
+        .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+        .toBe("鲸鱼娘 · 待机");
+      const actual = await app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
+        return { size: pet.getBounds().width, visible: pet.isVisible() };
+      });
+      expect(actual).toEqual({
+        size: previous?.size === "large" ? 240 : (previous?.size ?? 160),
+        visible: !previous,
+      });
+    } finally {
+      await f.close();
+    }
+  }
+});
+
+test("selection replaces the one pet, retains hidden size and location, and survives reopen and restart", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "whale",
+    size: 70,
+    visibility: "hidden",
+  });
+  try {
+    let { app, pet } = await f.launch();
+    let settings = await openSettings(app);
+    const native = () =>
+      app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
+        return {
+          id: pet.id,
+          bounds: pet.getBounds(),
+          visible: pet.isVisible(),
+          pets: BrowserWindow.getAllWindows().filter(
+            (w) => w.getTitle() === "Mosey",
+          ).length,
+        };
+      });
+    const before = await native();
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 10000,
+      })
+      .toBe("柯基 · 待机");
+    expect(await native()).toEqual(before);
+    await settings.close();
+    settings = await openSettings(app);
+    await expect
+      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
+      .toBe("corgi");
+    await app.close();
+    ({ app, pet } = await f.launch());
+    settings = await openSettings(app);
+    await expect
+      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
+      .toBe("corgi");
+    expect((await native()).visible).toBe(false);
+    expect((await native()).bounds.width).toBe(70);
+    await settings
+      .getByRole("button", { name: "显示宠物", exact: true })
+      .click();
+    await expect
+      .poll(() =>
+        pet.evaluate(() => {
+          const canvas = document.querySelector("canvas")!;
+          const pixels = canvas
+            .getContext("2d")!
+            .getImageData(0, 0, canvas.width, canvas.height).data;
+          return Array.from(pixels).filter(
+            (value, i) => i % 4 === 3 && value > 127,
+          ).length;
+        }),
+      )
+      .toBeGreaterThan(500);
+  } finally {
+    await f.close();
+  }
+});
+
+test("failed persistence keeps the actual and saved character, and retries the failed target", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "whale",
+    size: 160,
+    visibility: "hidden",
+  });
+  try {
+    let { app, pet } = await f.launch();
+    let settings = await openSettings(app);
+    const obstacle = path.join(f.profile, "preferences.json.tmp");
+    await mkdir(obstacle);
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await expect
+      .poll(() => settings.locator("#character-error").textContent(), {
+        timeout: 10000,
+      })
+      .toContain("保存失败");
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
+      "鲸鱼娘 · 待机",
+    );
+    expect(
+      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
+    ).toBe("whale");
+    await settings.close();
+    settings = await openSettings(app);
+    expect(await settings.locator("#character-error").isVisible()).toBe(true);
+    await rm(obstacle, { recursive: true });
+    await settings.getByRole("button", { name: "重试角色" }).click();
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
+    await app.close();
+    ({ app, pet } = await f.launch());
+    settings = await openSettings(app);
+    await expect
+      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
+      .toBe("corgi");
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
+      "柯基 · 待机",
+    );
+  } finally {
+    await f.close();
+  }
+});
+
+test("image failure and a superseded delayed response cannot replace the newest choice across settings lifetimes", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "corgi",
+    size: 240,
+    visibility: "hidden",
+  });
+  try {
+    let { app, pet } = await f.launch();
+    let settings = await openSettings(app);
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"))
+      .toBe("柯基 · 待机");
+    // Substitute only the image transport boundary, retaining the app's URL
+    // allowlist. Delayed callbacks belong to the test's Electron session.
+    await app.evaluate(({ session }, origin) => {
+      const control = {
+        mode: "fail",
+        callbacks: [] as ((value: { cancel: boolean }) => void)[],
+      };
+      Reflect.set(globalThis, "imageTransport", control);
+      session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+        const url = new URL(details.url);
+        const allowed =
+          url.protocol === "file:" ||
+          url.protocol === "data:" ||
+          url.origin === origin ||
+          (url.protocol === "ws:" && url.host === new URL(origin).host);
+        if (!allowed) return callback({ cancel: true });
+        if (details.resourceType === "image") {
+          if (control.mode === "hold") {
+            control.callbacks.push(callback);
+            return;
+          }
+          if (control.mode === "fail") return callback({ cancel: true });
+        }
+        callback({ cancel: false });
+      });
+    }, new URL(pet.url()).origin);
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect
+      .poll(() => settings.locator("#character-error").textContent(), {
+        timeout: 10000,
+      })
+      .toContain("素材加载失败");
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
+      "柯基 · 待机",
+    );
+    await app.evaluate(() => {
+      Reflect.get(globalThis, "imageTransport").mode = "hold";
+    });
+    await settings.getByRole("button", { name: "重试角色" }).click();
+    await expect
+      .poll(() =>
+        app.evaluate(
+          () => Reflect.get(globalThis, "imageTransport").callbacks.length,
+        ),
+      )
+      .toBeGreaterThan(0);
+    await settings.close();
+    settings = await openSettings(app);
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toContain("正在准备鲸鱼娘");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await app.evaluate(() => {
+      const control = Reflect.get(globalThis, "imageTransport");
+      control.mode = "allow";
+      for (const callback of control.callbacks.splice(0))
+        callback({ cancel: true });
+    });
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toBe("当前角色：柯基");
+    // Let the obsolete decode rejection reach the real main process.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(await settings.locator("#character-error").isVisible()).toBe(false);
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
+      "柯基 · 待机",
+    );
+    await app.close();
+    ({ app, pet } = await f.launch());
+    settings = await openSettings(app);
+    await expect
+      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
+      .toBe("corgi");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 10000,
+      })
+      .toBe("鲸鱼娘 · 待机");
+  } finally {
+    await f.close();
+  }
+});
+
+test("a held and falling pet keeps its old character until landing, then uses the new painted hit mask", async () => {
+  const f = await fixture({
+    version: 3,
+    character: "whale",
+    size: 160,
+    visibility: "visible",
+  });
+  try {
+    const { app, pet } = await f.launch();
+    const settings = await openSettings(app);
+    const bounds = () =>
+      app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()
+          .find((w) => w.getTitle() === "Mosey")!
+          .getBounds(),
+      );
+    await app.evaluate(({ BrowserWindow, screen }) => {
+      const pet = BrowserWindow.getAllWindows().find(
+        (w) => w.getTitle() === "Mosey",
+      )!;
+      const area = screen.getPrimaryDisplay().workArea;
+      pet.setPosition(
+        screen.getCursorScreenPoint().x > area.x + area.width / 2
+          ? area.x
+          : area.x + area.width - pet.getBounds().width,
+        area.y + area.height - pet.getBounds().height,
+        false,
+      );
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const body = () =>
+      pet.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const data = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        const y = Math.floor(canvas.height * 0.65);
+        for (let radius = 0; radius < canvas.width / 2; radius++)
+          for (const x of [
+            Math.floor(canvas.width / 2) - radius,
+            Math.floor(canvas.width / 2) + radius,
+          ])
+            if (data[(y * canvas.width + x) * 4 + 3]! >= 128)
+              return { x: x / devicePixelRatio, y: y / devicePixelRatio };
+        throw new Error("No painted pet body");
+      });
+    const ground = await bounds();
+    const point = await body();
+    await pet.mouse.move(point.x, point.y);
+    await pet.mouse.down();
+    await pet.mouse.move(point.x, point.y - 100, { steps: 4 });
+    await expect
+      .poll(async () => (await bounds()).y)
+      .toBeLessThan(ground.y - 50);
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .evaluate((element: HTMLSelectElement) => {
+        element.value = "corgi";
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toContain("等待宠物站稳");
+    expect(await pet.locator("canvas").getAttribute("aria-label")).toContain(
+      "鲸鱼娘",
+    );
+    await pet.mouse.up();
+    await expect
+      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
+        timeout: 5000,
+      })
+      .toBe("柯基 · 待机");
+    expect(await bounds()).toEqual(ground);
+    expect(
+      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
+    ).toBe("corgi");
+    // The same directed input now grabs corgi pixels, proving that replacing
+    // images also replaced main-process hit geometry without another window.
+    const next = await body();
+    await pet.mouse.move(next.x, next.y);
+    await pet.mouse.down();
+    await pet.mouse.move(next.x, next.y - 60, { steps: 3 });
+    await expect
+      .poll(async () => (await bounds()).y)
+      .toBeLessThan(ground.y - 30);
+    await pet.mouse.up();
+  } finally {
+    await f.close();
+  }
+});

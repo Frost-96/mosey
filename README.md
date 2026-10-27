@@ -1,6 +1,6 @@
 # Mosey
 
-一只生活在 macOS 桌面上的柯基。它会自主活动、睡觉，并对点击和拖动作出反应；日常运行离线、静音，无账号或在线 AI。
+一只生活在 macOS 桌面上的宠物，可选择鲸鱼娘或柯基。它会自主活动、睡觉，并对点击和拖动作出反应；日常运行离线、静音，无账号或在线 AI。
 
 ## 开发与运行
 
@@ -30,14 +30,7 @@ python3 tests/native/test-dock-live.py build/native/dock-live
 pnpm measure:resources --seconds 60 --growth-seconds 300
 ```
 
-鲸鱼娘隔离验收版覆盖通用动作，尚未开放正式角色选择。使用临时偏好目录启动本地打包样片：
-
-```sh
-sample_profile=$(mktemp -d /tmp/mosey-whale-sample.XXXXXX)
-out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey --character-sample=whale --user-data-dir="$sample_profile"
-```
-
-隔离验收版可检查待机、行走、自然活动、点击、睡眠、拖拽与回到底部，并沿用现有 Dock 支撑和权限边界。普通启动继续使用柯基；完整动作验收由 [#49](https://github.com/Frost-96/mosey/issues/49) 跟踪。
+设置页可选择鲸鱼娘或柯基。尚无角色选择记录时默认鲸鱼娘，之后恢复上次保存的选择；旧偏好的大小和隐藏意图继续保留。完整动作与角色切换验收分别由 [#49](https://github.com/Frost-96/mosey/issues/49) 和 [#50](https://github.com/Frost-96/mosey/issues/50) 跟踪。
 
 资源测量支持 `--app /绝对路径/Mosey.app` 和 `--output test-results/新目录`；输出目录必须尚不存在，避免覆盖证据。报告记录包与测量工具的哈希、进程成本、Dock 捕获状态和每分钟的持续运行数据，每 30 秒保存一次原始样本。测量完成不代表性能达标；无有效 Dock 捕获时不能据此判断 Dock 交互成本，预算与验收结论仍记录在 #11。
 
