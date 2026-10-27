@@ -1,3 +1,4 @@
+import { emptyDockCapture } from "./support/empty-dock";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -27,6 +28,7 @@ test.each([
     );
     let app: ElectronApplication | undefined;
     let stop: (() => Promise<void>) | undefined;
+    let restoreDock: (() => Promise<void>) | undefined;
     try {
       await writeFile(
         path.join(root, "preferences.json"),
@@ -43,6 +45,11 @@ test.each([
           path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
           path.join(root, "Mosey.app"),
         ]);
+      restoreDock = await emptyDockCapture(
+        packaged
+          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+          : path.resolve("build/native/dock-runtime"),
+      );
       let executablePath = packaged
         ? path.join(root, "Mosey.app/Contents/MacOS/Mosey")
         : undefined;
@@ -465,6 +472,7 @@ test.each([
       throw error;
     } finally {
       await app?.close().catch(() => {});
+      await restoreDock?.();
       await stop?.();
       await rm(root, { recursive: true, force: true });
     }
