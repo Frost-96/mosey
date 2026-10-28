@@ -311,7 +311,10 @@ async function exercisePet() {
     // A second launch must exit without adding a pet or terminating the first.
     const duplicate = spawn(
       app.process().spawnfile,
-      [...(packaged ? [] : ["."]), `--user-data-dir=${profile}`],
+      [
+        ...(packaged ? [] : [path.join(profile, "app")]),
+        `--user-data-dir=${profile}`,
+      ],
       {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
         stdio: "ignore",

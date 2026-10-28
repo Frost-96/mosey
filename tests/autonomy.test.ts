@@ -487,8 +487,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
           edge,
           destination,
           actions: ["walk", "stretch", "play"],
-          restClock:
-            "long delays >=10s shortened externally to 1s; movement/frame time real",
+          behaviorTime:
+            "controlled behavior adapter advances rest eligibility; movement and painted animation run at real elapsed speed",
           input:
             "targeted Playwright window input; system suspend/resume event simulated",
         },

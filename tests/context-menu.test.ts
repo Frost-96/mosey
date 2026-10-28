@@ -638,7 +638,13 @@ test("body secondary clicks open a native menu and cancel without changing the p
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
             args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
+        : {
+            args: [
+              path.join(root, "app"),
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
+          },
     );
     await app.firstWindow();
     expect((await bounds()).width).toBe(160);

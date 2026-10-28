@@ -620,7 +620,7 @@ test(
           {
             evidence,
             boundary:
-              "real Electron rendered pixels/window bounds/menu; directed input; random/long-rest time controlled externally",
+              "real Electron rendered pixels/window bounds/menu; directed input; choices and rest eligibility supplied through the controlled behavior adapter",
           },
           null,
           2,
