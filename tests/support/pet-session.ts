@@ -1,6 +1,6 @@
 import { expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import {
@@ -20,6 +20,7 @@ import { startForge } from "./forge";
 import { observePetRenderer } from "./pet-renderer";
 
 type SessionOptions = {
+  signal?: AbortSignal;
   preferences?: unknown;
   // Destructive main-process faults must not share macOS restoration history.
   isolateAppIdentity?: boolean;
@@ -53,6 +54,10 @@ export async function createPetTestSession(options: SessionOptions) {
   );
   mkdirSync(evidence, { recursive: true });
   const started = performance.now();
+  const testName = expect.getState().currentTestName;
+  const requestedScale = Number(
+    options.scaleFactor ?? process.env.MOSEY_TEST_SCALE_FACTOR ?? "1",
+  );
   let stage = "preparing";
   let root: string | undefined;
   let app: ElectronApplication | undefined;
@@ -64,8 +69,10 @@ export async function createPetTestSession(options: SessionOptions) {
       JSON.stringify({
         event,
         stage,
+        mode: process.env.MOSEY_TEST_MODE,
+        requestedScale,
         elapsed: performance.now() - started,
-        test: expect.getState().currentTestName,
+        test: testName,
         root,
         detail,
         processes: processes.map((child) => ({
@@ -82,23 +89,135 @@ export async function createPetTestSession(options: SessionOptions) {
   };
   const releases: (() => Promise<void>)[] = [];
   let closing: Promise<void> | undefined;
+  const cancellation = new AbortController();
+  let firstFailure: unknown;
+  const active = () => {
+    if (closing || cancellation.signal.aborted)
+      throw new Error("Pet session is closed or cancelled", {
+        cause: firstFailure,
+      });
+  };
+  const fail = (error: unknown) => {
+    if (firstFailure === undefined) {
+      firstFailure = error;
+      record(
+        "first-failure",
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+    cancellation.abort(error);
+  };
+  const step = async <T>(
+    label: string,
+    action: () => Promise<T>,
+    timeout = 5000,
+  ): Promise<T> => {
+    active();
+    mark(label);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let aborted: (() => void) | undefined;
+    try {
+      const cancelled = new Promise<never>((_resolve, reject) => {
+        aborted = () => reject(cancellation.signal.reason);
+        cancellation.signal.addEventListener("abort", aborted, { once: true });
+        timer = setTimeout(
+          () =>
+            fail(new Error(`${label} did not complete within ${timeout}ms`)),
+          timeout,
+        );
+      });
+      const result = await Promise.race([action(), cancelled]);
+      active();
+      return result;
+    } finally {
+      clearTimeout(timer);
+      if (aborted) cancellation.signal.removeEventListener("abort", aborted);
+    }
+  };
   let pending: Promise<unknown> = Promise.resolve();
+  const acquisitions = new Set<Promise<unknown>>();
+  const settleOwnership = async (work: Promise<unknown>) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        work,
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  "Owned acquisition did not settle within 10000ms during cleanup",
+                ),
+              ),
+            10000,
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
   const close = () =>
     (closing ??= (async () => {
+      cancellation.abort(new Error("Pet session is closed"));
       // Keep the last scenario stage even when callers close in a finally
       // block before Vitest can report their error.
       record("cleanup-started");
       const errors: unknown[] = [];
+      if (firstFailure !== undefined) {
+        const child = appProcess;
+        if (
+          child?.pid &&
+          child.exitCode === null &&
+          child.signalCode === null
+        ) {
+          try {
+            record("owned-process-group", processGroup(child.pid));
+          } catch (error) {
+            record("process-group-unavailable", String(error));
+          }
+          try {
+            execFileSync(
+              "/usr/bin/sample",
+              [
+                String(child.pid),
+                "1",
+                "1",
+                "-file",
+                path.join(evidence, `process-${child.pid}.txt`),
+              ],
+              { timeout: 5000, stdio: "ignore" },
+            );
+          } catch (error) {
+            record("sample-unavailable", String(error));
+          }
+        }
+      }
       // Interrupt an owned app before waiting on startup: a pending driver
       // call may only settle when its process exits. A late launch is adopted
       // and stopped below before it is allowed to observe readiness.
+      const interrupted = app;
       try {
         await stopApp();
       } catch (error) {
         errors.push(error);
       }
-      await pending.catch(() => {});
-      for (const release of releases.reverse()) {
+      try {
+        await settleOwnership(pending.catch(() => {}));
+        await settleOwnership(Promise.allSettled([...acquisitions]));
+      } catch (error) {
+        errors.push(error);
+      }
+      // A late acquisition's own release may fail. Verify that resource here
+      // too; an allSettled result must not silently accept a surviving app.
+      if (app && app !== interrupted) {
+        try {
+          await stopApp();
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+      for (const release of releases.toReversed()) {
         try {
           await release();
         } catch (error) {
@@ -106,53 +225,46 @@ export async function createPetTestSession(options: SessionOptions) {
         }
       }
       record("cleanup-complete", errors.map(String));
+      options.signal?.removeEventListener("abort", cancelled);
       if (errors.length)
-        throw new AggregateError(errors, "Pet session cleanup failed");
-    })());
+        throw new AggregateError(
+          firstFailure === undefined ? errors : [firstFailure, ...errors],
+          "Pet session cleanup failed",
+          { cause: firstFailure },
+        );
+    })().catch((error: unknown) => {
+      // A denied cleanup remains a failure, but callers can release the
+      // obstruction and safely retry. Scenario operations stay cancelled.
+      closing = undefined;
+      throw error;
+    }));
+  const cancelled = () => {
+    fail(new Error("Pet session cancelled", { cause: options.signal?.reason }));
+    void close().catch((error: unknown) =>
+      record("cancellation-cleanup-failed", String(error)),
+    );
+  };
+  options.signal?.addEventListener("abort", cancelled, { once: true });
   onTestFinished(async ({ task }) => {
     // Vitest runs onTestFinished before onTestFailed. Capture the failing
     // stage and live OS process here, before cleanup interrupts pending calls.
     if (task.result?.state === "fail") {
       record("test-failed", task.result.errors);
-      const child = appProcess;
-      if (child?.pid && child.exitCode === null && child.signalCode === null) {
-        try {
-          record("owned-process-group", processGroup(child.pid));
-        } catch (error) {
-          record("process-group-unavailable", String(error));
-        }
-        try {
-          execFileSync(
-            "/usr/bin/sample",
-            [
-              String(child.pid),
-              "1",
-              "1",
-              "-file",
-              path.join(evidence, `process-${child.pid}.txt`),
-            ],
-            { timeout: 5000, stdio: "ignore" },
-          );
-        } catch (error) {
-          record("sample-unavailable", String(error));
-        }
-      }
+      fail(new Error("Pet scenario failed", { cause: task.result.errors }));
     }
     await close();
   });
   let starting = false;
-  const stopApp = async () => {
-    if (!app) return;
-    const current = app;
-    app = undefined;
-    // The driver detaches its process accessor after an explicit quit/crash.
-    // Retain the owned OS handle from acquisition through final cleanup.
-    const child = appProcess!;
-    appProcess = undefined;
+  const stopProcess = async (
+    child: ChildProcess,
+    shutdown?: () => Promise<void>,
+  ) => {
+    if (!child.pid) return;
     record("app-stopping", { pid: child.pid });
     // Playwright gives each Electron process its own process group on macOS.
     // Bound graceful shutdown, then kill only this session's group (including
     // its capture helper), never matching other apps by executable name.
+    let permissionError: unknown;
     const signal = () => {
       if (!child.pid) return;
       try {
@@ -160,10 +272,14 @@ export async function createPetTestSession(options: SessionOptions) {
       } catch (error) {
         const code = (error as NodeJS.ErrnoException).code;
         if (code === "EPERM") {
+          permissionError = error;
           // macOS may signal some group members and still report EPERM.
           // Success below requires the leader's exit and no live members;
           // a permission failure that leaves a process alive still fails.
-          record("group-signal-partial", processGroup(child.pid));
+          record("group-signal-partial", {
+            code,
+            processes: processGroup(child.pid),
+          });
         } else if (code !== "ESRCH") throw error;
       }
     };
@@ -184,12 +300,24 @@ export async function createPetTestSession(options: SessionOptions) {
     });
     try {
       if (child.exitCode === null && child.signalCode === null)
-        await Promise.race([current.close(), exited, forced]);
+        await Promise.race([
+          shutdown
+            ? shutdown().catch((error: unknown) =>
+                record("driver-close-failed", String(error)),
+              )
+            : Promise.resolve(signal()),
+          exited,
+          forced,
+        ]);
+    } catch (error) {
+      record("shutdown-signal-failed", String(error));
     } finally {
       clearTimeout(timer);
-      // Reap any remaining helper in the owned group even if graceful close
-      // rejected or the main process exited before its children.
-      signal();
+    }
+    // Reap any remaining helper in the owned group even if graceful close
+    // rejected or the main process exited before its children.
+    signal();
+    try {
       await expect
         .poll(
           () => ({
@@ -202,16 +330,66 @@ export async function createPetTestSession(options: SessionOptions) {
           { timeout: 5000 },
         )
         .toEqual({ exited: true, live: [] });
-      record("app-stopped", { pid: child.pid });
+    } catch (error) {
+      if (permissionError)
+        throw new AggregateError(
+          [permissionError, error],
+          "Owned processes survived permission-denied cleanup",
+          { cause: error },
+        );
+      throw error;
+    }
+    record("app-stopped", { pid: child.pid });
+  };
+  const stopApp = async () => {
+    if (!app) return;
+    const current = app;
+    const child = appProcess!;
+    await stopProcess(child, () => current.close());
+    if (app === current) {
+      app = undefined;
+      appProcess = undefined;
+    }
+  };
+  const finishFailure = async (
+    error: unknown,
+    message: string,
+  ): Promise<never> => {
+    fail(error);
+    const cleanup = await close().then(
+      () => undefined,
+      (failure: unknown) => ({ failure }),
+    );
+    if (cleanup)
+      throw new AggregateError([error, cleanup.failure], message, {
+        cause: error,
+      });
+    throw error;
+  };
+  const run = async <T>(
+    label: string,
+    action: () => Promise<T>,
+    { timeout = 5000 } = {},
+  ) => {
+    // One driver or filesystem operation per call. A continuation must enter
+    // this guard again before its next side effect, including after a timeout.
+    try {
+      return await step(label, action, timeout);
+    } catch (error) {
+      return finishFailure(error, "Pet operation and cleanup failed");
     }
   };
   try {
+    if (options.signal?.aborted) cancelled();
+    active();
     const preparation = (async () => {
       root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
       const ownedRoot = root;
       releases.push(() => rm(ownedRoot, { recursive: true, force: true }));
+      active();
       const profile = path.join(root, "profile");
       await mkdir(profile);
+      active();
       if (options.preferences !== undefined)
         await writeFile(
           path.join(profile, "preferences.json"),
@@ -230,7 +408,8 @@ export async function createPetTestSession(options: SessionOptions) {
           { timeout: 30000 },
         );
       else {
-        releases.push(await startForge());
+        releases.push(await startForge({ signal: cancellation.signal }));
+        active();
         // app.getAppPath() must resolve inside this session. An existing
         // developer app must never launch our substituted capture producer.
         const directory = path.join(root, "app");
@@ -248,6 +427,7 @@ export async function createPetTestSession(options: SessionOptions) {
           "dir",
         );
       }
+      active();
 
       const observation = path.join(root, "dock.json");
       if (options.dock !== "real") {
@@ -306,7 +486,6 @@ setInterval(() => {
           packaged ? "Mosey" : "Electron",
         );
       }
-      releases.push(stopApp);
 
       return {
         directory: root,
@@ -320,8 +499,8 @@ setInterval(() => {
     const { directory, profile, packaged, observation, executablePath } =
       await preparation;
 
-    const launch = async () => {
-      if (closing) throw new Error("Pet session is closed");
+    const launch = async ({ timeout = 30000 } = {}) => {
+      active();
       if (app || starting)
         throw new Error(
           "Pet session already has an application; use restart()",
@@ -335,52 +514,92 @@ setInterval(() => {
           ...(options.isolateAppIdentity
             ? ["-ApplePersistenceIgnoreState", "YES"]
             : []),
-          `--force-device-scale-factor=${options.scaleFactor ?? process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
+          `--force-device-scale-factor=${requestedScale}`,
         ];
         // Playwright owns a launch that rejects before returning. Once it
         // returns, even after a test deadline, the session owns that process.
-        app = await electron.launch({
-          ...(executablePath ? { executablePath } : {}),
-          args,
-          timeout: 30000,
-          ...(options.recordVideo ? { recordVideo: options.recordVideo } : {}),
-        });
-        appProcess = app.process();
-        processes.push(appProcess);
-        appProcess.stderr?.on("data", (data: Buffer) =>
-          appendFileSync(path.join(evidence, "stderr.txt"), data),
+        const acquisition = electron
+          .launch({
+            ...(executablePath ? { executablePath } : {}),
+            args,
+            timeout,
+            ...(options.recordVideo
+              ? { recordVideo: options.recordVideo }
+              : {}),
+          })
+          .then(async (acquired) => {
+            app = acquired;
+            appProcess = app.process();
+            processes.push(appProcess);
+            const child = appProcess;
+            child.once("exit", (code, signal) =>
+              record("app-exited", { pid: child.pid, code, signal }),
+            );
+            appProcess.stderr?.on("data", (data: Buffer) =>
+              appendFileSync(path.join(evidence, "stderr.txt"), data),
+            );
+            record("app-acquired");
+            if (closing || cancellation.signal.aborted) {
+              await stopApp();
+              throw new Error(
+                "Pet session cancelled while the application was launching",
+              );
+            }
+            return acquired;
+          });
+        acquisitions.add(acquisition);
+        void acquisition.then(
+          () => acquisitions.delete(acquisition),
+          () => acquisitions.delete(acquisition),
         );
-        record("app-acquired");
-        if (closing) {
-          await stopApp();
-          throw new Error(
-            "Pet session closed while the application was launching",
-          );
-        }
-        const current = app;
+        const current = await step("launch", () => acquisition, timeout);
+        active();
         const renderer = observePetRenderer(current);
         const readiness = (async () => {
           // Observe without handling or suppressing the default fatal error.
           // A native error dialog can block later inspector calls and hide the
           // original exception behind a test timeout.
-          await current.evaluate(
-            (_electron, output) => {
-              process.on("uncaughtExceptionMonitor", (error, origin) => {
-                process
-                  .getBuiltinModule("node:fs")
-                  .appendFileSync(
-                    output,
-                    JSON.stringify({ origin, stack: error.stack }) + "\n",
-                  );
-              });
-            },
-            path.join(evidence, "main-exceptions.jsonl"),
+          await step("exception-monitor", () =>
+            current.evaluate(
+              (_electron, output) => {
+                process.on("uncaughtExceptionMonitor", (error, origin) => {
+                  process
+                    .getBuiltinModule("node:fs")
+                    .appendFileSync(
+                      output,
+                      JSON.stringify({ origin, stack: error.stack }) + "\n",
+                    );
+                });
+              },
+              path.join(evidence, "main-exceptions.jsonl"),
+            ),
           );
           mark("initial-document");
-          const pet = await current.firstWindow({ timeout: 15000 });
-          await pet.waitForLoadState("load");
+          const pet = await step(
+            "initial-window",
+            () => current.firstWindow({ timeout: 15000 }),
+            15000,
+          );
+          await step(
+            "initial-document",
+            () => pet.waitForLoadState("load"),
+            15000,
+          );
           mark("initial-presentation-and-paint");
-          await renderer.waitUntilReady({ timeout: 15000 });
+          const observed = await step(
+            "initial-presentation-and-paint",
+            () => renderer.waitUntilReady({ timeout: 15000 }),
+            15000,
+          );
+          record("observed-scale", {
+            requested: requestedScale,
+            observed: observed.scaleFactor,
+          });
+          if (observed.scaleFactor !== requestedScale)
+            throw new Error(
+              `Expected scale ${requestedScale}, observed ${observed.scaleFactor}`,
+            );
+          active();
           mark("ready");
           return { app: current, pet, renderer };
         })();
@@ -409,26 +628,130 @@ setInterval(() => {
         return await launching;
       } catch (error) {
         record("launch-failed", String(error));
-        try {
-          await close();
-        } catch (cleanup) {
-          throw new AggregateError(
-            [error, cleanup],
-            "Pet launch and cleanup failed",
-            { cause: cleanup },
-          );
-        }
-        throw error;
+        return finishFailure(error, "Pet launch and cleanup failed");
       } finally {
         starting = false;
       }
     };
     return {
       profile,
+      evidence,
       mark,
       launch,
+      run,
+      async launchDuplicate() {
+        active();
+        if (!app || !appProcess)
+          throw new Error("Pet session has no application");
+        const executable = appProcess.spawnfile;
+        let child: ChildProcess | undefined;
+        releases.push(async () => {
+          if (child) await stopProcess(child);
+        });
+        return run(
+          "duplicate-launch",
+          async () => {
+            child = spawn(
+              executable,
+              [
+                ...(packaged ? [] : [path.join(directory, "app")]),
+                `--user-data-dir=${profile}`,
+                `--force-device-scale-factor=${requestedScale}`,
+              ],
+              {
+                env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+                stdio: "pipe",
+                detached: true,
+              },
+            );
+            processes.push(child);
+            record("duplicate-acquired");
+            child.stderr?.on("data", (data: Buffer) =>
+              appendFileSync(path.join(evidence, "stderr.txt"), data),
+            );
+            await new Promise<void>((resolve, reject) => {
+              child!.once("error", reject);
+              child!.once("exit", (code, signal) => {
+                record("duplicate-exited", { pid: child!.pid, code, signal });
+                if (code === 0 && signal === null) resolve();
+                else
+                  reject(
+                    new Error(
+                      `Duplicate launch failed: code=${code}, signal=${signal}`,
+                    ),
+                  );
+              });
+            });
+            return { pid: child.pid, exitCode: child.exitCode };
+          },
+          { timeout: 10000 },
+        );
+      },
+      async quit() {
+        active();
+        if (!app || !appProcess)
+          throw new Error("Pet session has no application");
+        mark("normal-exit");
+        const child = appProcess;
+        // Trigger the product's quit action, but judge the owned OS process.
+        // A driver acknowledgement may never arrive even after a genuine exit.
+        void app
+          .evaluate(({ Menu }) => {
+            const item = Menu.getApplicationMenu()
+              ?.items.find((item) => item.label === "Mosey")
+              ?.submenu?.items.find((item) => item.label === "Quit Mosey");
+            if (!item) throw new Error("Missing Quit Mosey menu item");
+            item.click();
+          })
+          .then(
+            () => record("quit-acknowledged"),
+            (error: unknown) =>
+              record("quit-acknowledgement-failed", String(error)),
+          );
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const exited = () => {
+              clearTimeout(timer);
+              if (child.exitCode === 0 && child.signalCode === null) resolve();
+              else
+                reject(
+                  new Error(
+                    `normal-exit failed: code=${child.exitCode}, signal=${child.signalCode}`,
+                  ),
+                );
+            };
+            if (child.exitCode !== null || child.signalCode !== null) exited();
+            else {
+              child.once("exit", exited);
+              timer = setTimeout(() => {
+                child.off("exit", exited);
+                reject(
+                  new Error("normal-exit did not complete within 10000ms"),
+                );
+              }, 10000);
+            }
+          });
+          active();
+          record("normal-exit-complete");
+          await stopApp();
+        } catch (error) {
+          record("normal-exit-failed", String(error));
+          return finishFailure(error, "Pet quit and cleanup failed");
+        } finally {
+          clearTimeout(timer);
+        }
+      },
+      async writeProfileFile(name: string, contents: string) {
+        active();
+        if (path.basename(name) !== name)
+          throw new Error("Profile file must be a basename");
+        await run(`profile-write:${name}`, () =>
+          writeFile(path.join(profile, name), contents),
+        );
+      },
       restart() {
-        if (closing) throw new Error("Pet session is closed");
+        active();
         if (starting) throw new Error("Pet session is still launching");
         starting = true;
         const restarting = stopApp().then(
@@ -446,26 +769,19 @@ setInterval(() => {
         return restarting;
       },
       async setDockObservation(value: DockObservation | null) {
+        active();
         if (options.dock !== "controlled")
           throw new Error("Controlled Dock input was not selected");
         // Readers see one complete protocol value, even during an update.
         const pending = `${observation}.tmp`;
         await writeFile(pending, JSON.stringify(value));
+        active();
         await rename(pending, observation);
       },
       close,
     };
   } catch (error) {
     record("preparation-failed", String(error));
-    try {
-      await close();
-    } catch (cleanup) {
-      throw new AggregateError(
-        [error, cleanup],
-        "Pet preparation and cleanup failed",
-        { cause: cleanup },
-      );
-    }
-    throw error;
+    return finishFailure(error, "Pet preparation and cleanup failed");
   }
 }

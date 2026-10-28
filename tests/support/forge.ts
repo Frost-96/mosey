@@ -6,7 +6,9 @@ import path from "node:path";
 
 // Let Forge prepare the real dev build/server without launching an unmanaged
 // app. Each caller owns one cleanup function, including on readiness failure.
-export async function startForge(): Promise<() => Promise<void>> {
+export async function startForge({
+  signal,
+}: { signal?: AbortSignal } = {}): Promise<() => Promise<void>> {
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
@@ -53,12 +55,14 @@ export async function startForge(): Promise<() => Promise<void>> {
       }
     })());
   try {
+    signal?.throwIfAborted();
     await mkdir(path.dirname(executable), { recursive: true });
     await writeFile(
       executable,
       "#!/bin/sh\necho MOSEY_TEST_READY\nexec /bin/cat\n",
     );
     await chmod(executable, 0o755);
+    signal?.throwIfAborted();
     server = spawn("pnpm", ["start"], {
       env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
       stdio: "pipe",
@@ -75,20 +79,41 @@ export async function startForge(): Promise<() => Promise<void>> {
     server.stderr?.on("data", (data: Buffer) => {
       output += data.toString();
     });
-    await expect
-      .poll(
-        () => {
-          if (spawnError) throw spawnError;
-          if (server?.exitCode !== null || server.signalCode !== null)
-            throw new Error(output);
-          return output;
-        },
-        { timeout: 60000 },
-      )
-      .toContain("MOSEY_TEST_READY");
+    let aborted: (() => void) | undefined;
+    try {
+      await Promise.race([
+        expect
+          .poll(
+            () => {
+              if (spawnError) throw spawnError;
+              if (server?.exitCode !== null || server.signalCode !== null)
+                throw new Error(output);
+              return output;
+            },
+            { timeout: 60000 },
+          )
+          .toContain("MOSEY_TEST_READY"),
+        new Promise<never>((_resolve, reject) => {
+          aborted = () => reject(signal?.reason);
+          signal?.addEventListener("abort", aborted, { once: true });
+          if (signal?.aborted) aborted();
+        }),
+      ]);
+    } finally {
+      if (aborted) signal?.removeEventListener("abort", aborted);
+    }
     return stop;
   } catch (error) {
-    await stop();
+    const cleanup = await stop().then(
+      () => undefined,
+      (failure: unknown) => ({ failure }),
+    );
+    if (cleanup)
+      throw new AggregateError(
+        [error, cleanup.failure],
+        "Forge preparation and cleanup failed",
+        { cause: error },
+      );
     throw error;
   }
 }
