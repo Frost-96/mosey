@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import type { Page } from "playwright";
-import { rm, mkdir } from "node:fs/promises";
+import { rm, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
@@ -32,12 +32,19 @@ async function paintedCharacter(page: Page) {
   });
 }
 
-test("new and legacy profiles choose whale while retaining size and hidden intent", async () => {
-  for (const previous of [
-    undefined,
-    { version: 1, size: "large", visibility: "hidden" },
-    { version: 2, size: 70, visibility: "hidden" },
-  ]) {
+test.each([
+  { name: "new", previous: undefined },
+  {
+    name: "version 1",
+    previous: { version: 1, size: "large", visibility: "hidden" },
+  },
+  {
+    name: "version 2",
+    previous: { version: 2, size: 70, visibility: "hidden" },
+  },
+])(
+  "$name profile chooses whale while retaining size and hidden intent",
+  async ({ previous }) => {
     const f = await createPetTestSession({
       dock: "empty",
       preferences: previous,
@@ -66,8 +73,8 @@ test("new and legacy profiles choose whale while retaining size and hidden inten
     } finally {
       await f.close();
     }
-  }
-});
+  },
+);
 
 test("selection replaces the one pet, retains hidden size and location, and survives reopen and restart", async () => {
   const f = await createPetTestSession({
@@ -355,14 +362,53 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
         else callback({ cancel: false });
       });
     });
+    f.mark("request-held-preparation");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("whale");
     await expect
-      .poll(() => settings.locator("#character-error").textContent(), {
-        timeout: 20000,
-      })
-      .toContain("素材加载失败");
+      .poll(
+        () =>
+          app.evaluate(
+            () => Reflect.get(globalThis, "heldPreparationImages").length,
+          ),
+        { timeout: 5000 },
+      )
+      .toBeGreaterThan(0);
+    f.mark("wait-for-preparation-timeout");
+    try {
+      await expect
+        .poll(
+          () =>
+            settings.evaluate(
+              () =>
+                document.querySelector("#character-error")?.textContent ?? "",
+            ),
+          { timeout: 20000 },
+        )
+        .toContain("素材加载失败");
+    } catch (error) {
+      // Preserve the state before finally closes the app. A pending driver
+      // call can otherwise leave only a secondary TargetClosedError.
+      const observation = await Promise.race([
+        Promise.all([
+          settings.evaluate(() => document.body.innerText),
+          pet.evaluate(() => window.mosey.getPresentation()),
+          app.evaluate(
+            () => Reflect.get(globalThis, "heldPreparationImages").length,
+          ),
+        ]).catch(String),
+        new Promise((resolve) =>
+          setTimeout(() => resolve("Driver observation stalled"), 1000),
+        ),
+      ]);
+      await writeFile(
+        `test-results/preparation-timeout-${process.env.MOSEY_TEST_MODE}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.json`,
+        JSON.stringify({ error: String(error), observation }, null, 2),
+      );
+      throw error;
+    }
+    f.mark("preparation-timeout-reported");
     expect(await paintedCharacter(pet)).toBe("corgi");
     await app.evaluate(() => {
       for (const callback of Reflect.get(
@@ -392,16 +438,59 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
     );
     expect(await paintedCharacter(pet)).toBe("corgi");
     // Restart with the retry still loading: neither request was committed.
+    f.mark("restart-with-pending-preparation");
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
     expect(
       await settings.getByRole("combobox", { name: "角色" }).inputValue(),
     ).toBe("corgi");
     await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
+    f.mark("fresh-selection-with-cold-images");
+    await app.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows().find(
+        (window) => window.getTitle() === "Mosey",
+      )!.webContents;
+      Reflect.set(globalThis, "freshPreparationImages", []);
+      contents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (
+          details.webContentsId === contents.id &&
+          details.resourceType === "image"
+        )
+          Reflect.get(globalThis, "freshPreparationImages").push(callback);
+        else callback({ cancel: false });
+      });
+    });
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("whale");
-    await expect.poll(() => paintedCharacter(pet)).toBe("whale");
+    await expect
+      .poll(
+        () =>
+          app.evaluate(
+            () => Reflect.get(globalThis, "freshPreparationImages").length,
+          ),
+        { timeout: 5000 },
+      )
+      .toBeGreaterThan(0);
+    expect(await paintedCharacter(pet)).toBe("corgi");
+    expect(await settings.locator("#character-status").textContent()).toContain(
+      "正在准备鲸鱼娘",
+    );
+    // A cold atlas can legitimately take more than expect.poll's default 1s.
+    // Hold it beyond that boundary, while retaining the application's finite
+    // preparation deadline and every stale-reply/persistence assertion above.
+    await app.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()
+        .find((window) => window.getTitle() === "Mosey")!
+        .webContents.session.webRequest.onBeforeRequest(null);
+      for (const callback of Reflect.get(globalThis, "freshPreparationImages"))
+        setTimeout(() => callback({ cancel: false }), 1400);
+    });
+    await expect
+      .poll(() => paintedCharacter(pet), { timeout: 15000 })
+      .toBe("whale");
+    expect(await settings.locator("#character-error").isVisible()).toBe(false);
+    f.mark("fresh-selection-painted");
   } finally {
     await f.close();
   }

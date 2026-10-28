@@ -6,7 +6,14 @@ permissions:
   contents: read
 jobs:
   macos:
+    name: macos (${{ matrix.scale }}x)
     runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        scale: ["1", "2"]
+    env:
+      MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
     # Both serial suites include real-time Dock recovery and renderer lifecycles.
     timeout-minutes: 75
     steps:
@@ -36,7 +43,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-silicon-app-and-test-evidence
+          name: apple-silicon-app-and-test-evidence-${{ matrix.scale }}x
           path: |
             out/Mosey-darwin-arm64.zip
             test-results/
