@@ -1,3 +1,4 @@
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import type { Page } from "playwright";
 import { rm, mkdir, writeFile } from "node:fs/promises";
@@ -769,6 +770,7 @@ test("walking switches preserve left facing and ground placement at both end siz
   for (const size of [70, 240]) {
     const f = await createPetTestSession({
       dock: "empty",
+      behavior: { random: 0.1 },
       preferences: {
         version: 3,
         character: "whale",
@@ -779,32 +781,16 @@ test("walking switches preserve left facing and ground placement at both end siz
     try {
       const { app, pet } = await f.launch();
       const settings = await openSettings(app);
-      await app.evaluate(() => {
-        Math.random = () => 0.1;
-        const original = globalThis.setTimeout;
-        Reflect.set(globalThis, "restoreRestClock", () => {
-          globalThis.setTimeout = original;
-        });
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          original(
-            callback,
-            delay && delay >= 18000 ? 100 : delay,
-            ...args,
-          )) as typeof setTimeout;
-      });
+
       await settings
         .getByRole("button", { name: "显示宠物", exact: true })
         .click();
+      await advanceRest(app, 0.1);
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
         .toBe("鲸鱼娘 · 走路");
       const before = await pet.evaluate(() => window.mosey.getPresentation());
       expect(before.direction).toBe("left");
-      await app.evaluate(() => Reflect.get(globalThis, "restoreRestClock")());
       const bounds = () =>
         app.evaluate(({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()
@@ -838,6 +824,7 @@ test("walking switches preserve left facing and ground placement at both end siz
 test("a switch waits through climbing and commits on observed Dock support without descending", async () => {
   const f = await createPetTestSession({
     dock: "controlled",
+    behavior: { random: 0.1 },
     preferences: {
       version: 3,
       character: "whale",
@@ -865,16 +852,10 @@ test("a switch waits through climbing and commits on observed Dock support witho
     const old = await native();
     const floor = old.display.workArea.y + old.display.workArea.height;
     const top = floor - 80;
-    // Hold time before presenting the Dock so slow UI observation cannot miss
-    // the real climb. Images still prepare on real time; restore motion after
-    // readiness without forcing behavior or position.
+    // Hold only behavior time before presenting the Dock. Image preparation
+    // retains its real 2000ms delay and unrelated deadline while motion waits.
+    await controlBehavior(app, { running: false });
     await app.evaluate(({ BrowserWindow }) => {
-      const now = Date.now;
-      const heldAt = now();
-      Date.now = () => heldAt;
-      Reflect.set(globalThis, "restoreClimbClock", () => {
-        Date.now = now;
-      });
       Reflect.set(globalThis, "climbDelayedImages", 0);
       const contents = BrowserWindow.getAllWindows().find(
         (window) => window.getTitle() === "Mosey",
@@ -924,13 +905,13 @@ test("a switch waits through climbing and commits on observed Dock support witho
       "鲸鱼娘 · 攀爬",
     );
     await app.evaluate(({ BrowserWindow }) => {
-      Reflect.get(globalThis, "restoreClimbClock")();
       BrowserWindow.getAllWindows()
         .find((window) => window.getTitle() === "Mosey")!
         .webContents.session.webRequest.onBeforeRequest(null);
       if (Reflect.get(globalThis, "climbDelayedImages") < 1)
         throw new Error("Cold character preparation did not request an image");
     });
+    await controlBehavior(app, { running: true });
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 5000,

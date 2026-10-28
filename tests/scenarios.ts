@@ -7,11 +7,13 @@ import path from "node:path";
 export const scenarioGroups = {
   deterministic: [
     "tests/behavior-time.test.ts",
+    "tests/behavior-build.test.ts",
     "tests/pixel-comparison.test.ts",
   ],
   application: [
     "tests/app.test.ts",
     "tests/autonomy.test.ts",
+    "tests/behavior-control.test.ts",
     "tests/character-sample.test.ts",
     "tests/character-switch.test.ts",
     "tests/context-menu.test.ts",
