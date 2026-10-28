@@ -105,7 +105,7 @@ jobs:
           mkdir -p test-results/verification
           pnpm exec vitest list --no-static-parse --project development --json=test-results/verification/inventory.json
       - id: verification
-        run: pnpm test:dev --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+        run: exit 81 # Controlled channel-independence failure; temporary probe branch only
       - name: Record result
         if: always()
         env:
