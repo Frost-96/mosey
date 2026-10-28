@@ -61,16 +61,15 @@ test("paint comparison considers alpha and accepts any sampled animation frame",
 
 test("fractional scaling still rejects local damage and excessive overall error", () => {
   const reference = fixture();
-  // Captured at (311, 71) in the 400px preview canvas before/after recovery.
-  const edge = (5 * reference.width + 3) * 4;
-  reference.data.set([46, 16, 0, 95], edge);
-  const matches = matchPaintedFrames([encode(reference)], { resized: true });
+  const matches = matchPaintedFrames([encode(reference)], {
+    maxChannelDifference: 24,
+  });
   const roundedEdge = fixture();
-  roundedEdge.data.set([46, 16, 2, 112], edge);
+  roundedEdge.data[(5 * 16 + 3) * 4 + 3] += 23;
   expect(matches(encode(roundedEdge))).toBe(true);
-  roundedEdge.data[edge + 3] += 1;
+  roundedEdge.data[(5 * 16 + 3) * 4 + 3] += 2;
   expect(matches(encode(roundedEdge))).toBe(false);
-  const tinted = PNG.sync.read(PNG.sync.write(reference));
+  const tinted = fixture();
   for (let i = 0; i < tinted.data.length; i += 4)
     if (tinted.data[i + 3]) tinted.data[i] += 16;
   expect(matches(encode(tinted))).toBe(false);

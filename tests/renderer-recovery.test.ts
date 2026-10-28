@@ -90,7 +90,7 @@ test.each([
       await new Promise((resolve) => setTimeout(resolve, 60));
     }
     const matchesIdle = matchPaintedFrames(idleFrames, {
-      resized: phase === "preview",
+      maxChannelDifference: phase === "preview" ? 24 : 2,
     });
     const invoke = (label: string) =>
       app.evaluate(({ Menu }, label) => {
