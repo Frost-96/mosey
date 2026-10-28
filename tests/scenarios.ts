@@ -5,7 +5,10 @@ import path from "node:path";
 // Application groups deliberately run in both modes; scale-independent checks
 // run once. Keep conditional native/development cases inside their test files.
 export const scenarioGroups = {
-  deterministic: ["tests/pixel-comparison.test.ts"],
+  deterministic: [
+    "tests/behavior-time.test.ts",
+    "tests/pixel-comparison.test.ts",
+  ],
   application: [
     "tests/app.test.ts",
     "tests/autonomy.test.ts",
