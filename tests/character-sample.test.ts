@@ -1,11 +1,6 @@
-import { emptyDockCapture } from "./support/empty-dock";
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import { mkdir, writeFile } from "node:fs/promises";
+import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -13,69 +8,30 @@ const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 const evidence = `${packaged ? "packaged" : "development"}${scaleFactor === "1" ? "" : `-${scaleFactor}x`}`;
 
 test("selected whale paints one character, walks, yields to dragging and returns to the ground", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-whale-sample-"));
-  let app: ElectronApplication | undefined;
-  let stopForge: (() => Promise<void>) | undefined;
-  let restoreDockCapture: (() => Promise<void>) | undefined;
   await mkdir("test-results", { recursive: true });
-  try {
-    await mkdir(path.join(root, "profile"));
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "whale",
-        size: 160,
-        visibility: "visible",
-      }),
-    );
-    if (!packaged) stopForge = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    const args = [
-      `--user-data-dir=${root}/profile`,
-      `--force-device-scale-factor=${scaleFactor}`,
-    ];
-    restoreDockCapture = await emptyDockCapture(
-      packaged
-        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-        : path.resolve("build/native/dock-runtime"),
-    );
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args,
-            ...(process.env.MOSEY_RECORD_SAMPLE === "1"
-              ? {
-                  recordVideo: {
-                    dir: "test-results/whale-video",
-                    size: { width: 240, height: 240 },
-                    fps: 60,
-                  },
-                }
-              : {}),
-          }
-        : {
-            args: [".", ...args],
-            ...(process.env.MOSEY_RECORD_SAMPLE === "1"
-              ? {
-                  recordVideo: {
-                    dir: "test-results/whale-video",
-                    size: { width: 240, height: 240 },
-                    fps: 60,
-                  },
-                }
-              : {}),
+  const session = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "whale",
+      size: 160,
+      visibility: "visible",
+    },
+    scaleFactor,
+    ...(process.env.MOSEY_RECORD_SAMPLE === "1"
+      ? {
+          recordVideo: {
+            dir: "test-results/whale-video",
+            size: { width: 240, height: 240 },
+            fps: 60,
           },
-    );
-    const pet = await app.firstWindow();
+        }
+      : {}),
+  });
+  try {
+    const { app, pet } = await session.launch();
     const errors: string[] = [];
     pet.on("pageerror", (error) => errors.push(error.message));
-    await pet.locator("canvas").waitFor();
     const painted = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -297,9 +253,6 @@ test("selected whale paints one character, walks, yields to dragging and returns
     }
     expect(errors).toEqual([]);
   } finally {
-    await app?.close().catch(() => {});
-    await restoreDockCapture?.();
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await session.close();
   }
 });

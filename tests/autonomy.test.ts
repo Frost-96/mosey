@@ -1,6 +1,7 @@
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
+import { waitForPetVisibility } from "./support/visibility";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
@@ -120,8 +121,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
-    const invoke = (label: string) =>
-      app!.evaluate(async ({ Menu, BrowserWindow, app }, label) => {
+    const invoke = async (label: string) => {
+      await app!.evaluate(({ Menu, BrowserWindow, app }, label) => {
         const menu = Menu.getApplicationMenu();
         const item = menu?.items
           .find((entry) => entry.label === "Mosey")
@@ -145,35 +146,15 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
               })),
             }),
           );
-        // Cocoa delivers the public hide/show event after the menu callback.
-        // Wait for that boundary before positioning or driving the pet; an
-        // in-flight visibility transition can otherwise replace setup geometry.
-        const target = BrowserWindow.getAllWindows()[0]!;
-        const event =
-          label === "Hide Mosey"
-            ? "hide"
-            : label === "Show Mosey"
-              ? "show"
-              : undefined;
-        if (!event) {
-          item.click();
-          return;
-        }
-        await new Promise<void>((resolve, reject) => {
-          const settled = () => {
-            clearTimeout(timer);
-            resolve();
-          };
-          const timer = setTimeout(() => {
-            if (event === "hide") target.removeListener("hide", settled);
-            else target.removeListener("show", settled);
-            reject(new Error(`No public ${event} event after ${label}`));
-          }, 5000);
-          if (event === "hide") target.once("hide", settled);
-          else target.once("show", settled);
-          item.click();
-        });
+        item.click();
       }, label);
+      if (label === "Hide Mosey" || label === "Show Mosey")
+        await waitForPetVisibility(
+          app!,
+          pet,
+          label === "Hide Mosey" ? "hidden" : "visible",
+        );
+    };
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     await pet.evaluate(() => {

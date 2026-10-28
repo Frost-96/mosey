@@ -10,20 +10,48 @@ export async function startForge(): Promise<() => Promise<void>> {
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
-  const stop = async () => {
-    if (server?.pid) {
+  let stopping: Promise<void> | undefined;
+  const stop = () =>
+    (stopping ??= (async () => {
       try {
-        process.kill(-server.pid, "SIGTERM");
-      } catch {
-        /* already exited */
+        if (!server?.pid) return;
+        const child = server;
+        const signal = (value: NodeJS.Signals) => {
+          try {
+            process.kill(-child.pid!, value);
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+          }
+        };
+        const exited = new Promise<void>((resolve) => {
+          if (child.exitCode !== null || child.signalCode !== null) resolve();
+          else child.once("exit", () => resolve());
+        });
+        // Only this launch's detached group is ours. Escalate if Forge or its
+        // shim ignores TERM, including when startup never reached readiness.
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const forced = new Promise<void>((resolve, reject) => {
+          timer = setTimeout(() => {
+            try {
+              signal("SIGKILL");
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          }, 5000);
+        });
+        try {
+          signal("SIGTERM");
+          await Promise.race([exited, forced]);
+          signal("SIGKILL");
+          await exited;
+        } finally {
+          clearTimeout(timer);
+        }
+      } finally {
+        await rm(shim, { recursive: true, force: true });
       }
-      if (server.exitCode === null && server.signalCode === null)
-        await new Promise<void>((resolve) =>
-          server!.once("exit", () => resolve()),
-        );
-    }
-    await rm(shim, { recursive: true, force: true });
-  };
+    })());
   try {
     await mkdir(path.dirname(executable), { recursive: true });
     await writeFile(
@@ -37,6 +65,10 @@ export async function startForge(): Promise<() => Promise<void>> {
       detached: true,
     });
     let output = "";
+    let spawnError: Error | undefined;
+    server.on("error", (error) => {
+      spawnError = error;
+    });
     server.stdout?.on("data", (data: Buffer) => {
       output += data.toString();
     });
@@ -46,6 +78,7 @@ export async function startForge(): Promise<() => Promise<void>> {
     await expect
       .poll(
         () => {
+          if (spawnError) throw spawnError;
           if (server?.exitCode !== null || server.signalCode !== null)
             throw new Error(output);
           return output;

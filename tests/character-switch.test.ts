@@ -1,83 +1,9 @@
-import { test, expect, afterAll } from "vitest";
-import {
-  _electron as electron,
-  type ElectronApplication,
-  type Page,
-} from "playwright";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, mkdir, writeFile, chmod } from "node:fs/promises";
+import { test, expect } from "vitest";
+import type { Page } from "playwright";
+import { rm, mkdir } from "node:fs/promises";
 import path from "node:path";
-import os from "node:os";
-import { startForge } from "./support/forge";
-import { emptyDockCapture } from "./support/empty-dock";
+import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
-const packaged = process.env.MOSEY_TEST_MODE === "packaged";
-let stop: (() => Promise<void>) | undefined;
-afterAll(async () => {
-  await stop?.();
-});
-async function fixture(preferences?: unknown) {
-  if (!packaged && !stop) stop = await startForge();
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-character-"));
-  const profile = path.join(root, "profile");
-  await mkdir(profile);
-  if (preferences)
-    await writeFile(
-      path.join(profile, "preferences.json"),
-      JSON.stringify(preferences),
-    );
-  if (packaged)
-    execFileSync("/usr/bin/ditto", [
-      path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-      path.join(root, "Mosey.app"),
-    ]);
-  const restoreDock = await emptyDockCapture(
-    packaged
-      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-      : path.resolve("build/native/dock-runtime"),
-  );
-  let app: ElectronApplication;
-  const launch = async () => {
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${profile}`],
-          }
-        : { args: [".", `--user-data-dir=${profile}`] },
-    );
-    const pet = await app.firstWindow();
-    await pet.locator("canvas").waitFor();
-    // The HTML canvas exists before the renderer's asynchronous atlas decode.
-    // Observe the public presentation even for hidden profiles; only visible
-    // pets must have painted pixels before a scenario can sample or grab them.
-    await expect
-      .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
-        timeout: 15000,
-      })
-      .toMatch(/^(鲸鱼娘|柯基) · /);
-    const visible = await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()
-        .find((window) => window.getTitle() === "Mosey")!
-        .isVisible(),
-    );
-    if (visible)
-      await expect
-        .poll(() => paintedCharacter(pet), { timeout: 15000 })
-        .toMatch(/^(whale|corgi)$/);
-    return { app, pet };
-  };
-  return {
-    root,
-    profile,
-    launch,
-    async close() {
-      await app?.close().catch(() => {});
-      await restoreDock();
-      await rm(root, { recursive: true, force: true });
-    },
-  };
-}
 
 // An independent image-identity observation: the whale has blue hair/clothes;
 // corgi is warm orange. No atlas metadata or redraw implementation is used.
@@ -112,7 +38,10 @@ test("new and legacy profiles choose whale while retaining size and hidden inten
     { version: 1, size: "large", visibility: "hidden" },
     { version: 2, size: 70, visibility: "hidden" },
   ]) {
-    const f = await fixture(previous);
+    const f = await createPetTestSession({
+      dock: "empty",
+      preferences: previous,
+    });
     try {
       const { app, pet } = await f.launch();
       const settings = await openSettings(app);
@@ -141,11 +70,14 @@ test("new and legacy profiles choose whale while retaining size and hidden inten
 });
 
 test("selection replaces the one pet, retains hidden size and location, and survives reopen and restart", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "whale",
-    size: 70,
-    visibility: "hidden",
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "whale",
+      size: 70,
+      visibility: "hidden",
+    },
   });
   try {
     let { app, pet } = await f.launch();
@@ -179,8 +111,7 @@ test("selection replaces the one pet, retains hidden size and location, and surv
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
       .toBe("corgi");
-    await app.close();
-    ({ app, pet } = await f.launch());
+    ({ app, pet } = await f.restart());
     settings = await openSettings(app);
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
@@ -209,11 +140,14 @@ test("selection replaces the one pet, retains hidden size and location, and surv
 });
 
 test("failed persistence keeps the actual and saved character, and retries the failed target", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "whale",
-    size: 160,
-    visibility: "hidden",
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "whale",
+      size: 160,
+      visibility: "hidden",
+    },
   });
   try {
     let { app, pet } = await f.launch();
@@ -242,8 +176,7 @@ test("failed persistence keeps the actual and saved character, and retries the f
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("柯基 · 待机");
-    await app.close();
-    ({ app, pet } = await f.launch());
+    ({ app, pet } = await f.restart());
     settings = await openSettings(app);
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
@@ -257,11 +190,14 @@ test("failed persistence keeps the actual and saved character, and retries the f
 });
 
 test("image failure and a superseded delayed response cannot replace the newest choice across settings lifetimes", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "corgi",
-    size: 240,
-    visibility: "visible",
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 240,
+      visibility: "visible",
+    },
   });
   try {
     let { app, pet } = await f.launch();
@@ -342,8 +278,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("柯基 · 待机");
-    await app.close();
-    ({ app, pet } = await f.launch());
+    ({ app, pet } = await f.restart());
     settings = await openSettings(app);
     await expect
       .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
@@ -386,11 +321,14 @@ test("image failure and a superseded delayed response cannot replace the newest 
 });
 
 test("a held and falling pet keeps its old character until landing, then uses the new painted hit mask", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "whale",
-    size: 160,
-    visibility: "visible",
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "whale",
+      size: 160,
+      visibility: "visible",
+    },
   });
   try {
     const { app, pet } = await f.launch();
@@ -507,11 +445,14 @@ test("a held and falling pet keeps its old character until landing, then uses th
 });
 
 test("renderer recovery retires a pending preparation and permits an explicit retry without showing a hidden pet", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "corgi",
-    size: 160,
-    visibility: "hidden",
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 160,
+      visibility: "hidden",
+    },
   });
   try {
     const { app, pet } = await f.launch();
@@ -583,11 +524,14 @@ test("renderer recovery retires a pending preparation and permits an explicit re
 
 test("walking switches preserve left facing and ground placement at both end sizes", async () => {
   for (const size of [70, 240]) {
-    const f = await fixture({
-      version: 3,
-      character: "whale",
-      size,
-      visibility: "hidden",
+    const f = await createPetTestSession({
+      dock: "empty",
+      preferences: {
+        version: 3,
+        character: "whale",
+        size,
+        visibility: "hidden",
+      },
     });
     try {
       const { app, pet } = await f.launch();
@@ -649,22 +593,15 @@ test("walking switches preserve left facing and ground placement at both end siz
 });
 
 test("a switch waits through climbing and commits on observed Dock support without descending", async () => {
-  const f = await fixture({
-    version: 3,
-    character: "whale",
-    size: 160,
-    visibility: "visible",
+  const f = await createPetTestSession({
+    dock: "controlled",
+    preferences: {
+      version: 3,
+      character: "whale",
+      size: 160,
+      visibility: "visible",
+    },
   });
-  const observation = path.join(f.root, "dock.json");
-  const helper = packaged
-    ? path.join(f.root, "Mosey.app/Contents/Resources/native/dock-runtime")
-    : path.resolve("build/native/dock-runtime");
-  await writeFile(observation, "null");
-  await writeFile(
-    helper,
-    `#!${process.execPath}\nimport fs from 'node:fs'; const started = performance.now(); let sequence=0; console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));setInterval(()=>{const observation=JSON.parse(fs.readFileSync(${JSON.stringify(observation)},'utf8')); console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:observation?'current':'alpha_empty',observation}));},50);`,
-  );
-  await chmod(helper, 0o755);
   try {
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
@@ -713,23 +650,20 @@ test("a switch waits through climbing and commits on observed Dock support witho
         } else callback({ cancel: false });
       });
     });
-    await writeFile(
-      observation,
-      JSON.stringify({
-        orientation: "bottom",
-        primaryDisplayID: old.display.id,
-        bounds: {
-          x: old.bounds.x,
-          y: top,
-          width: 160,
-          height: old.display.bounds.y + old.display.bounds.height - top,
-        },
-        contour: Array.from({ length: 160 }, (_, i) => ({
-          axis: old.bounds.x + i,
-          inward: top,
-        })),
-      }),
-    );
+    await f.setDockObservation({
+      orientation: "bottom",
+      primaryDisplayID: old.display.id,
+      bounds: {
+        x: old.bounds.x,
+        y: top,
+        width: 160,
+        height: old.display.bounds.y + old.display.bounds.height - top,
+      },
+      contour: Array.from({ length: 160 }, (_, i) => ({
+        axis: old.bounds.x + i,
+        inward: top,
+      })),
+    });
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 5000,
