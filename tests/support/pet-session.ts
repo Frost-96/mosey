@@ -34,6 +34,14 @@ type SessionOptions = {
   };
 };
 
+const processGroup = (pid: number) =>
+  execFileSync("/bin/ps", ["-axo", "pid=,ppid=,pgid=,uid=,state=,comm="], {
+    timeout: 5000,
+    encoding: "utf8",
+  })
+    .split("\n")
+    .filter((line) => Number(line.trim().split(/\s+/)[2]) === pid);
+
 // A session owns its profile, launcher, substituted capture producer and every
 // app it launches. Cleanup is registered before acquisition and unwinds in
 // reverse order, continuing even when one release fails. Test exit is a safety
@@ -109,6 +117,11 @@ export async function createPetTestSession(options: SessionOptions) {
       const child = appProcess;
       if (child?.pid && child.exitCode === null && child.signalCode === null) {
         try {
+          record("owned-process-group", processGroup(child.pid));
+        } catch (error) {
+          record("process-group-unavailable", String(error));
+        }
+        try {
           execFileSync(
             "/usr/bin/sample",
             [
@@ -145,7 +158,13 @@ export async function createPetTestSession(options: SessionOptions) {
       try {
         process.kill(-child.pid, "SIGKILL");
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === "EPERM") {
+          // macOS may signal some group members and still report EPERM.
+          // Success below requires the leader's exit and no live members;
+          // a permission failure that leaves a process alive still fails.
+          record("group-signal-partial", processGroup(child.pid));
+        } else if (code !== "ESRCH") throw error;
       }
     };
     const exited = new Promise<void>((resolve) => {
@@ -165,13 +184,24 @@ export async function createPetTestSession(options: SessionOptions) {
     });
     try {
       if (child.exitCode === null && child.signalCode === null)
-        await Promise.race([current.close(), forced]);
+        await Promise.race([current.close(), exited, forced]);
     } finally {
       clearTimeout(timer);
       // Reap any remaining helper in the owned group even if graceful close
       // rejected or the main process exited before its children.
       signal();
-      await exited;
+      await expect
+        .poll(
+          () => ({
+            exited: child.exitCode !== null || child.signalCode !== null,
+            // A zombie has exited and cannot execute or retain app resources.
+            live: processGroup(child.pid!).filter(
+              (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
+            ),
+          }),
+          { timeout: 5000 },
+        )
+        .toEqual({ exited: true, live: [] });
       record("app-stopped", { pid: child.pid });
     }
   };
@@ -317,6 +347,9 @@ setInterval(() => {
         });
         appProcess = app.process();
         processes.push(appProcess);
+        appProcess.stderr?.on("data", (data: Buffer) =>
+          appendFileSync(path.join(evidence, "stderr.txt"), data),
+        );
         record("app-acquired");
         if (closing) {
           await stopApp();
@@ -327,6 +360,22 @@ setInterval(() => {
         const current = app;
         const renderer = observePetRenderer(current);
         const readiness = (async () => {
+          // Observe without handling or suppressing the default fatal error.
+          // A native error dialog can block later inspector calls and hide the
+          // original exception behind a test timeout.
+          await current.evaluate(
+            (_electron, output) => {
+              process.on("uncaughtExceptionMonitor", (error, origin) => {
+                process
+                  .getBuiltinModule("node:fs")
+                  .appendFileSync(
+                    output,
+                    JSON.stringify({ origin, stack: error.stack }) + "\n",
+                  );
+              });
+            },
+            path.join(evidence, "main-exceptions.jsonl"),
+          );
           mark("initial-document");
           const pet = await current.firstWindow({ timeout: 15000 });
           await pet.waitForLoadState("load");

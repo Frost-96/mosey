@@ -11,7 +11,9 @@ import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
+import { createPetTestSession } from "./support/pet-session";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("settings owns presets, reuses its window and preserves hidden intent and failed targets", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-"));
   let app: ElectronApplication | undefined;
@@ -54,9 +56,9 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${profile}`],
+              args: [scaleArgument, `--user-data-dir=${profile}`],
             }
-          : { args: [".", `--user-data-dir=${profile}`] },
+          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
       );
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
@@ -259,134 +261,121 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
   }
 });
 
-test("old presets and hidden intent migrate durably, recover backup and accept numeric steps", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-migration-"));
-  let app: ElectronApplication | undefined;
-  let stop: (() => Promise<void>) | undefined;
-  try {
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    for (const [old, size] of [
-      ["small", 70],
-      ["medium", 160],
-      ["large", 240],
-      [undefined, 160],
-      [110, 110],
-    ] as const) {
-      const profile = path.join(root, String(size) + String(old));
-      await mkdir(profile, { recursive: true });
-      const file = path.join(profile, "preferences.json");
-      await writeFile(
-        file,
-        JSON.stringify({
-          version: typeof old === "number" ? 2 : 1,
-          visibility: "hidden",
-          size: old,
-        }),
-      );
-      const launch = () =>
-        electron.launch(
-          packaged
-            ? {
-                executablePath: path.join(
-                  root,
-                  "Mosey.app/Contents/MacOS/Mosey",
-                ),
-                args: [`--user-data-dir=${profile}`],
-              }
-            : { args: [".", `--user-data-dir=${profile}`] },
-        );
-      app = await launch();
-      const pet = await app.firstWindow();
-      await pet.waitForLoadState("load");
-      const state = () =>
-        app!.evaluate(({ BrowserWindow }) => {
-          const pet = BrowserWindow.getAllWindows().find(
-            (w) => w.getTitle() === "Mosey",
-          )!;
-          return { side: pet.getBounds().width, visible: pet.isVisible() };
-        });
-      expect(await state()).toEqual({ side: size, visible: false });
-      if (typeof old === "number") {
-        const settings = await openSettings(app);
-        expect(await settings.locator("output").textContent()).toBe("110");
-        expect(await settings.locator('[aria-pressed="true"]').count()).toBe(0);
-        await settings
-          .getByRole("button", { name: "显示宠物", exact: true })
-          .click();
-        await expect
-          .poll(() =>
-            pet.evaluate(() => {
-              const canvas = document.querySelector("canvas")!;
-              const data = canvas
-                .getContext("2d")!
-                .getImageData(0, 0, canvas.width, canvas.height).data;
-              let opaque = 0;
-              for (let i = 3; i < data.length; i += 4)
-                if (data[i] > 127) opaque++;
-              return opaque / (canvas.width * canvas.height);
-            }),
-          )
-          .toBeGreaterThan(0.2);
-        const bounds = () =>
-          app!.evaluate(({ BrowserWindow }) =>
-            BrowserWindow.getAllWindows()
-              .find((w) => w.getTitle() === "Mosey")!
-              .getBounds(),
-          );
-        const ground = await bounds();
-        await pet.mouse.move(55, 82);
-        await pet.mouse.down();
-        await pet.mouse.move(55, -20);
-        await expect
-          .poll(async () => (await bounds()).y)
-          .toBeLessThan(ground.y - 50);
-        await pet.mouse.up();
-        await expect
-          .poll(() => distanceFromGround(app!), { timeout: 4000 })
-          .toBe(0);
-        await app.evaluate(({ Menu }) =>
-          Menu.getApplicationMenu()!
-            .items.find((x) => x.label === "Mosey")!
-            .submenu!.items.find((x) => x.label === "Hide Mosey")!
-            .click(),
-        );
-      }
-      await app.close();
-      app = undefined;
-      expect(JSON.parse(await readFile(file, "utf8"))).toEqual({
-        version: 3,
-        character: "whale",
+test.each([
+  ["small", 70],
+  ["medium", 160],
+  ["large", 240],
+  [undefined, 160],
+  [110, 110],
+] as const)(
+  "old %s preset retains %i DIP and hidden intent across durable migration",
+  async (old, size) => {
+    const session = await createPetTestSession({
+      // This scenario validates preferences and ordinary ground interaction;
+      // real Dock capture/permissions have their own unchanged acceptance.
+      dock: "empty",
+      preferences: {
+        version: typeof old === "number" ? 2 : 1,
         visibility: "hidden",
-        size,
+        size: old,
+      },
+    });
+    const { app: initialApp, pet, renderer } = await session.launch();
+    let app = initialApp;
+    const file = path.join(session.profile, "preferences.json");
+    expect((await renderer.read())!.scaleFactor).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
+    const state = () =>
+      app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (w) => w.getTitle() === "Mosey",
+        )!;
+        return { side: pet.getBounds().width, visible: pet.isVisible() };
       });
-      if (typeof old !== "number") {
-        await writeFile(file, "{broken");
-        await writeFile(`${file}.tmp`, "interrupted");
-        app = await launch();
-        await app.firstWindow();
-        expect(await state()).toEqual({ side: size, visible: false });
-        await app.close();
-        app = undefined;
-      }
+    const quit = async () => {
+      const child = app.process();
+      // Judge the real process exit, not a driver close acknowledgement that
+      // can remain pending after the application has already exited.
+      void app
+        .evaluate(({ Menu }) => {
+          Menu.getApplicationMenu()!
+            .items.find((item) => item.label === "Mosey")!
+            .submenu!.items.find((item) => item.label === "Quit Mosey")!
+            .click();
+        })
+        .catch(() => {});
+      await expect.poll(() => child.exitCode, { timeout: 10000 }).toBe(0);
+    };
+    session.mark("migrated-hidden-window");
+    expect(await state()).toEqual({ side: size, visible: false });
+    if (typeof old === "number") {
+      session.mark("numeric-settings");
+      const settings = await openSettings(app);
+      expect(await settings.locator("output").textContent()).toBe("110");
+      expect(await settings.locator('[aria-pressed="true"]').count()).toBe(0);
+      await settings
+        .getByRole("button", { name: "显示宠物", exact: true })
+        .click();
+      session.mark("numeric-visible-paint");
+      await renderer.waitUntilReady({ paintedPixels: 0 });
+      await expect
+        .poll(() =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            const data = canvas
+              .getContext("2d")!
+              .getImageData(0, 0, canvas.width, canvas.height).data;
+            let opaque = 0;
+            for (let i = 3; i < data.length; i += 4)
+              if (data[i] > 127) opaque++;
+            return opaque / (canvas.width * canvas.height);
+          }),
+        )
+        .toBeGreaterThan(0.2);
+      const bounds = () =>
+        app.evaluate(({ BrowserWindow }) =>
+          BrowserWindow.getAllWindows()
+            .find((w) => w.getTitle() === "Mosey")!
+            .getBounds(),
+        );
+      const ground = await bounds();
+      session.mark("numeric-drag-and-return");
+      await pet.mouse.move(55, 82);
+      await pet.mouse.down();
+      await pet.mouse.move(55, -20);
+      await expect
+        .poll(async () => (await bounds()).y)
+        .toBeLessThan(ground.y - 50);
+      await pet.mouse.up();
+      await expect
+        .poll(() => distanceFromGround(app), { timeout: 4000 })
+        .toBe(0);
+      await app.evaluate(({ Menu }) =>
+        Menu.getApplicationMenu()!
+          .items.find((x) => x.label === "Mosey")!
+          .submenu!.items.find((x) => x.label === "Hide Mosey")!
+          .click(),
+      );
     }
-  } catch (error) {
-    await mkdir("test-results", { recursive: true });
-    await app
-      ?.windows()[0]
-      ?.screenshot({
-        path: `test-results/failure-migration-${packaged ? "packaged" : "development"}.png`,
-        timeout: 3000,
-      })
-      .catch(() => {});
-    throw error;
-  } finally {
-    await app?.close().catch(() => {});
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
-  }
-});
+    session.mark("quit-before-durability-check");
+    await quit();
+    session.mark("persisted-migration");
+    expect(JSON.parse(await readFile(file, "utf8"))).toEqual({
+      version: 3,
+      character: "whale",
+      visibility: "hidden",
+      size,
+    });
+    if (typeof old !== "number") {
+      session.mark("corrupt-primary-and-interrupted-write");
+      await writeFile(file, "{broken");
+      await writeFile(`${file}.tmp`, "interrupted");
+      ({ app } = await session.restart());
+      session.mark("backup-recovered-hidden-window");
+      expect(await state()).toEqual({ side: size, visible: false });
+      await quit();
+    }
+    session.mark("migration-complete");
+  },
+);
