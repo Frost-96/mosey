@@ -8,6 +8,7 @@ type PetObservation = {
   presentation: Presentation;
   label: string | null;
   width: number;
+  scaleFactor: number;
   opaquePixels: number;
   pixels: string;
   mirroredPixels: string;
@@ -63,7 +64,7 @@ export function observePetRenderer(app: ElectronApplication) {
         return {
           presentation, documentHidden: document.hidden,
           label: canvas.getAttribute("aria-label"),
-          width: canvas.width / devicePixelRatio,
+          width: canvas.width / devicePixelRatio, scaleFactor: devicePixelRatio,
           opaquePixels, pixels: canvas.toDataURL(), mirroredPixels: mirror.toDataURL()
         };
       })()`);

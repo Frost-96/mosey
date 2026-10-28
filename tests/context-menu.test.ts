@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
 import { openSettings, closeSettings } from "./support/settings";
+import { matchPaintedFrames } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 // Exercise the CI 1x raster path on Retina developer machines too.
@@ -224,6 +225,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
       );
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
+    const matchesIdle = matchPaintedFrames(idleFrames);
     await openMenu();
     await expect.poll(menuCount).toBe(1);
     const labels = await app.evaluate(() =>
@@ -347,10 +349,10 @@ test("body secondary clicks open a native menu and cancel without changing the p
     // A native Control-click must not enter the ordinary left-button gesture.
     await openMenu(true);
     await closeMenu();
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await pet.mouse.click(120, 180);
     await expect
-      .poll(async () => idleFrames.has(await pixels()), { interval: 20 })
+      .poll(async () => matchesIdle(await pixels()), { interval: 20 })
       .toBe(false);
     await openMenu();
     await new Promise((resolve) => setTimeout(resolve, 40));
@@ -358,9 +360,9 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await new Promise((resolve) => setTimeout(resolve, 2100));
     expect((await pixels()) === reaction).toBe(true);
     await closeMenu();
-    expect(idleFrames.has(await pixels())).toBe(false);
+    expect(matchesIdle(await pixels())).toBe(false);
     await expect
-      .poll(async () => idleFrames.has(await pixels()), {
+      .poll(async () => matchesIdle(await pixels()), {
         interval: 25,
         timeout: 3000,
       })
@@ -431,7 +433,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     expect((await pixels()) === landing).toBe(true);
     expect(await bounds()).toEqual(landingBounds);
     await closeMenu();
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     // Preserve both a native-state deadline and in-progress desktop movement.
     await app.evaluate(() => {
       Math.random = () => 0.1;
@@ -492,15 +494,48 @@ test("body secondary clicks open a native menu and cancel without changing the p
         interval: 25,
       })
       .toBeGreaterThan(140);
+    // Exercise the gap between the main-process activity deadline and its
+    // first painted frame. Slow rendering must not be mistaken for inactivity.
+    // Only the first stretch/play paint is delayed; the actual renderer and
+    // native/menu pause behavior stay in charge of every subsequent assertion.
+    await pet.evaluate(() => {
+      const frame = requestAnimationFrame;
+      const delayed = new Set<string>();
+      Reflect.set(window, "restoreMenuFrames", () => {
+        window.requestAnimationFrame = frame;
+      });
+      window.requestAnimationFrame = (callback) =>
+        frame((time) => {
+          const label =
+            document.querySelector("canvas")?.getAttribute("aria-label") ?? "";
+          if (/伸展|玩耍/.test(label) && !delayed.has(label)) {
+            delayed.add(label);
+            setTimeout(() => callback(time), 900);
+          } else callback(time);
+        });
+    });
+    const activityPaints = [];
     for (const choice of [0.6, 0.9]) {
       await app.evaluate((_electron, choice) => {
         Math.random = () => choice;
       }, choice);
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
+      const expectedLabel = choice === 0.6 ? "柯基 · 伸展" : "柯基 · 玩耍";
+      const started = performance.now();
       await expect
-        .poll(async () => idleFrames.has(await pixels()), { interval: 20 })
-        .toBe(false);
+        .poll(
+          async () => ({
+            label: await pet.locator("canvas").getAttribute("aria-label"),
+            idlePixels: matchesIdle(await pixels()),
+          }),
+          { timeout: 3000, interval: 20 },
+        )
+        .toEqual({ label: expectedLabel, idlePixels: false });
+      activityPaints.push({
+        label: expectedLabel,
+        elapsed: performance.now() - started,
+      });
       await openMenu();
       const activity = { pixels: await pixels(), bounds: await bounds() };
       await new Promise((resolve) => setTimeout(resolve, 2400));
@@ -508,19 +543,20 @@ test("body secondary clicks open a native menu and cancel without changing the p
       expect(await bounds()).toEqual(activity.bounds);
       await closeMenu();
       await expect
-        .poll(async () => idleFrames.has(await pixels()), {
+        .poll(async () => matchesIdle(await pixels()), {
           timeout: 3000,
           interval: 25,
         })
         .toBe(true);
     }
+    await pet.evaluate(() => Reflect.get(window, "restoreMenuFrames")());
     await app.evaluate(() => {
       globalThis.setTimeout = Reflect.get(globalThis, "unshortenedTimeout");
     });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     await expect
-      .poll(async () => idleFrames.has(await pixels()), { timeout: 2000 })
+      .poll(async () => matchesIdle(await pixels()), { timeout: 2000 })
       .toBe(true);
     // Exercise menu lifecycle when system suspension supersedes a body menu.
     await openMenu();
@@ -543,7 +579,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await app.evaluate(({ Menu }) => {
       Menu.prototype.closePopup = Reflect.get(globalThis, "trackedClosePopup");
     });
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
     await app.evaluate(() =>
       Reflect.get(globalThis, "menus")
@@ -572,7 +608,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
         ),
       )
       .toBe(true);
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
     await app.evaluate(() =>
       Reflect.get(globalThis, "menus")
@@ -635,6 +671,8 @@ test("body secondary clicks open a native menu and cancel without changing the p
             "stretching",
             "playing",
           ],
+          activityPaints,
+          scaleFactor: Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
           dragSecondaryIgnored: true,
           systemSuspendClosesMenu: true,
           durableHiddenIntent: true,

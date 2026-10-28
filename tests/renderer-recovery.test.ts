@@ -1,10 +1,10 @@
 import { test, expect } from "vitest";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
-import { PNG } from "pngjs";
 import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
 import { openSettings } from "./support/settings";
+import { matchPaintedFrames } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
@@ -32,7 +32,10 @@ test.each([
     const { app, pet: page, renderer } = await session.launch();
     const drawn = async () => (await renderer.read())?.opaquePixels ?? 0;
     const pixels = async () => (await renderer.read())!.pixels;
-    await renderer.waitUntilReady({ paintedPixels: 1500 });
+    const initial = await renderer.waitUntilReady({ paintedPixels: 1500 });
+    expect(initial.scaleFactor).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
     if (phase === "main") {
       session.mark("main-process-crash");
       const children = await app.evaluate(({ app }) =>
@@ -86,40 +89,9 @@ test.each([
       idleFrames.add(frame.mirroredPixels);
       await new Promise((resolve) => setTimeout(resolve, 60));
     }
-    const references =
-      phase === "preview"
-        ? [...idleFrames].map((value) =>
-            PNG.sync.read(Buffer.from(value.split(",")[1]!, "base64")),
-          )
-        : [];
-    const matchesIdle = (value: string) => {
-      if (idleFrames.has(value)) return true;
-      if (phase !== "preview") return false;
-      const actual = PNG.sync.read(Buffer.from(value.split(",")[1]!, "base64"));
-      return references.some((reference) => {
-        if (
-          actual.width !== reference.width ||
-          actual.height !== reference.height
-        )
-          return false;
-        let error = 0;
-        for (let i = 0; i < actual.data.length; i += 4) {
-          const alpha = actual.data[i + 3]!;
-          const expectedAlpha = reference.data[i + 3]!;
-          error += Math.abs(alpha - expectedAlpha);
-          for (let channel = 0; channel < 3; channel++) {
-            error += Math.abs(
-              (actual.data[i + channel]! * alpha) / 255 -
-                (reference.data[i + channel]! * expectedAlpha) / 255,
-            );
-          }
-        }
-        // Noninteger atlas scaling can round differently in a rebuilt Canvas
-        // context. Allow under one level per premultiplied RGBA channel;
-        // retain exact comparison for the unscaled recovery fixtures.
-        return error / actual.data.length < 1;
-      });
-    };
+    const matchesIdle = matchPaintedFrames(idleFrames, {
+      maxChannelDifference: phase === "preview" ? 16 : 2,
+    });
     const invoke = (label: string) =>
       app.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()!
@@ -174,7 +146,7 @@ test.each([
         });
       }
       await expect
-        .poll(async () => idleFrames.has(await pixels()), {
+        .poll(async () => matchesIdle(await pixels()), {
           timeout: 5000,
           interval: 20,
         })
@@ -241,11 +213,9 @@ test.each([
         `Recovered canvas is not resting: ${JSON.stringify(state)}`,
       );
     }
-    if (phase === "preview") {
-      const presentation = (await renderer.read())!.presentation;
-      expect(presentation.posture).toBe("resting");
-      expect(presentation.size).toBe(expectedSize);
-    }
+    const presentation = (await renderer.read())!.presentation;
+    expect(presentation.posture).toBe("resting");
+    expect(presentation.size).toBe(expectedSize);
     expect(await distanceFromGround(app)).toBe(0);
     expect(
       await app.evaluate(

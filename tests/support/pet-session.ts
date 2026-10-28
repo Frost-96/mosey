@@ -305,9 +305,7 @@ setInterval(() => {
           ...(options.isolateAppIdentity
             ? ["-ApplePersistenceIgnoreState", "YES"]
             : []),
-          ...(options.scaleFactor
-            ? [`--force-device-scale-factor=${options.scaleFactor}`]
-            : []),
+          `--force-device-scale-factor=${options.scaleFactor ?? process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
         ];
         // Playwright owns a launch that rejects before returning. Once it
         // returns, even after a test deadline, the session owns that process.
