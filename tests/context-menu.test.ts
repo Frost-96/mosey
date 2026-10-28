@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
@@ -35,10 +40,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    if (!packaged) await copyBehaviorDevelopmentApp(root);
+    await instrumentBehaviorApplication({ root, packaged });
     restoreDock = await emptyDockCapture(
       packaged
         ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-        : path.resolve("build/native/dock-runtime"),
+        : path.join(root, "app/build/native/dock-runtime"),
     );
     app = await electron.launch(
       packaged
@@ -46,9 +53,18 @@ test("body secondary clicks open a native menu and cancel without changing the p
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
             args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
+        : {
+            args: [
+              path.join(root, "app"),
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
+          },
     );
     const pet = await app.firstWindow();
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
     await pet.waitForLoadState("networkidle");
     await app.evaluate(({ Menu }) => {
       const popup = Menu.prototype.popup;
@@ -435,24 +451,11 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await closeMenu();
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     // Preserve both a native-state deadline and in-progress desktop movement.
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      Reflect.set(globalThis, "unshortenedTimeout", timeout);
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 800 : delay,
-          ...args,
-        )) as typeof setTimeout;
-    });
+    await controlBehavior(app, { random: 0.1 });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     const walkOrigin = await bounds();
+    await advanceRest(app, 0.1);
     await expect
       .poll(async () => Math.abs((await bounds()).x - walkOrigin.x), {
         timeout: 3000,
@@ -516,13 +519,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
     });
     const activityPaints = [];
     for (const choice of [0.6, 0.9]) {
-      await app.evaluate((_electron, choice) => {
-        Math.random = () => choice;
-      }, choice);
+      await controlBehavior(app, { random: choice });
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
       const expectedLabel = choice === 0.6 ? "柯基 · 伸展" : "柯基 · 玩耍";
       const started = performance.now();
+      await advanceRest(app, choice);
       await expect
         .poll(
           async () => ({
@@ -550,9 +552,6 @@ test("body secondary clicks open a native menu and cancel without changing the p
         .toBe(true);
     }
     await pet.evaluate(() => Reflect.get(window, "restoreMenuFrames")());
-    await app.evaluate(() => {
-      globalThis.setTimeout = Reflect.get(globalThis, "unshortenedTimeout");
-    });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     await expect

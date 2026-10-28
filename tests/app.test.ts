@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior } from "./support/controlled-behavior";
 import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
@@ -134,13 +139,18 @@ async function exercisePet() {
         path.join(packagedRoot, "Mosey.app"),
       ]);
     }
+    if (!packaged) await copyBehaviorDevelopmentApp(profile);
+    await instrumentBehaviorApplication({
+      root: packaged ? packagedRoot! : profile,
+      packaged,
+    });
     restoreDockCapture = await emptyDockCapture(
       packaged
         ? path.join(
             packagedRoot!,
             "Mosey.app/Contents/Resources/native/dock-runtime",
           )
-        : path.resolve("build/native/dock-runtime"),
+        : path.join(profile, "app/build/native/dock-runtime"),
     );
     app = await electron.launch(
       packaged
@@ -153,7 +163,11 @@ async function exercisePet() {
             ),
           }
         : {
-            args: [".", scaleArgument, `--user-data-dir=${profile}`],
+            args: [
+              path.join(profile, "app"),
+              scaleArgument,
+              `--user-data-dir=${profile}`,
+            ],
             timeout: 20000,
           },
     );
@@ -373,9 +387,7 @@ async function exercisePet() {
     expect(idleFrames.has(await pixels())).toBe(true);
     const responses = new Set<string>();
     for (const random of [0.01, 0.4, 0.9]) {
-      await app.evaluate((_electron, value) => {
-        Math.random = () => value;
-      }, random);
+      await controlBehavior(app, { random });
       await window.mouse.click(120, 180);
       await expect
         .poll(async () => idleFrames.has(await pixels()), {

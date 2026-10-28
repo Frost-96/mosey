@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -17,6 +22,7 @@ import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 // Only the OS capture producer is substituted. The actual Electron window,
@@ -44,9 +50,11 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    if (!packaged) await copyBehaviorDevelopmentApp(root);
+    await instrumentBehaviorApplication({ root, packaged });
     helper = packaged
       ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-      : path.resolve("build/native/dock-runtime");
+      : path.join(root, "app/build/native/dock-runtime");
     original = await readFile(helper).catch(() => undefined);
     await mkdir(path.dirname(helper), { recursive: true });
     await writeFile(
@@ -68,10 +76,14 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
         : {
-            args: [".", `--user-data-dir=${root}/profile`],
+            args: [
+              path.join(root, "app"),
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
           },
     );
     applicationProcess = app.process();
@@ -147,6 +159,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       runtimeProvenance = { unavailable: String(error).slice(0, 500) };
     }
     const pet = await app.firstWindow();
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     await expect
@@ -802,22 +817,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         timeout: 5000,
       })
       .toBe(floor);
-    // Accelerate only the known long rest deadline; movement clocks retain real
-    // duration and the native cleanup/diagnostic deadlines remain untouched.
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-      const original = globalThis.setTimeout;
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        original(
-          callback,
-          delay && delay >= 18000 && delay <= 32000 ? 1000 : delay,
-          ...args,
-        )) as typeof setTimeout;
-    });
+    // Only behavior time advances; native cleanup and diagnostic deadlines stay real.
+    await controlBehavior(app, { random: 0.1 });
     const noSnapback = async () => {
       let prior = await bounds();
       await publishObservation("null");
@@ -832,6 +833,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
       const start = await bounds();
+      await advanceRest(app, 0.1);
       await expect
         .poll(async () => Math.abs((await bounds()).x - start.x), {
           timeout: 4000,
