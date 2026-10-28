@@ -16,6 +16,7 @@ export const scenarioGroups = {
     "tests/character-switch.test.ts",
     "tests/context-menu.test.ts",
     "tests/dock-recovery.test.ts",
+    "tests/dock-producer.test.ts",
     "tests/dock-status.test.ts",
     "tests/dock.test.ts",
     "tests/geometry.test.ts",
