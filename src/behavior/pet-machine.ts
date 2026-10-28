@@ -1,4 +1,5 @@
 import { assign, setup } from "xstate";
+import { realBehaviorAdapter } from "./adapters";
 
 // Tuning value, not a fixed product requirement. Active reactions absorb all clicks.
 export const clickMergeIntervalMs = 350;
@@ -15,10 +16,12 @@ export const petBehavior = setup({
   types: {
     input: {} as {
       now: () => number;
+      random?: () => number;
       walkDurationMs?: number;
     },
     context: {} as {
       now: () => number;
+      random: () => number;
       walkDurationMs: number;
       actionId: number;
       startedAt: number;
@@ -43,8 +46,8 @@ export const petBehavior = setup({
       | { type: "LANDED"; actionId: number },
   },
   delays: {
-    restDelay: () =>
-      autonomy.restMinMs + Math.random() * autonomy.restVariationMs,
+    restDelay: ({ context }) =>
+      autonomy.restMinMs + context.random() * autonomy.restVariationMs,
     walkDuration: ({ context }) => context.walkDurationMs,
   },
   guards: {
@@ -71,7 +74,7 @@ export const petBehavior = setup({
       lastClickAt: context.now(),
     })),
     rest: assign(({ context }) => ({
-      lastClickAt: 0,
+      lastClickAt: -Infinity,
       actionId: context.actionId + 1,
       startedAt: context.now(),
     })),
@@ -80,10 +83,11 @@ export const petBehavior = setup({
   id: "pet",
   context: ({ input }) => ({
     now: input.now,
+    random: input.random ?? realBehaviorAdapter.random,
     walkDurationMs: input.walkDurationMs ?? autonomy.walkMs,
     actionId: 0,
     startedAt: input.now(),
-    lastClickAt: 0,
+    lastClickAt: -Infinity,
     awakeSince: input.now(),
     sleepClickAt: undefined,
     choice: 0,
@@ -121,9 +125,10 @@ export const petBehavior = setup({
   states: {
     paused: {},
     autonomous: {
-      entry: assign(() => ({
-        choice: Math.random(),
-        direction: Math.random() < 0.5 ? ("left" as const) : ("right" as const),
+      entry: assign(({ context }) => ({
+        choice: context.random(),
+        direction:
+          context.random() < 0.5 ? ("left" as const) : ("right" as const),
       })),
       always: [
         {
@@ -229,7 +234,7 @@ export const petBehavior = setup({
       },
     },
     choosing: {
-      entry: assign(() => ({ choice: Math.random() })),
+      entry: assign(({ context }) => ({ choice: context.random() })),
       always: [
         { guard: ({ context }) => context.choice < 1 / 3, target: "tilt" },
         { guard: ({ context }) => context.choice < 2 / 3, target: "paw" },
