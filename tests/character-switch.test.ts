@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import type { Page } from "playwright";
-import { rm, mkdir } from "node:fs/promises";
+import { rm, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
@@ -362,14 +362,53 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
         else callback({ cancel: false });
       });
     });
+    f.mark("request-held-preparation");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("whale");
     await expect
-      .poll(() => settings.locator("#character-error").textContent(), {
-        timeout: 20000,
-      })
-      .toContain("素材加载失败");
+      .poll(
+        () =>
+          app.evaluate(
+            () => Reflect.get(globalThis, "heldPreparationImages").length,
+          ),
+        { timeout: 5000 },
+      )
+      .toBeGreaterThan(0);
+    f.mark("wait-for-preparation-timeout");
+    try {
+      await expect
+        .poll(
+          () =>
+            settings.evaluate(
+              () =>
+                document.querySelector("#character-error")?.textContent ?? "",
+            ),
+          { timeout: 20000 },
+        )
+        .toContain("素材加载失败");
+    } catch (error) {
+      // Preserve the state before finally closes the app. A pending driver
+      // call can otherwise leave only a secondary TargetClosedError.
+      const observation = await Promise.race([
+        Promise.all([
+          settings.evaluate(() => document.body.innerText),
+          pet.evaluate(() => window.mosey.getPresentation()),
+          app.evaluate(
+            () => Reflect.get(globalThis, "heldPreparationImages").length,
+          ),
+        ]).catch(String),
+        new Promise((resolve) =>
+          setTimeout(() => resolve("Driver observation stalled"), 1000),
+        ),
+      ]);
+      await writeFile(
+        `test-results/preparation-timeout-${process.env.MOSEY_TEST_MODE}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.json`,
+        JSON.stringify({ error: String(error), observation }, null, 2),
+      );
+      throw error;
+    }
+    f.mark("preparation-timeout-reported");
     expect(await paintedCharacter(pet)).toBe("corgi");
     await app.evaluate(() => {
       for (const callback of Reflect.get(
