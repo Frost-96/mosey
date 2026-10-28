@@ -3,7 +3,7 @@ import {
   characterDirectory,
   type CharacterId,
 } from "./shared/characters";
-import { petGeometry } from "./shared/size";
+import { characterGeometry } from "./shared/character-geometry";
 import type { Presentation } from "./shared/contract";
 
 try {
@@ -13,9 +13,11 @@ try {
     import: "default",
     query: "?url",
   });
-  const loadAssets = (character: CharacterId) =>
-    Promise.all(
-      characterAssets(character).map(async (atlas) => {
+  const loadAssets = async (character: CharacterId) => {
+    const atlases = characterAssets(character);
+    const images = new Map<string, HTMLImageElement>();
+    await Promise.all(
+      atlases.map(async (atlas) => {
         const loadImage = async (filename: string) => {
           const image = new Image();
           const url =
@@ -28,15 +30,16 @@ try {
           await image.decode();
           if (image.width !== atlas.width || image.height !== atlas.height)
             throw new Error("Atlas pixels do not match metadata");
-          return image;
+          images.set(filename, image);
         };
-        const [image, leftImage] = await Promise.all([
+        await Promise.all([
           loadImage(atlas.image),
           atlas.leftImage ? loadImage(atlas.leftImage) : undefined,
         ]);
-        return { atlas, image, leftImage };
       }),
     );
+    return { atlases, images, geometry: characterGeometry(atlases) };
+  };
   const prepared = new Map<
     CharacterId,
     Awaited<ReturnType<typeof loadAssets>>
@@ -86,29 +89,28 @@ try {
   function draw() {
     frameRequest = 0;
     if (presentation.visibility !== "visible" || document.hidden) return;
-    const geometry = petGeometry(presentation.size);
+    const side = presentation.size;
     // A new primary display can change backing scale without changing CSS size.
     // Check every visible draw, including the first draw after hiding.
     const ratio = window.devicePixelRatio;
     if (
-      canvas!.width !== Math.round(geometry.side * ratio) ||
-      canvas!.height !== Math.round(geometry.side * ratio)
+      canvas!.width !== Math.round(side * ratio) ||
+      canvas!.height !== Math.round(side * ratio)
     ) {
-      canvas!.width = Math.round(geometry.side * ratio);
-      canvas!.height = Math.round(geometry.side * ratio);
-      canvas!.style.width = `${geometry.side}px`;
-      canvas!.style.height = `${geometry.side}px`;
+      canvas!.width = Math.round(side * ratio);
+      canvas!.height = Math.round(side * ratio);
+      canvas!.style.width = `${side}px`;
+      canvas!.style.height = `${side}px`;
       context!.setTransform(ratio, 0, 0, ratio, 0, 0);
       previous = "";
     }
-    const asset = assets.find(
-      (asset) => asset.atlas.action === presentation.posture,
+    const atlas = assets.atlases.find(
+      (atlas) => atlas.action === presentation.posture,
     );
-    if (!asset)
+    if (!atlas)
       throw new Error(
         `Unsupported ${presentation.character} action: ${presentation.posture}`,
       );
-    const { atlas, image, leftImage } = asset;
     const total = atlas.frames.reduce(
       (sum, frame) => sum + frame.durationMs,
       0,
@@ -135,27 +137,24 @@ try {
       }
       const key = `${presentation.geometryRevision}:${presentation.actionId}:${presentation.direction}:${index}`;
       if (key !== previous) {
-        const { region, foot } = atlas.frames[index]!;
-        context!.clearRect(0, 0, geometry.side, geometry.side);
+        const { drawing } = assets.geometry.frame({
+          ...presentation,
+          frame: index,
+        })!;
+        const { source } = drawing;
+        context!.clearRect(0, 0, side, side);
         context!.save();
-        const authoredLeft = presentation.direction === "left" && leftImage;
-        if (presentation.direction === "left" && !authoredLeft) {
-          context!.translate(geometry.side, 0);
-          context!.scale(-1, 1);
-        }
-        const width = (region.width / atlas.pixelRatio) * geometry.assetScale;
-        const x =
-          geometry.foot.x - (foot.x / atlas.pixelRatio) * geometry.assetScale;
+        context!.transform(...drawing.transform);
         context!.drawImage(
-          authoredLeft || image,
-          region.x,
-          region.y,
-          region.width,
-          region.height,
-          authoredLeft ? geometry.side - x - width : x,
-          geometry.foot.y - (foot.y / atlas.pixelRatio) * geometry.assetScale,
-          width,
-          (region.height / atlas.pixelRatio) * geometry.assetScale,
+          assets.images.get(drawing.image)!,
+          source.x,
+          source.y,
+          source.width,
+          source.height,
+          0,
+          0,
+          source.width,
+          source.height,
         );
         context!.restore();
         window.mosey.input({
