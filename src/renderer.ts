@@ -93,14 +93,19 @@ try {
     // A new primary display can change backing scale without changing CSS size.
     // Check every visible draw, including the first draw after hiding.
     const ratio = window.devicePixelRatio;
+    const cssSide = `${side}px`;
     if (
       canvas!.width !== Math.round(side * ratio) ||
-      canvas!.height !== Math.round(side * ratio)
+      canvas!.height !== Math.round(side * ratio) ||
+      // The HTML backing size can already match (160 DIP at 1.5x = 240px).
+      // CSS size also distinguishes that uninitialized first draw.
+      canvas!.style.width !== cssSide ||
+      canvas!.style.height !== cssSide
     ) {
       canvas!.width = Math.round(side * ratio);
       canvas!.height = Math.round(side * ratio);
-      canvas!.style.width = `${side}px`;
-      canvas!.style.height = `${side}px`;
+      canvas!.style.width = cssSide;
+      canvas!.style.height = cssSide;
       context!.setTransform(ratio, 0, 0, ratio, 0, 0);
       previous = "";
     }
