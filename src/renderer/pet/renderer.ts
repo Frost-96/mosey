@@ -2,13 +2,13 @@ import {
   characterAssets,
   characterDirectory,
   type CharacterId,
-} from "./shared/characters";
-import { characterGeometry } from "./shared/character-geometry";
-import type { Presentation } from "./shared/contract";
+} from "../../shared/characters";
+import { characterGeometry } from "../../shared/character-geometry";
+import type { Presentation } from "../../shared/contract";
 
 try {
   const initial = await window.mosey.getPresentation();
-  const urls = import.meta.glob("./assets/generated/**/*.png", {
+  const urls = import.meta.glob("../../assets/generated/**/*.png", {
     eager: true,
     import: "default",
     query: "?url",
@@ -22,7 +22,7 @@ try {
           const image = new Image();
           const url =
             urls[
-              `./assets/generated/${characterDirectory(character)}${filename}`
+              `../../assets/generated/${characterDirectory(character)}${filename}`
             ];
           if (typeof url !== "string")
             throw new Error(`Missing ${character} ${atlas.action} image`);

@@ -64,13 +64,13 @@ async function buildHelper({
 // Product and historical validation keep separate source, binary and signing
 // identities; shared mechanics cannot overwrite the original probe's receipt.
 await buildHelper({
-  sourceFile: "src/platform/native/dock-live.swift",
+  sourceFile: "native/macos/dock-live.swift",
   outputName: "dock-live",
   identifier: "dev.frost.mosey.dock-helper",
   receiptName: "receipt.json",
 });
 await buildHelper({
-  sourceFile: "native/dock-runtime.swift",
+  sourceFile: "native/macos/dock-runtime.swift",
   outputName: "dock-runtime",
   identifier: "dev.frost.mosey.dock-runtime",
   receiptName: "runtime-receipt.json",

@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import type { Settings } from "./shared/contract";
+import type { Settings } from "../../shared/contract";
 import { LoginSettings } from "./settings-login";
-import { useSettings } from "./settings-state";
+import { useSettings } from "./use-settings";
 
 const characterNames = { whale: "鲸鱼娘", corgi: "柯基" };
 function CharacterSettings({

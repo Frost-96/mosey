@@ -6,21 +6,21 @@ import {
   type WebContents,
 } from "electron";
 import type { SnapshotFrom } from "xstate";
-import type { petBehavior } from "./behavior/resting";
-import type { PreferencesStore } from "./platform/preferences";
+import type { petBehavior } from "../../behavior/pet-machine";
+import type { PreferencesStore } from "../platform/preferences";
 import {
   characterAssets,
   characterWalk,
   type CharacterId,
-} from "./shared/characters";
-import { characterGeometry } from "./shared/character-geometry";
+} from "../../shared/characters";
+import { characterGeometry } from "../../shared/character-geometry";
 import {
   channels,
   characterPreparedSchema,
   emptyRequestSchema,
   type CharacterPreparation,
   type Settings,
-} from "./shared/contract";
+} from "../../shared/contract";
 
 function loadCharacter(id: CharacterId) {
   const atlases = characterAssets(id);

@@ -6,8 +6,8 @@ import log from "electron-log/main";
 import {
   dockRuntimeRecordSchema,
   type DockObservation,
-} from "./dock-runtime-protocol";
-export type { DockObservation } from "./dock-runtime-protocol";
+} from "./runtime-protocol";
+export type { DockObservation } from "./runtime-protocol";
 
 // Pixels stay in the helper. Only its bounded, validated numeric silhouette crosses
 // this boundary. Unavailable geometry is never replaced by workArea or a Dock setting.

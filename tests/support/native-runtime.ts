@@ -11,7 +11,7 @@ export async function nativeRuntimeFixture(
   input: string,
   ledger: string,
 ): Promise<Buffer> {
-  const production = await readFile("native/dock-runtime.swift", "utf8");
+  const production = await readFile("native/macos/dock-runtime.swift", "utf8");
   const marker = "@main struct DockRuntime {";
   if (production.split(marker).length !== 2)
     throw new Error("Native fixture cannot isolate the production entry point");
