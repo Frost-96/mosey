@@ -320,6 +320,160 @@ test("image failure and a superseded delayed response cannot replace the newest 
   }
 });
 
+test("a timed-out preparation keeps the saved choice and cannot complete a later retry", async () => {
+  const f = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 160,
+      visibility: "visible",
+    },
+  });
+  try {
+    let { app, pet } = await f.launch();
+    let settings = await openSettings(app);
+    await pet.evaluate(() => {
+      window.mosey.onPrepareCharacter((request) => {
+        // Retain an old message at the renderer IPC boundary, not module state.
+        if (!Reflect.has(window, "expiredPreparation"))
+          Reflect.set(window, "expiredPreparation", request);
+      });
+    });
+    await app.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows().find(
+        (window) => window.getTitle() === "Mosey",
+      )!.webContents;
+      const callbacks: ((value: { cancel: boolean }) => void)[] = [];
+      Reflect.set(globalThis, "heldPreparationImages", callbacks);
+      contents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (
+          details.webContentsId === contents.id &&
+          details.resourceType === "image"
+        )
+          callbacks.push(callback);
+        else callback({ cancel: false });
+      });
+    });
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect
+      .poll(() => settings.locator("#character-error").textContent(), {
+        timeout: 20000,
+      })
+      .toContain("素材加载失败");
+    expect(await paintedCharacter(pet)).toBe("corgi");
+    await app.evaluate(() => {
+      for (const callback of Reflect.get(
+        globalThis,
+        "heldPreparationImages",
+      ).splice(0))
+        callback({ cancel: true });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await settings.getByRole("button", { name: "重试角色" }).click();
+    await expect
+      .poll(() =>
+        app.evaluate(
+          () => Reflect.get(globalThis, "heldPreparationImages").length,
+        ),
+      )
+      .toBeGreaterThan(0);
+    await pet.evaluate(() => {
+      window.mosey.characterPrepared({
+        ...Reflect.get(window, "expiredPreparation"),
+        success: true,
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(await settings.locator("#character-status").textContent()).toContain(
+      "正在准备鲸鱼娘",
+    );
+    expect(await paintedCharacter(pet)).toBe("corgi");
+    // Restart with the retry still loading: neither request was committed.
+    ({ app, pet } = await f.restart());
+    settings = await openSettings(app);
+    expect(
+      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
+    ).toBe("corgi");
+    await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("whale");
+    await expect.poll(() => paintedCharacter(pet)).toBe("whale");
+  } finally {
+    await f.close();
+  }
+});
+
+test.runIf(process.env.MOSEY_TEST_MODE === "development")(
+  "a development document reload resumes an unfinished preparation",
+  async () => {
+    const f = await createPetTestSession({
+      dock: "empty",
+      preferences: {
+        version: 3,
+        character: "corgi",
+        size: 160,
+        visibility: "visible",
+      },
+    });
+    try {
+      const { app, pet } = await f.launch();
+      const settings = await openSettings(app);
+      await app.evaluate(({ BrowserWindow }) => {
+        const contents = BrowserWindow.getAllWindows().find(
+          (window) => window.getTitle() === "Mosey",
+        )!.webContents;
+        Reflect.set(globalThis, "heldReloadImages", 0);
+        contents.session.webRequest.onBeforeRequest((details, callback) => {
+          if (
+            details.webContentsId === contents.id &&
+            details.resourceType === "image"
+          ) {
+            Reflect.set(
+              globalThis,
+              "heldReloadImages",
+              Reflect.get(globalThis, "heldReloadImages") + 1,
+            );
+            return;
+          }
+          callback({ cancel: false });
+        });
+        // Only the old document loses its in-flight image responses. The new
+        // document must prepare the selection through the ordinary handshake.
+        contents.once("did-start-loading", () => {
+          contents.session.webRequest.onBeforeRequest(null);
+        });
+      });
+      await settings
+        .getByRole("combobox", { name: "角色" })
+        .selectOption("whale");
+      await expect
+        .poll(() =>
+          app.evaluate(() => Reflect.get(globalThis, "heldReloadImages")),
+        )
+        .toBeGreaterThan(0);
+      await pet.evaluate(() => location.reload());
+      await expect
+        .poll(
+          () => settings.getByRole("combobox", { name: "角色" }).inputValue(),
+          {
+            timeout: 10000,
+          },
+        )
+        .toBe("whale");
+      await expect.poll(() => paintedCharacter(pet)).toBe("whale");
+      expect(await settings.locator("#character-error").isVisible()).toBe(
+        false,
+      );
+    } finally {
+      await f.close();
+    }
+  },
+);
+
 test("a held and falling pet keeps its old character until landing, then uses the new painted hit mask", async () => {
   const f = await createPetTestSession({
     dock: "empty",
