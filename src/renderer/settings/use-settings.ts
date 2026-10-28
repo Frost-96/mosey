@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Settings, SettingsBridge } from "./shared/contract";
+import type { Settings, SettingsBridge } from "../../shared/contract";
 
 const initialSettings: Settings = {
   revision: 0,

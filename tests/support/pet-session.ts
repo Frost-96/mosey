@@ -15,7 +15,7 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { DockObservation } from "../../src/platform/dock-runtime-protocol";
+import type { DockObservation } from "../../src/main/platform/dock/runtime-protocol";
 import { startForge } from "./forge";
 import { observePetRenderer } from "./pet-renderer";
 

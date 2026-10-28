@@ -6,17 +6,17 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws://localhost:*"
     />
-    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/renderer/pet/style.css" />
     <link
       id="settings-style"
       rel="stylesheet"
-      href="/src/settings.css"
+      href="/src/renderer/settings/settings.css"
       media="not all"
     />
     <title>Mosey</title>
   </head>
   <body>
     <canvas width="240" height="240" aria-label="Mosey"></canvas>
-    <script type="module" src="/src/entry.ts"></script>
+    <script type="module" src="/src/renderer/entry.ts"></script>
   </body>
 </html>

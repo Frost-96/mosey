@@ -15,7 +15,7 @@ import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import { StringDecoder } from "node:string_decoder";
 import path from "node:path";
-import { dockRecordSchema, helperReceiptSchema } from "./dock-protocol";
+import { dockRecordSchema, helperReceiptSchema } from "./validation-protocol";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_LINE = 64 * 1024;
@@ -80,18 +80,16 @@ export class DockValidation {
       }
     });
   }
-  menu(): MenuItemConstructorOptions[] {
+  menu(capture: { start(): void; stop(): void }): MenuItemConstructorOptions[] {
     return [
       {
         label: "Start Dock validation (120 seconds)",
         enabled: !this.child,
-        click: () => this.start(),
+        click: capture.start,
       },
       {
         label: "Stop Dock validation",
-        click: () => {
-          void this.stop("user stop");
-        },
+        click: capture.stop,
       },
       { label: "Show Dock validation status", click: () => this.show() },
       {

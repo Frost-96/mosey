@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { characterSchema } from "../shared/contract";
-import { petSizeSchema, type PetSize } from "../shared/size";
+import { characterSchema } from "../../shared/contract";
+import { petSizeSchema, type PetSize } from "../../shared/size";
 import {
   closeSync,
   fsyncSync,

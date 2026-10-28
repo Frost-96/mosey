@@ -1,4 +1,4 @@
-import type { Settings } from "./shared/contract";
+import type { Settings } from "../../shared/contract";
 
 interface LoginSettingsProps {
   login: Settings["login"];
