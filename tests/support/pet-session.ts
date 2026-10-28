@@ -109,6 +109,23 @@ export async function createPetTestSession(options: SessionOptions) {
       const child = appProcess;
       if (child?.pid && child.exitCode === null && child.signalCode === null) {
         try {
+          const table = execFileSync(
+            "/bin/ps",
+            ["-axo", "pid=,ppid=,pgid=,uid=,state=,comm="],
+            { timeout: 5000, encoding: "utf8" },
+          );
+          record(
+            "owned-process-group",
+            table
+              .split("\n")
+              .filter(
+                (line) => Number(line.trim().split(/\s+/)[2]) === child.pid,
+              ),
+          );
+        } catch (error) {
+          record("process-group-unavailable", String(error));
+        }
+        try {
           execFileSync(
             "/usr/bin/sample",
             [
@@ -317,6 +334,9 @@ setInterval(() => {
         });
         appProcess = app.process();
         processes.push(appProcess);
+        appProcess.stderr?.on("data", (data: Buffer) =>
+          appendFileSync(path.join(evidence, "stderr.txt"), data),
+        );
         record("app-acquired");
         if (closing) {
           await stopApp();
@@ -327,6 +347,22 @@ setInterval(() => {
         const current = app;
         const renderer = observePetRenderer(current);
         const readiness = (async () => {
+          // Observe without handling or suppressing the default fatal error.
+          // A native error dialog can block later inspector calls and hide the
+          // original exception behind a test timeout.
+          await current.evaluate(
+            (_electron, output) => {
+              process.on("uncaughtExceptionMonitor", (error, origin) => {
+                process
+                  .getBuiltinModule("node:fs")
+                  .appendFileSync(
+                    output,
+                    JSON.stringify({ origin, stack: error.stack }) + "\n",
+                  );
+              });
+            },
+            path.join(evidence, "main-exceptions.jsonl"),
+          );
           mark("initial-document");
           const pet = await current.firstWindow({ timeout: 15000 });
           await pet.waitForLoadState("load");

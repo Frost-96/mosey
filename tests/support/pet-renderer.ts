@@ -112,31 +112,35 @@ export function observePetRenderer(app: ElectronApplication) {
       }, timeout);
     },
     async crash() {
-      await app.evaluate(({ BrowserWindow }) => {
-        const contents = BrowserWindow.getAllWindows().find(
-          (window) => window.getTitle() === "Mosey",
-        )!.webContents;
-        // A crash request can return while the old renderer is still alive.
-        // Wait for its actual exit before examining a replacement document.
-        return new Promise<void>((resolve, reject) => {
-          const exited = () => {
-            clearTimeout(timer);
-            resolve();
-          };
-          const timer = setTimeout(() => {
-            contents.off("render-process-gone", exited);
-            reject(new Error("Renderer did not exit after crash request"));
-          }, 5000);
-          contents.once("render-process-gone", exited);
-          try {
-            contents.forcefullyCrashRenderer();
-          } catch (error) {
-            clearTimeout(timer);
-            contents.off("render-process-gone", exited);
-            reject(error);
-          }
-        });
-      });
+      await within(
+        app.evaluate(({ BrowserWindow }) => {
+          const contents = BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey",
+          )!.webContents;
+          // A crash request can return while the old renderer is still alive.
+          // Wait for its actual exit before examining a replacement document.
+          return new Promise<void>((resolve, reject) => {
+            const exited = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+            const timer = setTimeout(() => {
+              contents.off("render-process-gone", exited);
+              reject(new Error("Renderer did not exit after crash request"));
+            }, 5000);
+            contents.once("render-process-gone", exited);
+            try {
+              contents.forcefullyCrashRenderer();
+            } catch (error) {
+              clearTimeout(timer);
+              contents.off("render-process-gone", exited);
+              reject(error);
+            }
+          });
+        }),
+        5000,
+        "Renderer crash request did not complete within 5000ms",
+      );
     },
     async withColdImages<T>(action: () => Promise<T>): Promise<T> {
       await app.evaluate(({ BrowserWindow }) => {
