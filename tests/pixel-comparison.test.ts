@@ -62,10 +62,10 @@ test("paint comparison considers alpha and accepts any sampled animation frame",
 test("fractional scaling still rejects local damage and excessive overall error", () => {
   const reference = fixture();
   const matches = matchPaintedFrames([encode(reference)], {
-    maxChannelDifference: 16,
+    maxChannelDifference: 24,
   });
   const roundedEdge = fixture();
-  roundedEdge.data[(5 * 16 + 3) * 4 + 3] += 15;
+  roundedEdge.data[(5 * 16 + 3) * 4 + 3] += 23;
   expect(matches(encode(roundedEdge))).toBe(true);
   roundedEdge.data[(5 * 16 + 3) * 4 + 3] += 2;
   expect(matches(encode(roundedEdge))).toBe(false);

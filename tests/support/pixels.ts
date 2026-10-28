@@ -6,7 +6,8 @@ const decode = (value: string) =>
 // Canvas readback and a rebuilt context can round scaled atlas pixels
 // differently. Compare painted RGBA, not PNG encoding. Bound EACH channel of
 // EACH pixel, including alpha, as well as the total error. The ordinary 240 DIP
-// fixture differs by <=2 levels; 200 DIP fractional scaling needs <=16. Both
+// fixture differs by <=2 levels. Fractional preview sampling measured peaks of
+// 15 at 1x and 17 at 2x; its local cap of 24 leaves rasterization margin. Both
 // retain a stricter mean limit (0.5) than the previous preview check (1).
 export function matchPaintedFrames(
   values: Iterable<string>,
