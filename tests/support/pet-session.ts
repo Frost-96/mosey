@@ -1,6 +1,8 @@
 import { expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import {
   chmod,
   cp,
@@ -15,9 +17,12 @@ import os from "node:os";
 import path from "node:path";
 import type { DockObservation } from "../../src/platform/dock-runtime-protocol";
 import { startForge } from "./forge";
+import { observePetRenderer } from "./pet-renderer";
 
 type SessionOptions = {
   preferences?: unknown;
+  // Destructive main-process faults must not share macOS restoration history.
+  isolateAppIdentity?: boolean;
   // Synthetic inputs prove application behavior at the native wire boundary,
   // never real Dock capture, permission, focus or cross-application input.
   dock: "real" | "empty" | "controlled";
@@ -34,16 +39,57 @@ type SessionOptions = {
 // reverse order, continuing even when one release fails. Test exit is a safety
 // net; close() also permits several independent profiles in a single scenario.
 export async function createPetTestSession(options: SessionOptions) {
+  const evidence = path.resolve(
+    "test-results/pet-sessions",
+    `${process.env.MOSEY_TEST_MODE}-${randomUUID()}`,
+  );
+  mkdirSync(evidence, { recursive: true });
+  const started = performance.now();
+  let stage = "preparing";
+  let root: string | undefined;
+  let app: ElectronApplication | undefined;
+  let appProcess: ReturnType<ElectronApplication["process"]> | undefined;
+  const processes: ReturnType<ElectronApplication["process"]>[] = [];
+  const record = (event: string, detail?: unknown) => {
+    appendFileSync(
+      path.join(evidence, "progress.jsonl"),
+      JSON.stringify({
+        event,
+        stage,
+        elapsed: performance.now() - started,
+        test: expect.getState().currentTestName,
+        root,
+        detail,
+        processes: processes.map((child) => ({
+          pid: child.pid,
+          exitCode: child.exitCode,
+          signalCode: child.signalCode,
+        })),
+      }) + "\n",
+    );
+  };
+  const mark = (value: string) => {
+    stage = value;
+    record("stage");
+  };
   const releases: (() => Promise<void>)[] = [];
   let closing: Promise<void> | undefined;
   let pending: Promise<unknown> = Promise.resolve();
   const close = () =>
     (closing ??= (async () => {
-      // A timed-out test may finish while startup is still acquiring a
-      // process or replacing a helper. Let that acquisition settle before
-      // releasing its resources, so it cannot write after restoration.
-      await pending.catch(() => {});
+      // Keep the last scenario stage even when callers close in a finally
+      // block before Vitest can report their error.
+      record("cleanup-started");
       const errors: unknown[] = [];
+      // Interrupt an owned app before waiting on startup: a pending driver
+      // call may only settle when its process exits. A late launch is adopted
+      // and stopped below before it is allowed to observe readiness.
+      try {
+        await stopApp();
+      } catch (error) {
+        errors.push(error);
+      }
+      await pending.catch(() => {});
       for (const release of releases.reverse()) {
         try {
           await release();
@@ -51,17 +97,46 @@ export async function createPetTestSession(options: SessionOptions) {
           errors.push(error);
         }
       }
+      record("cleanup-complete", errors.map(String));
       if (errors.length)
         throw new AggregateError(errors, "Pet session cleanup failed");
     })());
-  onTestFinished(close);
-  let app: ElectronApplication | undefined;
+  onTestFinished(async ({ task }) => {
+    // Vitest runs onTestFinished before onTestFailed. Capture the failing
+    // stage and live OS process here, before cleanup interrupts pending calls.
+    if (task.result?.state === "fail") {
+      record("test-failed", task.result.errors);
+      const child = appProcess;
+      if (child?.pid && child.exitCode === null && child.signalCode === null) {
+        try {
+          execFileSync(
+            "/usr/bin/sample",
+            [
+              String(child.pid),
+              "1",
+              "1",
+              "-file",
+              path.join(evidence, `process-${child.pid}.txt`),
+            ],
+            { timeout: 5000, stdio: "ignore" },
+          );
+        } catch (error) {
+          record("sample-unavailable", String(error));
+        }
+      }
+    }
+    await close();
+  });
   let starting = false;
   const stopApp = async () => {
     if (!app) return;
     const current = app;
     app = undefined;
-    const child = current.process();
+    // The driver detaches its process accessor after an explicit quit/crash.
+    // Retain the owned OS handle from acquisition through final cleanup.
+    const child = appProcess!;
+    appProcess = undefined;
+    record("app-stopping", { pid: child.pid });
     // Playwright gives each Electron process its own process group on macOS.
     // Bound graceful shutdown, then kill only this session's group (including
     // its capture helper), never matching other apps by executable name.
@@ -89,19 +164,22 @@ export async function createPetTestSession(options: SessionOptions) {
       }, 5000);
     });
     try {
-      await Promise.race([current.close(), forced]);
+      if (child.exitCode === null && child.signalCode === null)
+        await Promise.race([current.close(), forced]);
     } finally {
       clearTimeout(timer);
       // Reap any remaining helper in the owned group even if graceful close
       // rejected or the main process exited before its children.
       signal();
       await exited;
+      record("app-stopped", { pid: child.pid });
     }
   };
   try {
     const preparation = (async () => {
-      const root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
-      releases.push(() => rm(root, { recursive: true, force: true }));
+      root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
+      const ownedRoot = root;
+      releases.push(() => rm(ownedRoot, { recursive: true, force: true }));
       const profile = path.join(root, "profile");
       await mkdir(profile);
       if (options.preferences !== undefined)
@@ -111,6 +189,7 @@ export async function createPetTestSession(options: SessionOptions) {
         );
 
       const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+      mark(packaged ? "copy-package" : "start-forge");
       if (packaged)
         execFileSync(
           "/usr/bin/ditto",
@@ -162,12 +241,54 @@ setInterval(() => {
         );
         await chmod(helper, 0o755);
       }
+      let executablePath = packaged
+        ? path.join(root, "Mosey.app/Contents/MacOS/Mosey")
+        : undefined;
+      if (options.isolateAppIdentity) {
+        mark("isolate-app-identity");
+        const bundle = path.join(
+          root,
+          packaged ? "Mosey.app" : "CrashTest.app",
+        );
+        if (!packaged)
+          execFileSync(
+            "/usr/bin/ditto",
+            [path.resolve("node_modules/electron/dist/Electron.app"), bundle],
+            { timeout: 30000 },
+          );
+        execFileSync(
+          "/usr/libexec/PlistBuddy",
+          [
+            "-c",
+            `Set :CFBundleIdentifier dev.frost.mosey.fault.${path.basename(root)}`,
+            path.join(bundle, "Contents/Info.plist"),
+          ],
+          { timeout: 5000 },
+        );
+        execFileSync(
+          "/usr/bin/codesign",
+          ["--force", "--deep", "--sign", "-", bundle],
+          { timeout: 30000 },
+        );
+        executablePath = path.join(
+          bundle,
+          "Contents/MacOS",
+          packaged ? "Mosey" : "Electron",
+        );
+      }
       releases.push(stopApp);
 
-      return { root, profile, packaged, observation };
+      return {
+        directory: root,
+        profile,
+        packaged,
+        observation,
+        executablePath,
+      };
     })();
     pending = preparation;
-    const { root, profile, packaged, observation } = await preparation;
+    const { directory, profile, packaged, observation, executablePath } =
+      await preparation;
 
     const launch = async () => {
       if (closing) throw new Error("Pet session is closed");
@@ -177,72 +298,44 @@ setInterval(() => {
         );
       starting = true;
       const launching = (async () => {
+        mark("launch");
         const args = [
+          ...(packaged ? [] : [path.join(directory, "app")]),
           `--user-data-dir=${profile}`,
+          ...(options.isolateAppIdentity
+            ? ["-ApplePersistenceIgnoreState", "YES"]
+            : []),
           ...(options.scaleFactor
             ? [`--force-device-scale-factor=${options.scaleFactor}`]
             : []),
         ];
-        // Playwright owns process cleanup if launch rejects before returning
-        // an app. From this assignment onward the session owns shutdown.
+        // Playwright owns a launch that rejects before returning. Once it
+        // returns, even after a test deadline, the session owns that process.
         app = await electron.launch({
-          ...(packaged
-            ? {
-                executablePath: path.join(
-                  root,
-                  "Mosey.app/Contents/MacOS/Mosey",
-                ),
-                args,
-              }
-            : { args: [path.join(root, "app"), ...args] }),
+          ...(executablePath ? { executablePath } : {}),
+          args,
           timeout: 30000,
           ...(options.recordVideo ? { recordVideo: options.recordVideo } : {}),
         });
-        const readiness = (async () => {
-          const pet = await app.firstWindow({ timeout: 15000 });
-          // The window begins show:false. did-finish-load applies the saved
-          // visibility, so do not classify that transient startup hiding as
-          // a hidden scenario before the document has finished loading.
-          await pet.waitForLoadState("load");
-          // The public label is published after atlas decode. Hidden pets need
-          // this presentation, but cannot paint while document.hidden is true.
-          await expect
-            .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
-              timeout: 15000,
-            })
-            .toMatch(/^(鲸鱼娘|柯基) · /);
-          const { visibility } = await pet.evaluate(() =>
-            window.mosey.getPresentation(),
+        appProcess = app.process();
+        processes.push(appProcess);
+        record("app-acquired");
+        if (closing) {
+          await stopApp();
+          throw new Error(
+            "Pet session closed while the application was launching",
           );
-          if (visibility === "visible") {
-            await expect
-              .poll(
-                () =>
-                  app!.evaluate(({ BrowserWindow }) =>
-                    BrowserWindow.getAllWindows()
-                      .find((window) => window.getTitle() === "Mosey")!
-                      .isVisible(),
-                  ),
-                { timeout: 15000 },
-              )
-              .toBe(true);
-            await expect
-              .poll(
-                () =>
-                  pet.evaluate(() => {
-                    const canvas = document.querySelector("canvas")!;
-                    const pixels = canvas
-                      .getContext("2d")!
-                      .getImageData(0, 0, canvas.width, canvas.height).data;
-                    for (let i = 3; i < pixels.length; i += 4)
-                      if (pixels[i]! >= 128) return true;
-                    return false;
-                  }),
-                { timeout: 15000 },
-              )
-              .toBe(true);
-          }
-          return { app, pet };
+        }
+        const current = app;
+        const renderer = observePetRenderer(current);
+        const readiness = (async () => {
+          mark("initial-document");
+          const pet = await current.firstWindow({ timeout: 15000 });
+          await pet.waitForLoadState("load");
+          mark("initial-presentation-and-paint");
+          await renderer.waitUntilReady({ timeout: 15000 });
+          mark("ready");
+          return { app: current, pet, renderer };
         })();
         let timer: ReturnType<typeof setTimeout> | undefined;
         const deadline = new Promise<never>((_resolve, reject) => {
@@ -268,7 +361,16 @@ setInterval(() => {
       try {
         return await launching;
       } catch (error) {
-        await close();
+        record("launch-failed", String(error));
+        try {
+          await close();
+        } catch (cleanup) {
+          throw new AggregateError(
+            [error, cleanup],
+            "Pet launch and cleanup failed",
+            { cause: cleanup },
+          );
+        }
         throw error;
       } finally {
         starting = false;
@@ -276,6 +378,7 @@ setInterval(() => {
     };
     return {
       profile,
+      mark,
       launch,
       restart() {
         if (closing) throw new Error("Pet session is closed");
@@ -306,7 +409,16 @@ setInterval(() => {
       close,
     };
   } catch (error) {
-    await close();
+    record("preparation-failed", String(error));
+    try {
+      await close();
+    } catch (cleanup) {
+      throw new AggregateError(
+        [error, cleanup],
+        "Pet preparation and cleanup failed",
+        { cause: cleanup },
+      );
+    }
     throw error;
   }
 }
