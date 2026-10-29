@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
@@ -10,6 +15,7 @@ import { startForge } from "./support/forge";
 import { waitForPetVisibility } from "./support/visibility";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const recording =
@@ -47,25 +53,34 @@ test(
           path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
           path.join(root, "Mosey.app"),
         ]);
+      if (!packaged) await copyBehaviorDevelopmentApp(root);
+      await instrumentBehaviorApplication({ root, packaged });
       restoreDockCapture = await emptyDockCapture(
         packaged
           ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-          : path.resolve("build/native/dock-runtime"),
+          : path.join(root, "app/build/native/dock-runtime"),
       );
       app = await electron.launch(
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
               ...recording,
-              args: [`--user-data-dir=${root}/profile`],
+              args: [scaleArgument, `--user-data-dir=${root}/profile`],
             }
           : {
               ...recording,
-              args: [".", `--user-data-dir=${root}/profile`],
+              args: [
+                path.join(root, "app"),
+                scaleArgument,
+                `--user-data-dir=${root}/profile`,
+              ],
             },
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
+      expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+        Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+      );
       const menu = async (label: "Hide Mosey" | "Show Mosey") => {
         await app!.evaluate(({ Menu }, label) => {
           Menu.getApplicationMenu()!
@@ -157,32 +172,14 @@ test(
         idleFrames.add(await pixels());
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
-      await app.evaluate(() => {
-        Math.random = () => 0.6;
-        const timeout = globalThis.setTimeout;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 10000 ? 1200 : delay,
-            ...args,
-          )) as typeof setTimeout;
-      });
+      await controlBehavior(app, { random: 0.6 });
       await menu("Hide Mosey");
       await menu("Show Mosey");
       await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
-      await app.evaluate(() => {
-        const now = Date.now;
-        Date.now = () => now() + 180000;
-      });
-      await pet.evaluate(() => {
-        const now = Date.now;
-        Date.now = () => now() + 180000;
-      });
+      await controlBehavior(app, { advanceBy: 180000 });
+      await advanceRest(app, 0.6);
+
       await waitForSleep();
       const mode = evidence;
       await mkdir("test-results", { recursive: true });
@@ -201,14 +198,9 @@ test(
         await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
-        await app!.evaluate(() => {
-          const now = Date.now;
-          Date.now = () => now() + 180000;
-        });
-        await pet.evaluate(() => {
-          const now = Date.now;
-          Date.now = () => now() + 180000;
-        });
+        await controlBehavior(app!, { advanceBy: 180000 });
+        await advanceRest(app!, 0.6);
+
         await waitForSleep();
       };
       const sleepingFrames = new Set<string>();
@@ -440,7 +432,7 @@ test(
             input:
               "Playwright directed window input; native menu tracking intercepted; suspend/resume events simulated",
             timing:
-              "long rest delays shortened to1200ms; active lifespan advanced180s at external Date.now boundary; sleep entry synchronized through renderer contract; frames and click windows use real elapsed time",
+              "controlled behavior adapter advances the awake cycle at rest boundaries; ordinary renderer completion, animation and double-click windows use real elapsed time; infrastructure clocks are unchanged",
           },
           null,
           2,

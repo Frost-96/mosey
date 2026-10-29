@@ -1,3 +1,4 @@
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { expect, test } from "vitest";
 import type { Page } from "playwright";
 import { readFile } from "node:fs/promises";
@@ -63,6 +64,7 @@ for (const character of ["corgi", "whale"] as const) {
     test(`${character} ${direction} preserves painted input and feet at every preset size (${scaleFactor}x)`, async () => {
       const session = await createPetTestSession({
         dock: "empty",
+        ...(direction === "left" ? { behavior: { random: 0.1 } } : {}),
         scaleFactor,
         preferences: { version: 3, character, size: 160, visibility: "hidden" },
       });
@@ -75,30 +77,13 @@ for (const character of ["corgi", "whale"] as const) {
             .getBounds(),
           area: screen.getPrimaryDisplay().workArea,
         }));
-      // Exercise real autonomous facing through the existing external clock
-      // seam. Restore the clock before checking geometry and directed input.
-      if (direction === "left")
-        await app.evaluate(() => {
-          Math.random = () => 0.1;
-          const original = globalThis.setTimeout;
-          Reflect.set(globalThis, "restoreGeometryClock", () => {
-            globalThis.setTimeout = original;
-          });
-          globalThis.setTimeout = ((
-            callback: (...args: unknown[]) => void,
-            delay?: number,
-            ...args: unknown[]
-          ) =>
-            original(
-              callback,
-              delay && delay >= 18000 ? 100 : delay,
-              ...args,
-            )) as typeof setTimeout;
-        });
+      // Only the left-facing scenario controls behavior input. The right
+      // facing path retains the production-default adapter.
       await settings
         .getByRole("button", { name: "显示宠物", exact: true })
         .click();
       if (direction === "left") {
+        await advanceRest(app, 0.1);
         await expect
           .poll(
             async () =>
@@ -106,9 +91,6 @@ for (const character of ["corgi", "whale"] as const) {
                 .posture,
           )
           .toBe("walking");
-        await app.evaluate(() =>
-          Reflect.get(globalThis, "restoreGeometryClock")(),
-        );
         const { body } = await paintedPoints(pet);
         await pet.mouse.click(body.x, body.y);
       }
@@ -310,6 +292,7 @@ test("retired frames cannot restore input after size or character changes before
 test("left-facing sleep retains authored lettering and mirrored alpha geometry", async () => {
   const session = await createPetTestSession({
     dock: "empty",
+    behavior: { random: 0.1 },
     scaleFactor: "2",
     preferences: {
       version: 3,
@@ -320,21 +303,9 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
   });
   const { app, pet } = await session.launch();
   const settings = await openSettings(app);
-  await app.evaluate(() => {
-    Math.random = () => 0.1;
-    const original = globalThis.setTimeout;
-    globalThis.setTimeout = ((
-      callback: (...args: unknown[]) => void,
-      delay?: number,
-      ...args: unknown[]
-    ) =>
-      original(
-        callback,
-        delay && delay >= 18000 ? 1200 : delay,
-        ...args,
-      )) as typeof setTimeout;
-  });
+
   await settings.getByRole("button", { name: "显示宠物", exact: true }).click();
+  await advanceRest(app, 0.1);
   await expect
     .poll(
       async () =>
@@ -358,14 +329,8 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
         (await pet.evaluate(() => window.mosey.getPresentation())).posture,
     )
     .toBe("resting");
-  await app.evaluate(() => {
-    const now = Date.now;
-    Date.now = () => now() + 180000;
-  });
-  await pet.evaluate(() => {
-    const now = Date.now;
-    Date.now = () => now() + 180000;
-  });
+  await controlBehavior(app, { advanceBy: 180000 });
+
   await expect
     .poll(
       async () =>

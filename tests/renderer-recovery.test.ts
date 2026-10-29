@@ -1,3 +1,4 @@
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -21,6 +22,9 @@ test.each([
   async (phase) => {
     const session = await createPetTestSession({
       dock: "empty",
+      ...(["walking", "sleeping"].includes(phase)
+        ? { behavior: { random: 0.1 } }
+        : {}),
       isolateAppIdentity: phase === "main",
       preferences: {
         version: 3,
@@ -110,41 +114,12 @@ test.each([
     // Exercise real held and released gestures, plus a hidden renderer.
     if (phase === "hidden") await invoke("Hide Mosey");
     else if (phase === "walking" || phase === "sleeping") {
-      // Control time/randomness at the system boundary; never set behavior
-      // states or recovery counters. Restore these before the actual fault.
-      await app.evaluate(() => {
-        const timeout = globalThis.setTimeout;
-        const random = Math.random;
-        const now = Date.now;
-        Reflect.set(globalThis, "restoreRecoveryClock", () => {
-          globalThis.setTimeout = timeout;
-          Math.random = random;
-          Date.now = now;
-        });
-        Math.random = () => 0.1;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 15000 && delay <= 32000 ? 800 : delay,
-            ...args,
-          )) as typeof setTimeout;
-      });
+      // Advance only the injected behavior adapter; recovery deadlines stay real.
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
-      if (phase === "sleeping") {
-        await app.evaluate(() => {
-          const now = Date.now;
-          Date.now = () => now() + 180000;
-        });
-        await page.evaluate(() => {
-          const now = Date.now;
-          Date.now = () => now() + 180000;
-        });
-      }
+      if (phase === "sleeping")
+        await controlBehavior(app, { advanceBy: 180000 });
+      else await advanceRest(app, 0.1);
       await expect
         .poll(async () => matchesIdle(await pixels()), {
           timeout: 5000,
@@ -153,9 +128,6 @@ test.each([
         .toBe(false);
       if (phase === "sleeping")
         await new Promise((resolve) => setTimeout(resolve, 1800));
-      await app.evaluate(() =>
-        Reflect.get(globalThis, "restoreRecoveryClock")(),
-      );
     } else if (phase !== "preview") {
       await page.mouse.move(120, 180);
       await page.mouse.down();
