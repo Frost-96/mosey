@@ -113,6 +113,35 @@ test("normal exit succeeds even when the driver acknowledgement never arrives", 
   }
 });
 
+test("a failing requested quit action is rejected before the next independent session", async () => {
+  const session = await createPetTestSession({ dock: "empty" });
+  const { app } = await session.launch();
+  const child = app.process();
+  // Fault the public process boundary. A different successful menu command
+  // must never stand in for the caller's chosen action or its real exit status.
+  await expect(
+    session.quit({ action: () => app.evaluate(({ app }) => app.exit(17)) }),
+  ).rejects.toThrow(/normal-exit failed: code=17/);
+  expect(child.exitCode).toBe(17);
+  expect(child.signalCode).toBe(null);
+  await expect(
+    readFile(path.join(session.profile, "preferences.json"), "utf8"),
+  ).rejects.toMatchObject({ code: "ENOENT" });
+  await expect(session.launch()).rejects.toThrow(/closed|cancelled/);
+
+  const next = await createPetTestSession({ dock: "empty" });
+  const launched = await next.launch();
+  expect(
+    await next.run("next-visible-pet", () =>
+      launched.pet.evaluate(
+        async () => (await window.mosey.getPresentation()).visibility,
+      ),
+    ),
+  ).toBe("visible");
+  await next.quit();
+  expect(launched.app.process().exitCode).toBe(0);
+});
+
 test("cancellation during preparation releases its profile and the next session is independent", async () => {
   const before = new Set(await readdir(os.tmpdir()));
   const controller = new AbortController();
