@@ -146,26 +146,37 @@ async function exercisePet() {
       }),
     );
   await expect.poll(opaquePixelCount, { timeout: 10000 }).toBeGreaterThan(5000);
+  const reloadFromRenderer = async (timeout: number) => {
+    // Subscribe before the renderer requests navigation. A disappearing old
+    // execution context is expected during reload, so do not start a driver
+    // read until the new document has actually loaded.
+    const loaded = session.run(
+      "renderer-reload-load",
+      () => window.waitForEvent("load", { timeout }),
+      { timeout },
+    );
+    void loaded.catch(() => {});
+    await session.run("renderer-reload-request", () =>
+      window.evaluate(() => location.reload()),
+    );
+    await loaded;
+  };
   if (!packaged) {
     // Renderer-originated navigation exercises will-navigate; page.reload()
     // uses a browser API that can bypass the application's navigation guard.
     await session.run("window-evaluate", () =>
       window.evaluate(() => {
         document.documentElement.dataset.reloadIdentity = "original-document";
-        location.reload();
       }),
     );
-    await expect
-      .poll(
-        () =>
-          session.run("window-evaluate", () =>
-            window.evaluate(
-              () => document.documentElement.dataset.reloadIdentity ?? null,
-            ),
-          ),
-        { timeout: 10000 },
-      )
-      .toBe(null);
+    await reloadFromRenderer(10000);
+    expect(
+      await session.run("renderer-reload-identity", () =>
+        window.evaluate(
+          () => document.documentElement.dataset.reloadIdentity ?? null,
+        ),
+      ),
+    ).toBe(null);
     await expect
       .poll(opaquePixelCount, { timeout: 10000 })
       .toBeGreaterThan(5000);
@@ -669,9 +680,7 @@ async function exercisePet() {
     await expect
       .poll(async () => (await petBounds()).y)
       .toBeLessThan(ground.y - 100);
-    await session.run("window-evaluate", () =>
-      window.evaluate(() => location.reload()),
-    );
+    await reloadFromRenderer(5000);
     await waitForGround();
     await expect
       .poll(async () => idleFrames.has(await pixels()), { timeout: 5000 })
