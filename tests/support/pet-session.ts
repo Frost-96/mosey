@@ -2,7 +2,7 @@ import { expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   chmod,
   cp,
@@ -20,6 +20,7 @@ import { startForge } from "./forge";
 import { instrumentBehaviorApplication } from "./behavior-build";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
+import { nativeArtifactInventory, type DockProducer } from "./dock-producer";
 
 export type SessionOperation = <T>(
   label: string,
@@ -53,7 +54,7 @@ type SessionOptions = {
   packagedPlatform?: PackagedPlatformOwnership;
   // Synthetic inputs prove application behavior at the native wire boundary,
   // never real Dock capture, permission, focus or cross-application input.
-  dock: "real" | "empty" | "controlled";
+  dock: "real" | "empty" | "controlled" | DockProducer;
   scaleFactor?: string;
   recordVideo?: {
     dir: string;
@@ -563,11 +564,100 @@ export async function createPetTestSession(options: SessionOptions) {
       }
 
       const observation = path.join(root, "dock.json");
-      if (options.dock !== "real") {
+      const native = packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native")
+        : path.join(root, "app/build/native");
+      const helper = path.join(native, "dock-runtime");
+      if (typeof options.dock === "object") {
+        const producer = options.dock;
+        const scratch = path.join(root, "producer");
+        const shared = async () => ({
+          native: await nativeArtifactInventory("build/native"),
+          cache: await nativeArtifactInventory("build/swift-module-cache"),
+          ...(packaged
+            ? {
+                packaged: await nativeArtifactInventory(
+                  "out/Mosey-darwin-arm64/Mosey.app/Contents/Resources/native",
+                ),
+              }
+            : {}),
+        });
+        const diagnostic = async () => {
+          const files = await nativeArtifactInventory(native);
+          return Object.fromEntries(
+            Object.entries(files).filter(
+              ([file]) =>
+                file !== "dock-runtime" && file !== "runtime-receipt.json",
+            ),
+          );
+        };
+        const before = await step("producer-shared-inputs", shared);
+        const diagnosticBefore = await step(
+          "producer-diagnostic-identity",
+          diagnostic,
+        );
+        // Register evidence and invariance verification before any fixture
+        // acquisition. This runs before the owned root is removed, on failure too.
+        releases.push(() =>
+          settleOwnership(
+            (async () => {
+              const after = await shared();
+              const diagnosticAfter = await diagnostic();
+              await writeFile(
+                path.join(evidence, "native-isolation.json"),
+                JSON.stringify(
+                  {
+                    producer: producer.name,
+                    before,
+                    after,
+                    diagnosticBefore,
+                    diagnosticAfter,
+                  },
+                  null,
+                  2,
+                ),
+              );
+              expect(
+                after,
+                "producer changed shared prepared native inputs",
+              ).toEqual(before);
+              expect(
+                diagnosticAfter,
+                "producer changed diagnostic identity",
+              ).toEqual(diagnosticBefore);
+            })(),
+          ),
+        );
+        await step("producer-scratch", () => mkdir(scratch));
+        const preparing = producer.prepare({
+          root: scratch,
+          evidence,
+          signal: cancellation.signal,
+          run: (label, action, { timeout = 5000 } = {}) =>
+            step(label, action, timeout),
+        });
+        acquisitions.add(preparing);
+        void preparing.then(
+          () => acquisitions.delete(preparing),
+          () => acquisitions.delete(preparing),
+        );
+        const bytes = await step(
+          "producer-preparation",
+          () => preparing,
+          60000,
+        );
+        await step("producer-install", () => writeFile(helper, bytes));
+        await step("producer-executable", () => chmod(helper, 0o755));
+        record("producer-installed", {
+          name: producer.name,
+          helper,
+          scratch,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+          boundary:
+            "Scenario-owned producer; product wire parser remains real; no real capture or permission claim",
+        });
+      } else if (options.dock !== "real") {
         await writeFile(observation, "null");
-        const helper = packaged
-          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-          : path.join(root, "app/build/native/dock-runtime");
         // Both adapters substitute only a session-local copy; deleting the
         // owned root also rolls back a partial write or chmod failure.
         await writeFile(
