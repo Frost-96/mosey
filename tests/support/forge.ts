@@ -3,18 +3,20 @@ import { spawn } from "node:child_process";
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { beginMeasurement, measure, recordMeasurement } from "./measurement";
 
 // Let Forge prepare the real dev build/server without launching an unmanaged
 // app. Each caller owns one cleanup function, including on readiness failure.
 export async function startForge({
   signal,
 }: { signal?: AbortSignal } = {}): Promise<() => Promise<void>> {
+  const finishPreparation = beginMeasurement("forge.prepare");
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
   let stopping: Promise<void> | undefined;
   const stop = () =>
-    (stopping ??= (async () => {
+    (stopping ??= measure("forge.release", {}, async () => {
       try {
         if (!server?.pid) return;
         const child = server;
@@ -53,7 +55,7 @@ export async function startForge({
       } finally {
         await rm(shim, { recursive: true, force: true });
       }
-    })());
+    }));
   try {
     signal?.throwIfAborted();
     await mkdir(path.dirname(executable), { recursive: true });
@@ -67,6 +69,10 @@ export async function startForge({
       env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
       stdio: "pipe",
       detached: true,
+    });
+    recordMeasurement("forge-process", {
+      processId: server.pid,
+      groupId: server.pid,
     });
     let output = "";
     let spawnError: Error | undefined;
@@ -102,8 +108,10 @@ export async function startForge({
     } finally {
       if (aborted) signal?.removeEventListener("abort", aborted);
     }
+    finishPreparation("passed");
     return stop;
   } catch (error) {
+    finishPreparation(signal?.aborted ? "cancelled" : "failed", error);
     const cleanup = await stop().then(
       () => undefined,
       (failure: unknown) => ({ failure }),

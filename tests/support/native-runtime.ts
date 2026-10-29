@@ -4,96 +4,105 @@ import { appendFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ProducerOperation } from "./dock-producer";
+import { measure } from "./measurement";
 
 // A cancelled compile owns its process group until the compiler has exited;
 // its frontend children must not keep writing into an already released cache.
 function compileNative(args: string[], journal: string, signal?: AbortSignal) {
   signal?.throwIfAborted();
-  return new Promise<void>((resolve, reject) => {
-    const compiler = spawn("/usr/bin/xcrun", args, {
-      detached: true,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let failure: unknown;
-    let output = "";
-    const record = (event: string, detail?: unknown) => {
-      try {
-        appendFileSync(
-          journal,
-          JSON.stringify({
-            event,
-            pid: compiler.pid,
-            group: compiler.pid,
-            at: Date.now(),
-            ...(detail as object),
-          }) + "\n",
+  return measure(
+    "native.fixture-compile",
+    {},
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const compiler = spawn("/usr/bin/xcrun", args, {
+          detached: true,
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        let failure: unknown;
+        let output = "";
+        const record = (event: string, detail?: unknown) => {
+          try {
+            appendFileSync(
+              journal,
+              JSON.stringify({
+                event,
+                pid: compiler.pid,
+                group: compiler.pid,
+                at: Date.now(),
+                ...(detail as object),
+              }) + "\n",
+            );
+          } catch (error) {
+            failure ??= error;
+          }
+        };
+        record("compiler-spawned");
+        const terminate = (reason: unknown) => {
+          failure ??= reason;
+          if (!compiler.pid) return;
+          record("compiler-signal", { signal: "SIGKILL" });
+          try {
+            process.kill(-compiler.pid, "SIGKILL");
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ESRCH")
+              failure = error;
+          }
+        };
+        const cancelled = () => terminate(signal?.reason);
+        const timer = setTimeout(
+          () =>
+            terminate(
+              new Error("Native producer compilation exceeded 45000ms"),
+            ),
+          45000,
         );
-      } catch (error) {
-        failure ??= error;
-      }
-    };
-    record("compiler-spawned");
-    const terminate = (reason: unknown) => {
-      failure ??= reason;
-      if (!compiler.pid) return;
-      record("compiler-signal", { signal: "SIGKILL" });
-      try {
-        process.kill(-compiler.pid, "SIGKILL");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ESRCH") failure = error;
-      }
-    };
-    const cancelled = () => terminate(signal?.reason);
-    const timer = setTimeout(
-      () =>
-        terminate(new Error("Native producer compilation exceeded 45000ms")),
-      45000,
-    );
-    signal?.addEventListener("abort", cancelled, { once: true });
-    const capture = (bytes: Buffer) => {
-      output = (output + bytes.toString("utf8")).slice(-32768);
-    };
-    compiler.stdout.on("data", capture);
-    compiler.stderr.on("data", capture);
-    compiler.once("error", (error) => {
-      failure ??= error;
-    });
-    compiler.once("close", (code, exitSignal) => {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", cancelled);
-      try {
-        const live = compiler.pid
-          ? execFileSync("/bin/ps", ["-axo", "pid=,pgid=,state=,comm="], {
-              encoding: "utf8",
-              timeout: 5000,
-            })
-              .split("\n")
-              .filter((row) => {
-                const fields = row.trim().split(/\s+/);
-                return (
-                  Number(fields[1]) === compiler.pid &&
-                  !fields[2]!.startsWith("Z")
-                );
-              })
-          : [];
-        record("compiler-exited", { code, signal: exitSignal, live });
-        if (live.length)
-          failure ??= new Error(
-            `Owned native compiler group survived: ${live.join("; ")}`,
-          );
-      } catch (error) {
-        failure ??= error;
-      }
-      if (failure !== undefined) reject(failure);
-      else if (code !== 0)
-        reject(
-          new Error(
-            `Native producer compilation failed: code=${code}, signal=${exitSignal}\n${output}`,
-          ),
-        );
-      else resolve();
-    });
-  });
+        signal?.addEventListener("abort", cancelled, { once: true });
+        const capture = (bytes: Buffer) => {
+          output = (output + bytes.toString("utf8")).slice(-32768);
+        };
+        compiler.stdout.on("data", capture);
+        compiler.stderr.on("data", capture);
+        compiler.once("error", (error) => {
+          failure ??= error;
+        });
+        compiler.once("close", (code, exitSignal) => {
+          clearTimeout(timer);
+          signal?.removeEventListener("abort", cancelled);
+          try {
+            const live = compiler.pid
+              ? execFileSync("/bin/ps", ["-axo", "pid=,pgid=,state=,comm="], {
+                  encoding: "utf8",
+                  timeout: 5000,
+                })
+                  .split("\n")
+                  .filter((row) => {
+                    const fields = row.trim().split(/\s+/);
+                    return (
+                      Number(fields[1]) === compiler.pid &&
+                      !fields[2]!.startsWith("Z")
+                    );
+                  })
+              : [];
+            record("compiler-exited", { code, signal: exitSignal, live });
+            if (live.length)
+              failure ??= new Error(
+                `Owned native compiler group survived: ${live.join("; ")}`,
+              );
+          } catch (error) {
+            failure ??= error;
+          }
+          if (failure !== undefined) reject(failure);
+          else if (code !== 0)
+            reject(
+              new Error(
+                `Native producer compilation failed: code=${code}, signal=${exitSignal}\n${output}`,
+              ),
+            );
+          else resolve();
+        });
+      }),
+  );
 }
 
 // The fixture replaces the OS source only. The product Receiver, silhouette,

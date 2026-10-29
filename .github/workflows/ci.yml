@@ -59,9 +59,9 @@ jobs:
       - id: inventory
         run: |
           mkdir -p test-results/verification
-          pnpm exec vitest list --no-static-parse --project deterministic --json=test-results/verification/inventory.json
+          node tools/measure-verification.ts collection pnpm exec vitest list --no-static-parse --project deterministic --json=test-results/verification/inventory.json
       - id: verification
-        run: pnpm test:deterministic --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+        run: node tools/measure-verification.ts test pnpm test:deterministic --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
       - name: Record result
         if: always()
         env:
@@ -103,9 +103,9 @@ jobs:
       - id: inventory
         run: |
           mkdir -p test-results/verification
-          pnpm exec vitest list --no-static-parse --project development --json=test-results/verification/inventory.json
+          node tools/measure-verification.ts collection pnpm exec vitest list --no-static-parse --project development --json=test-results/verification/inventory.json
       - id: verification
-        run: pnpm test:dev --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+        run: node tools/measure-verification.ts test pnpm test:dev --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
       - name: Record result
         if: always()
         env:
@@ -137,7 +137,7 @@ jobs:
       - id: dependencies
         run: pnpm install --frozen-lockfile
       - id: preparation
-        run: pnpm package:mac
+        run: node tools/measure-verification.ts package pnpm package:mac
       - id: archive
         name: Archive this commit's local unsigned app
         run: |
@@ -152,6 +152,7 @@ jobs:
             out/Mosey-darwin-arm64.zip
             out/package-commit.txt
             out/package-sha256.txt
+            out/package-measurement.json
           if-no-files-found: error
       - name: Record result
         if: always()
@@ -205,9 +206,9 @@ jobs:
       - id: inventory
         run: |
           mkdir -p test-results/verification
-          pnpm exec vitest list --no-static-parse --project packaged --json=test-results/verification/inventory.json
+          node tools/measure-verification.ts collection pnpm exec vitest list --no-static-parse --project packaged --json=test-results/verification/inventory.json
       - id: verification
-        run: pnpm test:packaged --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+        run: node tools/measure-verification.ts test pnpm test:packaged --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
       - name: Record result
         if: always()
         env:
