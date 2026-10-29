@@ -307,7 +307,8 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
   // A size write while hidden must retain hidden intent across restart.
   await invoke("Hide Mosey");
   await choose("Large");
-  ({ app, pet } = await session.restart());
+  await session.quit();
+  ({ app, pet } = await session.launch());
   expect((await bounds()).width).toBe(240);
   expect(
     await session.run("app-evaluate", () =>
