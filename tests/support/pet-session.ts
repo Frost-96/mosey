@@ -710,7 +710,7 @@ setInterval(() => {
           { timeout: 10000 },
         );
       },
-      async quit() {
+      async quit({ action }: { action?: () => Promise<unknown> } = {}) {
         active();
         if (!app || !appProcess)
           throw new Error("Pet session has no application");
@@ -718,13 +718,22 @@ setInterval(() => {
         const child = appProcess;
         // Trigger the product's quit action, but judge the owned OS process.
         // A driver acknowledgement may never arrive even after a genuine exit.
-        void app
-          .evaluate(({ Menu }) => {
-            const item = Menu.getApplicationMenu()
-              ?.items.find((item) => item.label === "Mosey")
-              ?.submenu?.items.find((item) => item.label === "Quit Mosey");
-            if (!item) throw new Error("Missing Quit Mosey menu item");
-            item.click();
+        // A caller may select the body menu's real quit item. Keep its single
+        // driver action under the same cancellation guard and OS exit gate.
+        const request =
+          action ??
+          (() =>
+            app!.evaluate(({ Menu }) => {
+              const item = Menu.getApplicationMenu()
+                ?.items.find((item) => item.label === "Mosey")
+                ?.submenu?.items.find((item) => item.label === "Quit Mosey");
+              if (!item) throw new Error("Missing Quit Mosey menu item");
+              item.click();
+            }));
+        void Promise.resolve()
+          .then(() => {
+            active();
+            return request();
           })
           .then(
             () => record("quit-acknowledged"),

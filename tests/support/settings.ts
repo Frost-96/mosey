@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import type { SessionOperation } from "./pet-session";
 import type { ElectronApplication, Page } from "playwright";
 export async function openSettings(
   app: ElectronApplication,
@@ -58,7 +59,10 @@ export async function openSettings(
       .waitFor({ state: "hidden", timeout: 15000 });
   return page!;
 }
-export async function closeSettings(app: ElectronApplication) {
+export async function closeSettings(
+  app: ElectronApplication,
+  { run = (_label, action) => action() }: { run?: SessionOperation } = {},
+) {
   const page = app
     .windows()
     .find(
@@ -68,12 +72,18 @@ export async function closeSettings(app: ElectronApplication) {
     );
   // Electron's native close completes before Playwright receives Page.close.
   // Subscribe first and await both boundaries before a later reopen.
-  const closed = page?.waitForEvent("close");
-  await app.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()
-      .find((window) => window.getTitle() === "Mosey 设置")
-      ?.close();
-  });
+  const closed = page
+    ? run("settings-page-close", () => page.waitForEvent("close"))
+    : Promise.resolve();
+  // Keep the early event subscription observed even if native close fails.
+  void closed.catch(() => {});
+  await run("settings-native-close", () =>
+    app.evaluate(({ BrowserWindow }) => {
+      BrowserWindow.getAllWindows()
+        .find((window) => window.getTitle() === "Mosey 设置")
+        ?.close();
+    }),
+  );
   await closed;
 }
 
