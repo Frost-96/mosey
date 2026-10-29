@@ -21,12 +21,36 @@ import { instrumentBehaviorApplication } from "./behavior-build";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
 
+export type SessionOperation = <T>(
+  label: string,
+  action: () => Promise<T>,
+  options?: { timeout?: number },
+) => Promise<T>;
+
+export type PackagedPlatformOwnership = {
+  prepare?(context: {
+    bundle: string;
+    evidence: string;
+    signal: AbortSignal;
+    run: SessionOperation;
+  }): Promise<void>;
+  // Some OS resources can only be restored by their still-live app identity.
+  // This compensation must never launch an app or resume scenario operations.
+  restore(context: {
+    app: ElectronApplication | undefined;
+    attemptedLaunch: boolean;
+    run: SessionOperation;
+  }): Promise<void>;
+  release?(context: { run: SessionOperation }): Promise<void>;
+};
+
 type SessionOptions = {
   behavior?: ControlledBehaviorOptions;
   signal?: AbortSignal;
   preferences?: unknown;
   // Destructive main-process faults must not share macOS restoration history.
   isolateAppIdentity?: boolean;
+  packagedPlatform?: PackagedPlatformOwnership;
   // Synthetic inputs prove application behavior at the native wire boundary,
   // never real Dock capture, permission, focus or cross-application input.
   dock: "real" | "empty" | "controlled";
@@ -65,6 +89,7 @@ export async function createPetTestSession(options: SessionOptions) {
   let root: string | undefined;
   let app: ElectronApplication | undefined;
   let appProcess: ReturnType<ElectronApplication["process"]> | undefined;
+  let attemptedLaunch = false;
   const processes: ReturnType<ElectronApplication["process"]>[] = [];
   const record = (event: string, detail?: unknown) => {
     appendFileSync(
@@ -91,6 +116,9 @@ export async function createPetTestSession(options: SessionOptions) {
     record("stage");
   };
   const releases: (() => Promise<void>)[] = [];
+  let platformRestoration: Promise<void> | undefined;
+  let platformArmed = false;
+  let retainRoot = false;
   let closing: Promise<void> | undefined;
   const cancellation = new AbortController();
   let firstFailure: unknown;
@@ -160,8 +188,76 @@ export async function createPetTestSession(options: SessionOptions) {
       clearTimeout(timer);
     }
   };
+  const platformCleanup = async (
+    label: string,
+    action: (run: SessionOperation) => Promise<void>,
+  ) => {
+    // Cleanup has its own narrow guard: scenario cancellation permits OS
+    // restoration, but a restoration deadline forbids later continuations.
+    let available = true;
+    const run: SessionOperation = async (
+      label,
+      action,
+      { timeout = 5000 } = {},
+    ) => {
+      if (!available)
+        throw new Error("Platform restoration is no longer active");
+      mark(label);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        return await Promise.race([
+          action(),
+          new Promise<never>((_resolve, reject) => {
+            timer = setTimeout(() => {
+              available = false;
+              reject(
+                new Error(`${label} did not complete within ${timeout}ms`),
+              );
+            }, timeout);
+          }),
+        ]);
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+    try {
+      await run(label, () => action(run), { timeout: 10000 });
+    } finally {
+      available = false;
+    }
+  };
+  const restorePlatform = () => {
+    const platform = options.packagedPlatform;
+    if (!platform || !platformArmed) return Promise.resolve();
+    return (platformRestoration ??= platformCleanup(
+      "platform-restoration",
+      async (run) => {
+        await platform.restore({ app, attemptedLaunch, run });
+        record("platform-restored");
+      },
+    ));
+  };
+  const restoreAndStopApp = async () => {
+    const errors: unknown[] = [];
+    try {
+      await restorePlatform();
+    } catch (error) {
+      errors.push(error);
+    }
+    try {
+      await stopApp();
+    } catch (error) {
+      errors.push(error);
+    }
+    if (errors.length)
+      throw new AggregateError(
+        errors,
+        "Platform restoration or app shutdown failed",
+      );
+  };
   const close = () =>
     (closing ??= (async () => {
+      retainRoot = false;
       cancellation.abort(new Error("Pet session is closed"));
       // Keep the last scenario stage even when callers close in a finally
       // block before Vitest can report their error.
@@ -201,7 +297,7 @@ export async function createPetTestSession(options: SessionOptions) {
       // and stopped below before it is allowed to observe readiness.
       const interrupted = app;
       try {
-        await stopApp();
+        if (app) await restoreAndStopApp();
       } catch (error) {
         errors.push(error);
       }
@@ -215,16 +311,23 @@ export async function createPetTestSession(options: SessionOptions) {
       // too; an allSettled result must not silently accept a surviving app.
       if (app && app !== interrupted) {
         try {
-          await stopApp();
+          await restoreAndStopApp();
         } catch (error) {
           errors.push(error);
         }
       }
+      try {
+        await restorePlatform();
+      } catch (error) {
+        if (!errors.includes(error)) errors.push(error);
+      }
+      if (options.packagedPlatform && errors.length) retainRoot = true;
       for (const release of releases.toReversed()) {
         try {
           await release();
         } catch (error) {
           errors.push(error);
+          if (options.packagedPlatform) retainRoot = true;
         }
       }
       record("cleanup-complete", errors.map(String));
@@ -239,6 +342,7 @@ export async function createPetTestSession(options: SessionOptions) {
       // A denied cleanup remains a failure, but callers can release the
       // obstruction and safely retry. Scenario operations stay cancelled.
       closing = undefined;
+      platformRestoration = undefined;
       throw error;
     }));
   const cancelled = () => {
@@ -388,7 +492,13 @@ export async function createPetTestSession(options: SessionOptions) {
     const preparation = (async () => {
       root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
       const ownedRoot = root;
-      releases.push(() => rm(ownedRoot, { recursive: true, force: true }));
+      releases.push(async () => {
+        if (retainRoot) {
+          record("owned-root-retained", { directory: ownedRoot, evidence });
+          return;
+        }
+        await rm(ownedRoot, { recursive: true, force: true });
+      });
       active();
       const profile = path.join(root, "profile");
       await mkdir(profile);
@@ -509,6 +619,42 @@ setInterval(() => {
           packaged ? "Mosey" : "Electron",
         );
       }
+      const platform = options.packagedPlatform;
+      if (platform) {
+        if (!packaged || options.isolateAppIdentity)
+          throw new Error(
+            "Platform ownership requires its own packaged app identity",
+          );
+        platformArmed = true;
+        // Compensation is installed before any signing/registration attempt.
+        releases.push(() =>
+          platformCleanup("platform-release", async (run) => {
+            await platform.release?.({ run });
+          }),
+        );
+        await platform.prepare?.({
+          bundle: path.join(root, "Mosey.app"),
+          evidence,
+          signal: cancellation.signal,
+          run: (label, action, { timeout = 5000 } = {}) =>
+            step(
+              label,
+              () => {
+                // An aborted OS acquisition may still be completing. Settle it
+                // before compensation can unregister or delete the owned bundle.
+                const operation = action();
+                acquisitions.add(operation);
+                void operation.then(
+                  () => acquisitions.delete(operation),
+                  () => acquisitions.delete(operation),
+                );
+                return operation;
+              },
+              timeout,
+            ),
+        });
+        active();
+      }
 
       return {
         directory: root,
@@ -529,6 +675,7 @@ setInterval(() => {
           "Pet session already has an application; use restart()",
         );
       starting = true;
+      attemptedLaunch = true;
       const launching = (async () => {
         mark("launch");
         const args = [
@@ -563,7 +710,7 @@ setInterval(() => {
             );
             record("app-acquired");
             if (closing || cancellation.signal.aborted) {
-              await stopApp();
+              await restoreAndStopApp();
               throw new Error(
                 "Pet session cancelled while the application was launching",
               );
