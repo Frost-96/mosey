@@ -1,21 +1,11 @@
-import {
-  copyBehaviorDevelopmentApp,
-  instrumentBehaviorApplication,
-} from "./support/behavior-build";
+import { createPetTestSession } from "./support/pet-session";
 import { controlBehavior, advanceRest } from "./support/controlled-behavior";
-import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import { writeFile } from "node:fs/promises";
 import { waitForPetVisibility } from "./support/visibility";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
-const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const recording =
@@ -32,92 +22,67 @@ test(
   "sleep preserves the two-click window, drag priority and lifecycle cancellation",
   { timeout: 120000 },
   async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "mosey-sleep-"));
-    let app: ElectronApplication | undefined;
-    let stopForge: (() => Promise<void>) | undefined;
-    let restoreDockCapture: (() => Promise<void>) | undefined;
+    const session = await createPetTestSession({
+      dock: "empty",
+      behavior: {},
+      preferences: {
+        version: 3,
+        character: whale ? "whale" : "corgi",
+        size: 240,
+        visibility: "visible",
+      },
+      ...recording,
+    });
+    const { app, pet } = await session.launch();
+    // Vite may finish dependency optimization after the first painted frame.
+    await session.run("startup-network-idle", () =>
+      pet.waitForLoadState("networkidle"),
+    );
     try {
-      await mkdir(path.join(root, "profile"), { recursive: true });
-      await writeFile(
-        path.join(root, "profile/preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: whale ? "whale" : "corgi",
-          size: 240,
-          visibility: "visible",
-        }),
-      );
-      if (!packaged) stopForge = await startForge();
-      else
-        execFileSync("/usr/bin/ditto", [
-          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-          path.join(root, "Mosey.app"),
-        ]);
-      if (!packaged) await copyBehaviorDevelopmentApp(root);
-      await instrumentBehaviorApplication({ root, packaged });
-      restoreDockCapture = await emptyDockCapture(
-        packaged
-          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-          : path.join(root, "app/build/native/dock-runtime"),
-      );
-      app = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              ...recording,
-              args: [scaleArgument, `--user-data-dir=${root}/profile`],
-            }
-          : {
-              ...recording,
-              args: [
-                path.join(root, "app"),
-                scaleArgument,
-                `--user-data-dir=${root}/profile`,
-              ],
-            },
-      );
-      const pet = await app.firstWindow();
-      await pet.waitForLoadState("networkidle");
-      expect(await pet.evaluate(() => devicePixelRatio)).toBe(
-        Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
-      );
       const menu = async (label: "Hide Mosey" | "Show Mosey") => {
-        await app!.evaluate(({ Menu }, label) => {
-          Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === label)!
-            .click();
-        }, label);
+        await session.run("sleep:app-evaluate", () =>
+          app.evaluate(({ Menu }, label) => {
+            Menu.getApplicationMenu()!
+              .items.find((item) => item.label === "Mosey")!
+              .submenu!.items.find((item) => item.label === label)!
+              .click();
+          }, label),
+        );
         await waitForPetVisibility(
-          app!,
+          app,
           pet,
           label === "Hide Mosey" ? "hidden" : "visible",
+          { run: session.run },
         );
       };
       const pixels = () =>
-        pet.evaluate(() => {
-          const canvas = document.querySelector("canvas")!;
-          canvas
-            .getContext("2d")!
-            .getImageData(0, 0, canvas.width, canvas.height);
-          return canvas.toDataURL();
-        });
+        session.run("sleep:pet-evaluate", () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            canvas
+              .getContext("2d")!
+              .getImageData(0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL();
+          }),
+        );
       const height = () =>
-        pet.evaluate(() => {
-          const canvas = document.querySelector("canvas")!;
-          const pixels = canvas
-            .getContext("2d")!
-            .getImageData(0, 0, canvas.width, canvas.height).data;
-          let top = canvas.height,
-            bottom = -1;
-          for (let y = 0; y < canvas.height; y++)
-            for (let x = 0; x < canvas.width; x++)
-              if (pixels[(y * canvas.width + x) * 4 + 3]! > 127) {
-                top = Math.min(top, y);
-                bottom = Math.max(bottom, y);
-              }
-          return (bottom - top + 1) / devicePixelRatio;
-        });
+        session.run("sleep:pet-evaluate", () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            const pixels = canvas
+              .getContext("2d")!
+              .getImageData(0, 0, canvas.width, canvas.height).data;
+            let top = canvas.height,
+              bottom = -1;
+            for (let y = 0; y < canvas.height; y++)
+              for (let x = 0; x < canvas.width; x++)
+                if (pixels[(y * canvas.width + x) * 4 + 3]! > 127) {
+                  top = Math.min(top, y);
+                  bottom = Math.max(bottom, y);
+                }
+            return (bottom - top + 1) / devicePixelRatio;
+          }),
+        );
       await expect.poll(height, { timeout: 5000 }).toBeGreaterThan(180);
       const waitForSleep = async () => {
         // Settling is already short enough to pass the silhouette check, but
@@ -126,8 +91,10 @@ test(
         await expect
           .poll(
             () =>
-              pet.evaluate(
-                async () => (await window.mosey.getPresentation()).posture,
+              session.run("sleep:pet-evaluate", () =>
+                pet.evaluate(
+                  async () => (await window.mosey.getPresentation()).posture,
+                ),
               ),
             { timeout: 5500 },
           )
@@ -136,20 +103,24 @@ test(
         else await expect.poll(height).toBeLessThan(160);
       };
       const posture = () =>
-        pet.evaluate(
-          async () => (await window.mosey.getPresentation()).posture,
+        session.run("sleep:pet-evaluate", () =>
+          pet.evaluate(
+            async () => (await window.mosey.getPresentation()).posture,
+          ),
         );
       const waitForVisibleRest = async () => {
         await expect
           .poll(() =>
-            pet.evaluate(async () => {
-              const current = await window.mosey.getPresentation();
-              return (
-                !document.hidden &&
-                current.visibility === "visible" &&
-                current.posture === "resting"
-              );
-            }),
+            session.run("sleep:pet-evaluate", () =>
+              pet.evaluate(async () => {
+                const current = await window.mosey.getPresentation();
+                return (
+                  !document.hidden &&
+                  current.visibility === "visible" &&
+                  current.posture === "resting"
+                );
+              }),
+            ),
           )
           .toBe(true);
       };
@@ -172,25 +143,32 @@ test(
         idleFrames.add(await pixels());
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
-      await controlBehavior(app, { random: 0.6 });
+      await session.run("sleep:controlBehavior", () =>
+        controlBehavior(app, { random: 0.6 }),
+      );
       await menu("Hide Mosey");
       await menu("Show Mosey");
       await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
-      await controlBehavior(app, { advanceBy: 180000 });
-      await advanceRest(app, 0.6);
+      await session.run("sleep:controlBehavior", () =>
+        controlBehavior(app, { advanceBy: 180000 }),
+      );
+      await advanceRest(app, 0.6, session.run);
 
       await waitForSleep();
       const mode = evidence;
-      await mkdir("test-results", { recursive: true });
       const screenshot = (name: string) =>
-        pet.screenshot({
-          path: `test-results/${mode}-sleep-${name}.png`,
-          omitBackground: true,
-        });
+        session.run("sleep:pet-screenshot", () =>
+          pet.screenshot({
+            path: `test-results/${mode}-sleep-${name}.png`,
+            omitBackground: true,
+          }),
+        );
       const bounds = () =>
-        app!.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0]!.getBounds(),
+        session.run("sleep:app-evaluate", () =>
+          app.evaluate(({ BrowserWindow }) =>
+            BrowserWindow.getAllWindows()[0]!.getBounds(),
+          ),
         );
       const enterSleep = async () => {
         await menu("Hide Mosey");
@@ -198,8 +176,10 @@ test(
         await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
-        await controlBehavior(app!, { advanceBy: 180000 });
-        await advanceRest(app!, 0.6);
+        await session.run("sleep:controlBehavior", () =>
+          controlBehavior(app, { advanceBy: 180000 }),
+        );
+        await advanceRest(app, 0.6, session.run);
 
         await waitForSleep();
       };
@@ -215,25 +195,29 @@ test(
       expect(sleepingFrames.size).toBeGreaterThan(1);
       expect(await bounds()).toEqual(sleepingBounds);
       const body = () =>
-        pet.evaluate(() => {
-          const canvas = document.querySelector("canvas")!;
-          const data = canvas
-            .getContext("2d")!
-            .getImageData(0, 0, canvas.width, canvas.height).data;
-          const points: { x: number; y: number }[] = [];
-          for (let y = 0; y < canvas.height; y++)
-            for (let x = 0; x < canvas.width; x++)
-              if (data[(y * canvas.width + x) * 4 + 3]! > 200)
-                points.push({ x, y });
-          const point = points[Math.floor(points.length / 2)]!;
-          return {
-            x: point.x / devicePixelRatio,
-            y: point.y / devicePixelRatio,
-          };
-        });
+        session.run("sleep:pet-evaluate", () =>
+          pet.evaluate(() => {
+            const canvas = document.querySelector("canvas")!;
+            const data = canvas
+              .getContext("2d")!
+              .getImageData(0, 0, canvas.width, canvas.height).data;
+            const points: { x: number; y: number }[] = [];
+            for (let y = 0; y < canvas.height; y++)
+              for (let x = 0; x < canvas.width; x++)
+                if (data[(y * canvas.width + x) * 4 + 3]! > 200)
+                  points.push({ x, y });
+            const point = points[Math.floor(points.length / 2)]!;
+            return {
+              x: point.x / devicePixelRatio,
+              y: point.y / devicePixelRatio,
+            };
+          }),
+        );
       const click = async () => {
         const point = await body();
-        await pet.mouse.click(point.x, point.y);
+        await session.run("sleep:pet-mouse-click", () =>
+          pet.mouse.click(point.x, point.y),
+        );
       };
       await screenshot("breathing");
       await click();
@@ -280,28 +264,34 @@ test(
       // Existing context-menu tests cover native popup/cancel. Here retain the
       // menu tracking boundary deterministically: Cocoa can dismiss an inactive
       // automated menu before the requested hold has elapsed.
-      await app.evaluate(({ Menu }) => {
-        Menu.prototype.popup = function (options) {
-          Reflect.set(globalThis, "sleepMenu", this);
-          Reflect.set(globalThis, "sleepMenuClosed", false);
-          Reflect.set(this, "trackingCallback", options?.callback);
-          this.emit("menu-will-show");
-        };
-        Menu.prototype.closePopup = function () {
-          this.emit("menu-will-close");
-          Reflect.set(globalThis, "sleepMenuClosed", true);
-          const callback = Reflect.get(this, "trackingCallback");
-          Reflect.set(this, "trackingCallback", undefined);
-          callback?.();
-        };
-      });
+      await session.run("sleep:app-evaluate", () =>
+        app.evaluate(({ Menu }) => {
+          Menu.prototype.popup = function (options) {
+            Reflect.set(globalThis, "sleepMenu", this);
+            Reflect.set(globalThis, "sleepMenuClosed", false);
+            Reflect.set(this, "trackingCallback", options?.callback);
+            this.emit("menu-will-show");
+          };
+          Menu.prototype.closePopup = function () {
+            this.emit("menu-will-close");
+            Reflect.set(globalThis, "sleepMenuClosed", true);
+            const callback = Reflect.get(this, "trackingCallback");
+            Reflect.set(this, "trackingCallback", undefined);
+            callback?.();
+          };
+        }),
+      );
       await enterSleep();
       const freezeMenu = async () => {
         const point = await body();
-        await pet.mouse.click(point.x, point.y, { button: "right" });
+        await session.run("sleep:pet-mouse-click", () =>
+          pet.mouse.click(point.x, point.y, { button: "right" }),
+        );
         await expect
           .poll(() =>
-            app!.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+            session.run("sleep:app-evaluate", () =>
+              app.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+            ),
           )
           .toBe(false);
         await new Promise((resolve) => setTimeout(resolve, 60));
@@ -310,9 +300,11 @@ test(
         await new Promise((resolve) => setTimeout(resolve, 1300));
         expect(await pixels()).toBe(frozen);
         expect(await bounds()).toEqual(stationary);
-        await app!.evaluate(({ BrowserWindow }) =>
-          Reflect.get(globalThis, "sleepMenu").closePopup(
-            BrowserWindow.getAllWindows()[0],
+        await session.run("sleep:app-evaluate", () =>
+          app.evaluate(({ BrowserWindow }) =>
+            Reflect.get(globalThis, "sleepMenu").closePopup(
+              BrowserWindow.getAllWindows()[0],
+            ),
           ),
         );
       };
@@ -322,9 +314,15 @@ test(
       await new Promise((resolve) => setTimeout(resolve, 120));
       await assertAsleep();
       const point = await body();
-      await pet.mouse.click(point.x, point.y, { button: "right" });
+      await session.run("sleep:pet-mouse-click", () =>
+        pet.mouse.click(point.x, point.y, { button: "right" }),
+      );
       await expect
-        .poll(() => app!.evaluate(() => !!Reflect.get(globalThis, "sleepMenu")))
+        .poll(() =>
+          session.run("sleep:app-evaluate", () =>
+            app.evaluate(() => !!Reflect.get(globalThis, "sleepMenu")),
+          ),
+        )
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 150));
       await assertAsleep();
@@ -333,14 +331,18 @@ test(
       await new Promise((resolve) => setTimeout(resolve, 1200));
       expect(await pixels()).toBe(frozen);
       expect(await bounds()).toEqual(stationary);
-      await app.evaluate(({ BrowserWindow }) =>
-        Reflect.get(globalThis, "sleepMenu").closePopup(
-          BrowserWindow.getAllWindows()[0],
+      await session.run("sleep:app-evaluate", () =>
+        app.evaluate(({ BrowserWindow }) =>
+          Reflect.get(globalThis, "sleepMenu").closePopup(
+            BrowserWindow.getAllWindows()[0],
+          ),
         ),
       );
       await expect
         .poll(() =>
-          app!.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+          session.run("sleep:app-evaluate", () =>
+            app.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+          ),
         )
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 350));
@@ -351,18 +353,20 @@ test(
       // Sleeping and ear feedback both yield immediately to the existing drag.
       for (const source of ["sleep", "ear", "waking"]) {
         await enterSleep();
-        await app.evaluate(({ BrowserWindow, screen }) => {
-          const pet = BrowserWindow.getAllWindows()[0]!;
-          const area = screen.getPrimaryDisplay().workArea;
-          const cursor = screen.getCursorScreenPoint();
-          pet.setPosition(
-            cursor.x >= area.x + area.width / 2
-              ? area.x
-              : area.x + area.width - pet.getBounds().width,
-            pet.getBounds().y,
-            false,
-          );
-        });
+        await session.run("sleep:app-evaluate", () =>
+          app.evaluate(({ BrowserWindow, screen }) => {
+            const pet = BrowserWindow.getAllWindows()[0]!;
+            const area = screen.getPrimaryDisplay().workArea;
+            const cursor = screen.getCursorScreenPoint();
+            pet.setPosition(
+              cursor.x >= area.x + area.width / 2
+                ? area.x
+                : area.x + area.width - pet.getBounds().width,
+              pet.getBounds().y,
+              false,
+            );
+          }),
+        );
         // Deliver native hover from the old window placement before CDP takes
         // capture; a late native event can cancel the synthetic held pointer.
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -370,18 +374,28 @@ test(
         if (source === "waking") await click();
         const ground = await bounds();
         const point = await body();
-        await pet.mouse.move(point.x, point.y);
-        await pet.mouse.down();
-        await pet.mouse.move(point.x, point.y - 100, { steps: 4 });
+        await session.run("sleep:pet-mouse-move", () =>
+          pet.mouse.move(point.x, point.y),
+        );
+        await session.run("sleep:pet-mouse-down", () => pet.mouse.down());
+        await session.run("sleep:pet-mouse-move", () =>
+          pet.mouse.move(point.x, point.y - 100, { steps: 4 }),
+        );
         await expect
           .poll(async () => (await bounds()).y)
           .toBeLessThan(ground.y - 60);
         const grabbed = await bounds();
         await new Promise((resolve) => setTimeout(resolve, 1100));
         expect(await bounds()).toEqual(grabbed);
-        await pet.mouse.up();
+        await session.run("sleep:pet-mouse-up", () => pet.mouse.up());
         await expect
-          .poll(() => distanceFromGround(app!), { timeout: 4000 })
+          .poll(
+            () =>
+              session.run("sleep:distanceFromGround", () =>
+                distanceFromGround(app),
+              ),
+            { timeout: 4000 },
+          )
           .toBe(0);
         await expect
           .poll(async () => idleFrames.has(await pixels()), { timeout: 4000 })
@@ -394,11 +408,13 @@ test(
       }
 
       await enterSleep();
-      await app.evaluate(({ BrowserWindow, screen }) => {
-        const pet = BrowserWindow.getAllWindows()[0]!;
-        const area = screen.getPrimaryDisplay().workArea;
-        pet.setPosition(area.x + 20, pet.getBounds().y, false);
-      });
+      await session.run("sleep:app-evaluate", () =>
+        app.evaluate(({ BrowserWindow, screen }) => {
+          const pet = BrowserWindow.getAllWindows()[0]!;
+          const area = screen.getPrimaryDisplay().workArea;
+          pet.setPosition(area.x + 20, pet.getBounds().y, false);
+        }),
+      );
       const beforeHide = await bounds();
       await click();
       await menu("Hide Mosey");
@@ -414,44 +430,48 @@ test(
 
       await enterSleep();
       await click();
-      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
+      await session.run("sleep:app-evaluate", () =>
+        app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend")),
+      );
       const suspended = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
       expect(await bounds()).toEqual(suspended);
-      await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
+      await session.run("sleep:app-evaluate", () =>
+        app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume")),
+      );
       await expect.poll(height).toBeGreaterThan(180);
       expect(await bounds()).toEqual(suspended);
-      await writeFile(
-        `test-results/${mode}-sleep.json`,
-        JSON.stringify(
-          {
-            rapidGapMs: rapidGap,
-            sleepingFrameCount: sleepingFrames.size,
-            menuFrozenForMs: 1200,
-            dragSources: ["sleep", "ear", "waking"],
-            input:
-              "Playwright directed window input; native menu tracking intercepted; suspend/resume events simulated",
-            timing:
-              "controlled behavior adapter advances the awake cycle at rest boundaries; ordinary renderer completion, animation and double-click windows use real elapsed time; infrastructure clocks are unchanged",
-          },
-          null,
-          2,
+      await session.run("sleep:writeFile", () =>
+        writeFile(
+          `test-results/${mode}-sleep.json`,
+          JSON.stringify(
+            {
+              rapidGapMs: rapidGap,
+              sessionEvidence: session.evidence,
+              sleepingFrameCount: sleepingFrames.size,
+              menuFrozenForMs: 1200,
+              dragSources: ["sleep", "ear", "waking"],
+              input:
+                "Playwright directed window input; native menu tracking intercepted; suspend/resume events simulated",
+              timing:
+                "controlled behavior adapter advances the awake cycle at rest boundaries; ordinary renderer completion, animation and double-click windows use real elapsed time; infrastructure clocks are unchanged",
+            },
+            null,
+            2,
+          ),
         ),
       );
+      await session.quit();
     } catch (error) {
-      await mkdir("test-results", { recursive: true });
-      await app
-        ?.windows()[0]
-        ?.screenshot({
-          path: `test-results/failure-${evidence}-sleep.png`,
-        })
+      await session
+        .run("sleep-failure-screenshot", () =>
+          pet.screenshot({
+            path: `test-results/failure-${evidence}-sleep.png`,
+            timeout: 3000,
+          }),
+        )
         .catch(() => {});
       throw error;
-    } finally {
-      await app?.close().catch(() => {});
-      await restoreDockCapture?.();
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
     }
   },
 );
