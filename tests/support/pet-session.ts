@@ -8,6 +8,7 @@ import {
   cp,
   mkdir,
   mkdtemp,
+  readFile,
   rename,
   rm,
   symlink,
@@ -21,6 +22,12 @@ import { instrumentBehaviorApplication } from "./behavior-build";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
 import { nativeArtifactInventory, type DockProducer } from "./dock-producer";
+import {
+  beginMeasurement,
+  measure,
+  measureSync,
+  recordMeasurement,
+} from "./measurement";
 
 export type SessionOperation = <T>(
   label: string,
@@ -83,6 +90,11 @@ export async function createPetTestSession(options: SessionOptions) {
   mkdirSync(evidence, { recursive: true });
   const started = performance.now();
   const testName = expect.getState().currentTestName;
+  const measurement = {
+    sessionId: path.basename(evidence),
+    preparationId: randomUUID(),
+    test: testName,
+  };
   const requestedScale = Number(
     options.scaleFactor ?? process.env.MOSEY_TEST_SCALE_FACTOR ?? "1",
   );
@@ -97,6 +109,8 @@ export async function createPetTestSession(options: SessionOptions) {
       path.join(evidence, "progress.jsonl"),
       JSON.stringify({
         event,
+        runId: process.env.MOSEY_MEASUREMENT_RUN_ID,
+        ...measurement,
         stage,
         mode: process.env.MOSEY_TEST_MODE,
         requestedScale,
@@ -146,6 +160,10 @@ export async function createPetTestSession(options: SessionOptions) {
   ): Promise<T> => {
     active();
     mark(label);
+    const finish = beginMeasurement("session.operation", {
+      ...measurement,
+      operation: label,
+    });
     let timer: ReturnType<typeof setTimeout> | undefined;
     let aborted: (() => void) | undefined;
     try {
@@ -160,7 +178,11 @@ export async function createPetTestSession(options: SessionOptions) {
       });
       const result = await Promise.race([action(), cancelled]);
       active();
+      finish("passed");
       return result;
+    } catch (error) {
+      finish(cancellation.signal.aborted ? "cancelled" : "failed", error);
+      throw error;
     } finally {
       clearTimeout(timer);
       if (aborted) cancellation.signal.removeEventListener("abort", aborted);
@@ -204,9 +226,13 @@ export async function createPetTestSession(options: SessionOptions) {
       if (!available)
         throw new Error("Platform restoration is no longer active");
       mark(label);
+      const finish = beginMeasurement("platform.operation", {
+        ...measurement,
+        operation: label,
+      });
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        return await Promise.race([
+        const result = await Promise.race([
           action(),
           new Promise<never>((_resolve, reject) => {
             timer = setTimeout(() => {
@@ -217,6 +243,11 @@ export async function createPetTestSession(options: SessionOptions) {
             }, timeout);
           }),
         ]);
+        finish("passed");
+        return result;
+      } catch (error) {
+        finish("failed", error);
+        throw error;
       } finally {
         clearTimeout(timer);
       }
@@ -257,7 +288,7 @@ export async function createPetTestSession(options: SessionOptions) {
       );
   };
   const close = () =>
-    (closing ??= (async () => {
+    (closing ??= measure("session.cleanup", measurement, async () => {
       retainRoot = false;
       cancellation.abort(new Error("Pet session is closed"));
       // Keep the last scenario stage even when callers close in a finally
@@ -339,7 +370,7 @@ export async function createPetTestSession(options: SessionOptions) {
           "Pet session cleanup failed",
           { cause: firstFailure },
         );
-    })().catch((error: unknown) => {
+    }).catch((error: unknown) => {
       // A denied cleanup remains a failure, but callers can release the
       // obstruction and safely retry. Scenario operations stay cancelled.
       closing = undefined;
@@ -490,7 +521,7 @@ export async function createPetTestSession(options: SessionOptions) {
   try {
     if (options.signal?.aborted) cancelled();
     active();
-    const preparation = (async () => {
+    const preparation = measure("session.prepare", measurement, async () => {
       root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
       const ownedRoot = root;
       releases.push(async () => {
@@ -516,35 +547,57 @@ export async function createPetTestSession(options: SessionOptions) {
         options.behavior ? "controlled-behavior-v1" : "production-default",
       );
       mark(packaged ? "copy-package" : "start-forge");
-      if (packaged)
-        execFileSync(
-          "/usr/bin/ditto",
-          [
-            path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-            path.join(root, "Mosey.app"),
-          ],
-          { timeout: 30000 },
+      if (packaged) {
+        measureSync("session.copy", () =>
+          execFileSync(
+            "/usr/bin/ditto",
+            [
+              path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+              path.join(ownedRoot, "Mosey.app"),
+            ],
+            { timeout: 30000 },
+          ),
         );
-      else {
+        await measure("package.observe", {}, async () => {
+          recordMeasurement("package-consumed", {
+            artifactSHA256: createHash("sha256")
+              .update(
+                await readFile(
+                  path.join(ownedRoot, "Mosey.app/Contents/Resources/app.asar"),
+                ),
+              )
+              .digest("hex"),
+          });
+        });
+      } else {
         releases.push(await startForge({ signal: cancellation.signal }));
         active();
-        // app.getAppPath() must resolve inside this session. An existing
-        // developer app must never launch our substituted capture producer.
-        const directory = path.join(root, "app");
-        await mkdir(directory);
-        await cp("package.json", path.join(directory, "package.json"));
-        await cp(".vite/build", path.join(directory, ".vite/build"), {
-          recursive: true,
+        await measure("session.copy", {}, async () => {
+          // app.getAppPath() must resolve inside this session. An existing
+          // developer app must never launch our substituted capture producer.
+          const directory = path.join(ownedRoot, "app");
+          await mkdir(directory);
+          await cp("package.json", path.join(directory, "package.json"));
+          await cp(".vite/build", path.join(directory, ".vite/build"), {
+            recursive: true,
+          });
+          await cp("build/native", path.join(directory, "build/native"), {
+            recursive: true,
+          });
+          await symlink(
+            path.resolve("node_modules"),
+            path.join(directory, "node_modules"),
+            "dir",
+          );
         });
-        await cp("build/native", path.join(directory, "build/native"), {
-          recursive: true,
-        });
-        await symlink(
-          path.resolve("node_modules"),
-          path.join(directory, "node_modules"),
-          "dir",
-        );
       }
+      recordMeasurement("session-artifact", {
+        root,
+        profile,
+        variant: options.behavior
+          ? "controlled-behavior-v1"
+          : "production-default",
+      });
       active();
       if (options.behavior) {
         const instrumentation = instrumentBehaviorApplication({
@@ -698,10 +751,12 @@ setInterval(() => {
           ],
           { timeout: 5000 },
         );
-        execFileSync(
-          "/usr/bin/codesign",
-          ["--force", "--deep", "--sign", "-", bundle],
-          { timeout: 30000 },
+        measureSync("session.sign", () =>
+          execFileSync(
+            "/usr/bin/codesign",
+            ["--force", "--deep", "--sign", "-", bundle],
+            { timeout: 30000 },
+          ),
         );
         executablePath = path.join(
           bundle,
@@ -753,7 +808,7 @@ setInterval(() => {
         observation,
         executablePath,
       };
-    })();
+    });
     pending = preparation;
     const { directory, profile, packaged, observation, executablePath } =
       await preparation;
@@ -766,7 +821,7 @@ setInterval(() => {
         );
       starting = true;
       attemptedLaunch = true;
-      const launching = (async () => {
+      const launching = measure("session.launch", measurement, async () => {
         mark("launch");
         const args = [
           ...(packaged ? [] : [path.join(directory, "app")]),
@@ -882,7 +937,7 @@ setInterval(() => {
         } finally {
           clearTimeout(timer);
         }
-      })();
+      });
       pending = launching;
       try {
         return await launching;

@@ -2,11 +2,14 @@ import { execFileSync } from "node:child_process";
 import {
   appendFileSync,
   globSync,
+  existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
 } from "node:fs";
 import { scenarioFiles, scaleCoverage } from "../tests/scenarios.ts";
+import path from "node:path";
+import { summarizeMeasurements } from "../tests/support/measurement.ts";
 
 const channel = process.env.MOSEY_VERIFICATION_CHANNEL;
 if (
@@ -41,6 +44,32 @@ const observedScaleEvidence: {
   requested: number;
   observed: number;
 }[] = [];
+const measurements = globSync("test-results/measurements/*/run.json").map(
+  (file) => ({
+    file,
+    summary: summarizeMeasurements(path.dirname(file)),
+  }),
+);
+const testReport = "test-results/verification/tests.json";
+const scenarioDurations = existsSync(testReport)
+  ? (
+      JSON.parse(readFileSync(testReport, "utf8")).testResults as {
+        name: string;
+        assertionResults: {
+          fullName: string;
+          status: string;
+          duration?: number;
+        }[];
+      }[]
+    ).flatMap((file) =>
+      file.assertionResults.map((test) => ({
+        file: file.name,
+        test: test.fullName,
+        status: test.status,
+        durationMs: test.duration ?? null,
+      })),
+    )
+  : [];
 const evidenceReadErrors: { file: string; error: string }[] = [];
 if (application)
   for (const file of globSync(
@@ -97,6 +126,8 @@ const record = {
     application || channel === "deterministic" ? scenarioFiles(channel) : [],
   scaleCoverage: application ? scaleCoverage : null,
   observedScaleEvidence,
+  measurements,
+  scenarioDurations,
   evidenceReadErrors,
   recordedAt: new Date().toISOString(),
 };
