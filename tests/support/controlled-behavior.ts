@@ -21,14 +21,27 @@ export function controlBehavior(
 
 // Input setup, never an outcome oracle. Call after ordinary hide/show scheduled
 // a rest with this same choice. Product timing is centralized at its own seam.
-export async function advanceRest(app: ElectronApplication, choice: number) {
+export async function advanceRest(
+  app: ElectronApplication,
+  choice: number,
+  run: <T>(label: string, action: () => Promise<T>) => Promise<T> = (
+    _label,
+    action,
+  ) => action(),
+) {
   const renderer = observePetRenderer(app);
   await expect
-    .poll(async () => (await renderer.read())?.presentation.posture, {
-      timeout: 5000,
-    })
+    .poll(
+      async () =>
+        (await run("rest-presentation", renderer.read))?.presentation.posture,
+      {
+        timeout: 5000,
+      },
+    )
     .toBe("resting");
-  return controlBehavior(app, {
-    advanceBy: autonomy.restMinMs + choice * autonomy.restVariationMs,
-  });
+  return run("advance-rest-input", () =>
+    controlBehavior(app, {
+      advanceBy: autonomy.restMinMs + choice * autonomy.restVariationMs,
+    }),
+  );
 }
