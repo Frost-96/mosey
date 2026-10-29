@@ -1187,11 +1187,16 @@ test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without 
             app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend")),
           );
         else {
-          const opened = session.run("app.waitForEvent", () =>
-            app.waitForEvent("window"),
-          );
+          const opened = session
+            .run("diagnostic-window", () => app.waitForEvent("window"))
+            .then(
+              (panel) => ({ panel, error: undefined }),
+              (error: unknown) => ({ panel: undefined, error }),
+            );
           await diagnostic("Start Dock validation (120 seconds)");
-          const panel = await opened;
+          const result = await opened;
+          if (!result.panel) throw result.error;
+          const panel = result.panel;
           await session.run("diagnostic-heading", () =>
             panel.getByRole("heading", { name: "Dock validation" }).waitFor(),
           );
