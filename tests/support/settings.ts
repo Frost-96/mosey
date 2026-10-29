@@ -3,14 +3,19 @@ import type { SessionOperation } from "./pet-session";
 import type { ElectronApplication, Page } from "playwright";
 export async function openSettings(
   app: ElectronApplication,
-  { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
+  {
+    waitForInitialState = true,
+    run = (_label, action) => action(),
+  }: { waitForInitialState?: boolean; run?: SessionOperation } = {},
 ) {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()!
-      .items.find((item) => item.label === "Mosey")!
-      .submenu!.items.find((item) => item.label === "设置…")!
-      .click();
-  });
+  await run("settings-open", () =>
+    app.evaluate(({ Menu }) => {
+      Menu.getApplicationMenu()!
+        .items.find((item) => item.label === "Mosey")!
+        .submenu!.items.find((item) => item.label === "设置…")!
+        .click();
+    }),
+  );
   let page: Page | undefined;
   await expect
     .poll(
@@ -24,9 +29,11 @@ export async function openSettings(
           );
         if (!candidate) return false;
         try {
-          await candidate
-            .getByRole("button", { name: "中（默认）" })
-            .waitFor({ timeout: 1000 });
+          await run("settings-controls", () =>
+            candidate
+              .getByRole("button", { name: "中（默认）" })
+              .waitFor({ timeout: 1000 }),
+          );
         } catch (error) {
           if (candidate.isClosed()) return false;
           throw error;
@@ -42,21 +49,28 @@ export async function openSettings(
   await expect
     .poll(
       () =>
-        app.evaluate(({ BrowserWindow }) => {
-          const window = BrowserWindow.getAllWindows().find(
-            (window) => window.getTitle() === "Mosey 设置",
-          );
-          return !!window?.isVisible();
-        }),
+        run("settings-visible", () =>
+          app.evaluate(({ BrowserWindow }) => {
+            const window = BrowserWindow.getAllWindows().find(
+              (window) => window.getTitle() === "Mosey 设置",
+            );
+            return !!window?.isVisible();
+          }),
+        ),
       { timeout: 15000 },
     )
     .toBe(true);
   // React can paint controls before the first settings snapshot arrives. Most
   // callers need confirmed settings; ordering tests explicitly inspect loading.
   if (waitForInitialState)
-    await page!
-      .getByText("正在读取系统状态…", { exact: true })
-      .waitFor({ state: "hidden", timeout: 15000 });
+    await run(
+      "settings-initial-state",
+      () =>
+        page!
+          .getByText("正在读取系统状态…", { exact: true })
+          .waitFor({ state: "hidden", timeout: 15000 }),
+      { timeout: 15000 },
+    );
   return page!;
 }
 export async function closeSettings(
