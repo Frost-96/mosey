@@ -1,12 +1,6 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
-import { execFileSync } from "node:child_process";
-const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
 test.each([
   { size: 240, delta: 10, notifyMetrics: true },
@@ -17,39 +11,46 @@ test.each([
 ])(
   "$size DIP follows a $delta DIP work-area change (metrics notification: $notifyMetrics)",
   async ({ size, delta, notifyMetrics }) => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "mosey-ground-repro-"));
-    let app: ElectronApplication | undefined;
-    let stop: (() => Promise<void>) | undefined;
-    try {
-      await writeFile(
-        path.join(root, "preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: "corgi",
-          size,
-          visibility: "visible",
-        }),
-      );
-      if (!packaged) stop = await startForge();
-      else
-        execFileSync("/usr/bin/ditto", [
-          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-          path.join(root, "Mosey.app"),
-        ]);
-      app = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${root}`],
-            }
-          : { args: [".", `--user-data-dir=${root}`] },
-      );
-      const page = await app.firstWindow();
-      await page.waitForLoadState("networkidle");
-      await expect
-        .poll(() => page.locator("canvas").getAttribute("width"))
-        .not.toBeNull();
-      const result = await app.evaluate(
+    const session = await createPetTestSession({
+      dock: "empty",
+      preferences: {
+        version: 3,
+        character: "corgi",
+        size,
+        visibility: "visible",
+      },
+    });
+    const { app, pet: page } = await session.launch();
+    const ratio = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+    const raster = await session.run("page-evaluate", () =>
+      page.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        const pixels = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        let opaque = 0;
+        for (let i = 3; i < pixels.length; i += 4)
+          if (pixels[i] > 127) opaque++;
+        return {
+          ratio: devicePixelRatio,
+          width: canvas.width,
+          height: canvas.height,
+          cssWidth: canvas.getBoundingClientRect().width,
+          cssHeight: canvas.getBoundingClientRect().height,
+          opaque,
+        };
+      }),
+    );
+    expect(raster).toMatchObject({
+      ratio,
+      width: size * ratio,
+      height: size * ratio,
+      cssWidth: size,
+      cssHeight: size,
+    });
+    expect(raster.opaque).toBeGreaterThan(size * size * ratio * ratio * 0.2);
+    const result = await session.run("app-evaluate", () =>
+      app.evaluate(
         ({ BrowserWindow, screen }, { delta, notifyMetrics }) => {
           const pet = BrowserWindow.getAllWindows()[0]!;
           const display = screen.getPrimaryDisplay();
@@ -83,36 +84,34 @@ test.each([
           };
         },
         { delta, notifyMetrics },
-      );
-      if (!notifyMetrics) {
-        // The screen boundary exposes a new work area before its native
-        // notification. Observe recovery against the live floor, not a stale y.
-        await expect
-          .poll(() => distanceFromGround(app!), { timeout: 1000 })
-          .toBe(0);
-        const actual = await app.evaluate(
+      ),
+    );
+    if (!notifyMetrics) {
+      // The screen boundary exposes a new work area before its native
+      // notification. Observe recovery against the live floor, not a stale y.
+      await expect
+        .poll(
+          () =>
+            session.run("distanceFromGround", () => distanceFromGround(app)),
+          { timeout: 1000 },
+        )
+        .toBe(0);
+      const actual = await session.run("app-evaluate", () =>
+        app.evaluate(
           ({ BrowserWindow }) =>
             BrowserWindow.getAllWindows()[0]!.getBounds().y,
-        );
-        expect(actual).toBe(result.initialGround - delta);
-        expect(actual).toBe(result.currentGround);
-      } else {
-        expect(result.actual).toBe(result.initialGround - delta);
-        expect(result.actual).toBe(result.currentGround);
-        await expect.poll(() => distanceFromGround(app!)).toBe(0);
-      }
-    } catch (error) {
-      await app
-        ?.windows()[0]
-        ?.screenshot({
-          path: `test-results/failure-ground-${packaged ? "packaged" : "development"}.png`,
-        })
-        .catch(() => {});
-      throw error;
-    } finally {
-      await app?.close();
-      await stop?.();
-      await rm(root, { recursive: true, force: true });
+        ),
+      );
+      expect(actual).toBe(result.initialGround - delta);
+      expect(actual).toBe(result.currentGround);
+    } else {
+      expect(result.actual).toBe(result.initialGround - delta);
+      expect(result.actual).toBe(result.currentGround);
+      await expect
+        .poll(() =>
+          session.run("distanceFromGround", () => distanceFromGround(app)),
+        )
+        .toBe(0);
     }
   },
 );

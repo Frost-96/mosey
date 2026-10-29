@@ -55,6 +55,21 @@ export function scenarioFiles(project: TestProject): string[] {
 export const scaleCoverage = {
   requested: [1, 2],
   matrixProvesObservedDpr: false,
+  exceptions: [
+    {
+      file: "tests/app.test.ts",
+      tests: [
+        "packaged app starts a renderer without an inspector bootstrap",
+        "cancelling an uninstrumented startup reaps its owned process before releasing the package",
+      ],
+      project: "packaged",
+      requestedScale: 1,
+      coverage: "scale-independent startup and cancellation; no DPR claim",
+      reason:
+        "An inspector would change the shipped uninstrumented startup premise. Run once in the packaged 1x entry.",
+      evidence: "test-results/pet-sessions/*/startup.jsonl",
+    },
+  ],
   evidence:
     "Per-test assertions and test-results/pet-sessions/*/progress.jsonl",
   limitation:
