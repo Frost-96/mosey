@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
@@ -45,10 +50,12 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    if (!packaged) await copyBehaviorDevelopmentApp(root);
+    await instrumentBehaviorApplication({ root, packaged });
     restoreDockCapture = await emptyDockCapture(
       packaged
         ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-        : path.resolve("build/native/dock-runtime"),
+        : path.join(root, "app/build/native/dock-runtime"),
     );
     app = await electron.launch(
       packaged
@@ -57,10 +64,17 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
             args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
         : {
-            args: [".", scaleArgument, `--user-data-dir=${root}/profile`],
+            args: [
+              path.join(root, "app"),
+              scaleArgument,
+              `--user-data-dir=${root}/profile`,
+            ],
           },
     );
     const pet = await app.firstWindow();
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
     // Bounded public-boundary diagnostics only. These do not change menu
     // selection, timing expectations or the asserted visibility intent.
     await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app, screen }) => {
@@ -283,24 +297,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       ),
     );
     await mkdir("test-results", { recursive: true });
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      // Mock only the long rest clock, retaining real movement/animation time.
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 1000 : delay,
-          ...args,
-        )) as typeof setTimeout;
-    });
+    await controlBehavior(app, { random: 0.1 });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     const origin = await bounds();
+    await advanceRest(app, 0.1);
     await expect
       .poll(async () => Math.abs((await bounds()).x - origin.x), {
         timeout: 4500,
@@ -362,12 +363,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       [0.9, "playing"],
     ] as const) {
       checkpoint(`${action}-start`);
-      await app.evaluate((_electron, choice) => {
-        Math.random = () => choice;
-      }, choice);
+      await controlBehavior(app, { random: choice });
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
       const stationary = await bounds();
+      await advanceRest(app, choice);
       checkpoint(`${action}-menu-complete`);
       await expect
         .poll(async () => idleFrames.has(await pixels()), {
@@ -392,9 +392,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         })
         .toBe(true);
     }
-    await app.evaluate(() => {
-      Math.random = () => 0.6;
-    });
+    await controlBehavior(app, { random: 0.6 });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     // Directed Playwright input does not move the physical OS cursor. Keep
@@ -411,6 +409,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       pet.setPosition(x, pet.getBounds().y, false);
     });
     const ground = await bounds();
+    await advanceRest(app, 0.6);
     await expect
       .poll(async () => idleFrames.has(await pixels()), {
         timeout: 2500,
@@ -434,9 +433,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       .poll(async () => idleFrames.has(await pixels()), { timeout: 4000 })
       .toBe(true);
     // A new walk at the left boundary must turn inward and finish in a short range.
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-    });
+    await controlBehavior(app, { random: 0.1 });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     const edge = await app.evaluate(({ BrowserWindow, screen }) => {
@@ -445,6 +442,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       pet.setPosition(area.x, area.y + area.height - pet.getBounds().height);
       return pet.getBounds();
     });
+    await advanceRest(app, 0.1);
     await expect
       .poll(async () => (await bounds()).x, { timeout: 4500, interval: 50 })
       .toBeGreaterThan(edge.x + (whale ? 100 : 140));
@@ -489,8 +487,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
           edge,
           destination,
           actions: ["walk", "stretch", "play"],
-          restClock:
-            "long delays >=10s shortened externally to 1s; movement/frame time real",
+          behaviorTime:
+            "controlled behavior adapter advances rest eligibility; movement and painted animation run at real elapsed speed",
           input:
             "targeted Playwright window input; system suspend/resume event simulated",
         },

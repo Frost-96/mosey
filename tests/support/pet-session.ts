@@ -17,6 +17,8 @@ import os from "node:os";
 import path from "node:path";
 import type { DockObservation } from "../../src/main/platform/dock/runtime-protocol";
 import { startForge } from "./forge";
+import { instrumentBehaviorApplication } from "./behavior-build";
+import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
 
 export type SessionOperation = <T>(
@@ -43,6 +45,7 @@ export type PackagedPlatformOwnership = {
 };
 
 type SessionOptions = {
+  behavior?: ControlledBehaviorOptions;
   signal?: AbortSignal;
   preferences?: unknown;
   // Destructive main-process faults must not share macOS restoration history.
@@ -507,6 +510,10 @@ export async function createPetTestSession(options: SessionOptions) {
         );
 
       const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+      record(
+        "application-variant",
+        options.behavior ? "controlled-behavior-v1" : "production-default",
+      );
       mark(packaged ? "copy-package" : "start-forge");
       if (packaged)
         execFileSync(
@@ -538,6 +545,22 @@ export async function createPetTestSession(options: SessionOptions) {
         );
       }
       active();
+      if (options.behavior) {
+        const instrumentation = instrumentBehaviorApplication({
+          root: ownedRoot,
+          packaged,
+          options: options.behavior,
+          evidence,
+          signal: cancellation.signal,
+        });
+        acquisitions.add(instrumentation);
+        void instrumentation.then(
+          () => acquisitions.delete(instrumentation),
+          () => acquisitions.delete(instrumentation),
+        );
+        await step("prepare-behavior", () => instrumentation, 30000);
+        active();
+      }
 
       const observation = path.join(root, "dock.json");
       if (options.dock !== "real") {

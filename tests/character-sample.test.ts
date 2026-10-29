@@ -1,3 +1,4 @@
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
@@ -11,6 +12,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
   await mkdir("test-results", { recursive: true });
   const session = await createPetTestSession({
     dock: "empty",
+    behavior: { random: 0.1 },
     preferences: {
       version: 3,
       character: "whale",
@@ -76,9 +78,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
       [0.4, "wave"],
       [0.9, "greeting"],
     ] as const) {
-      await app.evaluate((_electron, choice) => {
-        Math.random = () => choice;
-      }, choice);
+      await controlBehavior(app, { random: choice });
       const point = await pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
         const data = canvas
@@ -126,21 +126,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
         if (!item) throw new Error(`Missing menu item: ${label}`);
         item.click();
       }, label);
-    // Only shorten the external rest clock; animation and desktop movement stay real-time.
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 500 : delay,
-          ...args,
-        )) as typeof setTimeout;
-    });
+    await controlBehavior(app, { random: 0.1 });
     await menu("Hide Mosey");
     await expect
       .poll(async () => (await windowState())[0]!.visible)
@@ -148,6 +134,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
     await menu("Show Mosey");
     await expect.poll(async () => (await windowState())[0]!.visible).toBe(true);
     const origin = (await windowState())[0]!.bounds;
+    await advanceRest(app, 0.1);
     await expect
       .poll(
         async () => Math.abs((await windowState())[0]!.bounds.x - origin.x),

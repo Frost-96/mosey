@@ -1,3 +1,8 @@
+import {
+  copyBehaviorDevelopmentApp,
+  instrumentBehaviorApplication,
+} from "./support/behavior-build";
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
@@ -84,6 +89,8 @@ test(
           path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
           path.join(root, "Mosey.app"),
         ]);
+      if (!packaged) await copyBehaviorDevelopmentApp(root);
+      await instrumentBehaviorApplication({ root, packaged });
       await mkdir(path.join(root, "profile"), { recursive: true });
       await writeFile(
         path.join(root, "profile/preferences.json"),
@@ -104,7 +111,7 @@ test(
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
               args,
             }
-          : { args: [".", ...args] },
+          : { args: [path.join(root, "app"), ...args] },
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("load");
@@ -265,30 +272,9 @@ test(
           ).toBe(false);
         references.set(side, { right, left });
       }
-      await app.evaluate(() => {
-        const control = { restMs: 60000 };
-        Reflect.set(globalThis, "sizeAutonomyClock", control);
-        const timeout = globalThis.setTimeout;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 10000 ? control.restMs : delay,
-            ...args,
-          )) as typeof setTimeout;
-      });
-      const restClock = (ms: number) =>
-        app!.evaluate((_electron, ms) => {
-          Reflect.get(globalThis, "sizeAutonomyClock").restMs = ms;
-        }, ms);
+
       const activity = async (random: number, atLeftEdge = false) => {
-        await app!.evaluate((_electron, random) => {
-          Math.random = () => random;
-        }, random);
-        await restClock(600);
+        await controlBehavior(app!, { random });
         await menu("Hide Mosey");
         // Restoring visibility preserves position. Arrange room for the
         // deliberately left-facing walk instead of relying on old recentering.
@@ -307,6 +293,7 @@ test(
           );
         }, atLeftEdge);
         await menu("Show Mosey");
+        await advanceRest(app!, random);
       };
       const visiblePoint = () =>
         pet.evaluate(() => {
@@ -351,7 +338,6 @@ test(
             interval: 20,
           })
           .toBeLessThan(origin.bounds.x - 15);
-        await restClock(60000);
         const resize = {
           ...(await choose(endLabel)),
           ...(await app.evaluate(({ screen }) => ({
@@ -432,7 +418,6 @@ test(
             interval: 20,
           })
           .toBeLessThan(clickOrigin.bounds.x - 15);
-        await restClock(60000);
         const points = await pet.evaluate(() => {
           const canvas = document.querySelector("canvas")!,
             ratio = devicePixelRatio;
@@ -512,7 +497,6 @@ test(
               { timeout: 2500, interval: 20 },
             )
             .toBe(false);
-          await restClock(60000);
           await new Promise((resolve) => setTimeout(resolve, 350));
           await expect.poll(footprint).toEqual({ width: side, bottom: side });
           await grounded();
@@ -621,7 +605,6 @@ test(
           { timeout: 4000, interval: 20 },
         )
         .toBeGreaterThan(140);
-      await restClock(60000);
       expect(
         (await desktop()).bounds.x - customOrigin.bounds.x,
       ).toBeLessThanOrEqual(151);
@@ -637,7 +620,7 @@ test(
           {
             evidence,
             boundary:
-              "real Electron rendered pixels/window bounds/menu; directed input; random/long-rest time controlled externally",
+              "real Electron rendered pixels/window bounds/menu; directed input; choices and rest eligibility supplied through the controlled behavior adapter",
           },
           null,
           2,
