@@ -1,11 +1,12 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
 import { openSettings, closeSettings } from "./support/settings";
+import { createPetTestSession } from "./support/pet-session";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("opening settings waits for confirmed values instead of the initial React view", async () => {
@@ -83,5 +84,44 @@ test("opening settings waits for confirmed values instead of the initial React v
     await app?.close();
     await stop?.();
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+
+test("a stalled settings close cancels reopening and profile writes while retaining process evidence", async () => {
+  const session = await createPetTestSession({ dock: "empty" });
+  const { app } = await session.launch();
+  await openSettings(app, { run: session.run });
+  const child = app.process();
+  // Stop the native close at the driver boundary. The real application still
+  // belongs to the session, whose cancellation must prevent all later work.
+  const stalled = vi.spyOn(app, "evaluate").mockImplementationOnce(
+    () => new Promise(() => {}),
+  );
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const closing = closeSettings(app, {
+      run: (label, action) => session.run(label, action, {
+        timeout: label === "settings-native-close" ? 100 : 5000,
+      }),
+    });
+    await expect(Promise.race([
+      closing,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Settings close ignored the session deadline")), 4000);
+      }),
+    ])).rejects.toThrow(/settings-native-close did not complete within 100ms/);
+    await expect(openSettings(app, { run: session.run })).rejects.toThrow(/closed or cancelled/);
+    await expect(session.writeProfileFile("after-close.json", "unexpected")).rejects.toThrow(/closed or cancelled/);
+    expect(child.exitCode !== null || child.signalCode !== null).toBe(true);
+    const evidence = await readFile(path.join(session.evidence, "progress.jsonl"), "utf8");
+    expect(evidence).toContain('"event":"first-failure"');
+    expect(evidence).toContain("settings-native-close did not complete within 100ms");
+    expect(evidence).toContain('"event":"app-exited"');
+    expect(evidence).toContain('"event":"cleanup-complete"');
+  } finally {
+    clearTimeout(timer);
+    stalled.mockRestore();
+    await session.close();
   }
 });
