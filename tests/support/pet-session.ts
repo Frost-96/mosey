@@ -2,7 +2,7 @@ import { expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   chmod,
   cp,
@@ -488,32 +488,36 @@ export async function createPetTestSession(options: SessionOptions) {
         );
         // Register evidence and invariance verification before any fixture
         // acquisition. This runs before the owned root is removed, on failure too.
-        releases.push(async () => {
-          const after = await shared();
-          const diagnosticAfter = await diagnostic();
-          await writeFile(
-            path.join(evidence, "native-isolation.json"),
-            JSON.stringify(
-              {
-                producer: producer.name,
-                before,
+        releases.push(() =>
+          settleOwnership(
+            (async () => {
+              const after = await shared();
+              const diagnosticAfter = await diagnostic();
+              await writeFile(
+                path.join(evidence, "native-isolation.json"),
+                JSON.stringify(
+                  {
+                    producer: producer.name,
+                    before,
+                    after,
+                    diagnosticBefore,
+                    diagnosticAfter,
+                  },
+                  null,
+                  2,
+                ),
+              );
+              expect(
                 after,
-                diagnosticBefore,
+                "producer changed shared prepared native inputs",
+              ).toEqual(before);
+              expect(
                 diagnosticAfter,
-              },
-              null,
-              2,
-            ),
-          );
-          expect(
-            after,
-            "producer changed shared prepared native inputs",
-          ).toEqual(before);
-          expect(
-            diagnosticAfter,
-            "producer changed diagnostic identity",
-          ).toEqual(diagnosticBefore);
-        });
+                "producer changed diagnostic identity",
+              ).toEqual(diagnosticBefore);
+            })(),
+          ),
+        );
         await step("producer-scratch", () => mkdir(scratch));
         const preparing = producer.prepare({
           root: scratch,
@@ -534,7 +538,14 @@ export async function createPetTestSession(options: SessionOptions) {
         );
         await step("producer-install", () => writeFile(helper, bytes));
         await step("producer-executable", () => chmod(helper, 0o755));
-        record("producer-installed", { name: producer.name, helper, scratch });
+        record("producer-installed", {
+          name: producer.name,
+          helper,
+          scratch,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+          boundary:
+            "Scenario-owned producer; product wire parser remains real; no real capture or permission claim",
+        });
       } else if (options.dock !== "real") {
         await writeFile(observation, "null");
         // Both adapters substitute only a session-local copy; deleting the

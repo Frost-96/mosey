@@ -30,7 +30,8 @@ import fs from 'node:fs';
 const start = performance.now(); let sequence=0;
 const record = (event, detail = {}) => fs.appendFileSync(${JSON.stringify(path.join(evidence, "producer-events.jsonl"))},JSON.stringify({event,pid:process.pid,ppid:process.ppid,...detail})+'\\n');
 record('spawn');
-process.on('SIGTERM', () => { record('exit', {code:0,signal:'SIGTERM'}); process.exit(0); });
+process.on('exit', code => record('exit', {code}));
+process.on('SIGTERM', () => process.exit(0));
 console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
 setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)},'utf8')); const pending=value?.testPending===true; const observation=pending?null:value; console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-start)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:pending?'new_complete_pending':observation?'current':'alpha_empty',observation})); },100);
 `;
@@ -372,10 +373,13 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
           { app, Menu, MenuItem, BrowserWindow, powerMonitor, screen },
           output,
         ) => {
-          const append = (event: unknown) =>
-            process
-              .getBuiltinModule("node:fs")
-              .appendFileSync(output, JSON.stringify(event) + "\n");
+          let evidenceBytes = 0;
+          const append = (event: unknown) => {
+            const line = JSON.stringify(event) + "\n";
+            if (evidenceBytes + Buffer.byteLength(line) > 256 * 1024) return;
+            process.getBuiltinModule("node:fs").appendFileSync(output, line);
+            evidenceBytes += Buffer.byteLength(line);
+          };
           const events: unknown[] = [];
           const menuEvents: unknown[] = [];
           const lifecycle: unknown[] = [];
@@ -706,18 +710,35 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       })
       .toBe(floor);
     const size = async (label: string) => {
+      const opened = session.run(
+        "size-settings-window",
+        () => app.waitForEvent("window", { timeout: 15000 }),
+        { timeout: 15000 },
+      );
       await invoke("设置…");
-      const settings = await session.run("size-settings-window", async () => {
-        const page = app
-          .windows()
-          .find(
-            (page) =>
-              !page.isClosed() &&
-              new URL(page.url()).searchParams.has("settings"),
-          );
-        if (!page) throw new Error("Settings window did not open");
-        return page;
-      });
+      const settings = await opened;
+      await session.run(
+        "size-settings-controls",
+        () =>
+          settings
+            .getByRole("button", { name: "中（默认）", exact: true })
+            .waitFor({ timeout: 15000 }),
+        { timeout: 15000 },
+      );
+      await expect
+        .poll(
+          () =>
+            session.run("size-settings-presentation", () =>
+              app.evaluate(({ BrowserWindow }) =>
+                BrowserWindow.getAllWindows().some(
+                  (window) =>
+                    window.getTitle() === "Mosey 设置" && window.isVisible(),
+                ),
+              ),
+            ),
+          { timeout: 15000 },
+        )
+        .toBe(true);
       await session.run(
         "size-settings-ready",
         () =>
@@ -920,7 +941,7 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
       const start = await bounds();
-      await session.run("walking-rest", () => advanceRest(app, 0.1));
+      await advanceRest(app, 0.1, session.run);
       await expect
         .poll(async () => Math.abs((await bounds()).x - start.x), {
           timeout: 4000,
@@ -1026,6 +1047,47 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       ),
     );
     await session.quit();
+    const producerRows = (
+      await session.run("producer-exit-ledger", () =>
+        readFile(path.join(session.evidence, "producer-events.jsonl"), "utf8"),
+      )
+    )
+      .trim()
+      .split("\n")
+      .map((row) => JSON.parse(row));
+    const childRows = (
+      await session.run("public-child-exits", () =>
+        readFile(path.join(session.evidence, "dock-navigation.jsonl"), "utf8"),
+      )
+    )
+      .trim()
+      .split("\n")
+      .map((row) => JSON.parse(row));
+    const pids = producerRows
+      .filter((row) => row.event === "spawn")
+      .map((row) => row.pid);
+    expect(pids.length).toBeGreaterThan(0);
+    for (const pid of pids) {
+      expect(
+        producerRows.some(
+          (row) => row.event === "exit" && row.pid === pid && row.code === 0,
+        ) ||
+          childRows.some(
+            (row) =>
+              row.event === "child-exit-entry" &&
+              row.detail.pid === pid &&
+              (row.detail.code !== null || row.detail.signal !== null),
+          ),
+        `producer ${pid} has a normal exit event or an observed child-process exit`,
+      ).toBe(true);
+      expect(() => process.kill(pid, 0)).toThrow();
+    }
+    await session.run("producer-cleanup-evidence", () =>
+      writeFile(
+        path.join(session.evidence, "producer-cleanup.json"),
+        JSON.stringify({ pids, allExited: true }),
+      ),
+    );
   } finally {
     await session.close();
   }

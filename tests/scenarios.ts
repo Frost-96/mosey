@@ -58,7 +58,7 @@ export const scaleCoverage = {
   evidence:
     "Per-test assertions and test-results/pet-sessions/*/progress.jsonl",
   limitation:
-    "Legacy launches do not all request and assert DPR; the geometry authored-lettering fixture uses fixed 2x. Lifecycle cancellation before readiness cannot observe DPR. Native display scale is distinct from renderer DPR.",
+    "Legacy launches do not all request and assert DPR; the geometry authored-lettering fixture uses fixed 2x. Lifecycle or native preparation cancellation before readiness cannot observe DPR. Native display scale is distinct from renderer DPR.",
 };
 
 export function validateScenarioInventory(root = process.cwd()) {
