@@ -2,7 +2,6 @@ import { test, expect } from "vitest";
 import type { ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
 import { appendFile, readFile, rename, writeFile } from "node:fs/promises";
-import { writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   createPetTestSession,
@@ -621,28 +620,9 @@ setInterval(()=>{
     );
   } catch (error) {
     failure = error;
-    // No post-failure driver call can resume the scenario. Inputs, complete PID
-    // history and bounded public lifecycle/exit events are already durable.
-    try {
-      writeFileSync(
-        path.join(session.evidence, "recovery-failure.json"),
-        JSON.stringify(
-          {
-            error: error instanceof Error ? error.stack : String(error),
-            sceneEpoch,
-            lastInputRevision: revision,
-          },
-          null,
-          2,
-        ),
-      );
-    } catch (evidenceError) {
-      failure = new AggregateError(
-        [error, evidenceError],
-        "Recovery failure evidence could not be saved",
-        { cause: error },
-      );
-    }
+    // No post-failure operation can resume the scenario. Inputs, complete PID
+    // history and bounded public lifecycle/exit events are already durable;
+    // the session and Vitest retain the failing operation/assertion.
   }
   const cleanup = await session.close().then(
     () => undefined,
