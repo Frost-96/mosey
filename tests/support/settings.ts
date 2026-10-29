@@ -101,53 +101,71 @@ export async function closeSettings(
   await closed;
 }
 
-export async function chooseSize(app: ElectronApplication, label: string) {
-  const page = await openSettings(app);
-  const before = await app.evaluate(({ BrowserWindow }) => {
-    const pet = BrowserWindow.getAllWindows().find(
-      (w) => w.getTitle() === "Mosey",
-    )!;
-    Reflect.set(globalThis, "resizeObservation", undefined);
-    const original = pet.setBounds.bind(pet);
-    Reflect.set(globalThis, "restoreResizeObservation", () => {
-      pet.setBounds = original;
-    });
-    pet.setBounds = (bounds, animate) => {
-      const before = pet.getBounds();
-      original(bounds, animate);
-      if (bounds.width !== undefined && bounds.width !== before.width)
-        Reflect.set(globalThis, "resizeObservation", {
-          before,
-          after: pet.getBounds(),
-          at: performance.now(),
-        });
-    };
-    return pet.getBounds();
-  });
-  await page
-    .getByRole("button", {
-      name: (
-        { Small: "小", Medium: "中（默认）", Large: "大" } as Record<
-          string,
-          string
-        >
-      )[label]!,
-      exact: true,
-    })
-    .click();
-  const after = await app.evaluate(({ BrowserWindow }) =>
-    BrowserWindow.getAllWindows()
-      .find((w) => w.getTitle() === "Mosey")!
-      .getBounds(),
+export async function chooseSize(
+  app: ElectronApplication,
+  label: string,
+  { run = (_label, action) => action() }: { run?: SessionOperation } = {},
+) {
+  const page = await openSettings(app, { run });
+  const before = await run("size-observe-resize", () =>
+    app.evaluate(({ BrowserWindow }) => {
+      const pet = BrowserWindow.getAllWindows().find(
+        (w) => w.getTitle() === "Mosey",
+      )!;
+      Reflect.set(globalThis, "resizeObservation", undefined);
+      const original = pet.setBounds.bind(pet);
+      Reflect.set(globalThis, "restoreResizeObservation", () => {
+        pet.setBounds = original;
+      });
+      pet.setBounds = (bounds, animate) => {
+        const before = pet.getBounds();
+        original(bounds, animate);
+        if (bounds.width !== undefined && bounds.width !== before.width)
+          Reflect.set(globalThis, "resizeObservation", {
+            before,
+            after: pet.getBounds(),
+            at: performance.now(),
+          });
+      };
+      return pet.getBounds();
+    }),
   );
-  const observation = (await app.evaluate(() => {
-    const result = Reflect.get(globalThis, "resizeObservation") as
-      { before: typeof before; after: typeof after; at: number } | undefined;
-    Reflect.get(globalThis, "restoreResizeObservation")();
-    return result;
-  })) ?? { before, after, at: await app.evaluate(() => performance.now()) };
+  await run("size-preset-click", () =>
+    page
+      .getByRole("button", {
+        name: (
+          { Small: "小", Medium: "中（默认）", Large: "大" } as Record<
+            string,
+            string
+          >
+        )[label]!,
+        exact: true,
+      })
+      .click(),
+  );
+  const after = await run("size-native-bounds", () =>
+    app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() === "Mosey")!
+        .getBounds(),
+    ),
+  );
+  const observation = (await run("size-finish-observation", () =>
+    app.evaluate(() => {
+      const result = Reflect.get(globalThis, "resizeObservation") as
+        { before: typeof before; after: typeof after; at: number } | undefined;
+      Reflect.get(globalThis, "restoreResizeObservation")();
+      return result;
+    }),
+  )) ?? {
+    before,
+    after,
+    at: await run("size-native-bounds", () =>
+      app.evaluate(() => performance.now()),
+    ),
+  };
   // Pet acceptance scenarios finish their setup here. Settings interaction is
   // exercised separately; keep its focused controls out of subsequent input.
-  await closeSettings(app);
+  await closeSettings(app, { run });
   return observation;
 }
