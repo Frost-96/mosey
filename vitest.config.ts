@@ -17,6 +17,7 @@ const projects: TestProject[] = [
   "preparation-packaged",
   "lifecycle-development",
   "lifecycle-packaged",
+  "observation-packaged",
 ];
 process.env.MOSEY_MEASUREMENT_RUN_ID ??= randomUUID();
 process.env.MOSEY_MEASUREMENT_ROOT ??= path.resolve(
@@ -48,7 +49,9 @@ export default defineConfig({
           MOSEY_TEST_MODE:
             name === "preparation" || name === "lifecycle-development"
               ? "development"
-              : name === "lifecycle-packaged" || name === "preparation-packaged"
+              : name === "lifecycle-packaged" ||
+                  name === "preparation-packaged" ||
+                  name === "observation-packaged"
                 ? "packaged"
                 : name,
         },

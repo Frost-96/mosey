@@ -15,6 +15,7 @@ console.log(
       "preparation-packaged": scenarioFiles("preparation-packaged"),
       "lifecycle-development": scenarioFiles("lifecycle-development"),
       "lifecycle-packaged": scenarioFiles("lifecycle-packaged"),
+      "observation-packaged": scenarioFiles("observation-packaged"),
       scaleCoverage,
     },
     null,

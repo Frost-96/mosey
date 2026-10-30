@@ -5,8 +5,8 @@ export async function openSettings(
   app: ElectronApplication,
   {
     waitForInitialState = true,
-    run = (_label, action) => action(),
-  }: { waitForInitialState?: boolean; run?: SessionOperation } = {},
+    run,
+  }: { waitForInitialState?: boolean; run: SessionOperation },
 ) {
   await run("settings-open", () =>
     app.evaluate(({ Menu }) => {
@@ -76,7 +76,7 @@ export async function openSettings(
 }
 export async function closeSettings(
   app: ElectronApplication,
-  { run = (_label, action) => action() }: { run?: SessionOperation } = {},
+  { run }: { run: SessionOperation },
 ) {
   const page = app
     .windows()
@@ -105,7 +105,7 @@ export async function closeSettings(
 export async function chooseSize(
   app: ElectronApplication,
   label: string,
-  { run = (_label, action) => action() }: { run?: SessionOperation } = {},
+  { run }: { run: SessionOperation },
 ) {
   const page = await openSettings(app, { run });
   const before = await run("size-observe-resize", () =>

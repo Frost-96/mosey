@@ -5,6 +5,7 @@ import path from "node:path";
 // Application groups deliberately run in both modes; scale-independent checks
 // run once. Keep conditional native/development cases inside their test files.
 export const scenarioGroups = {
+  observationHarness: ["tests/observation-lifecycle.test.ts"],
   packagePreparation: [
     "tests/preparation-package.test.ts",
     "tests/preparation-package-build.test.ts",
@@ -50,6 +51,7 @@ export const scenarioGroups = {
   packagedOnly: ["tests/login-items.test.ts"],
   lifecycleHarness: [
     "tests/session-quit-dispatch.test.ts",
+    "tests/session-renderer-dispatch.test.ts",
     "tests/settings-readiness-lifecycle.test.ts",
     "tests/behavior-input-lifecycle.test.ts",
   ],
@@ -62,9 +64,12 @@ export type TestProject =
   | "preparation-packaged"
   | "preparation"
   | "lifecycle-development"
-  | "lifecycle-packaged";
+  | "lifecycle-packaged"
+  | "observation-packaged";
 
 export function scenarioFiles(project: TestProject): string[] {
+  if (project === "observation-packaged")
+    return scenarioGroups.observationHarness;
   if (project === "preparation-packaged")
     return scenarioGroups.packagePreparation;
   if (project === "preparation") return scenarioGroups.preparation;
@@ -77,7 +82,7 @@ export function scenarioFiles(project: TestProject): string[] {
   ];
 }
 
-// The matrix is a request, not evidence that every legacy launch observed DPR.
+// The matrix is a request, not evidence that every application reached observed DPR.
 // geometry.test.ts also deliberately runs its authored-lettering fixture at 2x
 // in either matrix entry. Per-test assertions/session logs remain the evidence.
 export const scaleCoverage = {
@@ -101,7 +106,7 @@ export const scaleCoverage = {
   evidence:
     "Per-test assertions and test-results/pet-sessions/*/progress.jsonl",
   limitation:
-    "Legacy launches do not all request and assert DPR; the geometry authored-lettering fixture uses fixed 2x. Lifecycle or native preparation cancellation before readiness cannot observe DPR. Native display scale is distinct from renderer DPR.",
+    "Every ready inspector session asserts its requested DPR; the geometry authored-lettering fixture explicitly requests fixed 2x. No-inspector startup does not observe DPR. Lifecycle or native preparation cancellation before readiness cannot observe DPR. Native display scale is distinct from renderer DPR.",
 };
 
 export function validateScenarioInventory(root = process.cwd()) {

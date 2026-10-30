@@ -3,15 +3,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import {
-  cp,
-  mkdir,
-  readFile,
-  realpath,
-  rm,
-  symlink,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { createPackage, extractAll, getRawHeader } from "@electron/asar";
@@ -28,26 +20,6 @@ const controllerBuildOptions = {
   minify: false,
   format: "es",
 };
-
-// Legacy launchers already own their temporary root. This only prepares their
-// owned dev copy; lifecycle migration belongs to the unified session tickets.
-export async function copyBehaviorDevelopmentApp(root: string) {
-  const directory = path.join(root, "app");
-  await mkdir(directory);
-  await cp("package.json", path.join(directory, "package.json"));
-  await cp(".vite/build", path.join(directory, ".vite/build"), {
-    recursive: true,
-  });
-  await cp("build/native", path.join(directory, "build/native"), {
-    recursive: true,
-  });
-  await symlink(
-    path.resolve("node_modules"),
-    path.join(directory, "node_modules"),
-    "dir",
-  );
-  return directory;
-}
 
 export async function instrumentBehaviorApplication({
   root,

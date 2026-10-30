@@ -857,7 +857,7 @@ setInterval(() => {
       active();
       if (app || starting)
         throw new Error(
-          "Pet session already has an application; use restart()",
+          "Pet session already has an application; quit it before launching again",
         );
       starting = true;
       attemptedLaunch = true;
@@ -1116,24 +1116,6 @@ setInterval(() => {
         await run(`profile-write:${name}`, () =>
           writeFile(path.join(profile, name), contents),
         );
-      },
-      restart() {
-        active();
-        if (starting) throw new Error("Pet session is still launching");
-        starting = true;
-        const restarting = stopApp().then(
-          () => {
-            // Release the reservation and enter launch's guard in one turn.
-            starting = false;
-            return launch();
-          },
-          (error: unknown) => {
-            starting = false;
-            throw error;
-          },
-        );
-        pending = restarting;
-        return restarting;
       },
       async setDockObservation(value: DockObservation | null) {
         active();

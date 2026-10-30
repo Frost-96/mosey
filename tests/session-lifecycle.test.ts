@@ -1,9 +1,10 @@
 import { expect, test, vi } from "vitest";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
+import { advanceRest } from "./support/controlled-behavior";
 import { _electron as electron, type ElectronApplication } from "playwright";
 
 function deferred<T>() {
@@ -317,6 +318,104 @@ test("an interaction deadline stops the driver and preserves its first failing s
   await expect(
     session.run("late-interaction", () => app.evaluate(() => 1)),
   ).rejects.toThrow(/closed|cancelled/);
+
+  // A completed presentation response can arrive after cancellation. Keep the
+  // real app alive briefly during cleanup so transport failure cannot disguise
+  // an unguarded behavior mutation. Only this owned diagnostic identity is faulted.
+  const cancellation = new AbortController();
+  const controlled = await createPetTestSession({
+    dock: "empty",
+    behavior: { random: 0.1, running: false },
+    isolateAppIdentity: true,
+    signal: cancellation.signal,
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 160,
+      visibility: "visible",
+    },
+  });
+  const { app: controlledApp } = await controlled.launch();
+  const controlledChild = controlledApp.process();
+  const evaluate = controlledApp.evaluate.bind(controlledApp);
+  const realClose = controlledApp.close.bind(controlledApp);
+  const responseHeld = deferred<void>();
+  const releaseResponse = deferred<void>();
+  const cleanupEntered = deferred<void>();
+  const releaseCleanup = deferred<void>();
+  const preferences = await readFile(
+    path.join(controlled.profile, "preferences.json"),
+    "utf8",
+  );
+  const delayedResponse = vi
+    .spyOn(controlledApp, "evaluate")
+    .mockImplementationOnce(async (...args) => {
+      const response = await evaluate(...args);
+      responseHeld.resolve();
+      await releaseResponse.promise;
+      return response;
+    });
+  const delayedClose = vi
+    .spyOn(controlledApp, "close")
+    .mockImplementation(async () => {
+      cleanupEntered.resolve();
+      await releaseCleanup.promise;
+      return realClose();
+    });
+  // Every continuation re-enters the owner, including after a late response.
+  const advancing = advanceRest(controlledApp, 0.1, controlled.run).then(
+    () => ({ status: "resolved" as const }),
+    (error: unknown) => ({ status: "rejected" as const, error: String(error) }),
+  );
+  const observations: { posture: string; at: number }[] = [];
+  try {
+    await responseHeld.promise;
+    cancellation.abort(
+      new Error("cancel while behavior presentation is withheld"),
+    );
+    await cleanupEntered.promise;
+    expect(controlledChild.exitCode).toBe(null);
+    releaseResponse.resolve();
+    const until = performance.now() + 500;
+    do {
+      // Independent public observation while the cancelled scenario is held.
+      const presentation = await evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()
+          .find((window) => window.getTitle() === "Mosey")!
+          .webContents.executeJavaScript("window.mosey.getPresentation()"),
+      );
+      observations.push({
+        posture: presentation.posture,
+        at: performance.now(),
+      });
+      expect(presentation.posture).toBe("resting");
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    } while (performance.now() < until);
+    expect(
+      await readFile(path.join(controlled.profile, "preferences.json"), "utf8"),
+    ).toBe(preferences);
+  } finally {
+    releaseResponse.resolve();
+    releaseCleanup.resolve();
+    delayedResponse.mockRestore();
+    delayedClose.mockRestore();
+    await controlled.close();
+    await writeFile(
+      path.join(controlled.evidence, "cancelled-behavior.json"),
+      JSON.stringify({ observations, outcome: await advancing }, null, 2),
+    );
+  }
+  expect((await advancing).status).toBe("rejected");
+  expect(
+    controlledChild.exitCode !== null || controlledChild.signalCode !== null,
+  ).toBe(true);
+  await expect(controlled.launch()).rejects.toThrow(/closed|cancelled/);
+  await expect(
+    controlled.writeProfileFile("preferences.json", "late intent"),
+  ).rejects.toThrow(/closed|cancelled/);
+  await expect(
+    readFile(path.join(controlled.profile, "preferences.json"), "utf8"),
+  ).rejects.toMatchObject({ code: "ENOENT" });
 });
 
 test("a stalled second quit cancels later preference writes and launches", async () => {
