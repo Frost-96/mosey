@@ -89,7 +89,17 @@ test("a stalled settings close cancels reopening and profile writes while retain
   const stalled = vi
     .spyOn(app, "evaluate")
     .mockImplementationOnce(() => new Promise(() => {}));
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  // Hold real cleanup until the operation's first failure is observed. Its
+  // evidence collection and process exit have their own existing deadlines.
+  let releaseCleanup!: () => void;
+  const cleanupGate = new Promise<void>((resolve) => {
+    releaseCleanup = resolve;
+  });
+  const close = app.close.bind(app);
+  const cleaning = vi.spyOn(app, "close").mockImplementation(async () => {
+    await cleanupGate;
+    await close();
+  });
   try {
     const closing = closeSettings(app, {
       run: (label, action) =>
@@ -97,18 +107,30 @@ test("a stalled settings close cancels reopening and profile writes while retain
           timeout: label === "settings-native-close" ? 100 : 5000,
         }),
     });
-    await expect(
-      Promise.race([
-        closing,
-        new Promise<never>((_resolve, reject) => {
-          timer = setTimeout(
-            () =>
-              reject(new Error("Settings close ignored the session deadline")),
-            4000,
+    // Observe rejection immediately; assert it after cleanup has been released.
+    void closing.catch(() => {});
+    await expect
+      .poll(
+        async () => {
+          const progress = await readFile(
+            path.join(session.evidence, "progress.jsonl"),
+            "utf8",
           );
-        }),
-      ]),
-    ).rejects.toThrow(/settings-native-close did not complete within 100ms/);
+          return progress
+            .trim()
+            .split("\n")
+            .map((line) => JSON.parse(line))
+            .find((event) => event.event === "first-failure")?.detail;
+        },
+        { timeout: 4000 },
+      )
+      .toContain("settings-native-close did not complete within 100ms");
+    expect(child.exitCode).toBe(null);
+    expect(child.signalCode).toBe(null);
+    releaseCleanup();
+    await expect(closing).rejects.toThrow(
+      /settings-native-close did not complete within 100ms/,
+    );
     await expect(openSettings(app, { run: session.run })).rejects.toThrow(
       /closed or cancelled/,
     );
@@ -127,7 +149,8 @@ test("a stalled settings close cancels reopening and profile writes while retain
     expect(evidence).toContain('"event":"app-exited"');
     expect(evidence).toContain('"event":"cleanup-complete"');
   } finally {
-    clearTimeout(timer);
+    releaseCleanup();
+    cleaning.mockRestore();
     stalled.mockRestore();
     await session.close();
   }
