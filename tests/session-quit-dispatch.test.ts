@@ -11,6 +11,7 @@ test("driver Quit completes while a real interval is awaiting dispatch", async (
     isolateAppIdentity: true,
   });
   const { app } = await session.launch();
+  const child = app.process();
   const identity = await session.run("quit-inspector-identity", () =>
     app.evaluate(() => ({
       url: process.getBuiltinModule("node:inspector").url(),
@@ -138,8 +139,8 @@ test("driver Quit completes while a real interval is awaiting dispatch", async (
     socket.close();
     const outcome = await quitting;
     if ("error" in outcome) throw outcome.error;
-    expect(app.process().exitCode).toBe(0);
-    expect(app.process().signalCode).toBe(null);
+    expect(child.exitCode).toBe(0);
+    expect(child.signalCode).toBe(null);
     const exceptions = await session.run("quit-main-exceptions", () =>
       readFile(
         path.join(session.evidence, "main-exceptions.jsonl"),
