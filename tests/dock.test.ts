@@ -1120,7 +1120,6 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
 test("real Dock helper clears its capability and exits when transport stops or the pet hides", async () => {
   const session = await createPetTestSession({ dock: "real" });
   const { app } = await session.launch();
-  let helperPID: number | undefined;
   const readiness: { status: string; pid?: number }[] = [];
   onTestFinished(() => {
     // Retain host evidence without replacing a preceding scenario assertion.
@@ -1210,7 +1209,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
   };
   const initial = await waitForCapability();
   const initialStatus = initial.status;
-  helperPID = initial.pid;
+  const helperPID = initial.pid;
   const permissionBlocked = initialStatus.includes(
     "needs Screen Recording permission",
   );

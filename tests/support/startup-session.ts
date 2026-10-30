@@ -5,6 +5,13 @@ import { promisify } from "node:util";
 import os from "node:os";
 import path from "node:path";
 import { createPetTestSession } from "./pet-session";
+import {
+  liveProcessGroup,
+  readProcessSnapshot,
+  readProcessSnapshotAsync,
+  signalProcessGroup,
+  type ProcessIdentity,
+} from "../../tools/macos-processes";
 
 const execute = promisify(execFile);
 
@@ -18,6 +25,7 @@ export async function createPackagedStartupSession({
   let bundle = "";
   let evidence = "";
   let child: ChildProcess | undefined;
+  let identity: ProcessIdentity | undefined;
   let spawnError: Error | undefined;
   let output = "";
   let rendererObserved = false;
@@ -48,7 +56,10 @@ export async function createPackagedStartupSession({
         const signalGroup = async (value: NodeJS.Signals) => {
           record("startup-safety-signal", value);
           try {
-            process.kill(-owned.pid!, value);
+            signalProcessGroup(
+              liveProcessGroup(await processes(), owned.pid!, identity),
+              value,
+            );
           } catch (error) {
             const code = (error as NodeJS.ErrnoException).code;
             if (code === "EPERM") {
@@ -81,11 +92,8 @@ export async function createPackagedStartupSession({
           await expect
             .poll(
               async () => {
-                const { stdout } = await run("startup-owned-group", processes);
-                const live = stdout.split("\n").filter((line) => {
-                  const [, , group, state] = line.trim().split(/\s+/);
-                  return Number(group) === owned.pid && !state?.startsWith("Z");
-                });
+                const rows = await run("startup-owned-group", processes);
+                const live = liveProcessGroup(rows, owned.pid!, identity);
                 record("startup-cleanup-observation", { live });
                 return {
                   exited: owned.exitCode !== null || owned.signalCode !== null,
@@ -108,11 +116,7 @@ export async function createPackagedStartupSession({
       },
     },
   });
-  const processes = () =>
-    execute("/bin/ps", ["-axo", "pid=,ppid=,pgid=,state=,args="], {
-      encoding: "utf8",
-      timeout: 5000,
-    });
+  const processes = readProcessSnapshotAsync;
   return {
     close: session.close,
     evidence: session.evidence,
@@ -152,6 +156,7 @@ export async function createPackagedStartupSession({
             detached: true,
           },
         );
+        identity = readProcessSnapshot().find((row) => row.pid === child!.pid);
         record("startup-acquired");
         child.once("error", (error) => {
           spawnError = error;
@@ -171,15 +176,12 @@ export async function createPackagedStartupSession({
         if (spawnError) throw spawnError;
         if (!child || child.exitCode !== null || child.signalCode !== null)
           throw new Error(`App exited before renderer startup: ${output}`);
-        const { stdout } = await processes();
-        const observed = stdout.split("\n").some((line) => {
-          const [, parent, group, , ...args] = line.trim().split(/\s+/);
-          return (
-            Number(parent) === child!.pid &&
-            Number(group) === child!.pid &&
-            args.join(" ").includes("--type=renderer")
-          );
-        });
+        const observed = (await processes()).some(
+          (row) =>
+            row.parent === child!.pid &&
+            row.group === child!.pid &&
+            row.command.includes("--type=renderer"),
+        );
         if (observed && !rendererObserved) {
           rendererObserved = true;
           record("startup-renderer-observed", {

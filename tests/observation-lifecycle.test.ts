@@ -172,6 +172,11 @@ test("an observation deadline cancels later writes and launches while cleanup re
   const owned = await fixture();
   const session = await owned.session();
   const { app, child } = await session.launch();
+  await session.run("failure-stderr", () =>
+    app.evaluate(() => {
+      process.stderr.write("owned observation failure diagnostic\n");
+    }),
+  );
   const stalledClose = vi
     .spyOn(app, "close")
     .mockImplementation(() => new Promise(() => {}));
@@ -210,6 +215,21 @@ test("an observation deadline cancels later writes and launches while cleanup re
     expect(events.find((event) => event.event === "first-failure").stage).toBe(
       "stalled-observation",
     );
+    expect(
+      await readFile(path.join(session.evidence, "stderr.txt"), "utf8"),
+    ).toContain("owned observation failure diagnostic");
+    const sampled = events.find(
+      (event) => event.event === "failure-native-sample",
+    );
+    expect(sampled.detail).toMatchObject({ pid: child.pid, timeout: 5000 });
+    expect(events.indexOf(sampled)).toBeLessThan(
+      events.findIndex((event) => event.event === "safety-cleanup"),
+    );
+    if (sampled.detail.outcome === "captured")
+      expect(await readFile(sampled.detail.file, "utf8")).toContain(
+        String(child.pid),
+      );
+    else expect(sampled.detail.error).toBeDefined();
   } finally {
     stalledClose.mockRestore();
   }

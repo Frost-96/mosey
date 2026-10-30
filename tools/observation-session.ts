@@ -1,9 +1,18 @@
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync, type ChildProcess } from "node:child_process";
+import { execFile, execFileSync, type ChildProcess } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
+import {
+  liveProcessGroup,
+  readProcessSnapshot,
+  signalProcessGroup,
+  type ProcessIdentity,
+} from "./macos-processes.ts";
+
+const execute = promisify(execFile);
 
 export function observationError(error: unknown): unknown {
   return error instanceof Error
@@ -85,7 +94,10 @@ export async function createObservationSession({
   let launched = false;
   const cancellation = new AbortController();
   let acquisition: Promise<ElectronApplication> | undefined;
-  let rootStart: string | undefined;
+  let identity: ProcessIdentity | undefined;
+  let failureEvidenceCaptured = false;
+  let stderrBytes = 0;
+  let stderrTruncated = false;
   let bytes = 0;
   let truncated = false;
   const record = (event: string, detail?: unknown, critical = true) => {
@@ -128,40 +140,49 @@ export async function createObservationSession({
     cancelled = true;
     cancellation.abort(error);
   };
-  const processes = () =>
-    execFileSync("/bin/ps", ["-axo", "pid=,pgid=,lstart=,state=,comm="], {
-      encoding: "utf8",
-      timeout: 5000,
-      env: { ...process.env, LC_ALL: "C" },
-    })
-      .trim()
-      .split("\n")
-      .map((line) => {
-        const fields = line.trim().split(/\s+/);
-        return {
-          pid: Number(fields[0]),
-          group: Number(fields[1]),
-          start: fields.slice(2, 7).join(" "),
-          state: fields[7]!,
-          command: fields.slice(8).join(" "),
-        };
-      });
-  const group = () => {
-    const rows = processes();
-    const current = rows.find((row) => row.pid === child?.pid);
-    if (current && rootStart && current.start !== rootStart)
-      throw new Error(
-        "Owned observation PID was reused; refusing to signal another process",
-      );
-    return rows.filter(
-      (row) => row.group === child?.pid && !row.state.startsWith("Z"),
-    );
-  };
+  const group = () =>
+    child?.pid
+      ? liveProcessGroup(readProcessSnapshot(), child.pid, identity)
+      : [];
   const exited = () =>
     child !== undefined &&
     (child.exitCode !== null || child.signalCode !== null);
+  const captureFailure = async () => {
+    if (failure === undefined || !child?.pid || failureEvidenceCaptured) return;
+    failureEvidenceCaptured = true;
+    try {
+      const owned = group();
+      record("failure-owned-processes", { exited: exited(), members: owned });
+      if (exited() || !owned.some((member) => member.pid === child!.pid))
+        return;
+      const sample = {
+        pid: child.pid,
+        file: path.join(evidence, `process-${child.pid}.txt`),
+        timeout: 5000,
+      };
+      try {
+        // Read the owned OS process directly: a stalled Inspector must not
+        // block fault evidence. No sample runs during a successful observation.
+        await execute(
+          "/usr/bin/sample",
+          [String(sample.pid), "1", "1", "-file", sample.file],
+          { timeout: sample.timeout },
+        );
+        record("failure-native-sample", { ...sample, outcome: "captured" });
+      } catch (error) {
+        record("failure-native-sample", {
+          ...sample,
+          outcome: "unavailable",
+          error: observationError(error),
+        });
+      }
+    } catch (error) {
+      record("failure-process-evidence-unavailable", observationError(error));
+    }
+  };
   const stop = async () => {
     if (!child?.pid) return;
+    await captureFailure();
     record("safety-cleanup");
     if (!exited()) {
       await bounded(
@@ -179,10 +200,11 @@ export async function createObservationSession({
       );
     }
     let permission: unknown;
-    if (group().length) {
+    const members = group();
+    if (members.length) {
       record("safety-signal", "SIGKILL");
       try {
-        process.kill(-child.pid, "SIGKILL");
+        signalProcessGroup(members, "SIGKILL");
       } catch (error) {
         const code = (error as NodeJS.ErrnoException).code;
         if (code === "EPERM") {
@@ -348,7 +370,21 @@ export async function createObservationSession({
         .then(async (acquired) => {
           app = acquired;
           child = acquired.process();
-          rootStart = processes().find((row) => row.pid === child!.pid)?.start;
+          identity = readProcessSnapshot().find(
+            (row) => row.pid === child!.pid,
+          );
+          child.stderr?.on("data", (data: Buffer) => {
+            const remaining = Math.max(0, 1024 * 1024 - stderrBytes);
+            const retained = data.subarray(0, remaining);
+            if (retained.length) {
+              appendFileSync(path.join(evidence, "stderr.txt"), retained);
+              stderrBytes += retained.length;
+            }
+            if (data.length > remaining && !stderrTruncated) {
+              stderrTruncated = true;
+              record("stderr-trace-limit", { bytes: stderrBytes });
+            }
+          });
           child.once("exit", () => record("app-exited"));
           record("app-acquired");
           if (cancelled) {

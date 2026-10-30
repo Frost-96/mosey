@@ -26,6 +26,12 @@ import { withPreparationSource } from "./preparation-source";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
 import { isolateFaultExecutable } from "./fault-executable";
+import {
+  liveProcessGroup,
+  readProcessSnapshot,
+  signalProcessGroup,
+  type ProcessIdentity,
+} from "../../tools/macos-processes";
 import { nativeArtifactInventory, type DockProducer } from "./dock-producer";
 import {
   beginMeasurement,
@@ -76,14 +82,6 @@ type SessionOptions = {
   };
 };
 
-const processGroup = (pid: number) =>
-  execFileSync("/bin/ps", ["-axo", "pid=,ppid=,pgid=,uid=,state=,comm="], {
-    timeout: 5000,
-    encoding: "utf8",
-  })
-    .split("\n")
-    .filter((line) => Number(line.trim().split(/\s+/)[2]) === pid);
-
 // A session owns its profile, launcher, substituted capture producer and every
 // app it launches. Cleanup is registered before acquisition and unwinds in
 // reverse order, continuing even when one release fails. Test exit is a safety
@@ -110,6 +108,19 @@ export async function createPetTestSession(options: SessionOptions) {
   let appProcess: ReturnType<ElectronApplication["process"]> | undefined;
   let attemptedLaunch = false;
   const processes: ReturnType<ElectronApplication["process"]>[] = [];
+  const identities = new WeakMap<ChildProcess, ProcessIdentity>();
+  const rememberProcess = (child: ChildProcess) => {
+    const identity = readProcessSnapshot().find((row) => row.pid === child.pid);
+    if (identity) identities.set(child, identity);
+  };
+  const processGroup = (child: ChildProcess) =>
+    child.pid
+      ? liveProcessGroup(
+          readProcessSnapshot(),
+          child.pid,
+          identities.get(child),
+        )
+      : [];
   const record = (event: string, detail?: unknown) => {
     appendFileSync(
       path.join(evidence, "progress.jsonl"),
@@ -297,8 +308,7 @@ export async function createPetTestSession(options: SessionOptions) {
     (closing ??= measure("session.cleanup", measurement, async () => {
       retainRoot = false;
       cancellation.abort(new Error("Pet session is closed"));
-      // Keep the last scenario stage even when callers close in a finally
-      // block before Vitest can report their error.
+      // Keep the last scenario stage while the owner unwinds its resources.
       record("cleanup-started");
       const errors: unknown[] = [];
       if (firstFailure !== undefined) {
@@ -308,26 +318,30 @@ export async function createPetTestSession(options: SessionOptions) {
           child.exitCode === null &&
           child.signalCode === null
         ) {
+          let sampleable = false;
           try {
-            record("owned-process-group", processGroup(child.pid));
+            const members = processGroup(child);
+            record("owned-process-group", members);
+            sampleable = members.some((member) => member.pid === child.pid);
           } catch (error) {
             record("process-group-unavailable", String(error));
           }
-          try {
-            execFileSync(
-              "/usr/bin/sample",
-              [
-                String(child.pid),
-                "1",
-                "1",
-                "-file",
-                path.join(evidence, `process-${child.pid}.txt`),
-              ],
-              { timeout: 5000, stdio: "ignore" },
-            );
-          } catch (error) {
-            record("sample-unavailable", String(error));
-          }
+          if (sampleable)
+            try {
+              execFileSync(
+                "/usr/bin/sample",
+                [
+                  String(child.pid),
+                  "1",
+                  "1",
+                  "-file",
+                  path.join(evidence, `process-${child.pid}.txt`),
+                ],
+                { timeout: 5000, stdio: "ignore" },
+              );
+            } catch (error) {
+              record("sample-unavailable", String(error));
+            }
         }
       }
       // Interrupt an owned app before waiting on startup: a pending driver
@@ -413,7 +427,7 @@ export async function createPetTestSession(options: SessionOptions) {
     const signal = () => {
       if (!child.pid) return;
       try {
-        process.kill(-child.pid, "SIGKILL");
+        signalProcessGroup(processGroup(child), "SIGKILL");
       } catch (error) {
         const code = (error as NodeJS.ErrnoException).code;
         if (code === "EPERM") {
@@ -423,7 +437,7 @@ export async function createPetTestSession(options: SessionOptions) {
           // a permission failure that leaves a process alive still fails.
           record("group-signal-partial", {
             code,
-            processes: processGroup(child.pid),
+            processes: processGroup(child),
           });
         } else if (code !== "ESRCH") throw error;
       }
@@ -467,10 +481,7 @@ export async function createPetTestSession(options: SessionOptions) {
         .poll(
           () => ({
             exited: child.exitCode !== null || child.signalCode !== null,
-            // A zombie has exited and cannot execute or retain app resources.
-            live: processGroup(child.pid!).filter(
-              (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
-            ),
+            live: processGroup(child),
           }),
           { timeout: 5000 },
         )
@@ -891,6 +902,7 @@ setInterval(() => {
             appProcess = app.process();
             processes.push(appProcess);
             const child = appProcess;
+            rememberProcess(child);
             child.once("exit", (code, signal) =>
               record("app-exited", { pid: child.pid, code, signal }),
             );
@@ -1024,6 +1036,7 @@ setInterval(() => {
               },
             );
             processes.push(child);
+            rememberProcess(child);
             record("duplicate-acquired");
             child.stderr?.on("data", (data: Buffer) =>
               appendFileSync(path.join(evidence, "stderr.txt"), data),
