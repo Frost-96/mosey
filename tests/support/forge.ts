@@ -1,4 +1,3 @@
-import { expect } from "vitest";
 import { spawn } from "node:child_process";
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -9,7 +8,8 @@ import { beginMeasurement, measure, recordMeasurement } from "./measurement";
 // app. Each caller owns one cleanup function, including on readiness failure.
 export async function startForge({
   signal,
-}: { signal?: AbortSignal } = {}): Promise<() => Promise<void>> {
+  cwd = process.cwd(),
+}: { signal?: AbortSignal; cwd?: string } = {}): Promise<() => Promise<void>> {
   const finishPreparation = beginMeasurement("forge.prepare");
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
@@ -66,6 +66,7 @@ export async function startForge({
     await chmod(executable, 0o755);
     signal?.throwIfAborted();
     server = spawn("pnpm", ["start"], {
+      cwd,
       env: { ...process.env, ELECTRON_OVERRIDE_DIST_PATH: shim },
       stdio: "pipe",
       detached: true,
@@ -75,37 +76,35 @@ export async function startForge({
       groupId: server.pid,
     });
     let output = "";
-    let spawnError: Error | undefined;
-    server.on("error", (error) => {
-      spawnError = error;
-    });
-    server.stdout?.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
-    server.stderr?.on("data", (data: Buffer) => {
-      output += data.toString();
-    });
     let aborted: (() => void) | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([
-        expect
-          .poll(
-            () => {
-              if (spawnError) throw spawnError;
-              if (server?.exitCode !== null || server.signalCode !== null)
-                throw new Error(output);
-              return output;
-            },
-            { timeout: 60000 },
-          )
-          .toContain("MOSEY_TEST_READY"),
-        new Promise<never>((_resolve, reject) => {
-          aborted = () => reject(signal?.reason);
-          signal?.addEventListener("abort", aborted, { once: true });
-          if (signal?.aborted) aborted();
-        }),
-      ]);
+      await new Promise<void>((resolve, reject) => {
+        const capture = (data: Buffer) => {
+          output = (output + data.toString()).slice(-32768);
+          if (output.includes("MOSEY_TEST_READY")) resolve();
+        };
+        server!.stdout?.on("data", capture);
+        server!.stderr?.on("data", capture);
+        server!.once("error", reject);
+        server!.once("exit", (code, exitSignal) =>
+          reject(
+            new Error(
+              `Forge exited before readiness: ${code}/${exitSignal}\n${output}`,
+            ),
+          ),
+        );
+        timer = setTimeout(
+          () =>
+            reject(new Error(`Forge preparation exceeded 60000ms\n${output}`)),
+          60000,
+        );
+        aborted = () => reject(signal?.reason);
+        signal?.addEventListener("abort", aborted, { once: true });
+        if (signal?.aborted) aborted();
+      });
     } finally {
+      clearTimeout(timer);
       if (aborted) signal?.removeEventListener("abort", aborted);
     }
     finishPreparation("passed");

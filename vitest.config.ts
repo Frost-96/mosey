@@ -13,6 +13,8 @@ const projects: TestProject[] = [
   "deterministic",
   "development",
   "packaged",
+  "preparation",
+  "preparation-packaged",
   "lifecycle-development",
   "lifecycle-packaged",
 ];
@@ -38,11 +40,15 @@ export default defineConfig({
       test: {
         name,
         include: scenarioFiles(name),
+        globalSetup:
+          name === "deterministic"
+            ? []
+            : ["./tests/support/preparation-setup.ts"],
         env: {
           MOSEY_TEST_MODE:
-            name === "lifecycle-development"
+            name === "preparation" || name === "lifecycle-development"
               ? "development"
-              : name === "lifecycle-packaged"
+              : name === "lifecycle-packaged" || name === "preparation-packaged"
                 ? "packaged"
                 : name,
         },

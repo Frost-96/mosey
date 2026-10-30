@@ -153,6 +153,7 @@ jobs:
             out/package-commit.txt
             out/package-sha256.txt
             out/package-measurement.json
+            out/package-manifest.json
           if-no-files-found: error
       - name: Record result
         if: always()
@@ -203,6 +204,7 @@ jobs:
           test "$(cat out/package-commit.txt)" = "$(git rev-parse HEAD)"
           shasum -a 256 -c out/package-sha256.txt
           ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+          node tools/verify-package.ts
       - id: inventory
         run: |
           mkdir -p test-results/verification
@@ -292,6 +294,7 @@ jobs:
           test "$(cat out/package-commit.txt)" = "$(git rev-parse HEAD)"
           shasum -a 256 -c out/package-sha256.txt
           ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+          node tools/verify-package.ts
       - id: inventory
         run: |
           mkdir -p test-results/verification
@@ -308,4 +311,94 @@ jobs:
         if: always()
         with:
           name: lifecycle-packaged-evidence
+          path: test-results/
+
+  preparation:
+    name: Preparation harness (development)
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      MOSEY_TEST_SCALE_FACTOR: "1"
+      MOSEY_VERIFICATION_CHANNEL: preparation
+      MOSEY_TEST_MODE: development
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
+          run_install: false
+      - id: dependencies
+        run: pnpm install --frozen-lockfile
+      - id: inventory
+        run: |
+          mkdir -p test-results/verification
+          node tools/measure-verification.ts collection pnpm exec vitest list --no-static-parse --project preparation --json=test-results/verification/inventory.json
+      - id: verification
+        run: node tools/measure-verification.ts test pnpm exec vitest run --project preparation --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+      - name: Record result
+        if: always()
+        env:
+          MOSEY_VERIFICATION_STATUS: ${{ job.status }}
+          MOSEY_VERIFICATION_STEPS: ${{ toJSON(steps) }}
+        run: node tools/record-verification.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preparation-evidence
+          path: test-results/
+
+  preparation-packaged:
+    name: Preparation harness (packaged)
+    needs: package
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      MOSEY_TEST_SCALE_FACTOR: "1"
+      MOSEY_VERIFICATION_CHANNEL: preparation-packaged
+      MOSEY_TEST_MODE: packaged
+      MOSEY_PREPARATION_RESULT: ${{ needs.package.result }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.11.2
+          run_install: false
+      - id: dependencies
+        run: pnpm install --frozen-lockfile
+      - id: download
+        uses: actions/download-artifact@v4
+        with:
+          name: apple-silicon-app
+          path: out
+      - id: preparation
+        name: Verify package identity and unpack
+        run: |
+          test "$(cat out/package-commit.txt)" = "$(git rev-parse HEAD)"
+          shasum -a 256 -c out/package-sha256.txt
+          ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+          node tools/verify-package.ts
+      - id: inventory
+        run: |
+          mkdir -p test-results/verification
+          node tools/measure-verification.ts collection pnpm exec vitest list --no-static-parse --project preparation-packaged --json=test-results/verification/inventory.json
+      - id: verification
+        run: node tools/measure-verification.ts test pnpm exec vitest run --project preparation-packaged --reporter=default --reporter=json --outputFile=test-results/verification/tests.json
+      - name: Record result
+        if: always()
+        env:
+          MOSEY_VERIFICATION_STATUS: ${{ job.status }}
+          MOSEY_VERIFICATION_STEPS: ${{ toJSON(steps) }}
+        run: node tools/record-verification.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preparation-packaged-evidence
           path: test-results/
