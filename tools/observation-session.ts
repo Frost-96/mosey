@@ -299,11 +299,38 @@ export async function createObservationSession({
       active();
       if (launched) throw new Error("Observation session has already launched");
       launched = true;
+      const executablePath = await run("original-executable", async () => {
+        const name = execFileSync(
+          "/usr/libexec/PlistBuddy",
+          [
+            "-c",
+            "Print :CFBundleExecutable",
+            path.join(bundle, "Contents/Info.plist"),
+          ],
+          { encoding: "utf8", timeout: 5000 },
+        ).trim();
+        if (
+          !name ||
+          name === "." ||
+          name === ".." ||
+          path.basename(name) !== name ||
+          name.includes("\\") ||
+          [...name].some((character) => {
+            const code = character.charCodeAt(0);
+            return code < 32 || code === 127;
+          })
+        ) {
+          throw new Error(
+            "CFBundleExecutable must be a single executable filename",
+          );
+        }
+        return path.join(bundle, "Contents/MacOS", name);
+      });
       acquisition = Promise.resolve()
         .then(() => {
           active();
           return electron.launch({
-            executablePath: path.join(bundle, "Contents/MacOS/Mosey"),
+            executablePath,
             args: [`--user-data-dir=${profile}`],
             timeout: 30000,
             ...(inheritEnvironment
