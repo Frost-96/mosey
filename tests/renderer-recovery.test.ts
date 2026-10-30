@@ -26,7 +26,9 @@ test.each([
       ...(["walking", "sleeping"].includes(phase)
         ? { behavior: { random: 0.1 } }
         : {}),
-      isolateAppIdentity: phase === "main",
+      // These two fault scenarios share a demonstrated restoration-dialog
+      // chain; give each an owned native identity before later default sessions.
+      isolateAppIdentity: phase === "main" || phase === "preview",
       preferences: {
         version: 3,
         character: "corgi",
