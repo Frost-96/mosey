@@ -15,6 +15,7 @@ import path from "node:path";
 import { createObservationSession } from "../tools/observation-session";
 import { borrowPreparedApplication } from "./support/preparation";
 import { treeDigest } from "../tools/preparation-inputs";
+import { isolateFaultExecutable } from "./support/fault-executable";
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,6 +53,10 @@ async function fixture() {
     ],
     { timeout: 5000 },
   );
+  const executable = await isolateFaultExecutable(
+    bundle,
+    `Fault-${path.basename(root).slice(-6)}`,
+  );
   execFileSync(
     "/usr/bin/codesign",
     ["--force", "--deep", "--sign", "-", bundle],
@@ -60,6 +65,7 @@ async function fixture() {
   const before = await treeDigest(bundle);
   return {
     bundle,
+    executable,
     evidence,
     async session(signal?: AbortSignal) {
       const session = await createObservationSession({
@@ -106,7 +112,7 @@ test("original-bundle observation requires actual exit zero even when the quit a
     pet.evaluate(() => devicePixelRatio),
   );
   expect(await realpath(actual.executable)).toBe(
-    await realpath(path.join(owned.bundle, "Contents/MacOS/Mosey")),
+    await realpath(owned.executable),
   );
   expect(await realpath(actual.profile)).toBe(await realpath(session.profile));
   expect(

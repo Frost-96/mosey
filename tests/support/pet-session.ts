@@ -25,6 +25,7 @@ import { instrumentBehaviorApplication } from "./behavior-build";
 import { withPreparationSource } from "./preparation-source";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
+import { isolateFaultExecutable } from "./fault-executable";
 import { nativeArtifactInventory, type DockProducer } from "./dock-producer";
 import {
   beginMeasurement,
@@ -790,6 +791,13 @@ setInterval(() => {
             ],
             { timeout: 5000 },
           );
+          // A distinct bundle ID alone did not keep a deliberate main crash
+          // from triggering restoration prompts in later default sessions.
+          // Give the owned fault copy a distinct native executable name too.
+          const faultExecutable = await isolateFaultExecutable(
+            bundle,
+            `Fault-${path.basename(root).slice(-6)}`,
+          );
           measureSync("session.sign", () =>
             execFileSync(
               "/usr/bin/codesign",
@@ -797,11 +805,7 @@ setInterval(() => {
               { timeout: 30000 },
             ),
           );
-          executablePath = path.join(
-            bundle,
-            "Contents/MacOS",
-            packaged ? "Mosey" : "Electron",
-          );
+          executablePath = faultExecutable;
         }
         const platform = options.packagedPlatform;
         if (platform) {
