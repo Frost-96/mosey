@@ -14,6 +14,7 @@ export const scenarioGroups = {
     "tests/preparation-build.test.ts",
     "tests/preparation-derivatives.test.ts",
     "tests/preparation-ownership.test.ts",
+    "tests/preparation-parallel.test.ts",
   ],
   deterministic: [
     "tests/behavior-time.test.ts",

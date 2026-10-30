@@ -35,6 +35,7 @@ const productionRoots = [
   "tools/build-whale-assets.ts",
   "tools/asset-hit-rows.ts",
   "tools/build-dock-helper.ts",
+  "tools/prepare-build.ts",
 ];
 const volatileDependencies = new Set([
   ".vite",

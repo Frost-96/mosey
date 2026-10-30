@@ -25,9 +25,9 @@
     "postinstall": "install-electron",
     "assets:build": "node tools/build-assets.ts",
     "measure:resources": "node tools/measure-resources.ts",
-    "prestart": "pnpm assets:build && pnpm native:build",
-    "prebuild": "pnpm assets:build && pnpm native:build",
-    "prepackage:mac": "pnpm assets:build && pnpm native:build",
+    "prestart": "node tools/prepare-build.ts",
+    "prebuild": "node tools/prepare-build.ts",
+    "prepackage:mac": "node tools/prepare-build.ts",
     "native:build": "node tools/build-dock-helper.ts",
     "test:deterministic": "vitest run --project deterministic",
     "test:inventory": "node tools/check-test-inventory.ts"
