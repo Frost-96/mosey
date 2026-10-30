@@ -73,7 +73,9 @@ async function withRuntime(
     preferences: {
       version: 3,
       character: "corgi",
-      visibility: initial.startupSilence ? "hidden" : "visible",
+      // Install the exit observer before any capture can start. Launch-time
+      // display changes may retire a producer before session.launch returns.
+      visibility: "hidden",
       size: 240,
     },
     dock: {
@@ -213,6 +215,15 @@ setInterval(()=>{
       ),
     );
     const mainPID = app.process().pid;
+    const observerStarted = await session.run("observer-started", () =>
+      publicEvents.evaluate((events) => events[0]!.at),
+    );
+    expect(
+      (await ledger())
+        .filter((row) => row.event === "spawn")
+        .every((row) => row.at >= observerStarted),
+      "exit observation begins before every owned producer",
+    ).toBe(true);
     const children = () =>
       session.run("owned-producer-processes", async () =>
         execFileSync("/bin/ps", ["-Ao", "pid=,ppid=,command="], {
@@ -229,7 +240,7 @@ setInterval(()=>{
           )
           .map((parts) => Number(parts![1])),
       );
-    if (initial.startupSilence) {
+    {
       expect(
         await session.run("observe-pet-visibility", () =>
           app.evaluate(({ BrowserWindow }) =>
