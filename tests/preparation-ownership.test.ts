@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { expect, onTestFinished, test } from "vitest";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
+import { recordMeasurement } from "./support/measurement";
 import {
   borrowPreparedApplication,
   createPreparationRun,
@@ -115,15 +116,55 @@ test("closing a run during real Forge preparation rejects its pending borrow and
     );
     await owner.close();
   });
+  const processes = () =>
+    execFileSync("/bin/ps", ["-axo", "pid=,ppid=,pgid=,state=,comm="], {
+      encoding: "utf8",
+      timeout: 5000,
+    })
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const [pid, parent, group, state, ...command] = line
+          .trim()
+          .split(/\s+/);
+        return {
+          pid: Number(pid),
+          parent: Number(parent),
+          group: Number(group),
+          state: state!,
+          command: command.join(" "),
+        };
+      });
+  let observed: ReturnType<typeof processes> = [];
   await expect
     .poll(
-      async () =>
-        (await events())
+      async () => {
+        const leader = (await events())
           .slice(before)
-          .some((row) => row.event === "forge-process"),
+          .find((row) => row.event === "forge-process")?.groupId;
+        if (!leader) return false;
+        const table = processes(),
+          owned = new Set([leader]);
+        let changed = true;
+        while (changed) {
+          changed = false;
+          for (const member of table)
+            if (owned.has(member.parent) && !owned.has(member.pid)) {
+              owned.add(member.pid);
+              changed = true;
+            }
+        }
+        observed = table.filter((member) => owned.has(member.pid));
+        return observed.some(
+          (member) =>
+            member.command.endsWith("swift-frontend") &&
+            !member.state.startsWith("Z"),
+        );
+      },
       { timeout: 30000 },
     )
     .toBe(true);
+  recordMeasurement("forge-cancel-boundary", { descendants: observed });
   const closing = owner.close();
   expect(await failure).toMatchObject({
     message: expect.stringMatching(/closed/),
@@ -136,17 +177,13 @@ test("closing a run during real Forge preparation rejects its pending borrow and
   const groups = rows
     .filter((row) => row.event === "forge-process")
     .map((row) => row.groupId);
-  const live = execFileSync("/bin/ps", ["-axo", "pgid=,state="], {
-    encoding: "utf8",
-    timeout: 5000,
-  })
-    .trim()
-    .split("\n")
-    .map((line) => line.trim().split(/\s+/))
-    .filter(
-      ([group, state]) =>
-        groups.includes(Number(group)) && !state!.startsWith("Z"),
-    );
+  const live = processes().filter(
+    (member) =>
+      (observed.some((prior) => prior.pid === member.pid) ||
+        observed.some((prior) => prior.group === member.group)) &&
+      !member.state.startsWith("Z"),
+  );
+  recordMeasurement("forge-cancel-survivors", { descendants: live });
   expect(groups).toHaveLength(1);
   expect(live).toEqual([]);
   expect(rows.some((row) => row.event === "preparation-ready")).toBe(false);
