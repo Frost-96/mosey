@@ -14,9 +14,15 @@ import { summarizeMeasurements } from "../tests/support/measurement.ts";
 const channel = process.env.MOSEY_VERIFICATION_CHANNEL;
 if (
   !channel ||
-  !["static", "deterministic", "development", "package", "packaged"].includes(
-    channel,
-  )
+  ![
+    "static",
+    "deterministic",
+    "development",
+    "package",
+    "packaged",
+    "lifecycle-development",
+    "lifecycle-packaged",
+  ].includes(channel)
 )
   throw new Error(
     "MOSEY_VERIFICATION_CHANNEL must identify a verification channel",
@@ -24,7 +30,22 @@ if (
 const status = process.env.MOSEY_VERIFICATION_STATUS;
 if (!status || !["success", "failure", "cancelled", "skipped"].includes(status))
   throw new Error("MOSEY_VERIFICATION_STATUS must be the actual job status");
-const application = channel === "development" || channel === "packaged";
+const mode =
+  channel === "development" || channel === "lifecycle-development"
+    ? "development"
+    : channel === "packaged" || channel === "lifecycle-packaged"
+      ? "packaged"
+      : null;
+const application = mode !== null;
+const project = (
+  [
+    "deterministic",
+    "development",
+    "packaged",
+    "lifecycle-development",
+    "lifecycle-packaged",
+  ] as const
+).find((name) => name === channel);
 const requestedScale = application
   ? Number(process.env.MOSEY_TEST_SCALE_FACTOR)
   : null;
@@ -73,7 +94,7 @@ const scenarioDurations = existsSync(testReport)
 const evidenceReadErrors: { file: string; error: string }[] = [];
 if (application)
   for (const file of globSync(
-    `test-results/pet-sessions/${channel}-*/progress.jsonl`,
+    `test-results/pet-sessions/${mode}-*/progress.jsonl`,
   )) {
     try {
       for (const line of readFileSync(file, "utf8")
@@ -110,7 +131,7 @@ const record = {
       ? `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
       : null,
   channel,
-  mode: application ? channel : null,
+  mode,
   statusAtRecord: status,
   finalConclusion:
     "Use the GitHub job conclusion; this record precedes evidence upload.",
@@ -122,8 +143,7 @@ const record = {
       { outcome: step.outcome, conclusion: step.conclusion },
     ]),
   ),
-  scenarioFiles:
-    application || channel === "deterministic" ? scenarioFiles(channel) : [],
+  scenarioFiles: project ? scenarioFiles(project) : [],
   scaleCoverage: application ? scaleCoverage : null,
   observedScaleEvidence,
   measurements,
