@@ -6,6 +6,7 @@ import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
 import { openSettings } from "./support/settings";
 import { matchPaintedFrames } from "./support/pixels";
+import { invokePetMenu } from "./support/pet-menu";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
@@ -118,16 +119,7 @@ test.each([
     const matchesIdle = matchPaintedFrames(idleFrames, {
       maxChannelDifference: phase === "preview" ? 24 : 2,
     });
-    const invoke = (label: string) =>
-      session.run("app-evaluate", () =>
-        app.evaluate(({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing menu: ${label}`);
-          item.click();
-        }, label),
-      );
+    const invoke = (label: string) => invokePetMenu(app, label, session.run);
     const visible = () =>
       session.run("app-evaluate", () =>
         app.evaluate(({ BrowserWindow }) =>

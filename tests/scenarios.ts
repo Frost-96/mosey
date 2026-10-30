@@ -51,6 +51,7 @@ export const scenarioGroups = {
   packagedOnly: ["tests/login-items.test.ts"],
   lifecycleHarness: [
     "tests/session-quit-dispatch.test.ts",
+    "tests/session-renderer-dispatch.test.ts",
     "tests/settings-readiness-lifecycle.test.ts",
     "tests/behavior-input-lifecycle.test.ts",
   ],
