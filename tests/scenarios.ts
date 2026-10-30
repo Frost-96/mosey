@@ -47,7 +47,10 @@ export const scenarioGroups = {
     "tests/visibility.test.ts",
   ],
   packagedOnly: ["tests/login-items.test.ts"],
-  lifecycleHarness: ["tests/session-quit-dispatch.test.ts"],
+  lifecycleHarness: [
+    "tests/session-quit-dispatch.test.ts",
+    "tests/behavior-input-lifecycle.test.ts",
+  ],
 };
 
 export type TestProject =
