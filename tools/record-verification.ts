@@ -204,7 +204,7 @@ const recordedScaleCoverage = observationHarness
       ? {
           requested: [requestedScale],
           coverage:
-            "scale-independent Quit dispatch, settings readiness cancellation and behavior input dispatch; one requested 1x CI run per mode",
+            "scale-independent Quit and visibility input dispatch, renderer recovery, settings readiness cancellation and behavior input dispatch; one requested 1x CI run per mode",
           reason:
             "Driver scheduling, readiness cancellation and normal process exit do not depend on renderer DPR.",
           evidence:
