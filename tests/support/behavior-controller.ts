@@ -19,20 +19,31 @@ export function createBehaviorController(options: ControlledBehaviorOptions) {
     previous = current;
     if (running) adapter.advanceBy(elapsed);
   };
-  const update = (input: BehaviorInput) => {
-    pump();
-    if (input.random !== undefined) {
-      if (
-        !Number.isFinite(input.random) ||
-        input.random < 0 ||
-        input.random >= 1
-      )
-        throw new RangeError("Behavior choice must be in [0, 1)");
-      random = input.random;
-    }
-    if (input.running !== undefined) running = input.running;
-    if (input.advanceBy !== undefined) adapter.advanceBy(input.advanceBy);
-  };
+  // Inspector evaluation can arrive while the pump is dispatching a behavior
+  // callback. Enter through the event loop so one input cannot rewind another
+  // advance or make an actor process its queued event at the wrong time.
+  const update = (input: BehaviorInput) =>
+    new Promise<void>((resolve, reject) => {
+      setImmediate(() => {
+        try {
+          pump();
+          if (input.random !== undefined) {
+            if (
+              !Number.isFinite(input.random) ||
+              input.random < 0 ||
+              input.random >= 1
+            )
+              throw new RangeError("Behavior choice must be in [0, 1)");
+            random = input.random;
+          }
+          if (input.running !== undefined) running = input.running;
+          if (input.advanceBy !== undefined) adapter.advanceBy(input.advanceBy);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
   const interval = setInterval(pump, 8);
   interval.unref();
   // Inspector input exists only in this owned derivative, never shipped code.

@@ -15,7 +15,7 @@ export function controlBehavior(
     );
     if (!controller)
       throw new Error("Application is not a controlled behavior build");
-    controller.update(input);
+    return controller.update(input);
   }, input);
 }
 
