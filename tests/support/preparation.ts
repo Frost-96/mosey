@@ -144,12 +144,12 @@ export async function createPreparationRun({
           });
           cancellation.signal.throwIfAborted();
           if (mode === "development")
-            stops.push(
-              await startForge({
-                cwd: generation,
-                signal: cancellation.signal,
-              }),
-            );
+            await startForge({
+              cwd: generation,
+              signal: cancellation.signal,
+              preparationId,
+              registerStop: (stop) => stops.push(stop),
+            });
           const appRoot =
             mode === "development"
               ? generation
@@ -309,9 +309,12 @@ export async function createPreparationRun({
         await new Promise<void>((resolve, reject) =>
           server.close((error) => (error ? reject(error) : resolve())),
         );
-        await rm(directory, { recursive: true, force: true });
         if (errors.length)
-          throw new AggregateError(errors, "Preparation run cleanup failed");
+          throw new AggregateError(
+            errors,
+            "Preparation run cleanup failed; retained owned directory for diagnostics",
+          );
+        await rm(directory, { recursive: true, force: true });
       })();
       return closed;
     },

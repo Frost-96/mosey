@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -9,53 +9,150 @@ import { beginMeasurement, measure, recordMeasurement } from "./measurement";
 export async function startForge({
   signal,
   cwd = process.cwd(),
-}: { signal?: AbortSignal; cwd?: string } = {}): Promise<() => Promise<void>> {
+  preparationId,
+  registerStop,
+}: {
+  signal?: AbortSignal;
+  cwd?: string;
+  preparationId?: string;
+  registerStop?: (stop: () => Promise<void>) => void;
+} = {}): Promise<() => Promise<void>> {
   const finishPreparation = beginMeasurement("forge.prepare");
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
+  type Member = {
+    pid: number;
+    parent: number;
+    group: number;
+    start: string;
+    state: string;
+    command: string;
+  };
+  const known = new Map<number, Member>();
+  // pnpm's script shells and Swift frontends create their own process groups.
+  // Retain observed ancestry across reparenting instead of equating one PGID
+  // with the whole preparation. Start time guards against PID reuse.
+  const observe = () => {
+    const rows: Member[] = execFileSync(
+      "/bin/ps",
+      ["-axo", "pid=,ppid=,pgid=,lstart=,state=,comm="],
+      {
+        encoding: "utf8",
+        timeout: 5000,
+        env: { ...process.env, LC_ALL: "C" },
+      },
+    )
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const fields = line.trim().split(/\s+/);
+        return {
+          pid: Number(fields[0]),
+          parent: Number(fields[1]),
+          group: Number(fields[2]),
+          start: fields.slice(3, 8).join(" "),
+          state: fields[8]!,
+          command: fields.slice(9).join(" "),
+        };
+      });
+    const owned = new Set(
+      rows
+        .filter((row) => known.get(row.pid)?.start === row.start)
+        .map((row) => row.pid),
+    );
+    if (
+      server?.pid &&
+      server.exitCode === null &&
+      server.signalCode === null &&
+      !known.has(server.pid)
+    )
+      owned.add(server.pid);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      const groups = new Set(
+        rows.filter((row) => owned.has(row.pid)).map((row) => row.group),
+      );
+      for (const row of rows)
+        if (
+          (owned.has(row.parent) || groups.has(row.group)) &&
+          !owned.has(row.pid)
+        ) {
+          owned.add(row.pid);
+          changed = true;
+        }
+    }
+    const members = rows.filter((row) => owned.has(row.pid));
+    for (const member of members) known.set(member.pid, member);
+    return members.filter((member) => !member.state.startsWith("Z"));
+  };
   let stopping: Promise<void> | undefined;
   const stop = () =>
-    (stopping ??= measure("forge.release", {}, async () => {
-      try {
-        if (!server?.pid) return;
+    (stopping ??= measure("forge.release", { preparationId }, async () => {
+      if (server?.pid) {
         const child = server;
-        const signal = (value: NodeJS.Signals) => {
-          try {
-            process.kill(-child.pid!, value);
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        const signalled = new Map<NodeJS.Signals, Set<number>>();
+        const signalMembers = (value: NodeJS.Signals) => {
+          const members = observe();
+          recordMeasurement("forge-owned-processes", {
+            preparationId,
+            signal: value,
+            members,
+          });
+          const groups = signalled.get(value) ?? new Set<number>();
+          signalled.set(value, groups);
+          for (const group of new Set(members.map((member) => member.group))) {
+            if (groups.has(group)) continue;
+            groups.add(group);
+            if (group <= 1)
+              throw new Error("Invalid owned Forge process group");
+            try {
+              process.kill(-group, value);
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ESRCH")
+                throw error;
+            }
           }
         };
         const exited = new Promise<void>((resolve) => {
           if (child.exitCode !== null || child.signalCode !== null) resolve();
           else child.once("exit", () => resolve());
         });
-        // Only this launch's detached group is ours. Escalate if Forge or its
-        // shim ignores TERM, including when startup never reached readiness.
         let timer: ReturnType<typeof setTimeout> | undefined;
-        const forced = new Promise<void>((resolve, reject) => {
-          timer = setTimeout(() => {
-            try {
-              signal("SIGKILL");
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          }, 5000);
-        });
         try {
-          signal("SIGTERM");
-          await Promise.race([exited, forced]);
-          signal("SIGKILL");
-          await exited;
+          signalMembers("SIGTERM");
+          await Promise.race([
+            exited,
+            new Promise<void>((resolve) => {
+              timer = setTimeout(resolve, 5000);
+            }),
+          ]);
         } finally {
           clearTimeout(timer);
         }
-      } finally {
-        await rm(shim, { recursive: true, force: true });
+        signalMembers("SIGKILL");
+        const deadline = performance.now() + 5000;
+        let remaining = observe();
+        while (remaining.length && performance.now() < deadline) {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+          signalMembers("SIGKILL");
+          remaining = observe();
+        }
+        if (remaining.length)
+          throw new Error(
+            `Owned Forge descendants survived cleanup: ${JSON.stringify(remaining)}`,
+          );
+        await exited;
+        recordMeasurement("forge-processes-reaped", {
+          preparationId,
+          pids: [...known.keys()],
+        });
       }
+      // A failed reap retains files for diagnostics instead of racing a writer.
+      await rm(shim, { recursive: true, force: true });
     }));
+  registerStop?.(stop);
   try {
     signal?.throwIfAborted();
     await mkdir(path.dirname(executable), { recursive: true });
@@ -78,8 +175,17 @@ export async function startForge({
     let output = "";
     let aborted: (() => void) | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let observation: ReturnType<typeof setInterval> | undefined;
     try {
       await new Promise<void>((resolve, reject) => {
+        observe();
+        observation = setInterval(() => {
+          try {
+            observe();
+          } catch (error) {
+            reject(error);
+          }
+        }, 250);
         const capture = (data: Buffer) => {
           output = (output + data.toString()).slice(-32768);
           if (output.includes("MOSEY_TEST_READY")) resolve();
@@ -105,6 +211,7 @@ export async function startForge({
       });
     } finally {
       clearTimeout(timer);
+      clearInterval(observation);
       if (aborted) signal?.removeEventListener("abort", aborted);
     }
     finishPreparation("passed");

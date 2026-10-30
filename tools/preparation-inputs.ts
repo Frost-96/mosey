@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import type { BigIntStats } from "node:fs";
 import {
   lstat,
   readdir,
@@ -45,6 +46,27 @@ const volatileDependencies = new Set([
 ]);
 const fileDigests = new Map<string, { stamp: string; value: string }>();
 
+// Limit open files and large buffers across concurrent identity requests. Each
+// traversal still discovers every member and emits the original sorted DFS order.
+let activeReads = 0;
+const waitingReads: (() => void)[] = [];
+const inputRead = async <T>(read: () => Promise<T>): Promise<T> => {
+  if (activeReads === 8)
+    await new Promise<void>((resolve) => waitingReads.push(resolve));
+  else activeReads++;
+  try {
+    return await read();
+  } finally {
+    const next = waitingReads.shift();
+    if (next) next();
+    else activeReads--;
+  }
+};
+const readingDigests = new Map<
+  string,
+  { stamp: string; value: Promise<string> }
+>();
+
 // ctime/inode/size/mode also participate; restoring mtime cannot hide a write.
 // Contents, not timestamps, enter the identity. The cache is run-local only.
 export async function treeDigest(
@@ -52,61 +74,75 @@ export async function treeDigest(
   entries = ["."],
   dependencies = false,
 ) {
-  const rows: unknown[] = [];
-  const visit = async (relative: string) => {
+  const stampOf = (stat: BigIntStats) =>
+    [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode].join(
+      ":",
+    );
+  const collect = async (members: string[]): Promise<unknown[][]> => {
+    // Drain every read before rejecting so owner cleanup cannot race late I/O.
+    const results = await Promise.allSettled(members.map(visit));
+    const rows: unknown[][] = [];
+    for (const result of results) {
+      if (result.status === "rejected") throw result.reason;
+      rows.push(...result.value);
+    }
+    return rows;
+  };
+  const visit = async (relative: string): Promise<unknown[][]> => {
     const file = path.join(root, relative);
-    const stat = await lstat(file, { bigint: true });
+    const stat = await inputRead(() => lstat(file, { bigint: true }));
     if (stat.isSymbolicLink()) {
-      const target = await readlink(file);
+      const target = await inputRead(() => readlink(file));
       const resolved = path.resolve(path.dirname(file), target);
       if (!resolved.startsWith(`${path.resolve(root)}${path.sep}`))
         throw new Error(
           `Preparation input links outside its root: ${relative}`,
         );
-      rows.push([relative, "link", target]);
-    } else if (stat.isDirectory()) {
-      rows.push([relative, "directory", Number(stat.mode & 0o777n)]);
-      for (const name of (await readdir(file)).sort()) {
-        if (
-          dependencies &&
-          (volatileDependencies.has(name) || name === ".DS_Store")
-        )
-          continue;
-        await visit(path.join(relative, name));
-      }
-    } else if (stat.isFile()) {
-      const stamp = [
-        stat.dev,
-        stat.ino,
-        stat.size,
-        stat.mtimeNs,
-        stat.ctimeNs,
-        stat.mode,
-      ].join(":");
+      return [[relative, "link", target]];
+    }
+    if (stat.isDirectory()) {
+      const names = (await inputRead(() => readdir(file)))
+        .sort()
+        .filter(
+          (name) =>
+            !dependencies ||
+            (!volatileDependencies.has(name) && name !== ".DS_Store"),
+        );
+      return [
+        [relative, "directory", Number(stat.mode & 0o777n)],
+        ...(await collect(names.map((name) => path.join(relative, name)))),
+      ];
+    }
+    if (stat.isFile()) {
+      const stamp = stampOf(stat);
       let cached = fileDigests.get(file);
       if (cached?.stamp !== stamp) {
-        cached = { stamp, value: digest(await readFile(file)) };
-        const after = await lstat(file, { bigint: true });
-        if (
-          [
-            after.dev,
-            after.ino,
-            after.size,
-            after.mtimeNs,
-            after.ctimeNs,
-            after.mode,
-          ].join(":") !== stamp
-        )
+        let reading = readingDigests.get(file);
+        if (reading?.stamp !== stamp) {
+          const value = inputRead(async () => digest(await readFile(file)));
+          reading = { stamp, value };
+          readingDigests.set(file, reading);
+          const remove = () => {
+            if (readingDigests.get(file)?.value === value)
+              readingDigests.delete(file);
+          };
+          void value.then(remove, remove);
+        }
+        cached = { stamp, value: await reading.value };
+        // Sharing a read never shares its validation: every waiter checks the
+        // complete stamp again, including inode and ctime, after those bytes.
+        const after = await inputRead(() => lstat(file, { bigint: true }));
+        if (stampOf(after) !== stamp)
           throw new Error(
             `Preparation input changed while reading: ${relative}`,
           );
         fileDigests.set(file, cached);
       }
-      rows.push([relative, "file", Number(stat.mode & 0o777n), cached.value]);
-    } else throw new Error(`Unsupported preparation input: ${relative}`);
+      return [[relative, "file", Number(stat.mode & 0o777n), cached.value]];
+    }
+    throw new Error(`Unsupported preparation input: ${relative}`);
   };
-  for (const entry of [...entries].sort()) await visit(entry);
-  return digest(JSON.stringify(rows));
+  return digest(JSON.stringify(await collect([...entries].sort())));
 }
 
 export async function sourceIdentity(root: string) {
