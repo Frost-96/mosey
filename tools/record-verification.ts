@@ -147,9 +147,9 @@ const recordedScaleCoverage = preparationHarness
     ? {
         requested: [requestedScale],
         coverage:
-          "scale-independent Quit dispatch; one requested 1x CI run per mode",
+          "Scale-independent Quit dispatch and settings readiness cancellation; one requested 1x CI run per mode",
         reason:
-          "Inspector scheduling and normal process exit do not depend on renderer DPR.",
+          "Driver scheduling, readiness cancellation and normal process exit do not depend on renderer DPR.",
         evidence:
           "Per-test DPR assertion and observedScaleEvidence from progress.jsonl.",
         limitation:
