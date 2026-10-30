@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { execFileSync } from "node:child_process";
-import { readFile, writeFile, rename } from "node:fs/promises";
+import { appendFile, readFile, writeFile, rename } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -149,9 +149,37 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
           petWindowID,
         ),
       );
+    let groundSamples = 0;
+    const groundOffset = async () => {
+      // A native work-area update can arrive after startup or without its event.
+      // Observe the current ground and actual window in the same driver action.
+      const sample = await session.run("observe-current-ground", () =>
+        app.evaluate(({ BrowserWindow, screen }, id) => {
+          const bounds = BrowserWindow.fromId(id)!.getBounds();
+          const workArea = screen.getPrimaryDisplay().workArea;
+          return {
+            at: performance.now(),
+            bounds,
+            workArea,
+            footY: bounds.y + bounds.height,
+            floor: workArea.y + workArea.height,
+          };
+        }, petWindowID),
+      );
+      if (groundSamples++ < 128)
+        await session.run("record-current-ground", () =>
+          appendFile(
+            path.join(session.evidence, "ground-placement.jsonl"),
+            `${JSON.stringify(sample)}\n`,
+          ),
+        );
+      return sample.footY - sample.floor;
+    };
     const display = await session.run("app.evaluate", () =>
       app.evaluate(({ screen }) => screen.getPrimaryDisplay()),
     );
+    // Synthetic Dock coordinates stay fixed; ordinary ground assertions below
+    // use the current work area instead of this early display snapshot.
     const floor = display.workArea.y + display.workArea.height;
     const invokeMenu = async (section: string, label: string) => {
       // Input requires a currently available public menu item. Native menu
@@ -260,9 +288,7 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
         }),
       );
     };
-    await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height)
-      .toBe(floor);
+    await expect.poll(groundOffset).toBe(0);
     // Pending/null capture reports have never established Dock support. They
     // cannot undo placement recovered at an external display boundary.
     const displayRecoveryState = await session.run("app.evaluateHandle", () =>
@@ -657,6 +683,27 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       }),
     );
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Keep the existing Dock edge fixed while the ordinary ground changes by
+    // one point, as it can during native startup. Omit the notification so an
+    // expired worker must fall to the live ground, not a cached startup floor.
+    const changedGround = await session.run("changed-ground-fixture", () =>
+      app.evaluateHandle(({ screen }) => {
+        const original = screen.getPrimaryDisplay;
+        const initial = original();
+        screen.getPrimaryDisplay = () => ({
+          ...initial,
+          workArea: {
+            ...initial.workArea,
+            height: initial.workArea.height - 1,
+          },
+        });
+        return {
+          restore: () => {
+            screen.getPrimaryDisplay = original;
+          },
+        };
+      }),
+    );
     // A worker processing a newer frame must not consume the old edge or
     // make the pet fall and re-climb between valid complete frames.
     await publishObservation(JSON.stringify({ testPending: true }));
@@ -665,10 +712,14 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
     expect(idleFrames.has(await pixels())).toBe(true);
     // A stuck worker cannot keep an old edge alive indefinitely.
     await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
+      .poll(groundOffset, {
         timeout: 3000,
       })
-      .toBe(floor);
+      .toBe(0);
+    await session.run("changed-ground-restore", () =>
+      changedGround.evaluate((state) => state.restore()),
+    );
+    await session.run("changed-ground-dispose", () => changedGround.dispose());
     await setDock(
       "bottom",
       origin.x - 20,
@@ -688,10 +739,10 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       floor - 75,
     );
     await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
+      .poll(groundOffset, {
         timeout: 5000,
       })
-      .toBe(floor);
+      .toBe(0);
     await setDock(
       "bottom",
       origin.x - 20,
@@ -705,10 +756,10 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       .toBe(floor - 75);
     await publishObservation("null");
     await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
+      .poll(groundOffset, {
         timeout: 5000,
       })
-      .toBe(floor);
+      .toBe(0);
     const size = async (label: string) => {
       const opened = session.run(
         "size-settings-window",
@@ -878,16 +929,16 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       .toBe(floor - 75);
     await publishObservation("null");
     await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
+      .poll(groundOffset, {
         timeout: 5000,
       })
-      .toBe(floor);
+      .toBe(0);
     // Side geometry changes x only, using the captured contour at body height.
     await setDock("left", floor - 250, floor, origin.x + 70);
     await expect
       .poll(async () => (await bounds()).x, { timeout: 3000 })
       .toBeGreaterThan(origin.x + 50);
-    expect((await bounds()).y + (await bounds()).height).toBe(floor);
+    expect(await groundOffset()).toBe(0);
     await invoke("Hide Mosey");
     const hidden = await bounds();
     await setDock(
@@ -919,10 +970,10 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
       .toBe(floor - 100);
     await publishObservation("null");
     await expect
-      .poll(async () => (await bounds()).y + (await bounds()).height, {
+      .poll(groundOffset, {
         timeout: 5000,
       })
-      .toBe(floor);
+      .toBe(0);
     // Only behavior time advances; native cleanup and diagnostic deadlines stay real.
     await session.run("walking-choice", () =>
       controlBehavior(app, { random: 0.1 }),
@@ -1023,10 +1074,10 @@ setInterval(()=>{ const value=JSON.parse(fs.readFileSync(${JSON.stringify(input)
         .toBeGreaterThan(50);
       await noSnapback();
       await expect
-        .poll(async () => (await bounds()).y + (await bounds()).height, {
+        .poll(groundOffset, {
           timeout: 3000,
         })
-        .toBe(floor);
+        .toBe(0);
     }
     const finalBounds = await bounds();
     await session.run("writeFile", () =>
