@@ -152,6 +152,5 @@ test("a stalled settings close cancels reopening and profile writes while retain
     releaseCleanup();
     cleaning.mockRestore();
     stalled.mockRestore();
-    await session.close();
   }
 });

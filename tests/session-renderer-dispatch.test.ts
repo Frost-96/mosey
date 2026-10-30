@@ -236,6 +236,5 @@ test("driver visibility input preserves renderer recovery while a real interval 
     socket.close();
     await hiding;
     await crashing;
-    await session.close();
   }
 });

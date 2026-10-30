@@ -156,6 +156,5 @@ test("driver Quit completes while a real interval is awaiting dispatch", async (
     // The session's independent cleanup still owns the application process.
     socket.close();
     await quitting;
-    await session.close();
   }
 });

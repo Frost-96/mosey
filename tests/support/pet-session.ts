@@ -1048,6 +1048,13 @@ setInterval(() => {
           throw new Error("Pet session has no application");
         mark("normal-exit");
         const child = appProcess;
+        if (child.exitCode !== null || child.signalCode !== null)
+          return finishFailure(
+            new Error(
+              "normal-exit failed: application already exited before Quit",
+            ),
+            "Pet quit and cleanup failed",
+          );
         // Trigger the product's quit action, but judge the owned OS process.
         // A driver acknowledgement may never arrive even after a genuine exit.
         // A caller may select the body menu's real quit item. Keep its single

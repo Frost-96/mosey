@@ -370,6 +370,12 @@ export async function createObservationSession({
         throw new Error("Observation session has no application");
       stage = "normal-exit";
       const owned = child;
+      if (exited())
+        return finishFailure(
+          new Error(
+            "normal-exit failed: application already exited before Quit",
+          ),
+        );
       void Promise.resolve()
         .then(() => {
           active();

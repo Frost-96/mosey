@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { expect, onTestFinished, test, vi } from "vitest";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import { spawn } from "node:child_process";
@@ -368,6 +368,12 @@ test("an interaction deadline stops the driver and preserves its first failing s
     (error: unknown) => ({ status: "rejected" as const, error: String(error) }),
   );
   const observations: { posture: string; at: number }[] = [];
+  onTestFinished(async () => {
+    await writeFile(
+      path.join(controlled.evidence, "cancelled-behavior.json"),
+      JSON.stringify({ observations, outcome: await advancing }, null, 2),
+    );
+  });
   try {
     await responseHeld.promise;
     cancellation.abort(
@@ -399,12 +405,8 @@ test("an interaction deadline stops the driver and preserves its first failing s
     releaseCleanup.resolve();
     delayedResponse.mockRestore();
     delayedClose.mockRestore();
-    await controlled.close();
-    await writeFile(
-      path.join(controlled.evidence, "cancelled-behavior.json"),
-      JSON.stringify({ observations, outcome: await advancing }, null, 2),
-    );
   }
+  await controlled.close();
   expect((await advancing).status).toBe("rejected");
   expect(
     controlledChild.exitCode !== null || controlledChild.signalCode !== null,
