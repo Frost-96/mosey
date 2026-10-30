@@ -710,12 +710,15 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await session.quit({
       action: () =>
         app.evaluate(() => {
-          Reflect.get(globalThis, "menus")
+          const item = Reflect.get(globalThis, "menus")
             .at(-1)
             .items.find(
               (item: { label: string }) => item.label === "Quit Mosey",
-            )
-            .click();
+            );
+          if (!item) throw new Error("Missing body-menu Quit Mosey item");
+          // Match the normal Quit boundary: the menu action clears app timers
+          // and must run after an Inspector-interrupted timer dispatch.
+          setImmediate(() => item.click());
         }),
     });
     expect(child.exitCode).toBe(0);
