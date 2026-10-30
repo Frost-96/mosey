@@ -9,6 +9,7 @@ export const scenarioGroups = {
     "tests/preparation-session.test.ts",
     "tests/preparation-build.test.ts",
     "tests/preparation-derivatives.test.ts",
+    "tests/preparation-ownership.test.ts",
   ],
   deterministic: [
     "tests/behavior-time.test.ts",
