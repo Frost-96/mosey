@@ -160,8 +160,8 @@ test("a failed platform restoration preserves its bundle and original failure wi
     // This harness-only resource never registered an OS login item. Removing
     // its injected transport obstruction permits cleanup without a relaunch.
     unavailable = false;
-    await session.close();
   }
+  await session.close();
   await expect(access(root)).rejects.toMatchObject({ code: "ENOENT" });
 });
 

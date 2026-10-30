@@ -151,7 +151,6 @@ test("original-bundle observation requires actual exit zero even when the quit a
     expect(child.signalCode).toBe(null);
   } finally {
     acknowledgement.mockRestore();
-    await session.close();
   }
   const failed = await owned.session();
   const { app: failureApp, child: failureChild } = await failed.launch();
@@ -173,6 +172,11 @@ test("an observation deadline cancels later writes and launches while cleanup re
   const owned = await fixture();
   const session = await owned.session();
   const { app, child } = await session.launch();
+  await session.run("failure-stderr", () =>
+    app.evaluate(() => {
+      process.stderr.write("owned observation failure diagnostic\n");
+    }),
+  );
   const stalledClose = vi
     .spyOn(app, "close")
     .mockImplementation(() => new Promise(() => {}));
@@ -211,11 +215,42 @@ test("an observation deadline cancels later writes and launches while cleanup re
     expect(events.find((event) => event.event === "first-failure").stage).toBe(
       "stalled-observation",
     );
+    expect(
+      await readFile(path.join(session.evidence, "stderr.txt"), "utf8"),
+    ).toContain("owned observation failure diagnostic");
+    const sampled = events.find(
+      (event) => event.event === "failure-native-sample",
+    );
+    expect(sampled.detail).toMatchObject({ pid: child.pid, timeout: 5000 });
+    expect(events.indexOf(sampled)).toBeLessThan(
+      events.findIndex((event) => event.event === "safety-cleanup"),
+    );
+    if (sampled.detail.outcome === "captured")
+      expect(await readFile(sampled.detail.file, "utf8")).toContain(
+        String(child.pid),
+      );
+    else expect(sampled.detail.error).toBeDefined();
   } finally {
     stalledClose.mockRestore();
-    await session.close();
-    await session.close();
   }
+  await session.close();
+  await session.close();
+  await owned.unchanged();
+});
+
+test("observation Quit refuses an application that exited before the request", async () => {
+  const owned = await fixture();
+  const session = await owned.session();
+  const { app, child } = await session.launch();
+  await app.evaluate(({ app }) => app.exit(0)).catch(() => {});
+  await expect.poll(() => child.exitCode, { timeout: 5000 }).toBe(0);
+  expect(child.signalCode).toBe(null);
+  await expect(session.quit()).rejects.toThrow(/already exited before Quit/);
+  const journal = await readFile(
+    path.join(session.evidence, "lifecycle.jsonl"),
+    "utf8",
+  );
+  expect(journal).not.toContain('"event":"normal-exit-complete"');
   await owned.unchanged();
 });
 
@@ -273,8 +308,8 @@ test("cancelling an observation adopts a late application without resuming readi
   } finally {
     release();
     delayed.mockRestore();
-    await session.close();
   }
+  await session.close();
   const next = await owned.session();
   const running = await next.launch();
   await next.quit();
@@ -332,21 +367,15 @@ test("denied observation cleanup preserves the primary failure and retries witho
   } finally {
     signals.mockRestore();
     stalled.mockRestore();
-    try {
-      await session.close();
-    } finally {
-      if (child.exitCode === null && child.signalCode === null) {
-        kill(-child.pid!, "SIGKILL");
-        await new Promise<void>((resolve) =>
-          child.once("exit", () => resolve()),
-        );
-      }
-      unrelated.kill("SIGKILL");
-      if (unrelated.exitCode === null && unrelated.signalCode === null)
-        await new Promise<void>((resolve) =>
-          unrelated.once("exit", () => resolve()),
-        );
+    if (child.exitCode === null && child.signalCode === null) {
+      kill(-child.pid!, "SIGKILL");
+      await new Promise<void>((resolve) => child.once("exit", () => resolve()));
     }
+    unrelated.kill("SIGKILL");
+    if (unrelated.exitCode === null && unrelated.signalCode === null)
+      await new Promise<void>((resolve) =>
+        unrelated.once("exit", () => resolve()),
+      );
   }
   await owned.unchanged();
 });

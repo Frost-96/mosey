@@ -1,8 +1,15 @@
-import { execFileSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { beginMeasurement, measure, recordMeasurement } from "./measurement";
+import {
+  isLiveProcess,
+  readProcessSnapshot,
+  sameProcess,
+  signalProcessGroup,
+  type MacOSProcess,
+} from "../../tools/macos-processes";
 
 // Let Forge prepare the real dev build/server without launching an unmanaged
 // app. Each caller owns one cleanup function, including on readiness failure.
@@ -21,44 +28,15 @@ export async function startForge({
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
-  type Member = {
-    pid: number;
-    parent: number;
-    group: number;
-    start: string;
-    state: string;
-    command: string;
-  };
-  const known = new Map<number, Member>();
+  const known = new Map<number, MacOSProcess>();
   // pnpm's script shells and Swift frontends create their own process groups.
   // Retain observed ancestry across reparenting instead of equating one PGID
   // with the whole preparation. Start time guards against PID reuse.
   const observe = () => {
-    const rows: Member[] = execFileSync(
-      "/bin/ps",
-      ["-axo", "pid=,ppid=,pgid=,lstart=,state=,comm="],
-      {
-        encoding: "utf8",
-        timeout: 5000,
-        env: { ...process.env, LC_ALL: "C" },
-      },
-    )
-      .trim()
-      .split("\n")
-      .map((line) => {
-        const fields = line.trim().split(/\s+/);
-        return {
-          pid: Number(fields[0]),
-          parent: Number(fields[1]),
-          group: Number(fields[2]),
-          start: fields.slice(3, 8).join(" "),
-          state: fields[8]!,
-          command: fields.slice(9).join(" "),
-        };
-      });
+    const rows = readProcessSnapshot();
     const owned = new Set(
       rows
-        .filter((row) => known.get(row.pid)?.start === row.start)
+        .filter((row) => sameProcess(known.get(row.pid), row))
         .map((row) => row.pid),
     );
     if (
@@ -85,7 +63,7 @@ export async function startForge({
     }
     const members = rows.filter((row) => owned.has(row.pid));
     for (const member of members) known.set(member.pid, member);
-    return members.filter((member) => !member.state.startsWith("Z"));
+    return members.filter(isLiveProcess);
   };
   let stopping: Promise<void> | undefined;
   const stop = () =>
@@ -104,15 +82,13 @@ export async function startForge({
           signalled.set(value, groups);
           for (const group of new Set(members.map((member) => member.group))) {
             if (groups.has(group)) continue;
-            groups.add(group);
-            if (group <= 1)
-              throw new Error("Invalid owned Forge process group");
-            try {
-              process.kill(-group, value);
-            } catch (error) {
-              if ((error as NodeJS.ErrnoException).code !== "ESRCH")
-                throw error;
-            }
+            if (
+              signalProcessGroup(
+                members.filter((member) => member.group === group),
+                value,
+              )
+            )
+              groups.add(group);
           }
         };
         const exited = new Promise<void>((resolve) => {
