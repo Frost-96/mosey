@@ -375,13 +375,7 @@ test.each([
     ).toBe(true);
     session.mark("explicit-quit");
     const processHandle = app.process();
-    const exited = session.run(
-      "app-waitForEvent",
-      () => app.waitForEvent("close"),
-      { timeout: 10000 },
-    );
-    await invoke("Quit Mosey");
-    await exited;
+    await session.quit();
     expect(processHandle.exitCode).toBe(0);
   },
 );
