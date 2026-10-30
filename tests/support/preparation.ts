@@ -1,6 +1,6 @@
 import { createServer, request } from "node:http";
 import { randomUUID } from "node:crypto";
-import { cp, mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./forge";
@@ -68,6 +68,16 @@ export async function createPreparationRun({
   const prepare = (mode: "development" | "packaged") => {
     const acquisition = (async () => {
       cancellation.signal.throwIfAborted();
+      if (mode === "packaged") {
+        try {
+          await readFile(path.join(sourceRoot, "out/package-manifest.json"));
+        } catch (error) {
+          throw new Error(
+            "Package producer manifest is required before borrowing",
+            { cause: error },
+          );
+        }
+      }
       const inputs = await measure("preparation.identify", {}, async () => ({
         source: await sourceIdentity(sourceRoot),
         producer: await producerIdentity(sourceRoot),

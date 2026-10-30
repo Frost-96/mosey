@@ -5,6 +5,7 @@ import path from "node:path";
 // Application groups deliberately run in both modes; scale-independent checks
 // run once. Keep conditional native/development cases inside their test files.
 export const scenarioGroups = {
+  packagePreparation: ["tests/preparation-package.test.ts"],
   preparation: [
     "tests/preparation-session.test.ts",
     "tests/preparation-build.test.ts",
@@ -50,11 +51,14 @@ export type TestProject =
   | "deterministic"
   | "development"
   | "packaged"
+  | "preparation-packaged"
   | "preparation"
   | "lifecycle-development"
   | "lifecycle-packaged";
 
 export function scenarioFiles(project: TestProject): string[] {
+  if (project === "preparation-packaged")
+    return scenarioGroups.packagePreparation;
   if (project === "preparation") return scenarioGroups.preparation;
   if (project === "deterministic") return scenarioGroups.deterministic;
   if (project === "lifecycle-development" || project === "lifecycle-packaged")

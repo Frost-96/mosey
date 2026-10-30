@@ -14,6 +14,7 @@ const projects: TestProject[] = [
   "development",
   "packaged",
   "preparation",
+  "preparation-packaged",
   "lifecycle-development",
   "lifecycle-packaged",
 ];
@@ -47,7 +48,7 @@ export default defineConfig({
           MOSEY_TEST_MODE:
             name === "preparation" || name === "lifecycle-development"
               ? "development"
-              : name === "lifecycle-packaged"
+              : name === "lifecycle-packaged" || name === "preparation-packaged"
                 ? "packaged"
                 : name,
         },

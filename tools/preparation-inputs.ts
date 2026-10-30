@@ -128,7 +128,8 @@ const observe = (command: string, args: string[]) =>
   }).trim();
 const binaryIdentity = async (file: string) => {
   const resolved = await realpath(file);
-  return treeDigest(path.dirname(resolved), [path.basename(resolved)]);
+  await treeDigest(path.dirname(resolved), [path.basename(resolved)]);
+  return fileDigests.get(resolved)!.value;
 };
 
 export async function producerIdentity(root: string) {
@@ -176,6 +177,12 @@ export async function producerIdentity(root: string) {
   const environment = Object.fromEntries(
     [
       "NODE_ENV",
+      "NODE_OPTIONS",
+      "ELECTRON_MIRROR",
+      "ELECTRON_CUSTOM_DIR",
+      "ELECTRON_CUSTOM_FILENAME",
+      "ELECTRON_CUSTOM_VERSION",
+      "ELECTRON_GET_USE_PROXY",
       "DEVELOPER_DIR",
       "SDKROOT",
       "MACOSX_DEPLOYMENT_TARGET",
@@ -196,7 +203,15 @@ export async function producerIdentity(root: string) {
     node: process.versions.node,
     nodeBinary: await binaryIdentity(process.execPath),
     pnpm,
-    pnpmBinary: await binaryIdentity(observe("/usr/bin/which", ["pnpm"])),
+    pnpmLauncher: await binaryIdentity(observe("/usr/bin/which", ["pnpm"])),
+    pnpmBinary: await binaryIdentity(
+      observe("pnpm", [
+        "exec",
+        process.execPath,
+        "-p",
+        "process.env.npm_execpath",
+      ]),
+    ),
     versions,
     dependencies: await treeDigest(
       path.join(root, "node_modules"),
@@ -210,17 +225,9 @@ export async function producerIdentity(root: string) {
       compilerSHA256: await binaryIdentity(compiler),
       version: observe("/usr/bin/xcrun", ["swiftc", "--version"]),
       developer: observe("/usr/bin/xcode-select", ["-p"]),
-      sdk: observe("/usr/bin/xcrun", ["--sdk", "macosx", "--show-sdk-path"]),
-      sdkVersion: observe("/usr/bin/xcrun", [
-        "--sdk",
-        "macosx",
-        "--show-sdk-version",
-      ]),
-      sdkBuild: observe("/usr/bin/xcrun", [
-        "--sdk",
-        "macosx",
-        "--show-sdk-build-version",
-      ]),
+      sdk: observe("/usr/bin/xcrun", ["--show-sdk-path"]),
+      sdkVersion: observe("/usr/bin/xcrun", ["--show-sdk-version"]),
+      sdkBuild: observe("/usr/bin/xcrun", ["--show-sdk-build-version"]),
     },
     environment,
     viteEnvironment: digest(
