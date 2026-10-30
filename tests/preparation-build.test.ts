@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
+import { preparationSourceFixture } from "./support/preparation-source-fixture";
 import path from "node:path";
 import {
   borrowPreparedApplication,
@@ -121,4 +122,49 @@ test("changing real build inputs prepares a new generation while an old borrower
       [first.preparationId, second.preparationId].includes(row.preparationId),
   );
   expect(ready).toHaveLength(2);
+});
+
+test("a real native build failure rejects the changed input without destroying a valid generation", async () => {
+  const eventsFile = path.join(
+    process.env.MOSEY_MEASUREMENT_ROOT!,
+    process.env.MOSEY_MEASUREMENT_RUN_ID!,
+    "events.jsonl",
+  );
+  const events = async () =>
+    (await readFile(eventsFile, "utf8"))
+      .split("\n")
+      .slice(0, -1)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+  const before = (await events()).length;
+  const root = await preparationSourceFixture();
+  const owner = await createPreparationRun({ sourceRoot: root });
+  onTestFinished(() => owner.close());
+  const first = await borrowPreparedApplication(owner.locator, "development");
+  onTestFinished(() => first.release());
+  const main = await readFile(
+    path.join(first.appRoot, ".vite/build/main.mjs"),
+    "utf8",
+  );
+  const url = main.match(/http:\/\/localhost:\d+/)?.[0];
+  expect(url).toBeTruthy();
+  const swift = path.join(root, "native/macos/dock-live.swift");
+  const original = await readFile(swift, "utf8");
+  await writeFile(swift, `${original}\nnot_a_swift_declaration(\n`);
+  await expect(
+    borrowPreparedApplication(owner.locator, "development"),
+  ).rejects.toThrow(/Forge exited before readiness/);
+  expect(await (await fetch(url!)).text()).toContain("<title>Mosey</title>");
+  await writeFile(swift, original);
+  const restored = await borrowPreparedApplication(
+    owner.locator,
+    "development",
+  );
+  onTestFinished(() => restored.release());
+  expect(restored.preparationId).toBe(first.preparationId);
+  expect(await (await fetch(url!)).text()).toContain("<title>Mosey</title>");
+  const attempts = (await events())
+    .slice(before)
+    .filter((row) => row.event === "end" && row.phase === "forge.prepare");
+  expect(attempts.map((row) => row.outcome)).toEqual(["passed", "failed"]);
 });
