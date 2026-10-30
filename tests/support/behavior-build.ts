@@ -1,4 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import {
   cp,
@@ -10,7 +13,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { build, version as viteVersion } from "vite";
+
 import { createPackage, extractAll, getRawHeader } from "@electron/asar";
 import ts from "typescript";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
@@ -19,6 +22,7 @@ import { measure, measureSync } from "./measurement";
 const variant = "controlled-behavior-v1";
 const digest = (value: string | Buffer) =>
   createHash("sha256").update(value).digest("hex");
+const transformSHA256 = digest(readFileSync(fileURLToPath(import.meta.url)));
 const controllerBuildOptions = {
   target: "node24",
   minify: false,
@@ -48,12 +52,16 @@ export async function copyBehaviorDevelopmentApp(root: string) {
 export async function instrumentBehaviorApplication({
   root,
   packaged,
+  sourceRoot,
+  parentPreparation,
   options = {},
   evidence = path.resolve("test-results/behavior-builds", randomUUID()),
   signal,
 }: {
   root: string;
   packaged: boolean;
+  sourceRoot?: string;
+  parentPreparation?: string;
   options?: ControlledBehaviorOptions;
   evidence?: string;
   signal?: AbortSignal;
@@ -124,16 +132,28 @@ export async function instrumentBehaviorApplication({
         "Behavior instrumentation requires exactly one pet bootstrap",
       );
     const insertion = bootstraps[0].getStart(parsed) + 1;
-    const inputs: Record<string, string> = {};
+    if (!sourceRoot)
+      throw new Error(
+        "Behavior derivation requires a borrowed preparation source",
+      );
+    const requirePrepared = createRequire(
+      path.join(sourceRoot, "package.json"),
+    );
+    const { build, version: viteVersion }: typeof import("vite") = await import(
+      pathToFileURL(requirePrepared.resolve("vite")).href
+    );
+    const inputs: Record<string, string> = {
+      "tests/support/behavior-build.ts": transformSHA256,
+    };
     for (const file of [
-      "tests/support/behavior-build.ts",
       "tests/support/behavior-controller.ts",
       "src/behavior/adapters.ts",
       "pnpm-lock.yaml",
     ])
-      inputs[file] = digest(await readFile(file));
+      inputs[file] = digest(await readFile(path.join(sourceRoot, file)));
     const identity = {
       variant,
+      parentPreparation,
       mode: packaged ? "packaged" : "development",
       parentMain: digest(original),
       parentArchive: sourceArchive ? digest(sourceArchive) : undefined,
@@ -141,6 +161,7 @@ export async function instrumentBehaviorApplication({
       options,
       controllerBuildOptions,
       viteVersion,
+      typescriptVersion: ts.version,
       nodeVersion: process.versions.node,
       platform: process.platform,
       architecture: process.arch,
@@ -149,6 +170,7 @@ export async function instrumentBehaviorApplication({
     active();
     const built = await measure("behavior.controller-build", {}, () =>
       build({
+        root: sourceRoot,
         configFile: false,
         logLevel: "error",
         build: {
@@ -158,7 +180,10 @@ export async function instrumentBehaviorApplication({
           emptyOutDir: false,
           outDir: path.dirname(entry),
           lib: {
-            entry: path.resolve("tests/support/behavior-controller.ts"),
+            entry: path.join(
+              sourceRoot,
+              "tests/support/behavior-controller.ts",
+            ),
             formats: ["es"],
             fileName: () => "behavior-controller.mjs",
           },

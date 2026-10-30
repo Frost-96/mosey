@@ -1,10 +1,16 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ProducerOperation } from "./dock-producer";
 import { measure } from "./measurement";
+import { preparationSource } from "./preparation-source";
+
+const fixtureTransformSHA256 = createHash("sha256")
+  .update(readFileSync(fileURLToPath(import.meta.url)))
+  .digest("hex");
 
 // A cancelled compile owns its process group until the compiler has exited;
 // its frontend children must not keep writing into an already released cache.
@@ -122,8 +128,12 @@ export async function nativeRuntimeFixture(
       signal?.throwIfAborted();
       return value;
     });
+  const prepared = preparationSource();
   const production = await operation("native-source-read", () =>
-    readFile("native/macos/dock-runtime.swift", "utf8"),
+    readFile(
+      path.join(prepared.sourceRoot, "native/macos/dock-runtime.swift"),
+      "utf8",
+    ),
   );
   const marker = "@main struct DockRuntime {";
   if (production.split(marker).length !== 2)
@@ -246,6 +256,9 @@ export async function nativeRuntimeFixture(
     writeFile(
       path.join(root, "native-source-fixture-receipt.json"),
       JSON.stringify({
+        parentPreparation: prepared.preparationId,
+        productionSource: prepared.sourceId,
+        fixtureTransformSHA256,
         prefixSHA256: createHash("sha256").update(prefix).digest("hex"),
         fixtureSHA256: createHash("sha256")
           .update(prefix + footer)

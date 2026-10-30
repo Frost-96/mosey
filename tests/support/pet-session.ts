@@ -22,6 +22,7 @@ import {
   type PreparationLocator,
 } from "./preparation";
 import { instrumentBehaviorApplication } from "./behavior-build";
+import { withPreparationSource } from "./preparation-source";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
 import { nativeArtifactInventory, type DockProducer } from "./dock-producer";
@@ -629,6 +630,8 @@ export async function createPetTestSession(options: SessionOptions) {
         if (options.behavior) {
           const instrumentation = instrumentBehaviorApplication({
             root: ownedRoot,
+            sourceRoot: prepared.sourceRoot,
+            parentPreparation: prepared.preparationId,
             packaged,
             options: options.behavior,
             evidence,
@@ -707,13 +710,15 @@ export async function createPetTestSession(options: SessionOptions) {
             ),
           );
           await step("producer-scratch", () => mkdir(scratch));
-          const preparing = producer.prepare({
-            root: scratch,
-            evidence,
-            signal: cancellation.signal,
-            run: (label, action, { timeout = 5000 } = {}) =>
-              step(label, action, timeout),
-          });
+          const preparing = withPreparationSource(prepared, () =>
+            producer.prepare({
+              root: scratch,
+              evidence,
+              signal: cancellation.signal,
+              run: (label, action, { timeout = 5000 } = {}) =>
+                step(label, action, timeout),
+            }),
+          );
           acquisitions.add(preparing);
           void preparing.then(
             () => acquisitions.delete(preparing),
