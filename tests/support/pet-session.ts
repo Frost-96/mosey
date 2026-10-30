@@ -1055,7 +1055,10 @@ setInterval(() => {
                 ?.items.find((item) => item.label === "Mosey")
                 ?.submenu?.items.find((item) => item.label === "Quit Mosey");
               if (!item) throw new Error("Missing Quit Mosey menu item");
-              item.click();
+              // Inspector evaluation can interrupt a selected Node timer before
+              // dispatch. Quit clears timers, so enter it from the app's event
+              // loop after that dispatch instead of mutating its callback here.
+              setImmediate(() => item.click());
             }));
         void Promise.resolve()
           .then(() => {
