@@ -9,7 +9,13 @@ import {
 
 validateScenarioInventory();
 
-const projects: TestProject[] = ["deterministic", "development", "packaged"];
+const projects: TestProject[] = [
+  "deterministic",
+  "development",
+  "packaged",
+  "lifecycle-development",
+  "lifecycle-packaged",
+];
 process.env.MOSEY_MEASUREMENT_RUN_ID ??= randomUUID();
 process.env.MOSEY_MEASUREMENT_ROOT ??= path.resolve(
   "test-results/measurements",
@@ -32,7 +38,14 @@ export default defineConfig({
       test: {
         name,
         include: scenarioFiles(name),
-        env: { MOSEY_TEST_MODE: name },
+        env: {
+          MOSEY_TEST_MODE:
+            name === "lifecycle-development"
+              ? "development"
+              : name === "lifecycle-packaged"
+                ? "packaged"
+                : name,
+        },
         testTimeout: 90000,
         hookTimeout: 90000,
         fileParallelism: false,
