@@ -1,6 +1,10 @@
+import {
+  identifyPackage,
+  copyPackageGeneration,
+} from "../../tools/package-consumption";
 import { createServer, request } from "node:http";
 import { randomUUID } from "node:crypto";
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./forge";
@@ -12,6 +16,7 @@ import {
 import {
   copyPreparationInputs,
   digest,
+  installedIdentity,
   producerIdentity,
   sourceIdentity,
   treeDigest,
@@ -68,26 +73,32 @@ export async function createPreparationRun({
   const prepare = (mode: "development" | "packaged") => {
     const acquisition = (async () => {
       cancellation.signal.throwIfAborted();
-      if (mode === "packaged") {
-        try {
-          await readFile(path.join(sourceRoot, "out/package-manifest.json"));
-        } catch (error) {
-          throw new Error(
-            "Package producer manifest is required before borrowing",
-            { cause: error },
-          );
-        }
-      }
-      const inputs = await measure("preparation.identify", {}, async () => ({
-        source: await sourceIdentity(sourceRoot),
-        producer: await producerIdentity(sourceRoot),
-      }));
+      const inputs = await measure("preparation.identify", {}, async () => {
+        const source = await sourceIdentity(sourceRoot);
+        if (mode === "development")
+          return {
+            source,
+            producer: await producerIdentity(sourceRoot),
+            consumer: undefined,
+            packaged: undefined,
+          };
+        const consumer = await installedIdentity(sourceRoot);
+        const packaged = await identifyPackage(sourceRoot, source, consumer);
+        return {
+          source,
+          producer: packaged.manifest.producer,
+          consumer,
+          packaged,
+        };
+      });
       cancellation.signal.throwIfAborted();
       const key = digest(
         JSON.stringify({
           mode,
           source: inputs.source.digest,
           producer: inputs.producer.digest,
+          consumer: inputs.consumer,
+          artifact: inputs.packaged?.manifestSHA256,
         }),
       );
       let work = preparations.get(key);
@@ -102,12 +113,12 @@ export async function createPreparationRun({
                 path.join(generation, "node_modules"),
                 ["."],
                 true,
-              )) !== inputs.producer.dependencies ||
+              )) !== (inputs.consumer ?? inputs.producer).dependencies ||
               (await treeDigest(
                 path.join(sourceRoot, "node_modules"),
                 ["."],
                 true,
-              )) !== inputs.producer.dependencies
+              )) !== (inputs.consumer ?? inputs.producer).dependencies
             )
               throw new Error(
                 "Installed dependencies changed while taking the preparation snapshot",
@@ -142,7 +153,13 @@ export async function createPreparationRun({
           const appRoot =
             mode === "development"
               ? generation
-              : path.join(sourceRoot, "out/Mosey-darwin-arm64/Mosey.app");
+              : await measure("package.consume", {}, () =>
+                  copyPackageGeneration(
+                    generation,
+                    generation,
+                    inputs.packaged!,
+                  ),
+                );
           const manifest = path.join(generation, "preparation.json");
           const receipt = {
             schema: 1,
@@ -156,7 +173,7 @@ export async function createPreparationRun({
                     ".vite/build",
                     "build/native",
                   ])
-                : null,
+                : inputs.packaged!.manifest.artifact.digest,
           };
           await writeFile(manifest, JSON.stringify(receipt, null, 2));
           const evidence = measurementDirectory();

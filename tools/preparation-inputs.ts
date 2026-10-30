@@ -39,6 +39,7 @@ const volatileDependencies = new Set([
   ".vite",
   ".vite-temp",
   ".vitest",
+  ".vitest-cache",
   ".cache",
   ".pnpm-store",
 ]);
@@ -111,7 +112,15 @@ export async function treeDigest(
 export async function sourceIdentity(root: string) {
   const entries = [
     ...productionRoots,
-    ...(await readdir(root)).filter((name) => /^\.env(?:\.|$)/.test(name)),
+    ...(await readdir(root)).filter(
+      (name) =>
+        name === "public" ||
+        /^\.env(?:\.|$)/.test(name) ||
+        /^\.postcssrc(?:\.(?:json|yaml|yml|ts|cts|mts|js|cjs|mjs))?$/.test(
+          name,
+        ) ||
+        /^postcss\.config\.(?:ts|cts|mts|js|cjs|mjs)$/.test(name),
+    ),
   ].sort();
   return {
     schema: "mosey-production-inputs-v1",
@@ -132,7 +141,7 @@ const binaryIdentity = async (file: string) => {
   return fileDigests.get(resolved)!.value;
 };
 
-export async function producerIdentity(root: string) {
+export async function installedIdentity(root: string) {
   const manifest = JSON.parse(
     await readFile(path.join(root, "package.json"), "utf8"),
   );
@@ -173,33 +182,7 @@ export async function producerIdentity(root: string) {
     pnpm !== manifest.engines.pnpm
   )
     throw new Error("Preparation requires the pinned Node and pnpm toolchain");
-  const compiler = observe("/usr/bin/xcrun", ["--find", "swiftc"]);
-  const environment = Object.fromEntries(
-    [
-      "NODE_ENV",
-      "NODE_OPTIONS",
-      "ELECTRON_MIRROR",
-      "ELECTRON_CUSTOM_DIR",
-      "ELECTRON_CUSTOM_FILENAME",
-      "ELECTRON_CUSTOM_VERSION",
-      "ELECTRON_GET_USE_PROXY",
-      "DEVELOPER_DIR",
-      "SDKROOT",
-      "MACOSX_DEPLOYMENT_TARGET",
-      "SWIFT_EXEC",
-      "CC",
-      "CXX",
-      "CFLAGS",
-      "CPPFLAGS",
-      "LDFLAGS",
-      "ARCHFLAGS",
-    ].map((name) => [
-      name,
-      process.env[name] === undefined ? null : digest(process.env[name]!),
-    ]),
-  );
-  const identity = {
-    schema: "mosey-producer-v1",
+  return {
     node: process.versions.node,
     nodeBinary: await binaryIdentity(process.execPath),
     pnpm,
@@ -220,15 +203,54 @@ export async function producerIdentity(root: string) {
     ),
     platform: process.platform,
     architecture: process.arch,
-    native: {
-      compiler: await realpath(compiler),
-      compilerSHA256: await binaryIdentity(compiler),
-      version: observe("/usr/bin/xcrun", ["swiftc", "--version"]),
-      developer: observe("/usr/bin/xcode-select", ["-p"]),
-      sdk: observe("/usr/bin/xcrun", ["--show-sdk-path"]),
-      sdkVersion: observe("/usr/bin/xcrun", ["--show-sdk-version"]),
-      sdkBuild: observe("/usr/bin/xcrun", ["--show-sdk-build-version"]),
-    },
+  };
+}
+
+export const buildEnvironmentKeys = [
+  "NODE_ENV",
+  "NODE_OPTIONS",
+  "ELECTRON_MIRROR",
+  "ELECTRON_CUSTOM_DIR",
+  "ELECTRON_CUSTOM_FILENAME",
+  "ELECTRON_CUSTOM_VERSION",
+  "ELECTRON_GET_USE_PROXY",
+  "DEVELOPER_DIR",
+  "SDKROOT",
+  "MACOSX_DEPLOYMENT_TARGET",
+  "SWIFT_EXEC",
+  "CC",
+  "CXX",
+  "CFLAGS",
+  "CPPFLAGS",
+  "LDFLAGS",
+  "ARCHFLAGS",
+] as const;
+
+export async function nativeToolchainIdentity() {
+  const compiler = observe("/usr/bin/xcrun", ["--find", "swiftc"]);
+  return {
+    compiler: await realpath(compiler),
+    compilerSHA256: await binaryIdentity(compiler),
+    version: observe("/usr/bin/xcrun", ["swiftc", "--version"]),
+    developer: observe("/usr/bin/xcode-select", ["-p"]),
+    sdk: observe("/usr/bin/xcrun", ["--show-sdk-path"]),
+    sdkVersion: observe("/usr/bin/xcrun", ["--show-sdk-version"]),
+    sdkBuild: observe("/usr/bin/xcrun", ["--show-sdk-build-version"]),
+  };
+}
+
+export async function producerIdentity(root: string) {
+  const installed = await installedIdentity(root);
+  const environment = Object.fromEntries(
+    buildEnvironmentKeys.map((name) => [
+      name,
+      process.env[name] === undefined ? null : digest(process.env[name]!),
+    ]),
+  );
+  const identity = {
+    schema: "mosey-producer-v1",
+    ...installed,
+    native: await nativeToolchainIdentity(),
     environment,
     viteEnvironment: digest(
       JSON.stringify(

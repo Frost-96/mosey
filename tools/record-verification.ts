@@ -22,6 +22,8 @@ if (
     "packaged",
     "lifecycle-development",
     "lifecycle-packaged",
+    "preparation",
+    "preparation-packaged",
   ].includes(channel)
 )
   throw new Error(
@@ -31,9 +33,13 @@ const status = process.env.MOSEY_VERIFICATION_STATUS;
 if (!status || !["success", "failure", "cancelled", "skipped"].includes(status))
   throw new Error("MOSEY_VERIFICATION_STATUS must be the actual job status");
 const mode =
-  channel === "development" || channel === "lifecycle-development"
+  channel === "development" ||
+  channel === "lifecycle-development" ||
+  channel === "preparation"
     ? "development"
-    : channel === "packaged" || channel === "lifecycle-packaged"
+    : channel === "packaged" ||
+        channel === "lifecycle-packaged" ||
+        channel === "preparation-packaged"
       ? "packaged"
       : null;
 const application = mode !== null;
@@ -46,6 +52,8 @@ const project = (
     "packaged",
     "lifecycle-development",
     "lifecycle-packaged",
+    "preparation",
+    "preparation-packaged",
   ] as const
 ).find((name) => name === channel);
 const requestedScale = application
@@ -123,21 +131,33 @@ if (application)
       evidenceReadErrors.push({ file, error: String(error) });
     }
   }
-const recordedScaleCoverage = lifecycleHarness
+const preparationHarness =
+  channel === "preparation" || channel === "preparation-packaged";
+const recordedScaleCoverage = preparationHarness
   ? {
       requested: [requestedScale],
       coverage:
-        "scale-independent Quit dispatch; one requested 1x CI run per mode",
-      reason:
-        "Inspector scheduling and normal process exit do not depend on renderer DPR.",
+        "Preparation identity, immutable inputs, ownership and failure isolation; one requested 1x CI run per mode",
       evidence:
-        "Per-test DPR assertion and observedScaleEvidence from progress.jsonl.",
+        "Preparation receipts, real build/output assertions, process/HTTP lifecycle observations and any recorded renderer DPR.",
       limitation:
-        "Lifecycle harness CI jobs exercise only 1x; they do not claim 2x or native-display-scale coverage.",
+        "Preparation harness is separate from the frozen business matrix; it does not claim 2x or native-display-scale coverage.",
     }
-  : application
-    ? scaleCoverage
-    : null;
+  : lifecycleHarness
+    ? {
+        requested: [requestedScale],
+        coverage:
+          "scale-independent Quit dispatch; one requested 1x CI run per mode",
+        reason:
+          "Inspector scheduling and normal process exit do not depend on renderer DPR.",
+        evidence:
+          "Per-test DPR assertion and observedScaleEvidence from progress.jsonl.",
+        limitation:
+          "Lifecycle harness CI jobs exercise only 1x; they do not claim 2x or native-display-scale coverage.",
+      }
+    : application
+      ? scaleCoverage
+      : null;
 const record = {
   commit,
   workflowCommit: process.env.GITHUB_SHA ?? null,

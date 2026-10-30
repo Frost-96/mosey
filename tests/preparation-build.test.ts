@@ -1,7 +1,7 @@
 import { expect, onTestFinished, test } from "vitest";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import { preparationSourceFixture } from "./support/preparation-source-fixture";
 import path from "node:path";
@@ -167,4 +167,79 @@ test("a real native build failure rejects the changed input without destroying a
     .slice(before)
     .filter((row) => row.event === "end" && row.phase === "forge.prepare");
   expect(attempts.map((row) => row.outcome)).toEqual(["passed", "failed"]);
+});
+
+test("public assets and PostCSS changes create a real new server while an existing borrower stays immutable", async () => {
+  const root = await preparationSourceFixture();
+  const owner = await createPreparationRun({ sourceRoot: root });
+  onTestFinished(() => owner.close());
+  await mkdir(path.join(root, "public"));
+  const changeInputs = async (value: string) => {
+    await writeFile(path.join(root, "public/preparation-proof.txt"), value);
+    await writeFile(
+      path.join(root, "postcss.config.mjs"),
+      `export default { plugins: [{ postcssPlugin: "mosey-input-proof", Once(root) { root.append({ selector: ":root", nodes: [{ prop: "--mosey-input-proof", value: "${value}" }] }); } }] };`,
+    );
+  };
+  const borrow = async () => {
+    const lease = await borrowPreparedApplication(owner.locator, "development");
+    onTestFinished(() => lease.release());
+    const main = await readFile(
+      path.join(lease.appRoot, ".vite/build/main.mjs"),
+      "utf8",
+    );
+    const url = main.match(/http:\/\/localhost:\d+/)?.[0];
+    expect(url).toBeTruthy();
+    return { lease, url: url! };
+  };
+  const renderedInputs = async (url: string) => ({
+    asset: await (await fetch(`${url}/preparation-proof.txt`)).text(),
+    css: await (await fetch(`${url}/src/renderer/pet/style.css?direct`)).text(),
+  });
+  await changeInputs("generation-A");
+  const first = await borrow();
+  expect(await renderedInputs(first.url)).toEqual({
+    asset: "generation-A",
+    css: expect.stringContaining("--mosey-input-proof: generation-A"),
+  });
+  await changeInputs("generation-B");
+  expect(await renderedInputs(first.url)).toEqual({
+    asset: "generation-A",
+    css: expect.stringContaining("--mosey-input-proof: generation-A"),
+  });
+  const second = await borrow();
+  expect(second.lease.preparationId).not.toBe(first.lease.preparationId);
+  expect(second.url).not.toBe(first.url);
+  expect(await renderedInputs(second.url)).toEqual({
+    asset: "generation-B",
+    css: expect.stringContaining("--mosey-input-proof: generation-B"),
+  });
+  expect(await renderedInputs(first.url)).toEqual({
+    asset: "generation-A",
+    css: expect.stringContaining("--mosey-input-proof: generation-A"),
+  });
+});
+
+test("Vitest transform cache writes do not replace a running production preparation", async () => {
+  const root = await preparationSourceFixture();
+  const owner = await createPreparationRun({ sourceRoot: root });
+  onTestFinished(() => owner.close());
+  const first = await borrowPreparedApplication(owner.locator, "development");
+  onTestFinished(() => first.release());
+  const main = await readFile(
+    path.join(first.appRoot, ".vite/build/main.mjs"),
+    "utf8",
+  );
+  const url = main.match(/http:\/\/localhost:\d+/)?.[0];
+  expect(url).toBeTruthy();
+  const cache = path.join(root, "node_modules/.vitest-cache");
+  await mkdir(cache, { recursive: true });
+  await writeFile(
+    path.join(cache, "preparation-runner-cache-proof"),
+    "runner transform cache changed",
+  );
+  const next = await borrowPreparedApplication(owner.locator, "development");
+  onTestFinished(() => next.release());
+  expect(next.preparationId).toBe(first.preparationId);
+  expect(await (await fetch(url!)).text()).toContain("<title>Mosey</title>");
 });

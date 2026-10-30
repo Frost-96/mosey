@@ -5,7 +5,10 @@ import path from "node:path";
 // Application groups deliberately run in both modes; scale-independent checks
 // run once. Keep conditional native/development cases inside their test files.
 export const scenarioGroups = {
-  packagePreparation: ["tests/preparation-package.test.ts"],
+  packagePreparation: [
+    "tests/preparation-package.test.ts",
+    "tests/preparation-package-build.test.ts",
+  ],
   preparation: [
     "tests/preparation-session.test.ts",
     "tests/preparation-build.test.ts",

@@ -15,8 +15,8 @@ import {
   recordMeasurement,
 } from "../tests/support/measurement.ts";
 
-const bundleRelative = "out/Mosey-darwin-arm64/Mosey.app";
-const nativeDefinitions = [
+export const bundleRelative = "out/Mosey-darwin-arm64/Mosey.app";
+export const nativeDefinitions = [
   {
     name: "dock-live",
     source: "native/macos/dock-live.swift",
@@ -29,8 +29,8 @@ const nativeDefinitions = [
     receipt: "runtime-receipt.json",
     identifier: "dev.frost.mosey.dock-runtime",
   },
-];
-const nativeFlags = [
+] as const;
+export const nativeFlags = [
   "-O",
   "-target",
   "arm64-apple-macos15.0",
@@ -43,7 +43,7 @@ const command = (executable: string, args: string[]) =>
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 
-function signature(file: string, identifier: string) {
+export function signature(file: string, identifier: string) {
   command("/usr/bin/codesign", ["--verify", "--deep", "--strict", file]);
   const result = spawnSync("/usr/bin/codesign", ["-dvvv", file], {
     encoding: "utf8",

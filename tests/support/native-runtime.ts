@@ -6,6 +6,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ProducerOperation } from "./dock-producer";
 import { measure } from "./measurement";
+import { nativeToolchainIdentity } from "../../tools/preparation-inputs";
 import { preparationSource } from "./preparation-source";
 
 const fixtureTransformSHA256 = createHash("sha256")
@@ -230,6 +231,9 @@ export async function nativeRuntimeFixture(
     writeFile(source, prefix + footer),
   );
   const moduleCache = path.join(root, "swift-module-cache");
+  const toolchain = await operation("native-toolchain", () =>
+    nativeToolchainIdentity(),
+  );
   await operation(
     "native-compile",
     () =>
@@ -264,7 +268,11 @@ export async function nativeRuntimeFixture(
           .update(prefix + footer)
           .digest("hex"),
         binarySHA256: createHash("sha256").update(result).digest("hex"),
-        compiler: { moduleCache, target: "arm64-apple-macos15.0" },
+        compiler: {
+          ...toolchain,
+          moduleCache,
+          target: "arm64-apple-macos15.0",
+        },
         boundary:
           "Synthetic source samples, actual production Receiver and stdout; no real capture",
       }),
