@@ -1,4 +1,4 @@
-import { expect, onTestFinished } from "vitest";
+import { expect, inject, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
@@ -17,7 +17,10 @@ import {
 import os from "node:os";
 import path from "node:path";
 import type { DockObservation } from "../../src/main/platform/dock/runtime-protocol";
-import { startForge } from "./forge";
+import {
+  borrowPreparedApplication,
+  type PreparationLocator,
+} from "./preparation";
 import { instrumentBehaviorApplication } from "./behavior-build";
 import type { ControlledBehaviorOptions } from "./behavior-controller";
 import { observePetRenderer } from "./pet-renderer";
@@ -53,6 +56,7 @@ export type PackagedPlatformOwnership = {
 };
 
 type SessionOptions = {
+  preparation?: PreparationLocator;
   behavior?: ControlledBehaviorOptions;
   signal?: AbortSignal;
   preferences?: unknown;
@@ -92,7 +96,7 @@ export async function createPetTestSession(options: SessionOptions) {
   const testName = expect.getState().currentTestName;
   const measurement = {
     sessionId: path.basename(evidence),
-    preparationId: randomUUID(),
+    preparationId: undefined as string | undefined,
     test: testName,
   };
   const requestedScale = Number(
@@ -522,200 +526,221 @@ export async function createPetTestSession(options: SessionOptions) {
     if (options.signal?.aborted) cancelled();
     active();
     const preparation = measure("session.prepare", measurement, async () => {
-      root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
-      const ownedRoot = root;
-      releases.push(async () => {
-        if (retainRoot) {
-          record("owned-root-retained", { directory: ownedRoot, evidence });
-          return;
-        }
-        await rm(ownedRoot, { recursive: true, force: true });
-      });
-      active();
-      const profile = path.join(root, "profile");
-      await mkdir(profile);
-      active();
-      if (options.preferences !== undefined)
-        await writeFile(
-          path.join(profile, "preferences.json"),
-          JSON.stringify(options.preferences),
+      const locator = options.preparation ?? inject("moseyPreparation");
+      if (!locator)
+        throw new Error(
+          "Application validation requires a run preparation owner",
         );
-
-      const packaged = process.env.MOSEY_TEST_MODE === "packaged";
-      record(
-        "application-variant",
-        options.behavior ? "controlled-behavior-v1" : "production-default",
+      const prepared = await borrowPreparedApplication(
+        locator,
+        process.env.MOSEY_TEST_MODE === "packaged" ? "packaged" : "development",
+        cancellation.signal,
       );
-      mark(packaged ? "copy-package" : "start-forge");
-      if (packaged) {
-        measureSync("session.copy", () =>
-          execFileSync(
-            "/usr/bin/ditto",
-            [
-              path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-              path.join(ownedRoot, "Mosey.app"),
-            ],
-            { timeout: 30000 },
-          ),
-        );
-        await measure("package.observe", {}, async () => {
-          recordMeasurement("package-consumed", {
-            artifactSHA256: createHash("sha256")
-              .update(
-                await readFile(
-                  path.join(ownedRoot, "Mosey.app/Contents/Resources/app.asar"),
-                ),
-              )
-              .digest("hex"),
-          });
-        });
-      } else {
-        releases.push(await startForge({ signal: cancellation.signal }));
-        active();
-        await measure("session.copy", {}, async () => {
-          // app.getAppPath() must resolve inside this session. An existing
-          // developer app must never launch our substituted capture producer.
-          const directory = path.join(ownedRoot, "app");
-          await mkdir(directory);
-          await cp("package.json", path.join(directory, "package.json"));
-          await cp(".vite/build", path.join(directory, ".vite/build"), {
-            recursive: true,
-          });
-          await cp("build/native", path.join(directory, "build/native"), {
-            recursive: true,
-          });
-          await symlink(
-            path.resolve("node_modules"),
-            path.join(directory, "node_modules"),
-            "dir",
-          );
-        });
-      }
-      recordMeasurement("session-artifact", {
-        root,
-        profile,
-        variant: options.behavior
-          ? "controlled-behavior-v1"
-          : "production-default",
-      });
+      releases.push(prepared.release);
+      measurement.preparationId = prepared.preparationId;
       active();
-      if (options.behavior) {
-        const instrumentation = instrumentBehaviorApplication({
-          root: ownedRoot,
-          packaged,
-          options: options.behavior,
-          evidence,
-          signal: cancellation.signal,
+      return measure("session.materialize", measurement, async () => {
+        root = await mkdtemp(path.join(os.tmpdir(), "mosey-pet-session-"));
+        const ownedRoot = root;
+        releases.push(async () => {
+          if (retainRoot) {
+            record("owned-root-retained", { directory: ownedRoot, evidence });
+            return;
+          }
+          await rm(ownedRoot, { recursive: true, force: true });
         });
-        acquisitions.add(instrumentation);
-        void instrumentation.then(
-          () => acquisitions.delete(instrumentation),
-          () => acquisitions.delete(instrumentation),
-        );
-        await step("prepare-behavior", () => instrumentation, 30000);
         active();
-      }
+        const profile = path.join(root, "profile");
+        await mkdir(profile);
+        active();
+        if (options.preferences !== undefined)
+          await writeFile(
+            path.join(profile, "preferences.json"),
+            JSON.stringify(options.preferences),
+          );
 
-      const observation = path.join(root, "dock.json");
-      const native = packaged
-        ? path.join(root, "Mosey.app/Contents/Resources/native")
-        : path.join(root, "app/build/native");
-      const helper = path.join(native, "dock-runtime");
-      if (typeof options.dock === "object") {
-        const producer = options.dock;
-        const scratch = path.join(root, "producer");
-        const shared = async () => ({
-          native: await nativeArtifactInventory("build/native"),
-          cache: await nativeArtifactInventory("build/swift-module-cache"),
-          ...(packaged
-            ? {
-                packaged: await nativeArtifactInventory(
-                  "out/Mosey-darwin-arm64/Mosey.app/Contents/Resources/native",
-                ),
-              }
-            : {}),
-        });
-        const diagnostic = async () => {
-          const files = await nativeArtifactInventory(native);
-          return Object.fromEntries(
-            Object.entries(files).filter(
-              ([file]) =>
-                file !== "dock-runtime" && file !== "runtime-receipt.json",
+        const packaged = prepared.mode === "packaged";
+        record(
+          "application-variant",
+          options.behavior ? "controlled-behavior-v1" : "production-default",
+        );
+        mark(packaged ? "copy-package" : "start-forge");
+        if (packaged) {
+          measureSync("session.copy", () =>
+            execFileSync(
+              "/usr/bin/ditto",
+              [prepared.appRoot, path.join(ownedRoot, "Mosey.app")],
+              { timeout: 30000 },
             ),
           );
-        };
-        const before = await step("producer-shared-inputs", shared);
-        const diagnosticBefore = await step(
-          "producer-diagnostic-identity",
-          diagnostic,
-        );
-        // Register evidence and invariance verification before any fixture
-        // acquisition. This runs before the owned root is removed, on failure too.
-        releases.push(() =>
-          settleOwnership(
-            (async () => {
-              const after = await shared();
-              const diagnosticAfter = await diagnostic();
-              await writeFile(
-                path.join(evidence, "native-isolation.json"),
-                JSON.stringify(
-                  {
-                    producer: producer.name,
-                    before,
-                    after,
-                    diagnosticBefore,
-                    diagnosticAfter,
-                  },
-                  null,
-                  2,
-                ),
-              );
-              expect(
-                after,
-                "producer changed shared prepared native inputs",
-              ).toEqual(before);
-              expect(
-                diagnosticAfter,
-                "producer changed diagnostic identity",
-              ).toEqual(diagnosticBefore);
-            })(),
-          ),
-        );
-        await step("producer-scratch", () => mkdir(scratch));
-        const preparing = producer.prepare({
-          root: scratch,
-          evidence,
-          signal: cancellation.signal,
-          run: (label, action, { timeout = 5000 } = {}) =>
-            step(label, action, timeout),
+          await measure("package.observe", {}, async () => {
+            recordMeasurement("package-consumed", {
+              artifactSHA256: createHash("sha256")
+                .update(
+                  await readFile(
+                    path.join(
+                      ownedRoot,
+                      "Mosey.app/Contents/Resources/app.asar",
+                    ),
+                  ),
+                )
+                .digest("hex"),
+            });
+          });
+        } else {
+          await measure("session.copy", {}, async () => {
+            // app.getAppPath() must resolve inside this session. An existing
+            // developer app must never launch our substituted capture producer.
+            const directory = path.join(ownedRoot, "app");
+            await mkdir(directory);
+            await cp(
+              path.join(prepared.appRoot, "package.json"),
+              path.join(directory, "package.json"),
+            );
+            await cp(
+              path.join(prepared.appRoot, ".vite/build"),
+              path.join(directory, ".vite/build"),
+              {
+                recursive: true,
+              },
+            );
+            await cp(
+              prepared.nativeRoot,
+              path.join(directory, "build/native"),
+              {
+                recursive: true,
+              },
+            );
+            await symlink(
+              prepared.dependencyRoot,
+              path.join(directory, "node_modules"),
+              "dir",
+            );
+          });
+        }
+        recordMeasurement("session-artifact", {
+          root,
+          profile,
+          variant: options.behavior
+            ? "controlled-behavior-v1"
+            : "production-default",
         });
-        acquisitions.add(preparing);
-        void preparing.then(
-          () => acquisitions.delete(preparing),
-          () => acquisitions.delete(preparing),
-        );
-        const bytes = await step(
-          "producer-preparation",
-          () => preparing,
-          60000,
-        );
-        await step("producer-install", () => writeFile(helper, bytes));
-        await step("producer-executable", () => chmod(helper, 0o755));
-        record("producer-installed", {
-          name: producer.name,
-          helper,
-          scratch,
-          sha256: createHash("sha256").update(bytes).digest("hex"),
-          boundary:
-            "Scenario-owned producer; product wire parser remains real; no real capture or permission claim",
-        });
-      } else if (options.dock !== "real") {
-        await writeFile(observation, "null");
-        // Both adapters substitute only a session-local copy; deleting the
-        // owned root also rolls back a partial write or chmod failure.
-        await writeFile(
-          helper,
-          `#!${process.execPath}
+        active();
+        if (options.behavior) {
+          const instrumentation = instrumentBehaviorApplication({
+            root: ownedRoot,
+            packaged,
+            options: options.behavior,
+            evidence,
+            signal: cancellation.signal,
+          });
+          acquisitions.add(instrumentation);
+          void instrumentation.then(
+            () => acquisitions.delete(instrumentation),
+            () => acquisitions.delete(instrumentation),
+          );
+          await step("prepare-behavior", () => instrumentation, 30000);
+          active();
+        }
+
+        const observation = path.join(root, "dock.json");
+        const native = packaged
+          ? path.join(root, "Mosey.app/Contents/Resources/native")
+          : path.join(root, "app/build/native");
+        const helper = path.join(native, "dock-runtime");
+        if (typeof options.dock === "object") {
+          const producer = options.dock;
+          const scratch = path.join(root, "producer");
+          const shared = async () => ({
+            native: await nativeArtifactInventory(prepared.nativeRoot),
+            cache: await nativeArtifactInventory(prepared.cacheRoot),
+            ...(packaged
+              ? {
+                  packaged: await nativeArtifactInventory(prepared.nativeRoot),
+                }
+              : {}),
+          });
+          const diagnostic = async () => {
+            const files = await nativeArtifactInventory(native);
+            return Object.fromEntries(
+              Object.entries(files).filter(
+                ([file]) =>
+                  file !== "dock-runtime" && file !== "runtime-receipt.json",
+              ),
+            );
+          };
+          const before = await step("producer-shared-inputs", shared);
+          const diagnosticBefore = await step(
+            "producer-diagnostic-identity",
+            diagnostic,
+          );
+          // Register evidence and invariance verification before any fixture
+          // acquisition. This runs before the owned root is removed, on failure too.
+          releases.push(() =>
+            settleOwnership(
+              (async () => {
+                const after = await shared();
+                const diagnosticAfter = await diagnostic();
+                await writeFile(
+                  path.join(evidence, "native-isolation.json"),
+                  JSON.stringify(
+                    {
+                      producer: producer.name,
+                      before,
+                      after,
+                      diagnosticBefore,
+                      diagnosticAfter,
+                    },
+                    null,
+                    2,
+                  ),
+                );
+                expect(
+                  after,
+                  "producer changed shared prepared native inputs",
+                ).toEqual(before);
+                expect(
+                  diagnosticAfter,
+                  "producer changed diagnostic identity",
+                ).toEqual(diagnosticBefore);
+              })(),
+            ),
+          );
+          await step("producer-scratch", () => mkdir(scratch));
+          const preparing = producer.prepare({
+            root: scratch,
+            evidence,
+            signal: cancellation.signal,
+            run: (label, action, { timeout = 5000 } = {}) =>
+              step(label, action, timeout),
+          });
+          acquisitions.add(preparing);
+          void preparing.then(
+            () => acquisitions.delete(preparing),
+            () => acquisitions.delete(preparing),
+          );
+          const bytes = await step(
+            "producer-preparation",
+            () => preparing,
+            60000,
+          );
+          await step("producer-install", () => writeFile(helper, bytes));
+          await step("producer-executable", () => chmod(helper, 0o755));
+          record("producer-installed", {
+            name: producer.name,
+            helper,
+            scratch,
+            sha256: createHash("sha256").update(bytes).digest("hex"),
+            boundary:
+              "Scenario-owned producer; product wire parser remains real; no real capture or permission claim",
+          });
+        } else if (options.dock !== "real") {
+          await writeFile(observation, "null");
+          // Both adapters substitute only a session-local copy; deleting the
+          // owned root also rolls back a partial write or chmod failure.
+          await writeFile(
+            helper,
+            `#!${process.execPath}
 import fs from 'node:fs';
 const started = performance.now(); let sequence = 0;
 console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
@@ -724,90 +749,100 @@ setInterval(() => {
   console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:observation?'current':'alpha_empty',observation}));
 }, 50);
 `,
-        );
-        await chmod(helper, 0o755);
-      }
-      let executablePath = packaged
-        ? path.join(root, "Mosey.app/Contents/MacOS/Mosey")
-        : undefined;
-      if (options.isolateAppIdentity) {
-        mark("isolate-app-identity");
-        const bundle = path.join(
-          root,
-          packaged ? "Mosey.app" : "CrashTest.app",
-        );
-        if (!packaged)
-          execFileSync(
-            "/usr/bin/ditto",
-            [path.resolve("node_modules/electron/dist/Electron.app"), bundle],
-            { timeout: 30000 },
           );
-        execFileSync(
-          "/usr/libexec/PlistBuddy",
-          [
-            "-c",
-            `Set :CFBundleIdentifier dev.frost.mosey.fault.${path.basename(root)}`,
-            path.join(bundle, "Contents/Info.plist"),
-          ],
-          { timeout: 5000 },
-        );
-        measureSync("session.sign", () =>
-          execFileSync(
-            "/usr/bin/codesign",
-            ["--force", "--deep", "--sign", "-", bundle],
-            { timeout: 30000 },
-          ),
-        );
-        executablePath = path.join(
-          bundle,
-          "Contents/MacOS",
-          packaged ? "Mosey" : "Electron",
-        );
-      }
-      const platform = options.packagedPlatform;
-      if (platform) {
-        if (!packaged || options.isolateAppIdentity)
-          throw new Error(
-            "Platform ownership requires its own packaged app identity",
+          await chmod(helper, 0o755);
+        }
+        let executablePath = packaged
+          ? path.join(root, "Mosey.app/Contents/MacOS/Mosey")
+          : path.join(
+              prepared.dependencyRoot,
+              "electron/dist/Electron.app/Contents/MacOS/Electron",
+            );
+        if (options.isolateAppIdentity) {
+          mark("isolate-app-identity");
+          const bundle = path.join(
+            root,
+            packaged ? "Mosey.app" : "CrashTest.app",
           );
-        platformArmed = true;
-        // Compensation is installed before any signing/registration attempt.
-        releases.push(() =>
-          platformCleanup("platform-release", async (run) => {
-            await platform.release?.({ run });
-          }),
-        );
-        await platform.prepare?.({
-          bundle: path.join(root, "Mosey.app"),
-          evidence,
-          signal: cancellation.signal,
-          run: (label, action, { timeout = 5000 } = {}) =>
-            step(
-              label,
-              () => {
-                // An aborted OS acquisition may still be completing. Settle it
-                // before compensation can unregister or delete the owned bundle.
-                const operation = action();
-                acquisitions.add(operation);
-                void operation.then(
-                  () => acquisitions.delete(operation),
-                  () => acquisitions.delete(operation),
-                );
-                return operation;
-              },
-              timeout,
+          if (!packaged)
+            execFileSync(
+              "/usr/bin/ditto",
+              [
+                path.join(
+                  prepared.dependencyRoot,
+                  "electron/dist/Electron.app",
+                ),
+                bundle,
+              ],
+              { timeout: 30000 },
+            );
+          execFileSync(
+            "/usr/libexec/PlistBuddy",
+            [
+              "-c",
+              `Set :CFBundleIdentifier dev.frost.mosey.fault.${path.basename(root)}`,
+              path.join(bundle, "Contents/Info.plist"),
+            ],
+            { timeout: 5000 },
+          );
+          measureSync("session.sign", () =>
+            execFileSync(
+              "/usr/bin/codesign",
+              ["--force", "--deep", "--sign", "-", bundle],
+              { timeout: 30000 },
             ),
-        });
-        active();
-      }
+          );
+          executablePath = path.join(
+            bundle,
+            "Contents/MacOS",
+            packaged ? "Mosey" : "Electron",
+          );
+        }
+        const platform = options.packagedPlatform;
+        if (platform) {
+          if (!packaged || options.isolateAppIdentity)
+            throw new Error(
+              "Platform ownership requires its own packaged app identity",
+            );
+          platformArmed = true;
+          // Compensation is installed before any signing/registration attempt.
+          releases.push(() =>
+            platformCleanup("platform-release", async (run) => {
+              await platform.release?.({ run });
+            }),
+          );
+          await platform.prepare?.({
+            bundle: path.join(root, "Mosey.app"),
+            evidence,
+            signal: cancellation.signal,
+            run: (label, action, { timeout = 5000 } = {}) =>
+              step(
+                label,
+                () => {
+                  // An aborted OS acquisition may still be completing. Settle it
+                  // before compensation can unregister or delete the owned bundle.
+                  const operation = action();
+                  acquisitions.add(operation);
+                  void operation.then(
+                    () => acquisitions.delete(operation),
+                    () => acquisitions.delete(operation),
+                  );
+                  return operation;
+                },
+                timeout,
+              ),
+          });
+          active();
+        }
 
-      return {
-        directory: root,
-        profile,
-        packaged,
-        observation,
-        executablePath,
-      };
+        return {
+          directory: root,
+          profile,
+          packaged,
+          observation,
+          executablePath,
+        };
+      });
     });
     pending = preparation;
     const { directory, profile, packaged, observation, executablePath } =
