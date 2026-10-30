@@ -15,7 +15,12 @@ function deferred<T>() {
 }
 
 test("permission-denied cleanup keeps the original failure and can be safely retried", async () => {
-  const session = await createPetTestSession({ dock: "empty" });
+  // A destructive fault must not leave macOS restoration history on the
+  // default application identity used by later independent sessions.
+  const session = await createPetTestSession({
+    dock: "empty",
+    isolateAppIdentity: true,
+  });
   const { app } = await session.launch();
   const child = app.process();
   const original = new Error("original scenario assertion");
@@ -53,7 +58,10 @@ test("permission-denied cleanup keeps the original failure and can be safely ret
 });
 
 test("partial group signalling succeeds only after owned processes exit and leaves unrelated processes alive", async () => {
-  const session = await createPetTestSession({ dock: "empty" });
+  const session = await createPetTestSession({
+    dock: "empty",
+    isolateAppIdentity: true,
+  });
   const { app } = await session.launch();
   const child = app.process();
   const unrelated = spawn(
@@ -114,7 +122,10 @@ test("normal exit succeeds even when the driver acknowledgement never arrives", 
 });
 
 test("a failing requested quit action is rejected before the next independent session", async () => {
-  const session = await createPetTestSession({ dock: "empty" });
+  const session = await createPetTestSession({
+    dock: "empty",
+    isolateAppIdentity: true,
+  });
   const { app } = await session.launch();
   const child = app.process();
   // Fault the public process boundary. A different successful menu command
@@ -177,6 +188,7 @@ test("cancellation during document readiness stops its pending driver call", asy
   const session = await createPetTestSession({
     dock: "empty",
     signal: controller.signal,
+    isolateAppIdentity: true,
   });
   const waiting = deferred<ElectronApplication>();
   const launch = electron.launch.bind(electron);
@@ -208,6 +220,7 @@ test("cancellation adopts a late application and never resumes readiness", async
   const session = await createPetTestSession({
     dock: "empty",
     signal: controller.signal,
+    isolateAppIdentity: true,
   });
   const acquired = deferred<ElectronApplication>();
   const release = deferred<void>();
@@ -237,7 +250,10 @@ test("cancellation adopts a late application and never resumes readiness", async
 });
 
 test("a launch deadline adopts the application when its driver returns late", async () => {
-  const session = await createPetTestSession({ dock: "empty" });
+  const session = await createPetTestSession({
+    dock: "empty",
+    isolateAppIdentity: true,
+  });
   const acquired = deferred<ElectronApplication>();
   const release = deferred<void>();
   const launch = electron.launch.bind(electron);
@@ -264,6 +280,8 @@ test("a launch deadline adopts the application when its driver returns late", as
 });
 
 test("an interaction deadline stops the driver and preserves its first failing stage", async () => {
+  // Keep the default identity: preceding destructive sessions must leave this
+  // application's startup free of their crash-recovery prompts.
   const session = await createPetTestSession({ dock: "empty" });
   const { app } = await session.launch();
   const child = app.process();
@@ -278,10 +296,19 @@ test("an interaction deadline stops the driver and preserves its first failing s
     path.join(session.evidence, "progress.jsonl"),
     "utf8",
   );
-  expect(progress).toContain(
-    '"event":"first-failure","stage":"stalled-interaction"',
-  );
-  expect(progress).toContain(`"pid":${child.pid}`);
+  const firstFailures = progress
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.event === "first-failure");
+  expect(firstFailures).toEqual([
+    expect.objectContaining({
+      stage: "stalled-interaction",
+      processes: expect.arrayContaining([
+        expect.objectContaining({ pid: child.pid }),
+      ]),
+    }),
+  ]);
   await expect(
     session.run("late-interaction", () => app.evaluate(() => 1)),
   ).rejects.toThrow(/closed|cancelled/);
@@ -290,6 +317,7 @@ test("an interaction deadline stops the driver and preserves its first failing s
 test("a stalled second quit cancels later preference writes and launches", async () => {
   const session = await createPetTestSession({
     dock: "empty",
+    isolateAppIdentity: true,
     preferences: {
       version: 3,
       character: "corgi",
