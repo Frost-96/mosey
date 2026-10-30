@@ -37,6 +37,8 @@ const mode =
       ? "packaged"
       : null;
 const application = mode !== null;
+const lifecycleHarness =
+  channel === "lifecycle-development" || channel === "lifecycle-packaged";
 const project = (
   [
     "deterministic",
@@ -121,6 +123,21 @@ if (application)
       evidenceReadErrors.push({ file, error: String(error) });
     }
   }
+const recordedScaleCoverage = lifecycleHarness
+  ? {
+      requested: [requestedScale],
+      coverage:
+        "scale-independent Quit dispatch; one requested 1x CI run per mode",
+      reason:
+        "Inspector scheduling and normal process exit do not depend on renderer DPR.",
+      evidence:
+        "Per-test DPR assertion and observedScaleEvidence from progress.jsonl.",
+      limitation:
+        "Lifecycle harness CI jobs exercise only 1x; they do not claim 2x or native-display-scale coverage.",
+    }
+  : application
+    ? scaleCoverage
+    : null;
 const record = {
   commit,
   workflowCommit: process.env.GITHUB_SHA ?? null,
@@ -144,7 +161,7 @@ const record = {
     ]),
   ),
   scenarioFiles: project ? scenarioFiles(project) : [],
-  scaleCoverage: application ? scaleCoverage : null,
+  scaleCoverage: recordedScaleCoverage,
   observedScaleEvidence,
   measurements,
   scenarioDurations,
@@ -173,7 +190,7 @@ const summary = [
   ...(application
     ? [
         `Observed DPR evidence: ${observedScaleEvidence.length} recorded launch(es); this does not establish coverage for unrecorded launches.`,
-        scaleCoverage.limitation,
+        recordedScaleCoverage?.limitation,
         "",
       ]
     : []),
