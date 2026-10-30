@@ -3,6 +3,7 @@ import { observePetRenderer } from "./pet-renderer";
 import type { ElectronApplication } from "playwright";
 import { autonomy } from "../../src/behavior/pet-machine";
 import type { BehaviorInput } from "./behavior-controller";
+import type { SessionOperation } from "./pet-session";
 
 export function controlBehavior(
   app: ElectronApplication,
@@ -24,10 +25,7 @@ export function controlBehavior(
 export async function advanceRest(
   app: ElectronApplication,
   choice: number,
-  run: <T>(label: string, action: () => Promise<T>) => Promise<T> = (
-    _label,
-    action,
-  ) => action(),
+  run: SessionOperation,
 ) {
   const renderer = observePetRenderer(app);
   await expect

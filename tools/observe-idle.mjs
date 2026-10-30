@@ -1,17 +1,13 @@
-import { _electron } from "playwright";
-import { PNG } from "pngjs";
-import { createHash } from "node:crypto";
+import process from "node:process";
 import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  writeFile,
-  rm,
-  realpath,
-} from "node:fs/promises";
+  createObservationSession,
+  captureObservationEvidence,
+} from "./observation-session.ts";
+import { PNG } from "pngjs";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readFile, writeFile, realpath } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import os from "node:os";
 
 // Observe the packaged application's visible output; no product test hooks.
 // An isolated profile leaves other running Mosey probes untouched.
@@ -19,49 +15,73 @@ const executable = path.resolve(
   "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
 );
 const output = path.resolve("test-results/issue-2-desktop");
-const profile = await mkdtemp(path.join(os.tmpdir(), "mosey-issue2-profile-"));
 const foreground = () => {
   const asn = execFileSync("/usr/bin/lsappinfo", ["front"], {
     encoding: "utf8",
+    timeout: 5000,
   }).trim();
   const info = execFileSync(
     "/usr/bin/lsappinfo",
     ["info", "-only", "bundleID", asn],
-    { encoding: "utf8" },
+    { encoding: "utf8", timeout: 5000 },
   );
   return /bundleID="([^"]+)"/.exec(info)?.[1] ?? "unavailable";
 };
 let app;
 let child;
+let observation;
+let failure;
+const run = (label, action, options) => observation.run(label, action, options);
+const cancellation = new globalThis.AbortController();
+const interrupt = () =>
+  cancellation.abort(new Error("Idle observation interrupted by SIGINT"));
+const terminate = () =>
+  cancellation.abort(new Error("Idle observation interrupted by SIGTERM"));
+process.once("SIGINT", interrupt);
+process.once("SIGTERM", terminate);
 try {
   await mkdir(output, { recursive: true });
-  const before = foreground();
-  app = await _electron.launch({
-    executablePath: executable,
-    args: [`--user-data-dir=${profile}`],
+  observation = await createObservationSession({
+    bundle: path.resolve(executable, "../../.."),
+    evidence: path.join(output, "lifecycle", randomUUID()),
+    inheritEnvironment: true,
+    signal: cancellation.signal,
   });
-  child = app.process();
-  const window = await app.firstWindow();
-  await window.waitForFunction(() => {
-    const canvas = globalThis.document.querySelector("canvas");
-    if (!canvas) return false;
-    const data = canvas
-      .getContext("2d")
-      .getImageData(0, 0, canvas.width, canvas.height).data;
-    return data.some((value, index) => index % 4 === 3 && value >= 128);
-  });
-  const runtime = await app.evaluate(({ app }) => ({
-    electron: globalThis.process.versions.electron,
-    node: globalThis.process.versions.node,
-    userData: app.getPath("userData"),
-  }));
+  const { profile } = observation;
+  const before = await run("foreground-before", async () => foreground());
+  const launched = await observation.launch();
+  app = launched.app;
+  child = launched.child;
+  const window = launched.pet;
+  await run(
+    "window-waitForFunction",
+    () =>
+      window.waitForFunction(() => {
+        const canvas = globalThis.document.querySelector("canvas");
+        if (!canvas) return false;
+        const data = canvas
+          .getContext("2d")
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        return data.some((value, index) => index % 4 === 3 && value >= 128);
+      }),
+    { timeout: 30000 },
+  );
+  const runtime = await run("app-evaluate", () =>
+    app.evaluate(({ app }) => ({
+      electron: globalThis.process.versions.electron,
+      node: globalThis.process.versions.node,
+      userData: app.getPath("userData"),
+    })),
+  );
   if ((await realpath(runtime.userData)) !== (await realpath(profile)))
     throw new Error("Temporary profile isolation was not applied");
   const samples = [];
   const unique = new Map();
   const started = Date.now();
   while (Date.now() - started < 6500) {
-    const bytes = await window.screenshot({ omitBackground: true });
+    const bytes = await run("window-screenshot", () =>
+      window.screenshot({ omitBackground: true }),
+    );
     const png = PNG.sync.read(bytes);
     let left = png.width;
     let right = -1;
@@ -81,7 +101,9 @@ try {
     if (!unique.has(digest)) {
       const frame = unique.size;
       unique.set(digest, frame);
-      await writeFile(path.join(output, `frame-${frame}.png`), bytes);
+      await captureObservationEvidence(() =>
+        writeFile(path.join(output, `frame-${frame}.png`), bytes),
+      );
     }
     samples.push({
       elapsedMs: Date.now() - started,
@@ -96,7 +118,9 @@ try {
     });
     await new Promise((resolve) => globalThis.setTimeout(resolve, 100));
   }
-  const foregroundAfter = foreground();
+  const foregroundAfter = await run("foreground-after", async () =>
+    foreground(),
+  );
   const allGrounded = samples.every(
     (sample) => sample.bottom === sample.height - 1,
   );
@@ -108,11 +132,14 @@ try {
     executable,
     asarSha256: createHash("sha256")
       .update(
-        await readFile(path.resolve(executable, "../../Resources/app.asar")),
+        await run("artifact-digest", () =>
+          readFile(path.resolve(executable, "../../Resources/app.asar")),
+        ),
       )
       .digest("hex"),
     runtime,
     isolatedProfile: true,
+    lifecycleEvidence: observation.evidence,
     foregroundBefore: before,
     foregroundAfter,
     uniqueFrames: unique.size,
@@ -120,12 +147,14 @@ try {
     noHorizontalDrift,
     samples,
   };
-  await app.close();
+  await observation.quit();
   app = undefined;
   report.exitCode = child.exitCode;
-  await writeFile(
-    path.join(output, "idle-cycle.json"),
-    JSON.stringify(report, null, 2) + "\n",
+  await captureObservationEvidence(() =>
+    writeFile(
+      path.join(output, "idle-cycle.json"),
+      JSON.stringify(report, null, 2) + "\n",
+    ),
   );
   globalThis.console.log(
     JSON.stringify(
@@ -154,7 +183,22 @@ try {
     child.exitCode !== 0
   )
     throw new Error("Packaged idle observation failed");
-} finally {
-  await app?.close();
-  await rm(profile, { recursive: true, force: true });
+} catch (error) {
+  failure = error;
 }
+const cleanup = await observation?.close().then(
+  () => undefined,
+  (error) => ({ error }),
+);
+process.off("SIGINT", interrupt);
+process.off("SIGTERM", terminate);
+if (cleanup)
+  failure =
+    failure === undefined
+      ? cleanup.error
+      : new AggregateError(
+          [failure, cleanup.error],
+          "Idle observation and cleanup failed",
+          { cause: failure },
+        );
+if (failure !== undefined) throw failure;
