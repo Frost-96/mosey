@@ -13,7 +13,7 @@ const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 // Observe the real Canvas, independently of atlas metadata and the production
 // geometry. Select interiors with a margin so antialiasing is not the oracle.
 async function paintedPoints(pet: Page, run: SessionOperation) {
-  return run("pet-evaluate", () =>
+  const points = await run("pet-evaluate", () =>
     pet.evaluate(() => {
       const canvas = document.querySelector("canvas")!;
       const pixels = canvas
@@ -53,8 +53,6 @@ async function paintedPoints(pet: Page, run: SessionOperation) {
       for (let y = 0; y < canvas.height; y++)
         for (let x = 0; x < canvas.width; x++)
           if (alpha(x, y) >= 128) bottom = y + 1;
-      if (!body || !transparent)
-        throw new Error("Missing painted/transparent interior");
       return {
         body,
         transparent,
@@ -64,6 +62,13 @@ async function paintedPoints(pet: Page, run: SessionOperation) {
       };
     }),
   );
+  // A valid transport can observe the canvas between clearing and painting.
+  // Keep that readiness assertion outside the cancellation boundary so the
+  // caller's existing bounded poll can wait for its required pixels.
+  const { body, transparent } = points;
+  if (!body || !transparent)
+    throw new Error("Missing painted/transparent interior");
+  return { ...points, body, transparent };
 }
 
 for (const character of ["corgi", "whale"] as const) {
@@ -93,17 +98,21 @@ for (const character of ["corgi", "whale"] as const) {
       );
       if (direction === "left") {
         await advanceRest(app, 0.1, session.run);
+        let points: Awaited<ReturnType<typeof paintedPoints>> | undefined;
         await expect
-          .poll(
-            async () =>
-              (
-                await session.run("pet-evaluate", () =>
-                  pet.evaluate(() => window.mosey.getPresentation()),
-                )
-              ).posture,
-          )
+          .poll(async () => {
+            const presentation = await session.run("pet-evaluate", () =>
+              pet.evaluate(() => window.mosey.getPresentation()),
+            );
+            // Publication can precede its first animation frame. Keep the
+            // original walking budget while waiting for the required hit area.
+            if (presentation.posture === "walking")
+              points = await paintedPoints(pet, session.run);
+            return presentation.posture;
+          })
           .toBe("walking");
-        const { body } = await paintedPoints(pet, session.run);
+        if (!points) throw new Error("Walking did not produce a painted body");
+        const { body } = points;
         await session.run("pet-click", () => pet.mouse.click(body.x, body.y));
       }
       await expect
