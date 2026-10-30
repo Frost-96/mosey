@@ -363,15 +363,16 @@ export async function borrowPreparedApplication(
       },
     };
   } catch (error) {
-    try {
-      await release();
-    } catch (releaseError) {
+    const cleanup = await release().then(
+      () => undefined,
+      (releaseError: unknown) => ({ releaseError }),
+    );
+    if (cleanup)
       throw new AggregateError(
-        [error, releaseError],
+        [error, cleanup.releaseError],
         `Preparation acquisition failed (${String(error)}); late release also failed`,
         { cause: error },
       );
-    }
     throw error;
   } finally {
     if (aborted) signal?.removeEventListener("abort", aborted);

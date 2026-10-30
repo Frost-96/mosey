@@ -43,14 +43,22 @@ export const scenarioGroups = {
     "tests/visibility.test.ts",
   ],
   packagedOnly: ["tests/login-items.test.ts"],
+  lifecycleHarness: ["tests/session-quit-dispatch.test.ts"],
 };
 
 export type TestProject =
-  "deterministic" | "development" | "packaged" | "preparation";
+  | "deterministic"
+  | "development"
+  | "packaged"
+  | "preparation"
+  | "lifecycle-development"
+  | "lifecycle-packaged";
 
 export function scenarioFiles(project: TestProject): string[] {
   if (project === "preparation") return scenarioGroups.preparation;
   if (project === "deterministic") return scenarioGroups.deterministic;
+  if (project === "lifecycle-development" || project === "lifecycle-packaged")
+    return scenarioGroups.lifecycleHarness;
   return [
     ...scenarioGroups.application,
     ...(project === "packaged" ? scenarioGroups.packagedOnly : []),

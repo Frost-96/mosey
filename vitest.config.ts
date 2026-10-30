@@ -14,6 +14,8 @@ const projects: TestProject[] = [
   "development",
   "packaged",
   "preparation",
+  "lifecycle-development",
+  "lifecycle-packaged",
 ];
 process.env.MOSEY_MEASUREMENT_RUN_ID ??= randomUUID();
 process.env.MOSEY_MEASUREMENT_ROOT ??= path.resolve(
@@ -41,7 +43,14 @@ export default defineConfig({
           name === "deterministic"
             ? []
             : ["./tests/support/preparation-setup.ts"],
-        env: { MOSEY_TEST_MODE: name === "preparation" ? "development" : name },
+        env: {
+          MOSEY_TEST_MODE:
+            name === "preparation" || name === "lifecycle-development"
+              ? "development"
+              : name === "lifecycle-packaged"
+                ? "packaged"
+                : name,
+        },
         testTimeout: 90000,
         hookTimeout: 90000,
         fileParallelism: false,
