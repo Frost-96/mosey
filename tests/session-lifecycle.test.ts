@@ -142,6 +142,8 @@ test("a failing requested quit action is rejected before the next independent se
 
   const next = await createPetTestSession({ dock: "empty" });
   const launched = await next.launch();
+  // Retain the real process before Quit can dispose the driver's lookup.
+  const nextChild = launched.app.process();
   expect(
     await next.run("next-visible-pet", () =>
       launched.pet.evaluate(
@@ -150,7 +152,10 @@ test("a failing requested quit action is rejected before the next independent se
     ),
   ).toBe("visible");
   await next.quit();
-  expect(launched.app.process().exitCode).toBe(0);
+  await next.close();
+  expect(nextChild.exitCode).toBe(0);
+  expect(nextChild.signalCode).toBe(null);
+  await expect(readdir(next.profile)).rejects.toMatchObject({ code: "ENOENT" });
 });
 
 test("cancellation during preparation releases its profile and the next session is independent", async () => {
