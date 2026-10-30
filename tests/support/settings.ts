@@ -29,11 +29,12 @@ export async function openSettings(
           );
         if (!candidate) return false;
         try {
-          await run("settings-controls", () =>
-            candidate
-              .getByRole("button", { name: "中（默认）" })
-              .waitFor({ timeout: 1000 }),
+          // A pending DOM is an observation, not a failed session operation.
+          // Keep the existing readiness budget while guarding each driver call.
+          const visible = await run("settings-controls", () =>
+            candidate.getByRole("button", { name: "中（默认）" }).isVisible(),
           );
+          if (!visible) return false;
         } catch (error) {
           if (candidate.isClosed()) return false;
           throw error;

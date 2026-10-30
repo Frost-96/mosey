@@ -100,16 +100,14 @@ test("opening settings tolerates delayed renderer controls within its readiness 
         }
         delayed = true;
         const record = (event: string) =>
-          process
-            .getBuiltinModule("node:fs")
-            .appendFileSync(
-              trace,
-              JSON.stringify({
-                event,
-                at: performance.now(),
-                url: details.url,
-              }) + "\n",
-            );
+          process.getBuiltinModule("node:fs").appendFileSync(
+            trace,
+            JSON.stringify({
+              event,
+              at: performance.now(),
+              url: details.url,
+            }) + "\n",
+          );
         record("held");
         // Delay one real module response after the settings document exists.
         // This is below the existing 15s readiness budget, above the old 1s probe.
