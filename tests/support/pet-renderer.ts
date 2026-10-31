@@ -1,5 +1,6 @@
 import { expect } from "vitest";
 import type { ElectronApplication } from "playwright";
+import type { SessionOperation } from "./pet-session";
 import type { Presentation } from "../../src/shared/contract";
 
 type PetObservation = {
@@ -142,30 +143,37 @@ export function observePetRenderer(app: ElectronApplication) {
         "Renderer crash request did not complete within 5000ms",
       );
     },
-    async withColdImages<T>(action: () => Promise<T>): Promise<T> {
-      await app.evaluate(({ BrowserWindow }) => {
-        const contents = BrowserWindow.getAllWindows().find(
-          (window) => window.getTitle() === "Mosey",
-        )!.webContents;
-        Reflect.set(globalThis, "recoveryImageRequested", false);
-        contents.session.webRequest.onBeforeRequest((details, callback) => {
-          if (
-            details.webContentsId === contents.id &&
-            details.resourceType === "image"
-          ) {
-            Reflect.set(globalThis, "recoveryImageRequested", true);
-            setTimeout(() => callback({ cancel: false }), 2000);
-          } else callback({ cancel: false });
-        });
-      });
+    async withColdImages<T>(
+      action: () => Promise<T>,
+      run: SessionOperation,
+    ): Promise<T> {
+      await run("cold-images-install", () =>
+        app.evaluate(({ BrowserWindow }) => {
+          const contents = BrowserWindow.getAllWindows().find(
+            (window) => window.getTitle() === "Mosey",
+          )!.webContents;
+          Reflect.set(globalThis, "recoveryImageRequested", false);
+          contents.session.webRequest.onBeforeRequest((details, callback) => {
+            if (
+              details.webContentsId === contents.id &&
+              details.resourceType === "image"
+            ) {
+              Reflect.set(globalThis, "recoveryImageRequested", true);
+              setTimeout(() => callback({ cancel: false }), 2000);
+            } else callback({ cancel: false });
+          });
+        }),
+      );
       let outcome: { value: T } | { error: unknown };
       try {
         const result = await action();
         // This checks that the network fault was exercised, not an internal
         // renderer field or a timer call count. Pixels remain the acceptance.
         expect(
-          await app.evaluate(() =>
-            Reflect.get(globalThis, "recoveryImageRequested"),
+          await run("cold-images-observed", () =>
+            app.evaluate(() =>
+              Reflect.get(globalThis, "recoveryImageRequested"),
+            ),
           ),
         ).toBe(true);
         outcome = { value: result };
@@ -173,24 +181,26 @@ export function observePetRenderer(app: ElectronApplication) {
         outcome = { error };
       }
       if (child.exitCode === null && child.signalCode === null) {
-        try {
-          await within(
-            app.evaluate(({ BrowserWindow }) => {
-              BrowserWindow.getAllWindows()
-                .find((window) => window.getTitle() === "Mosey")
-                ?.webContents.session.webRequest.onBeforeRequest(null);
-            }),
-            1000,
-            "Cold image interception cleanup did not finish within 1000ms",
-          );
-        } catch (cleanup) {
+        const cleanup = await within(
+          app.evaluate(({ BrowserWindow }) => {
+            BrowserWindow.getAllWindows()
+              .find((window) => window.getTitle() === "Mosey")
+              ?.webContents.session.webRequest.onBeforeRequest(null);
+          }),
+          1000,
+          "Cold image interception cleanup did not finish within 1000ms",
+        ).then(
+          () => undefined,
+          (error: unknown) => ({ error }),
+        );
+        if (cleanup) {
           if ("error" in outcome)
             throw new AggregateError(
-              [outcome.error, cleanup],
+              [outcome.error, cleanup.error],
               "Cold image action and cleanup failed",
-              { cause: cleanup },
+              { cause: outcome.error },
             );
-          throw cleanup;
+          throw cleanup.error;
         }
       }
       if ("error" in outcome) throw outcome.error;

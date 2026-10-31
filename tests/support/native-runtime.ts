@@ -1,7 +1,116 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { appendFileSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { ProducerOperation } from "./dock-producer";
+import { measure } from "./measurement";
+import { nativeToolchainIdentity } from "../../tools/preparation-inputs";
+import { preparationSource } from "./preparation-source";
+
+const fixtureTransformSHA256 = createHash("sha256")
+  .update(readFileSync(fileURLToPath(import.meta.url)))
+  .digest("hex");
+
+// A cancelled compile owns its process group until the compiler has exited;
+// its frontend children must not keep writing into an already released cache.
+function compileNative(args: string[], journal: string, signal?: AbortSignal) {
+  signal?.throwIfAborted();
+  return measure(
+    "native.fixture-compile",
+    {},
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const compiler = spawn("/usr/bin/xcrun", args, {
+          detached: true,
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        let failure: unknown;
+        let output = "";
+        const record = (event: string, detail?: unknown) => {
+          try {
+            appendFileSync(
+              journal,
+              JSON.stringify({
+                event,
+                pid: compiler.pid,
+                group: compiler.pid,
+                at: Date.now(),
+                ...(detail as object),
+              }) + "\n",
+            );
+          } catch (error) {
+            failure ??= error;
+          }
+        };
+        record("compiler-spawned");
+        const terminate = (reason: unknown) => {
+          failure ??= reason;
+          if (!compiler.pid) return;
+          record("compiler-signal", { signal: "SIGKILL" });
+          try {
+            process.kill(-compiler.pid, "SIGKILL");
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ESRCH")
+              failure = error;
+          }
+        };
+        const cancelled = () => terminate(signal?.reason);
+        const timer = setTimeout(
+          () =>
+            terminate(
+              new Error("Native producer compilation exceeded 45000ms"),
+            ),
+          45000,
+        );
+        signal?.addEventListener("abort", cancelled, { once: true });
+        const capture = (bytes: Buffer) => {
+          output = (output + bytes.toString("utf8")).slice(-32768);
+        };
+        compiler.stdout.on("data", capture);
+        compiler.stderr.on("data", capture);
+        compiler.once("error", (error) => {
+          failure ??= error;
+        });
+        compiler.once("close", (code, exitSignal) => {
+          clearTimeout(timer);
+          signal?.removeEventListener("abort", cancelled);
+          try {
+            const live = compiler.pid
+              ? execFileSync("/bin/ps", ["-axo", "pid=,pgid=,state=,comm="], {
+                  encoding: "utf8",
+                  timeout: 5000,
+                })
+                  .split("\n")
+                  .filter((row) => {
+                    const fields = row.trim().split(/\s+/);
+                    return (
+                      Number(fields[1]) === compiler.pid &&
+                      !fields[2]!.startsWith("Z")
+                    );
+                  })
+              : [];
+            record("compiler-exited", { code, signal: exitSignal, live });
+            if (live.length)
+              failure ??= new Error(
+                `Owned native compiler group survived: ${live.join("; ")}`,
+              );
+          } catch (error) {
+            failure ??= error;
+          }
+          if (failure !== undefined) reject(failure);
+          else if (code !== 0)
+            reject(
+              new Error(
+                `Native producer compilation failed: code=${code}, signal=${exitSignal}\n${output}`,
+              ),
+            );
+          else resolve();
+        });
+      }),
+  );
+}
 
 // The fixture replaces the OS source only. The product Receiver, silhouette,
 // mapping, clocks, process identity and stdout serialization run unchanged.
@@ -10,8 +119,23 @@ export async function nativeRuntimeFixture(
   root: string,
   input: string,
   ledger: string,
+  { run, signal }: { run?: ProducerOperation; signal?: AbortSignal } = {},
 ): Promise<Buffer> {
-  const production = await readFile("native/macos/dock-runtime.swift", "utf8");
+  const operation: ProducerOperation =
+    run ??
+    (async (_label, action) => {
+      signal?.throwIfAborted();
+      const value = await action();
+      signal?.throwIfAborted();
+      return value;
+    });
+  const prepared = preparationSource();
+  const production = await operation("native-source-read", () =>
+    readFile(
+      path.join(prepared.sourceRoot, "native/macos/dock-runtime.swift"),
+      "utf8",
+    ),
+  );
   const marker = "@main struct DockRuntime {";
   if (production.split(marker).length !== 2)
     throw new Error("Native fixture cannot isolate the production entry point");
@@ -103,35 +227,56 @@ export async function nativeRuntimeFixture(
 `;
   const source = path.join(root, "native-source-fixture.swift");
   const binary = path.join(root, "native-source-fixture");
-  await writeFile(source, prefix + footer);
-  execFileSync(
-    "/usr/bin/xcrun",
-    [
-      "swiftc",
-      "-O",
-      "-target",
-      "arm64-apple-macos15.0",
-      "-parse-as-library",
-      "-module-cache-path",
-      path.resolve("build/swift-module-cache"),
-      source,
-      "-o",
-      binary,
-    ],
-    { timeout: 45000, maxBuffer: 32768 },
+  await operation("native-source-write", () =>
+    writeFile(source, prefix + footer),
   );
-  const result = await readFile(binary);
-  await writeFile(
-    path.join(root, "native-source-fixture-receipt.json"),
-    JSON.stringify({
-      prefixSHA256: createHash("sha256").update(prefix).digest("hex"),
-      fixtureSHA256: createHash("sha256")
-        .update(prefix + footer)
-        .digest("hex"),
-      binarySHA256: createHash("sha256").update(result).digest("hex"),
-      boundary:
-        "Synthetic source samples, actual production Receiver and stdout; no real capture",
-    }),
+  const moduleCache = path.join(root, "swift-module-cache");
+  const toolchain = await operation("native-toolchain", () =>
+    nativeToolchainIdentity(),
+  );
+  await operation(
+    "native-compile",
+    () =>
+      compileNative(
+        [
+          "swiftc",
+          "-O",
+          "-target",
+          "arm64-apple-macos15.0",
+          "-parse-as-library",
+          "-module-cache-path",
+          moduleCache,
+          source,
+          "-o",
+          binary,
+        ],
+        `${ledger}.compiler.jsonl`,
+        signal,
+      ),
+    { timeout: 45000 },
+  );
+  const result = await operation("native-binary-read", () => readFile(binary));
+  await operation("native-receipt-write", () =>
+    writeFile(
+      path.join(root, "native-source-fixture-receipt.json"),
+      JSON.stringify({
+        parentPreparation: prepared.preparationId,
+        productionSource: prepared.sourceId,
+        fixtureTransformSHA256,
+        prefixSHA256: createHash("sha256").update(prefix).digest("hex"),
+        fixtureSHA256: createHash("sha256")
+          .update(prefix + footer)
+          .digest("hex"),
+        binarySHA256: createHash("sha256").update(result).digest("hex"),
+        compiler: {
+          ...toolchain,
+          moduleCache,
+          target: "arm64-apple-macos15.0",
+        },
+        boundary:
+          "Synthetic source samples, actual production Receiver and stdout; no real capture",
+      }),
+    ),
   );
   return result;
 }

@@ -5,6 +5,7 @@ import path from "node:path";
 import log from "electron-log/main";
 import { createActor } from "xstate";
 import { Timeline } from "../../behavior/timeline";
+import type { BehaviorAdapter } from "../../behavior/adapters";
 import { petBehavior, autonomy } from "../../behavior/pet-machine";
 import { dockSupport } from "../../behavior/dock-support";
 import {
@@ -22,6 +23,7 @@ import type { DockObservation } from "../platform/dock/runtime";
 import { CharacterSwitch } from "./character-switch";
 
 type Environment = {
+  behavior?: BehaviorAdapter;
   dock: Pick<DockCapture, "start" | "stop">;
   refreshMenus(): void;
   publishSettings(): void;
@@ -34,7 +36,7 @@ export function createPetSession(
   preferences: PreferencesStore,
   environment: Environment,
 ) {
-  const timeline = new Timeline();
+  const timeline = new Timeline(environment.behavior);
   let visibility: Presentation["visibility"] = "hidden";
   let suspended = false;
   let rendererState: "loading" | "ready" | "failed" = "loading";
@@ -116,6 +118,7 @@ export function createPetSession(
     clock: timeline,
     input: {
       now: timeline.now,
+      random: timeline.random,
       walkDurationMs: characters.current.walk?.durationMs,
     },
   }).start();
@@ -329,8 +332,7 @@ export function createPetSession(
           : behavior.getSnapshot().value,
       direction: behavior.getSnapshot().context.direction,
       actionId: behavior.getSnapshot().context.actionId,
-      startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
-      frozenAt: timeline.pausedAt,
+      ...timeline.presentation(behavior.getSnapshot().context.startedAt),
       visibility: suspended ? "hidden" : visibility,
       size: liveSize,
       geometryRevision,

@@ -1,39 +1,21 @@
-import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
+import { test, expect, vi } from "vitest";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { startForge } from "./support/forge";
 import { openSettings, closeSettings } from "./support/settings";
+import { createPetTestSession } from "./support/pet-session";
 
-const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("opening settings waits for confirmed values instead of the initial React view", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-ready-"));
-  let app: ElectronApplication | undefined;
-  let stop: (() => Promise<void>) | undefined;
-  try {
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${path.join(root, "profile")}`],
-          }
-        : { args: [".", `--user-data-dir=${path.join(root, "profile")}`] },
-    );
-    await app.firstWindow();
-    const first = await openSettings(app);
-    const snapshot = await first.evaluate(() => window.moseySettings.get());
-    await closeSettings(app);
-    // Hold incoming settings at the IPC boundary until the native window is
-    // observed visible, then release a non-default size and approval state.
-    await app.evaluate(({ app, ipcMain }, snapshot) => {
+  const session = await createPetTestSession({ dock: "empty" });
+  const { app } = await session.launch();
+  const first = await openSettings(app, { run: session.run });
+  const snapshot = await session.run("settings-readiness:first.evaluate", () =>
+    first.evaluate(() => window.moseySettings.get()),
+  );
+  await closeSettings(app, { run: session.run });
+  // Hold incoming settings at the IPC boundary until the native window is
+  // observed visible, then release a non-default size and approval state.
+  await session.run("settings-readiness:app.evaluate", () =>
+    app.evaluate(({ app, ipcMain }, snapshot) => {
       const pending: (() => void)[] = [];
       let released = false;
       const deliver = (send: () => void) => {
@@ -71,17 +53,104 @@ test("opening settings waits for confirmed values instead of the initial React v
           return visible;
         };
       });
-    }, snapshot);
-    const settings = await openSettings(app);
-    expect(await settings.locator("output").textContent()).toBe("110");
-    expect(await settings.getByRole("checkbox").isChecked()).toBe(false);
-    expect(await settings.getByRole("checkbox").isDisabled()).toBe(true);
-    expect(await settings.locator("#login-status").textContent()).toContain(
-      "等待批准",
+    }, snapshot),
+  );
+  const settings = await openSettings(app, { run: session.run });
+  expect(
+    await session.run("settings-readiness:settings.textContent", () =>
+      settings.locator("output").textContent(),
+    ),
+  ).toBe("110");
+  expect(
+    await session.run("settings-readiness:settings.isChecked", () =>
+      settings.getByRole("checkbox").isChecked(),
+    ),
+  ).toBe(false);
+  expect(
+    await session.run("settings-readiness:settings.isDisabled", () =>
+      settings.getByRole("checkbox").isDisabled(),
+    ),
+  ).toBe(true);
+  expect(
+    await session.run("settings-readiness:settings.textContent", () =>
+      settings.locator("#login-status").textContent(),
+    ),
+  ).toContain("等待批准");
+  await session.quit();
+});
+
+test("a stalled settings close cancels reopening and profile writes while retaining process evidence", async () => {
+  const session = await createPetTestSession({ dock: "empty" });
+  const { app } = await session.launch();
+  await openSettings(app, { run: session.run });
+  const child = app.process();
+  // Stop the native close at the driver boundary. The real application still
+  // belongs to the session, whose cancellation must prevent all later work.
+  const stalled = vi
+    .spyOn(app, "evaluate")
+    .mockImplementationOnce(() => new Promise(() => {}));
+  // Hold real cleanup until the operation's first failure is observed. Its
+  // evidence collection and process exit have their own existing deadlines.
+  let releaseCleanup!: () => void;
+  const cleanupGate = new Promise<void>((resolve) => {
+    releaseCleanup = resolve;
+  });
+  const close = app.close.bind(app);
+  const cleaning = vi.spyOn(app, "close").mockImplementation(async () => {
+    await cleanupGate;
+    await close();
+  });
+  try {
+    const closing = closeSettings(app, {
+      run: (label, action) =>
+        session.run(label, action, {
+          timeout: label === "settings-native-close" ? 100 : 5000,
+        }),
+    });
+    // Observe rejection immediately; assert it after cleanup has been released.
+    void closing.catch(() => {});
+    await expect
+      .poll(
+        async () => {
+          const progress = await readFile(
+            path.join(session.evidence, "progress.jsonl"),
+            "utf8",
+          );
+          return progress
+            .trim()
+            .split("\n")
+            .map((line) => JSON.parse(line))
+            .find((event) => event.event === "first-failure")?.detail;
+        },
+        { timeout: 4000 },
+      )
+      .toContain("settings-native-close did not complete within 100ms");
+    expect(child.exitCode).toBe(null);
+    expect(child.signalCode).toBe(null);
+    releaseCleanup();
+    await expect(closing).rejects.toThrow(
+      /settings-native-close did not complete within 100ms/,
     );
+    await expect(openSettings(app, { run: session.run })).rejects.toThrow(
+      /closed or cancelled/,
+    );
+    await expect(
+      session.writeProfileFile("after-close.json", "unexpected"),
+    ).rejects.toThrow(/closed or cancelled/);
+    expect(child.exitCode !== null || child.signalCode !== null).toBe(true);
+    const evidence = await readFile(
+      path.join(session.evidence, "progress.jsonl"),
+      "utf8",
+    );
+    expect(evidence).toContain('"event":"first-failure"');
+    expect(evidence).toContain(
+      "settings-native-close did not complete within 100ms",
+    );
+    expect(evidence).toContain('"event":"app-exited"');
+    expect(evidence).toContain('"event":"cleanup-complete"');
   } finally {
-    await app?.close();
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    releaseCleanup();
+    cleaning.mockRestore();
+    stalled.mockRestore();
   }
 });

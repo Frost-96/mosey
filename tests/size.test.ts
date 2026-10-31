@@ -1,125 +1,47 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import {
-  mkdtemp,
-  rm,
-  mkdir,
-  writeFile,
-  readFile,
-  chmod,
-  stat,
-} from "node:fs/promises";
+import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import os from "node:os";
 import { chooseSize, openSettings } from "./support/settings";
-import { startForge } from "./support/forge";
-
-const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+import { createPetTestSession } from "./support/pet-session";
 
 test("size menu scales the visible corgi and keeps its feet on the same ground", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-size-"));
-  let app: ElectronApplication | undefined;
-  let stopForge: (() => Promise<void>) | undefined;
-  let dockHelper: string | undefined;
-  let originalDockHelper: Buffer | undefined;
-  let originalDockMode = 0o755;
-  const restoreDockHelper = async () => {
-    if (!packaged && dockHelper && originalDockHelper) {
-      await writeFile(dockHelper, originalDockHelper);
-      await chmod(dockHelper, originalDockMode);
-      const restored = await readFile(dockHelper);
-      const sameBytes = restored.equals(originalDockHelper);
-      await mkdir("test-results", { recursive: true });
-      await writeFile(
-        "test-results/development-size-empty-dock-restoration.json",
-        JSON.stringify({
-          originalSHA256: createHash("sha256")
-            .update(originalDockHelper)
-            .digest("hex"),
-          restoredSHA256: createHash("sha256").update(restored).digest("hex"),
-          sameBytes,
-        }),
-      );
-      if (!sameBytes)
-        throw new Error("Size fixture did not restore Dock helper");
-    }
-  };
-  try {
-    if (!packaged) stopForge = await startForge();
-    if (packaged)
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    // This case measures geometry/input against the ordinary work-area floor.
-    // Substitute only the external OS source with an explicitly empty Dock;
-    // real Dock support is covered separately, without changing desktop settings.
-    dockHelper = packaged
-      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-      : path.resolve("build/native/dock-runtime");
-    if (!packaged) {
-      originalDockHelper = await readFile(dockHelper);
-      originalDockMode = (await stat(dockHelper)).mode & 0o777;
-    }
-    await writeFile(
-      dockHelper,
-      `#!${process.execPath}
-const started = performance.now(); let sequence = 0;
-console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
-process.on('SIGTERM',()=>process.exit(0));
-setInterval(()=>console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:'alpha_empty',observation:null})),100);
-setTimeout(()=>process.exit(0),120000);
-`,
-    );
-    await chmod(dockHelper, 0o755);
-    await mkdir(path.join(root, "profile"), { recursive: true });
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "corgi",
-        size: 160,
-        visibility: "visible",
-      }),
-    );
-    const args = [
-      `--user-data-dir=${path.join(root, "profile")}`,
-      `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
-    ];
-    const launch = () =>
-      electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args,
-            }
-          : { args: [".", ...args] },
-      );
-    app = await launch();
-    let pet = await app.firstWindow();
-    const bounds = () =>
-      app!.evaluate(({ BrowserWindow }) =>
+  const session = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 160,
+      visibility: "visible",
+    },
+  });
+  let { app, pet } = await session.launch();
+  const profile = session.profile;
+  const bounds = () =>
+    session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()
           .find((w) => w.getTitle() === "Mosey")!
           .getBounds(),
-      );
-    const desktop = () =>
-      app!.evaluate(({ BrowserWindow, screen }) => ({
+      ),
+    );
+  const desktop = () =>
+    session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow, screen }) => ({
         bounds: BrowserWindow.getAllWindows()
           .find((w) => w.getTitle() === "Mosey")!
           .getBounds(),
         area: screen.getPrimaryDisplay().workArea,
-      }));
-    const groundDistance = async () => {
-      const { bounds, area } = await desktop();
-      return bounds.y + bounds.height - area.y - area.height;
-    };
-    await pet.waitForLoadState("load");
-    await expect
-      .poll(
-        () =>
+      })),
+    );
+  const groundDistance = async () => {
+    const { bounds, area } = await desktop();
+    return bounds.y + bounds.height - area.y - area.height;
+  };
+  await session.run("pet-waitForLoadState", () => pet.waitForLoadState("load"));
+  await expect
+    .poll(
+      () =>
+        session.run("pet-evaluate", () =>
           pet.evaluate(() => {
             const canvas = document.querySelector("canvas")!;
             return Array.from(
@@ -128,60 +50,69 @@ setTimeout(()=>process.exit(0),120000);
                 .getImageData(0, 0, canvas.width, canvas.height).data,
             ).filter((value, i) => i % 4 === 3 && value > 127).length;
           }),
-        { timeout: 10000 },
-      )
-      .toBeGreaterThan(1500);
-    await expect
-      .poll(() =>
-        app!.evaluate(({ BrowserWindow }) =>
+        ),
+      { timeout: 10000 },
+    )
+    .toBeGreaterThan(1500);
+  await expect
+    .poll(() =>
+      session.run("app-evaluate", () =>
+        app.evaluate(({ BrowserWindow }) =>
           BrowserWindow.getAllWindows()
             .find((w) => w.getTitle() === "Mosey")!
             .isVisible(),
         ),
-      )
-      .toBe(true);
-    // Native visibility can precede the bounded work-area reconciliation.
-    // Require actual startup settlement, still with strict zero distance.
-    await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
-    const choose = (label: string) => chooseSize(app!, label);
-    const invoke = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
+      ),
+    )
+    .toBe(true);
+  // Native visibility can precede the bounded work-area reconciliation.
+  // Require actual startup settlement, still with strict zero distance.
+  await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
+  const choose = (label: string) =>
+    chooseSize(app, label, { run: session.run });
+  const invoke = (label: string) =>
+    session.run("app-evaluate", () =>
+      app.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
           ?.items.find((item) => item.label === "Mosey")
           ?.submenu?.items.find((item) => item.label === label);
         if (!item) throw new Error(`Missing menu item: ${label}`);
         item.click();
-      }, label);
-    const pixels = () =>
+      }, label),
+    );
+  const pixels = () =>
+    session.run("pet-evaluate", () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
         canvas
           .getContext("2d")!
           .getImageData(0, 0, canvas.width, canvas.height);
         return canvas.toDataURL();
-      });
-    for (const [label, side] of [
-      ["Small", 70],
-      ["Large", 240],
-      ["Medium", 160],
-    ] as const) {
-      const before = await desktop();
-      await choose(label);
-      await expect.poll(async () => (await bounds()).width).toBe(side);
-      const after = await desktop();
-      const resized = after.bounds;
-      expect(resized.height).toBe(side);
-      // A display-metrics change legitimately re-grounds the pet. Preserve
-      // its physical foot on size-only changes; always use the current floor.
-      if (JSON.stringify(before.area) === JSON.stringify(after.area)) {
-        expect(resized.x + side / 2).toBe(
-          before.bounds.x + before.bounds.width / 2,
-        );
-        expect(resized.y + side).toBe(before.bounds.y + before.bounds.height);
-      }
-      expect(resized.y + side).toBe(after.area.y + after.area.height);
-      await expect
-        .poll(() =>
+      }),
+    );
+  for (const [label, side] of [
+    ["Small", 70],
+    ["Large", 240],
+    ["Medium", 160],
+  ] as const) {
+    const before = await desktop();
+    await choose(label);
+    await expect.poll(async () => (await bounds()).width).toBe(side);
+    const after = await desktop();
+    const resized = after.bounds;
+    expect(resized.height).toBe(side);
+    // A display-metrics change legitimately re-grounds the pet. Preserve
+    // its physical foot on size-only changes; always use the current floor.
+    if (JSON.stringify(before.area) === JSON.stringify(after.area)) {
+      expect(resized.x + side / 2).toBe(
+        before.bounds.x + before.bounds.width / 2,
+      );
+      expect(resized.y + side).toBe(before.bounds.y + before.bounds.height);
+    }
+    expect(resized.y + side).toBe(after.area.y + after.area.height);
+    await expect
+      .poll(() =>
+        session.run("pet-evaluate", () =>
           pet.evaluate(() => {
             const canvas = document.querySelector("canvas")!;
             const data = canvas
@@ -197,30 +128,48 @@ setTimeout(()=>process.exit(0),120000);
                 }
             return {
               width: canvas.getBoundingClientRect().width,
+              height: canvas.getBoundingClientRect().height,
+              ratio: devicePixelRatio,
+              backingWidth: canvas.width,
+              backingHeight: canvas.height,
               bottom: Math.round((bottom + 1) / devicePixelRatio),
               visible: opaque > 200,
             };
           }),
-        )
-        .toEqual({ width: side, bottom: side, visible: true });
-      await pet.screenshot({
-        path: `test-results/${packaged ? "packaged" : "development"}-size-${label.toLowerCase()}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.png`,
-        omitBackground: true,
+        ),
+      )
+      .toEqual({
+        width: side,
+        height: side,
+        ratio: Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+        backingWidth: side * Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+        backingHeight:
+          side * Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+        bottom: side,
+        visible: true,
       });
-      const idle = new Set<string>();
-      const until = Date.now() + 2150;
-      while (Date.now() < until) {
-        idle.add(await pixels());
-        await new Promise((resolve) => setTimeout(resolve, 60));
-      }
-      // Directed input proves application geometry, not real OS click routing.
-      await pet.mouse.click(0, 0);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      expect(idle.has(await pixels()), `${label} transparent corner`).toBe(
-        true,
-      );
-      for (const target of ["body", "edge"] as const) {
-        const point = await pet.evaluate(
+    await session.run("pet-screenshot", () =>
+      pet.screenshot({
+        path: path.join(
+          session.evidence,
+          `size-${label.toLowerCase()}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.png`,
+        ),
+        omitBackground: true,
+      }),
+    );
+    const idle = new Set<string>();
+    const until = Date.now() + 2150;
+    while (Date.now() < until) {
+      idle.add(await pixels());
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    }
+    // Directed input proves application geometry, not real OS click routing.
+    await session.run("pet-click", () => pet.mouse.click(0, 0));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(idle.has(await pixels()), `${label} transparent corner`).toBe(true);
+    for (const target of ["body", "edge"] as const) {
+      const point = await session.run("pet-evaluate", () =>
+        pet.evaluate(
           ({ side, target }) => {
             const canvas = document.querySelector("canvas")!;
             const pixels = canvas
@@ -234,18 +183,20 @@ setTimeout(()=>process.exit(0),120000);
             throw new Error("No visible body edge");
           },
           { side, target },
-        );
-        await pet.mouse.click(point.x, point.y);
-        await expect
-          .poll(async () => idle.has(await pixels()), { interval: 20 })
-          .toBe(false);
-        await expect
-          .poll(async () => idle.has(await pixels()), { timeout: 5000 })
-          .toBe(true);
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
-      // Keep the directed gesture away from real cursor movement, as #4 does.
-      await app.evaluate(({ BrowserWindow, screen }) => {
+        ),
+      );
+      await session.run("pet-click", () => pet.mouse.click(point.x, point.y));
+      await expect
+        .poll(async () => idle.has(await pixels()), { interval: 20 })
+        .toBe(false);
+      await expect
+        .poll(async () => idle.has(await pixels()), { timeout: 5000 })
+        .toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    // Keep the directed gesture away from real cursor movement, as #4 does.
+    await session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow, screen }) => {
         const pet = BrowserWindow.getAllWindows().find(
           (w) => w.getTitle() === "Mosey",
         )!;
@@ -258,20 +209,24 @@ setTimeout(()=>process.exit(0),120000);
           pet.getBounds().y,
           false,
         );
-      });
-      const ground = await bounds();
-      await pet.mouse.move(side / 2, side * 0.75);
-      await pet.mouse.down();
-      await pet.mouse.move(side / 2, -120, { steps: 5 });
-      await expect
-        .poll(async () => (await bounds()).y)
-        .toBeLessThan(ground.y - 150);
-      await pet.mouse.up();
-      await expect
-        .poll(async () => (await bounds()).y, { interval: 10 })
-        .toBeGreaterThan(ground.y - 150);
-      // Catch the moving body using its visible pixels, including the scaled pose.
-      const point = await pet.evaluate(() => {
+      }),
+    );
+    const ground = await bounds();
+    await session.run("pet-move", () => pet.mouse.move(side / 2, side * 0.75));
+    await session.run("pet-down", () => pet.mouse.down());
+    await session.run("pet-move", () =>
+      pet.mouse.move(side / 2, -120, { steps: 5 }),
+    );
+    await expect
+      .poll(async () => (await bounds()).y)
+      .toBeLessThan(ground.y - 150);
+    await session.run("pet-up", () => pet.mouse.up());
+    await expect
+      .poll(async () => (await bounds()).y, { interval: 10 })
+      .toBeGreaterThan(ground.y - 150);
+    // Catch the moving body using its visible pixels, including the scaled pose.
+    const point = await session.run("pet-evaluate", () =>
+      pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
         const pixels = canvas
           .getContext("2d")!
@@ -281,20 +236,22 @@ setTimeout(()=>process.exit(0),120000);
             if (pixels[(y * canvas.width + x) * 4 + 3] > 250)
               return { x: x / devicePixelRatio, y: y / devicePixelRatio };
         throw new Error("No visible returning body");
-      });
-      await pet.mouse.move(point.x, point.y);
-      await pet.mouse.down();
-      await new Promise((resolve) => setTimeout(resolve, 60));
-      const caught = await bounds();
-      await new Promise((resolve) => setTimeout(resolve, 250));
-      expect(await bounds()).toEqual(caught);
-      await pet.mouse.up();
-      await expect.poll(groundDistance).toBe(0);
-      await expect
-        .poll(async () => idle.has(await pixels()), { timeout: 5000 })
-        .toBe(true);
-      // Place the next size fixture at the current primary work-area center.
-      await app.evaluate(({ BrowserWindow, screen }) => {
+      }),
+    );
+    await session.run("pet-move", () => pet.mouse.move(point.x, point.y));
+    await session.run("pet-down", () => pet.mouse.down());
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const caught = await bounds();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(await bounds()).toEqual(caught);
+    await session.run("pet-up", () => pet.mouse.up());
+    await expect.poll(groundDistance).toBe(0);
+    await expect
+      .poll(async () => idle.has(await pixels()), { timeout: 5000 })
+      .toBe(true);
+    // Place the next size fixture at the current primary work-area center.
+    await session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow, screen }) => {
         const pet = BrowserWindow.getAllWindows().find(
           (w) => w.getTitle() === "Mosey",
         )!;
@@ -305,66 +262,68 @@ setTimeout(()=>process.exit(0),120000);
           bounds.y,
           false,
         );
-      });
-    }
-    // Resize a captured pet in the air: preserve the physical foot, release the
-    // old capture, and let the return finish with the new ground geometry.
-    const beforeLift = await bounds();
-    await pet.mouse.move(80, 120);
-    await pet.mouse.down();
-    // One client-space move makes one 150-DIP screen-space displacement.
-    // Interpolated client moves would compound as the native window follows,
-    // reaching the work-area ceiling on smaller CI displays.
-    await pet.mouse.move(80, -30);
-    await expect
-      .poll(async () => (await bounds()).y)
-      .toBeLessThan(beforeLift.y - 100);
-    const held = await bounds();
-    await choose("Large");
-    const resizedHeld = await bounds();
-    expect(resizedHeld.x + resizedHeld.width / 2).toBe(held.x + held.width / 2);
-    expect(resizedHeld.y + resizedHeld.height).toBe(held.y + held.height);
-    await new Promise((resolve) => setTimeout(resolve, 80));
-    await pet.mouse.move(-500, -500);
-    await pet.mouse.up();
-    expect(await bounds()).toEqual(resizedHeld);
-    await expect
-      .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
-      .toBeGreaterThan(resizedHeld.y + 10);
-    // Include driver delay without counting ongoing falling as a resize jump.
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    // Measure the resize itself in one main-process turn. Separate driver
-    // round trips include legitimate falling motion under scheduler load.
-    const { before: falling, after: resizedFalling } = await choose("Small");
-    expect(resizedFalling.width).toBe(70);
-    expect(resizedFalling.x + resizedFalling.width / 2).toBe(
-      falling.x + falling.width / 2,
+      }),
     );
-    expect(
-      Math.abs(
-        resizedFalling.y + resizedFalling.height - falling.y - falling.height,
-      ),
-    ).toBeLessThan(30);
-    await expect.poll(groundDistance, { timeout: 4000 }).toBe(0);
-    // A size write while hidden must retain hidden intent across restart.
-    await invoke("Hide Mosey");
-    await choose("Large");
-    await app.close();
-    app = await launch();
-    pet = await app.firstWindow();
-    await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(240);
-    expect(
-      await app.evaluate(({ BrowserWindow }) =>
+  }
+  // Resize a captured pet in the air: preserve the physical foot, release the
+  // old capture, and let the return finish with the new ground geometry.
+  const beforeLift = await bounds();
+  await session.run("pet-move", () => pet.mouse.move(80, 120));
+  await session.run("pet-down", () => pet.mouse.down());
+  // One client-space move makes one 150-DIP screen-space displacement.
+  // Interpolated client moves would compound as the native window follows,
+  // reaching the work-area ceiling on smaller CI displays.
+  await session.run("pet-move", () => pet.mouse.move(80, -30));
+  await expect
+    .poll(async () => (await bounds()).y)
+    .toBeLessThan(beforeLift.y - 100);
+  const held = await bounds();
+  await choose("Large");
+  const resizedHeld = await bounds();
+  expect(resizedHeld.x + resizedHeld.width / 2).toBe(held.x + held.width / 2);
+  expect(resizedHeld.y + resizedHeld.height).toBe(held.y + held.height);
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  await session.run("pet-move", () => pet.mouse.move(-500, -500));
+  await session.run("pet-up", () => pet.mouse.up());
+  expect(await bounds()).toEqual(resizedHeld);
+  await expect
+    .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
+    .toBeGreaterThan(resizedHeld.y + 10);
+  // Include driver delay without counting ongoing falling as a resize jump.
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  // Measure the resize itself in one main-process turn. Separate driver
+  // round trips include legitimate falling motion under scheduler load.
+  const { before: falling, after: resizedFalling } = await choose("Small");
+  expect(resizedFalling.width).toBe(70);
+  expect(resizedFalling.x + resizedFalling.width / 2).toBe(
+    falling.x + falling.width / 2,
+  );
+  expect(
+    Math.abs(
+      resizedFalling.y + resizedFalling.height - falling.y - falling.height,
+    ),
+  ).toBeLessThan(30);
+  await expect.poll(groundDistance, { timeout: 4000 }).toBe(0);
+  // A size write while hidden must retain hidden intent across restart.
+  await invoke("Hide Mosey");
+  await choose("Large");
+  await session.quit();
+  ({ app, pet } = await session.launch());
+  expect((await bounds()).width).toBe(240);
+  expect(
+    await session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()
           .find((w) => w.getTitle() === "Mosey")!
           .isVisible(),
       ),
-    ).toBe(false);
-    await invoke("Show Mosey");
-    await expect
-      .poll(
-        () =>
+    ),
+  ).toBe(false);
+  await invoke("Show Mosey");
+  await expect
+    .poll(
+      () =>
+        session.run("pet-evaluate", () =>
           pet.evaluate(() => {
             const canvas = document.querySelector("canvas")!;
             return Array.from(
@@ -373,71 +332,58 @@ setTimeout(()=>process.exit(0),120000);
                 .getImageData(0, 0, canvas.width, canvas.height).data,
             ).filter((value, i) => i % 4 === 3 && value > 127).length;
           }),
-        { timeout: 10000 },
-      )
-      .toBeGreaterThan(1500);
-    // Restart must recompute the current primary floor; its work area may
-    // legitimately differ from the previous process by even one desktop point.
-    const { bounds: stable, area: restoredArea } = await desktop();
-    expect(stable.y + stable.height).toBe(restoredArea.y + restoredArea.height);
-    await app.close();
-    app = undefined;
-    const profile = path.join(root, "profile");
-    // The previous validated choice survives interrupted and corrupt primary writes.
-    await writeFile(path.join(profile, "preferences.json"), "broken");
-    await writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1');
-    app = await launch();
-    pet = await app.firstWindow();
-    await pet.waitForLoadState("load");
-    expect((await bounds()).width).toBe(240);
-    expect(
-      await app.evaluate(({ BrowserWindow }) =>
+        ),
+      { timeout: 10000 },
+    )
+    .toBeGreaterThan(1500);
+  // Restart must recompute the current primary floor; its work area may
+  // legitimately differ from the previous process by even one desktop point.
+  const { bounds: stable, area: restoredArea } = await desktop();
+  expect(stable.y + stable.height).toBe(restoredArea.y + restoredArea.height);
+  await session.quit();
+  // The previous validated choice survives interrupted and corrupt primary writes.
+  await session.run("writeFile", () =>
+    writeFile(path.join(profile, "preferences.json"), "broken"),
+  );
+  await session.run("writeFile", () =>
+    writeFile(path.join(profile, "preferences.json.tmp"), '{"version":1'),
+  );
+  ({ app, pet } = await session.launch());
+  expect((await bounds()).width).toBe(240);
+  expect(
+    await session.run("app-evaluate", () =>
+      app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()
           .find((w) => w.getTitle() === "Mosey")!
           .isVisible(),
       ),
-    ).toBe(false);
-    await invoke("Show Mosey");
-    await app.close();
-    app = undefined;
-    await rm(path.join(profile, "preferences.json"));
-    await mkdir(path.join(profile, "preferences.json"));
-    app = await launch();
-    pet = await app.firstWindow();
-    await pet.waitForLoadState("load");
-    await choose("Small");
-    expect((await bounds()).width).toBe(240);
-    const settings = await openSettings(app);
-    expect(
-      await settings
+    ),
+  ).toBe(false);
+  await invoke("Show Mosey");
+  await session.quit();
+  await session.run("rm", () => rm(path.join(profile, "preferences.json")));
+  await session.run("mkdir", () =>
+    mkdir(path.join(profile, "preferences.json")),
+  );
+  ({ app, pet } = await session.launch());
+  await choose("Small");
+  expect((await bounds()).width).toBe(240);
+  const settings = await openSettings(app, { run: session.run });
+  expect(
+    await session.run("settings-getAttribute", () =>
+      settings
         .getByRole("button", { name: "大", exact: true })
         .getAttribute("aria-pressed"),
-    ).toBe("true");
-    const logPath = await app.evaluate(({ app }) =>
+    ),
+  ).toBe("true");
+  const logPath = await session.run("app-evaluate", () =>
+    app.evaluate(({ app }) =>
       process
         .getBuiltinModule("node:path")
         .join(app.getPath("logs"), "main.log"),
-    );
-    expect(await readFile(logPath, "utf8")).toContain(
-      "Unable to save pet size",
-    );
-  } catch (error) {
-    await mkdir("test-results", { recursive: true });
-    await app
-      ?.windows()[0]
-      ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-size.png`,
-        timeout: 3000,
-      })
-      .catch(() => {});
-    throw error;
-  } finally {
-    await app?.close().catch(() => {});
-    try {
-      await restoreDockHelper();
-    } finally {
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
-    }
-  }
+    ),
+  );
+  expect(
+    await session.run("readFile", () => readFile(logPath, "utf8")),
+  ).toContain("Unable to save pet size");
 });

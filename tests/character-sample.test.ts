@@ -1,3 +1,4 @@
+import { controlBehavior, advanceRest } from "./support/controlled-behavior";
 import { test, expect } from "vitest";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
@@ -11,6 +12,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
   await mkdir("test-results", { recursive: true });
   const session = await createPetTestSession({
     dock: "empty",
+    behavior: { random: 0.1 },
     preferences: {
       version: 3,
       character: "whale",
@@ -28,11 +30,11 @@ test("selected whale paints one character, walks, yields to dragging and returns
         }
       : {}),
   });
-  try {
-    const { app, pet } = await session.launch();
-    const errors: string[] = [];
-    pet.on("pageerror", (error) => errors.push(error.message));
-    const painted = () =>
+  const { app, pet } = await session.launch();
+  const errors: string[] = [];
+  pet.on("pageerror", (error) => errors.push(error.message));
+  const painted = () =>
+    session.run("pet-evaluate", () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
         const data = canvas
@@ -47,39 +49,45 @@ test("selected whale paints one character, walks, yields to dragging and returns
               blue++;
           }
         return { blue, opaque, pixels: canvas.toDataURL() };
-      });
-    await expect
-      .poll(async () => (await painted()).blue, { timeout: 10000 })
-      .toBeGreaterThan(600);
-    const windowState = () =>
+      }),
+    );
+  await expect
+    .poll(async () => (await painted()).blue, { timeout: 10000 })
+    .toBeGreaterThan(600);
+  const windowState = () =>
+    session.run("app-evaluate", () =>
       app!.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows().map((window) => ({
           bounds: window.getBounds(),
           visible: window.isVisible(),
         })),
-      );
-    expect(await windowState()).toHaveLength(1);
-    const idle = new Set<string>();
-    const until = Date.now() + 3000;
-    while (Date.now() < until) {
-      idle.add((await painted()).pixels);
-      await new Promise((resolve) => setTimeout(resolve, 70));
-    }
-    expect(idle.size).toBeGreaterThan(1);
-    await pet.screenshot({
+      ),
+    );
+  expect(await windowState()).toHaveLength(1);
+  const idle = new Set<string>();
+  const until = Date.now() + 3000;
+  while (Date.now() < until) {
+    idle.add((await painted()).pixels);
+    await new Promise((resolve) => setTimeout(resolve, 70));
+  }
+  expect(idle.size).toBeGreaterThan(1);
+  await session.run("pet-screenshot", () =>
+    pet.screenshot({
       path: `test-results/${evidence}-whale-idle.png`,
       omitBackground: true,
-    });
-    const responseFrames = new Set<string>();
-    for (const [choice, response] of [
-      [0.1, "curious"],
-      [0.4, "wave"],
-      [0.9, "greeting"],
-    ] as const) {
-      await app.evaluate((_electron, choice) => {
-        Math.random = () => choice;
-      }, choice);
-      const point = await pet.evaluate(() => {
+    }),
+  );
+  const responseFrames = new Set<string>();
+  for (const [choice, response] of [
+    [0.1, "curious"],
+    [0.4, "wave"],
+    [0.9, "greeting"],
+  ] as const) {
+    await session.run("controlBehavior", () =>
+      controlBehavior(app, { random: choice }),
+    );
+    const point = await session.run("pet-evaluate", () =>
+      pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
         const data = canvas
           .getContext("2d")!
@@ -93,99 +101,100 @@ test("selected whale paints one character, walks, yields to dragging and returns
           if (data[(y * canvas.width + x) * 4 + 3]! >= 200)
             return { x: x / devicePixelRatio, y: y / devicePixelRatio };
         throw new Error("No painted body for click");
-      });
-      await pet.mouse.click(point.x, point.y);
-      await expect
-        .poll(async () => idle.has((await painted()).pixels), {
-          timeout: 1000,
-          interval: 20,
-        })
-        .toBe(false);
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      responseFrames.add((await painted()).pixels);
-      await pet.screenshot({
+      }),
+    );
+    await session.run("pet-click", () => pet.mouse.click(point.x, point.y));
+    await expect
+      .poll(async () => idle.has((await painted()).pixels), {
+        timeout: 1000,
+        interval: 20,
+      })
+      .toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    responseFrames.add((await painted()).pixels);
+    await session.run("pet-screenshot", () =>
+      pet.screenshot({
         path: `test-results/${evidence}-whale-${response}.png`,
         omitBackground: true,
-      });
-      for (let click = 0; click < 3; click++)
-        await pet.mouse.click(point.x, point.y);
-      await expect
-        .poll(async () => idle.has((await painted()).pixels), {
-          timeout: 2500,
-          interval: 30,
-        })
-        .toBe(true);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-    expect(responseFrames.size).toBe(3);
-    const menu = (label: string) =>
+      }),
+    );
+    for (let click = 0; click < 3; click++)
+      await session.run("pet-click", () => pet.mouse.click(point.x, point.y));
+    await expect
+      .poll(async () => idle.has((await painted()).pixels), {
+        timeout: 2500,
+        interval: 30,
+      })
+      .toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  expect(responseFrames.size).toBe(3);
+  const menu = (label: string) =>
+    session.run("app-evaluate", () =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
           ?.items.find((entry) => entry.label === "Mosey")
           ?.submenu?.items.find((entry) => entry.label === label);
         if (!item) throw new Error(`Missing menu item: ${label}`);
         item.click();
-      }, label);
-    // Only shorten the external rest clock; animation and desktop movement stay real-time.
-    await app.evaluate(() => {
-      Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 500 : delay,
-          ...args,
-        )) as typeof setTimeout;
-    });
-    await menu("Hide Mosey");
-    await expect
-      .poll(async () => (await windowState())[0]!.visible)
-      .toBe(false);
-    await menu("Show Mosey");
-    await expect.poll(async () => (await windowState())[0]!.visible).toBe(true);
-    const origin = (await windowState())[0]!.bounds;
-    await expect
-      .poll(
-        async () => Math.abs((await windowState())[0]!.bounds.x - origin.x),
-        { timeout: 5000, interval: 30 },
-      )
-      .toBeGreaterThan(15);
-    const moving = (await windowState())[0]!.bounds;
-    expect(moving.y).toBe(origin.y);
-    expect(moving.width).toBe(160);
-    expect(idle.has((await painted()).pixels)).toBe(false);
-    await pet.screenshot({
+      }, label),
+    );
+  await session.run("controlBehavior", () =>
+    controlBehavior(app, { random: 0.1 }),
+  );
+  await menu("Hide Mosey");
+  await expect.poll(async () => (await windowState())[0]!.visible).toBe(false);
+  await menu("Show Mosey");
+  await expect.poll(async () => (await windowState())[0]!.visible).toBe(true);
+  const origin = (await windowState())[0]!.bounds;
+  await advanceRest(app, 0.1, session.run);
+  await expect
+    .poll(async () => Math.abs((await windowState())[0]!.bounds.x - origin.x), {
+      timeout: 5000,
+      interval: 30,
+    })
+    .toBeGreaterThan(15);
+  const moving = (await windowState())[0]!.bounds;
+  expect(moving.y).toBe(origin.y);
+  expect(moving.width).toBe(160);
+  expect(idle.has((await painted()).pixels)).toBe(false);
+  await session.run("pet-screenshot", () =>
+    pet.screenshot({
       path: `test-results/${evidence}-whale-walking.png`,
       omitBackground: true,
-    });
-    if (process.env.MOSEY_RECORD_SAMPLE === "1") {
-      const frames = [];
-      const began = performance.now();
-      while (performance.now() - began < 3000) {
-        const [windows, pixels] = await Promise.all([windowState(), painted()]);
-        frames.push({
-          at: performance.now() - began,
-          bounds: windows[0]!.bounds,
-          pixels: pixels.pixels,
-        });
-        await new Promise((resolve) => setTimeout(resolve, 33));
-      }
-      await writeFile(
+    }),
+  );
+  if (process.env.MOSEY_RECORD_SAMPLE === "1") {
+    const frames: {
+      at: number;
+      bounds: Awaited<ReturnType<typeof windowState>>[number]["bounds"];
+      pixels: string;
+    }[] = [];
+    const began = performance.now();
+    while (performance.now() - began < 3000) {
+      const [windows, pixels] = await Promise.all([windowState(), painted()]);
+      frames.push({
+        at: performance.now() - began,
+        bounds: windows[0]!.bounds,
+        pixels: pixels.pixels,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 33));
+    }
+    await session.run("writeFile", () =>
+      writeFile(
         `test-results/${evidence}-whale-recording.json`,
         JSON.stringify({
           scope:
             "Real Electron canvas and native window bounds sampled at recorded elapsed times; not a desktop screen recording.",
           frames,
         }),
-      );
-    }
-    // Directed input checks that hit geometry follows the painted whale. Actual
-    // cross-application pointer routing remains a separate desktop acceptance.
-    await app.evaluate(({ BrowserWindow, screen }) => {
+      ),
+    );
+  }
+  // Directed input checks that hit geometry follows the painted whale. Actual
+  // cross-application pointer routing remains a separate desktop acceptance.
+  await session.run("app-evaluate", () =>
+    app.evaluate(({ BrowserWindow, screen }) => {
       const pet = BrowserWindow.getAllWindows()[0]!;
       const area = screen.getPrimaryDisplay().workArea;
       const pointer = screen.getCursorScreenPoint();
@@ -196,10 +205,12 @@ test("selected whale paints one character, walks, yields to dragging and returns
         pet.getBounds().y,
         false,
       );
-    });
-    // Let native hover settle before directed capture starts at its new location.
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const body = await pet.evaluate(() => {
+    }),
+  );
+  // Let native hover settle before directed capture starts at its new location.
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const body = await session.run("pet-evaluate", () =>
+    pet.evaluate(() => {
       const canvas = document.querySelector("canvas")!;
       const data = canvas
         .getContext("2d")!
@@ -214,45 +225,52 @@ test("selected whale paints one character, walks, yields to dragging and returns
             return { x: x / devicePixelRatio, y: y / devicePixelRatio };
       }
       throw new Error("No visible body at the sampled row");
-    });
-    await pet.mouse.move(body.x, body.y);
-    await pet.mouse.down();
-    const held = (await windowState())[0]!.bounds;
-    await pet.mouse.move(body.x, body.y - 30, { steps: 3 });
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    await expect
-      .poll(async () => (await windowState())[0]!.bounds.y)
-      .toBeLessThan(held.y - 20);
-    await pet.mouse.up();
-    await expect
-      .poll(() => distanceFromGround(app!), { timeout: 5000 })
-      .toBe(0);
-    for (const [label, size] of [
-      ["Small", 70],
-      ["Large", 240],
-    ] as const) {
-      await app.evaluate(({ Menu }, label) => {
+    }),
+  );
+  await session.run("pet-move", () => pet.mouse.move(body.x, body.y));
+  await session.run("pet-down", () => pet.mouse.down());
+  const held = (await windowState())[0]!.bounds;
+  await session.run("pet-move", () =>
+    pet.mouse.move(body.x, body.y - 30, { steps: 3 }),
+  );
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await expect
+    .poll(async () => (await windowState())[0]!.bounds.y)
+    .toBeLessThan(held.y - 20);
+  await session.run("pet-up", () => pet.mouse.up());
+  await expect
+    .poll(
+      () => session.run("distanceFromGround", () => distanceFromGround(app!)),
+      { timeout: 5000 },
+    )
+    .toBe(0);
+  for (const [label, size] of [
+    ["Small", 70],
+    ["Large", 240],
+  ] as const) {
+    await session.run("app-evaluate", () =>
+      app.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
           ?.items.find((entry) => entry.label === "Mosey")
           ?.submenu?.items.find((entry) => entry.label === "Pet Size")
           ?.submenu?.items.find((entry) => entry.label === label);
         if (!item) throw new Error(`Missing size: ${label}`);
         item.click();
-      }, label);
-      await expect
-        .poll(async () => (await windowState())[0]!.bounds.width)
-        .toBe(size);
-      await expect
-        .poll(async () => (await painted()).blue)
-        .toBeGreaterThan(size === 70 ? 100 : 1000);
-      expect(await windowState()).toHaveLength(1);
-      await pet.screenshot({
+      }, label),
+    );
+    await expect
+      .poll(async () => (await windowState())[0]!.bounds.width)
+      .toBe(size);
+    await expect
+      .poll(async () => (await painted()).blue)
+      .toBeGreaterThan(size === 70 ? 100 : 1000);
+    expect(await windowState()).toHaveLength(1);
+    await session.run("pet-screenshot", () =>
+      pet.screenshot({
         path: `test-results/${evidence}-whale-${size}.png`,
         omitBackground: true,
-      });
-    }
-    expect(errors).toEqual([]);
-  } finally {
-    await session.close();
+      }),
+    );
   }
+  expect(errors).toEqual([]);
 });
