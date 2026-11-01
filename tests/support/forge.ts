@@ -71,6 +71,7 @@ export async function startForge({
       if (server?.pid) {
         const child = server;
         const signalled = new Map<NodeJS.Signals, Set<number>>();
+        const permissionErrors = new Set<unknown>();
         const signalMembers = (value: NodeJS.Signals) => {
           const members = observe();
           recordMeasurement("forge-owned-processes", {
@@ -82,13 +83,27 @@ export async function startForge({
           signalled.set(value, groups);
           for (const group of new Set(members.map((member) => member.group))) {
             if (groups.has(group)) continue;
-            if (
-              signalProcessGroup(
-                members.filter((member) => member.group === group),
-                value,
+            try {
+              if (
+                signalProcessGroup(
+                  members.filter((member) => member.group === group),
+                  value,
+                )
               )
-            )
-              groups.add(group);
+                groups.add(group);
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "EPERM")
+                throw error;
+              permissionErrors.add(error);
+              // A group signal can take effect and still report EPERM. Finish
+              // the other groups, then judge the actual owned process outcomes.
+              recordMeasurement("forge-group-signal-denied", {
+                preparationId,
+                group,
+                signal: value,
+                error: String(error),
+              });
+            }
           }
         };
         const exited = new Promise<void>((resolve) => {
@@ -109,17 +124,32 @@ export async function startForge({
         }
         signalMembers("SIGKILL");
         const deadline = performance.now() + 5000;
+        const hasExited = () =>
+          child.exitCode !== null || child.signalCode !== null;
         let remaining = observe();
-        while (remaining.length && performance.now() < deadline) {
+        while (
+          (remaining.length || !hasExited()) &&
+          performance.now() < deadline
+        ) {
           await new Promise((resolve) => setTimeout(resolve, 25));
           signalMembers("SIGKILL");
           remaining = observe();
         }
-        if (remaining.length)
-          throw new Error(
-            `Owned Forge descendants survived cleanup: ${JSON.stringify(remaining)}`,
+        if (remaining.length || !hasExited()) {
+          const failure = new Error(
+            `Owned Forge processes did not exit: ${JSON.stringify({
+              exited: hasExited(),
+              remaining,
+            })}`,
           );
-        await exited;
+          if (permissionErrors.size)
+            throw new AggregateError(
+              [...permissionErrors, failure],
+              "Owned Forge processes survived permission-denied cleanup",
+              { cause: failure },
+            );
+          throw failure;
+        }
         recordMeasurement("forge-processes-reaped", {
           preparationId,
           pids: [...known.keys()],
@@ -127,6 +157,10 @@ export async function startForge({
       }
       // A failed reap retains files for diagnostics instead of racing a writer.
       await rm(shim, { recursive: true, force: true });
+    }).catch((error: unknown) => {
+      // Keep ownership after a failed reap so its caller can retry cleanup.
+      stopping = undefined;
+      throw error;
     }));
   registerStop?.(stop);
   try {
@@ -147,6 +181,7 @@ export async function startForge({
     recordMeasurement("forge-process", {
       processId: server.pid,
       groupId: server.pid,
+      shim,
     });
     let output = "";
     let aborted: (() => void) | undefined;

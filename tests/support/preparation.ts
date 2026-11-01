@@ -306,16 +306,21 @@ export async function createPreparationRun({
             errors.push(error);
           }
         }
-        await new Promise<void>((resolve, reject) =>
-          server.close((error) => (error ? reject(error) : resolve())),
-        );
+        if (server.listening)
+          await new Promise<void>((resolve, reject) =>
+            server.close((error) => (error ? reject(error) : resolve())),
+          );
         if (errors.length)
           throw new AggregateError(
             errors,
             "Preparation run cleanup failed; retained owned directory for diagnostics",
           );
         await rm(directory, { recursive: true, force: true });
-      })();
+      })().catch((error: unknown) => {
+        // Retrying cleanup never reopens acquisition or its closed endpoint.
+        closed = undefined;
+        throw error;
+      });
       return closed;
     },
   };

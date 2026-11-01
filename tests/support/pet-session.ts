@@ -1089,6 +1089,7 @@ setInterval(() => {
               // loop after that dispatch instead of mutating its callback here.
               setImmediate(() => item.click());
             }));
+        let requestFailure: unknown;
         void Promise.resolve()
           .then(() => {
             active();
@@ -1096,8 +1097,13 @@ setInterval(() => {
           })
           .then(
             () => record("quit-acknowledged"),
-            (error: unknown) =>
-              record("quit-acknowledgement-failed", String(error)),
+            (error: unknown) => {
+              requestFailure = error;
+              record(
+                "quit-acknowledgement-failed",
+                error instanceof Error ? error.stack : String(error),
+              );
+            },
           );
         let timer: ReturnType<typeof setTimeout> | undefined;
         try {
@@ -1109,6 +1115,7 @@ setInterval(() => {
                 reject(
                   new Error(
                     `normal-exit failed: code=${child.exitCode}, signal=${child.signalCode}`,
+                    { cause: requestFailure },
                   ),
                 );
             };
@@ -1118,7 +1125,9 @@ setInterval(() => {
               timer = setTimeout(() => {
                 child.off("exit", exited);
                 reject(
-                  new Error("normal-exit did not complete within 10000ms"),
+                  new Error("normal-exit did not complete within 10000ms", {
+                    cause: requestFailure,
+                  }),
                 );
               }, 10000);
             }

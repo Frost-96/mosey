@@ -1,7 +1,12 @@
-import { execFileSync } from "node:child_process";
-import { expect, onTestFinished, test } from "vitest";
-import { access, readFile } from "node:fs/promises";
+import { execFileSync, spawn } from "node:child_process";
+import { expect, onTestFinished, test, vi } from "vitest";
+import { access, readFile, rm } from "node:fs/promises";
 import path from "node:path";
+import {
+  readProcessSnapshot,
+  sameProcess,
+  isLiveProcess,
+} from "../tools/macos-processes";
 import { recordMeasurement } from "./support/measurement";
 import {
   borrowPreparedApplication,
@@ -188,3 +193,129 @@ test("closing a run during real Forge preparation rejects its pending borrow and
   expect(live).toEqual([]);
   expect(rows.some((row) => row.event === "preparation-ready")).toBe(false);
 });
+
+test.each(["partial", "denied"] as const)(
+  "Forge cleanup verifies actual process outcomes after %s group signals",
+  async (outcome) => {
+    const owner = await createPreparationRun();
+    let released = false;
+    onTestFinished(async () => {
+      if (!released) await owner.close();
+    });
+    const lease = await borrowPreparedApplication(owner.locator, "development");
+    await lease.release();
+    const eventsFile = path.join(
+      process.env.MOSEY_MEASUREMENT_ROOT!,
+      process.env.MOSEY_MEASUREMENT_RUN_ID!,
+      "events.jsonl",
+    );
+    const events = () =>
+      readFile(eventsFile, "utf8").then((contents) =>
+        contents
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line)),
+      );
+    const forge = (await events()).find(
+      (row) =>
+        row.event === "forge-process" &&
+        row.preparationId === lease.preparationId,
+    );
+    const leader: number = forge.processId;
+    const shim: string = forge.shim;
+    await expect(access(shim)).resolves.toBeUndefined();
+    const table = readProcessSnapshot();
+    const descendants = (pid: number): typeof table =>
+      table
+        .filter((row) => row.parent === pid)
+        .flatMap((row) => [row, ...descendants(row.pid)]);
+    const owned = [
+      table.find((row) => row.pid === leader)!,
+      ...descendants(leader),
+    ];
+    const groups = new Set(owned.map((row) => row.group));
+    const live = () =>
+      readProcessSnapshot().filter(
+        (row) =>
+          isLiveProcess(row) && owned.some((prior) => sameProcess(prior, row)),
+      );
+    const unrelated = spawn(
+      process.execPath,
+      ["-e", "setInterval(() => {}, 1000)"],
+      { stdio: "ignore" },
+    );
+    const kill = process.kill.bind(process);
+    const denied = Object.assign(
+      new Error("controlled Forge group permission denial"),
+      { code: "EPERM" },
+    );
+    const signals = vi
+      .spyOn(process, "kill")
+      .mockImplementation((pid, signal) => {
+        if (pid < 0 && groups.has(-pid)) {
+          if (outcome === "partial") kill(pid, signal);
+          throw denied;
+        }
+        return kill(pid, signal);
+      });
+    const cleanup = async () => {
+      signals.mockRestore();
+      // The intentionally denied case leaves real resources for diagnosis.
+      // Release only identities observed under this preparation, never names.
+      for (const row of live()) {
+        try {
+          kill(row.pid, "SIGKILL");
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        }
+      }
+      await expect.poll(live, { timeout: 5000 }).toEqual([]);
+      await new Promise<void>((resolve) => {
+        unrelated.once("exit", () => resolve());
+        unrelated.kill("SIGKILL");
+      });
+      await owner.close().catch(() => {});
+      await rm(path.dirname(owner.locator.socketPath), {
+        recursive: true,
+        force: true,
+      });
+      await rm(shim, { recursive: true, force: true });
+      released = true;
+    };
+    try {
+      if (outcome === "partial") {
+        await owner.close();
+        await owner.close();
+        expect(live()).toEqual([]);
+        await expect(access(lease.appRoot)).rejects.toThrow();
+      } else {
+        const failure = await owner.close().catch((error: unknown) => error);
+        expect(failure).toBeInstanceOf(AggregateError);
+        const errors = failure instanceof AggregateError ? failure.errors : [];
+        expect(
+          errors.flatMap((error: unknown) =>
+            error instanceof AggregateError ? error.errors : [error],
+          ),
+        ).toContain(denied);
+        expect(live().length).toBeGreaterThan(0);
+        await expect(access(lease.appRoot)).resolves.toBeUndefined();
+      }
+      expect(kill(unrelated.pid!, 0)).toBe(true);
+      expect(
+        (await events()).some(
+          (row) =>
+            row.event === "forge-group-signal-denied" &&
+            row.preparationId === lease.preparationId,
+        ),
+      ).toBe(true);
+      signals.mockRestore();
+      await owner.close();
+      await owner.close();
+      expect(live()).toEqual([]);
+      await expect(access(lease.appRoot)).rejects.toThrow();
+      await expect(access(shim)).rejects.toThrow();
+    } finally {
+      await cleanup();
+    }
+  },
+);
