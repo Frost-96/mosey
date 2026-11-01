@@ -7,59 +7,30 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { scenarioFiles, scaleCoverage } from "../tests/scenarios.ts";
+import {
+  scenarioFiles,
+  scaleCoverage,
+  testProjectNames,
+  testProjects,
+} from "../tests/scenarios.ts";
 import path from "node:path";
 import { summarizeMeasurements } from "../tests/support/measurement.ts";
 
 const channel = process.env.MOSEY_VERIFICATION_CHANNEL;
-if (
-  !channel ||
-  ![
-    "static",
-    "deterministic",
-    "development",
-    "package",
-    "packaged",
-    "lifecycle-development",
-    "lifecycle-packaged",
-    "observation-packaged",
-    "preparation",
-    "preparation-packaged",
-  ].includes(channel)
-)
+const project = testProjectNames.find((name) => name === channel);
+if (channel !== "static" && channel !== "package" && !project)
   throw new Error(
     "MOSEY_VERIFICATION_CHANNEL must identify a verification channel",
   );
 const status = process.env.MOSEY_VERIFICATION_STATUS;
 if (!status || !["success", "failure", "cancelled", "skipped"].includes(status))
   throw new Error("MOSEY_VERIFICATION_STATUS must be the actual job status");
-const mode =
-  channel === "development" ||
-  channel === "lifecycle-development" ||
-  channel === "preparation"
-    ? "development"
-    : channel === "packaged" ||
-        channel === "lifecycle-packaged" ||
-        channel === "observation-packaged" ||
-        channel === "preparation-packaged"
-      ? "packaged"
-      : null;
+const projectMode = project ? testProjects[project].mode : null;
+const mode = projectMode === "deterministic" ? null : projectMode;
 const application = mode !== null;
 const observationHarness = channel === "observation-packaged";
 const lifecycleHarness =
   channel === "lifecycle-development" || channel === "lifecycle-packaged";
-const project = (
-  [
-    "deterministic",
-    "development",
-    "packaged",
-    "lifecycle-development",
-    "lifecycle-packaged",
-    "observation-packaged",
-    "preparation",
-    "preparation-packaged",
-  ] as const
-).find((name) => name === channel);
 const requestedScale =
   application && !observationHarness
     ? Number(process.env.MOSEY_TEST_SCALE_FACTOR)
@@ -85,33 +56,46 @@ const observedScaleEvidence: {
   requested: number;
   observed: number;
 }[] = [];
+const evidenceReadErrors: { file: string; error: string }[] = [];
+function readEvidence<T>(file: string, read: () => T): T | undefined {
+  try {
+    return read();
+  } catch (error) {
+    evidenceReadErrors.push({ file, error: String(error) });
+    return undefined;
+  }
+}
 const measurements = globSync("test-results/measurements/*/run.json").map(
   (file) => ({
     file,
-    summary: summarizeMeasurements(path.dirname(file)),
+    summary:
+      readEvidence(file, () => summarizeMeasurements(path.dirname(file))) ??
+      null,
   }),
 );
 const testReport = "test-results/verification/tests.json";
-const scenarioDurations = existsSync(testReport)
-  ? (
-      JSON.parse(readFileSync(testReport, "utf8")).testResults as {
-        name: string;
-        assertionResults: {
-          fullName: string;
-          status: string;
-          duration?: number;
-        }[];
-      }[]
-    ).flatMap((file) =>
-      file.assertionResults.map((test) => ({
-        file: file.name,
-        test: test.fullName,
-        status: test.status,
-        durationMs: test.duration ?? null,
-      })),
-    )
-  : [];
-const evidenceReadErrors: { file: string; error: string }[] = [];
+const scenarioDurations =
+  (existsSync(testReport)
+    ? readEvidence(testReport, () =>
+        (
+          JSON.parse(readFileSync(testReport, "utf8")).testResults as {
+            name: string;
+            assertionResults: {
+              fullName: string;
+              status: string;
+              duration?: number;
+            }[];
+          }[]
+        ).flatMap((file) =>
+          file.assertionResults.map((test) => ({
+            file: file.name,
+            test: test.fullName,
+            status: test.status,
+            durationMs: test.duration ?? null,
+          })),
+        ),
+      )
+    : undefined) ?? [];
 if (application && !observationHarness)
   for (const file of globSync(
     `test-results/pet-sessions/${mode}-*/progress.jsonl`,
@@ -275,6 +259,9 @@ const summary = [
       ]
     : []),
   "The recorded status precedes evidence upload. GitHub's job conclusion is authoritative, including if cancellation prevents finalization or upload. Artifacts retain the inventory, test results and available session evidence.",
+  ...evidenceReadErrors.map(
+    ({ file, error }) => `Evidence could not be read: ${file}: ${error}`,
+  ),
   "",
 ].join("\n");
 if (process.env.GITHUB_STEP_SUMMARY)

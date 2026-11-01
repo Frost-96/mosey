@@ -3,22 +3,13 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import {
   scenarioFiles,
+  testProjectNames,
+  testProjects,
   validateScenarioInventory,
-  type TestProject,
 } from "./tests/scenarios.ts";
 
 validateScenarioInventory();
 
-const projects: TestProject[] = [
-  "deterministic",
-  "development",
-  "packaged",
-  "preparation",
-  "preparation-packaged",
-  "lifecycle-development",
-  "lifecycle-packaged",
-  "observation-packaged",
-];
 process.env.MOSEY_MEASUREMENT_RUN_ID ??= randomUUID();
 process.env.MOSEY_MEASUREMENT_ROOT ??= path.resolve(
   "test-results/measurements",
@@ -37,7 +28,7 @@ export default defineConfig({
     },
     maxWorkers: 1,
     fileParallelism: false,
-    projects: projects.map((name) => ({
+    projects: testProjectNames.map((name) => ({
       test: {
         name,
         include: scenarioFiles(name),
@@ -46,14 +37,7 @@ export default defineConfig({
             ? []
             : ["./tests/support/preparation-setup.ts"],
         env: {
-          MOSEY_TEST_MODE:
-            name === "preparation" || name === "lifecycle-development"
-              ? "development"
-              : name === "lifecycle-packaged" ||
-                  name === "preparation-packaged" ||
-                  name === "observation-packaged"
-                ? "packaged"
-                : name,
+          MOSEY_TEST_MODE: testProjects[name].mode,
         },
         testTimeout: 90000,
         hookTimeout: 90000,

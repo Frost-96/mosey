@@ -21,6 +21,8 @@ export const scenarioGroups = {
     "tests/behavior-time.test.ts",
     "tests/behavior-build.test.ts",
     "tests/pixel-comparison.test.ts",
+    "tests/verification-report.test.ts",
+    "tests/verification-inventory.test.ts",
   ],
   application: [
     "tests/app.test.ts",
@@ -58,29 +60,40 @@ export const scenarioGroups = {
   ],
 };
 
-export type TestProject =
-  | "deterministic"
-  | "development"
-  | "packaged"
-  | "preparation-packaged"
-  | "preparation"
-  | "lifecycle-development"
-  | "lifecycle-packaged"
-  | "observation-packaged";
+export const testProjects = {
+  deterministic: { mode: "deterministic", files: scenarioGroups.deterministic },
+  development: { mode: "development", files: scenarioGroups.application },
+  packaged: {
+    mode: "packaged",
+    files: [...scenarioGroups.application, ...scenarioGroups.packagedOnly],
+  },
+  preparation: { mode: "development", files: scenarioGroups.preparation },
+  "preparation-packaged": {
+    mode: "packaged",
+    files: scenarioGroups.packagePreparation,
+  },
+  "lifecycle-development": {
+    mode: "development",
+    files: scenarioGroups.lifecycleHarness,
+  },
+  "lifecycle-packaged": {
+    mode: "packaged",
+    files: scenarioGroups.lifecycleHarness,
+  },
+  "observation-packaged": {
+    mode: "packaged",
+    files: scenarioGroups.observationHarness,
+  },
+} satisfies Record<
+  string,
+  { mode: "deterministic" | "development" | "packaged"; files: string[] }
+>;
+
+export type TestProject = keyof typeof testProjects;
+export const testProjectNames = Object.keys(testProjects) as TestProject[];
 
 export function scenarioFiles(project: TestProject): string[] {
-  if (project === "observation-packaged")
-    return scenarioGroups.observationHarness;
-  if (project === "preparation-packaged")
-    return scenarioGroups.packagePreparation;
-  if (project === "preparation") return scenarioGroups.preparation;
-  if (project === "deterministic") return scenarioGroups.deterministic;
-  if (project === "lifecycle-development" || project === "lifecycle-packaged")
-    return scenarioGroups.lifecycleHarness;
-  return [
-    ...scenarioGroups.application,
-    ...(project === "packaged" ? scenarioGroups.packagedOnly : []),
-  ];
+  return testProjects[project].files;
 }
 
 // The matrix is a request, not evidence that every application reached observed DPR.
@@ -120,8 +133,25 @@ export function validateScenarioInventory(root = process.cwd()) {
   );
   const missing = discovered.filter((file) => !assignments.includes(file));
   const stale = assignments.filter((file) => !discovered.includes(file));
-  if (duplicates.length || missing.length || stale.length)
+  const scheduled = testProjectNames.flatMap(scenarioFiles);
+  const unassigned = assignments.filter((file) => !scheduled.includes(file));
+  const coverage = new Set<string>();
+  const duplicateCoverage: { mode: string; file: string }[] = [];
+  for (const { mode, files } of Object.values(testProjects)) {
+    for (const file of files) {
+      const key = `${mode}:${file}`;
+      if (coverage.has(key)) duplicateCoverage.push({ mode, file });
+      coverage.add(key);
+    }
+  }
+  if (
+    duplicates.length ||
+    missing.length ||
+    stale.length ||
+    unassigned.length ||
+    duplicateCoverage.length
+  )
     throw new Error(
-      `Invalid scenario inventory: ${JSON.stringify({ duplicates, missing, stale })}`,
+      `Invalid scenario inventory: ${JSON.stringify({ duplicates, missing, stale, unassigned, duplicateCoverage })}`,
     );
 }
