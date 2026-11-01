@@ -7,6 +7,7 @@ import path from "node:path";
 export const scenarioGroups = {
   observationHarness: ["tests/observation-lifecycle.test.ts"],
   packagePreparation: [
+    "tests/login-preparation.test.ts",
     "tests/preparation-package.test.ts",
     "tests/preparation-package-build.test.ts",
   ],

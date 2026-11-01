@@ -7,6 +7,7 @@ import {
   type SessionOperation,
 } from "./support/pet-session";
 import { openSettings } from "./support/settings";
+import { compareAuthoredAtlas } from "./support/pixels";
 
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
@@ -441,67 +442,44 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
       { timeout: 6000 },
     )
     .toBe("sleeping");
-  const sources = await Promise.all(
-    ["sleeping-atlas-left.png", "sleeping-atlas.png"].map(
-      async (file) =>
-        `data:image/png;base64,${(await session.run("readFile", () => readFile(`src/assets/generated/whale/${file}`))).toString("base64")}`,
+  const capture = () =>
+    session.run("sleep-canvas-capture", () =>
+      pet.evaluate(() => {
+        const canvas = document.querySelector("canvas")!;
+        // This fixture is a strip of 480px square illustrations. At 240 DIP/2x
+        // each cell is one whole window; no production projection is consulted.
+        if (canvas.width !== 480 || canvas.height !== 480)
+          throw new Error("Unexpected fixture size");
+        return canvas.toDataURL();
+      }),
+    );
+  const [authored, opposite] = await Promise.all(
+    ["sleeping-atlas-left.png", "sleeping-atlas.png"].map((file) =>
+      session.run("readFile", () =>
+        readFile(`src/assets/generated/whale/${file}`),
+      ),
     ),
   );
-  const compared = await session.run("pet-evaluate", () =>
-    pet.evaluate(async (sources) => {
-      const images = await Promise.all(
-        sources.map(async (source) => {
-          const image = new Image();
-          image.src = source;
-          await image.decode();
-          return image;
-        }),
-      );
-      const canvas = document.querySelector("canvas")!;
-      const actual = canvas
-        .getContext("2d")!
-        .getImageData(0, 0, canvas.width, canvas.height).data;
-      // This fixture is a strip of 480px square illustrations. At 240 DIP/2x
-      // each cell is one whole window: compare PNG pixels, without consulting
-      // atlas foot/scale metadata or any production projection function.
-      if (canvas.width !== 480 || canvas.height !== 480)
-        throw new Error("Unexpected fixture size");
-      const comparison = document.createElement("canvas");
-      comparison.width = comparison.height = 480;
-      const context = comparison.getContext("2d")!;
-      const mismatches: {
-        authored: number;
-        mirrored: number;
-        alpha: number;
-      }[] = [];
-      for (let frame = 0; frame < images[0]!.width / 480; frame++) {
-        context.clearRect(0, 0, 480, 480);
-        context.drawImage(images[0]!, frame * 480, 0, 480, 480, 0, 0, 480, 480);
-        const authored = context.getImageData(0, 0, 480, 480).data;
-        context.clearRect(0, 0, 480, 480);
-        context.save();
-        context.translate(480, 0);
-        context.scale(-1, 1);
-        context.drawImage(images[1]!, frame * 480, 0, 480, 480, 0, 0, 480, 480);
-        context.restore();
-        const mirrored = context.getImageData(0, 0, 480, 480).data;
-        let authoredDifference = 0,
-          mirroredDifference = 0,
-          alphaDifference = 0;
-        for (let i = 0; i < actual.length; i++) {
-          if (Math.abs(actual[i]! - authored[i]!) > 2) authoredDifference++;
-          if (Math.abs(actual[i]! - mirrored[i]!) > 2) mirroredDifference++;
-          if (i % 4 === 3 && actual[i] !== mirrored[i]) alphaDifference++;
-        }
-        mismatches.push({
-          authored: authoredDifference,
-          mirrored: mirroredDifference,
-          alpha: alphaDifference,
-        });
-      }
-      return mismatches.sort((a, b) => a.authored - b.authored)[0]!;
-    }, sources),
-  );
+  let compared = { authored: Infinity, mirrored: 0, alpha: Infinity };
+  // Presentation publication precedes paint, and the first sleep cells have
+  // no lettering. Wait for a painted authored frame whose text distinguishes
+  // it from an incorrectly mirrored image, within the same short deadline.
+  await expect
+    .poll(
+      async () => {
+        const captured = await capture();
+        compared = await session.run("compare-sleep-atlas", async () =>
+          compareAuthoredAtlas(captured, authored!, opposite!),
+        );
+        return (
+          compared.authored === 0 &&
+          compared.mirrored > 30 &&
+          compared.alpha === 0
+        );
+      },
+      { timeout: 5000 },
+    )
+    .toBe(true);
   expect(compared.authored).toBe(0);
   expect(compared.mirrored).toBeGreaterThan(30);
   expect(compared.alpha).toBe(0);

@@ -94,12 +94,19 @@ export async function createLoginTestSession({
           ),
         { timeout: 30000 },
       );
-      await run("login-verify-signature", () =>
-        command(
-          "/usr/bin/codesign",
-          ["--verify", "--deep", "--strict", ownedBundle],
-          { signal, timeout: 5000 },
-        ),
+      // Deep verification walks the whole Electron bundle. Give this native
+      // preparation the same bounded budget as signing/package verification,
+      // rather than the ordinary 5s driver-operation budget. Cancellation still
+      // reaches the actual command through the session's AbortSignal.
+      await run(
+        "login-verify-signature",
+        () =>
+          command(
+            "/usr/bin/codesign",
+            ["--verify", "--deep", "--strict", ownedBundle],
+            { signal, timeout: 30000 },
+          ),
+        { timeout: 30000 },
       );
       const signature = await run("login-signature", () =>
         command("/usr/bin/codesign", ["-d", "--verbose=4", ownedBundle], {

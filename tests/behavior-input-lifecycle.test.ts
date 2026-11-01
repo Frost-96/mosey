@@ -33,8 +33,15 @@ for (const { title, interruption } of [
       "a hidden pet rejects a queued idle-cycle input after work-area cancellation",
     interruption: "hidden",
   },
+  {
+    title:
+      "a prior native work-area cancellation still rejects the hidden pet's queued input",
+    interruption: "hidden-early-display",
+  },
 ] as const) {
   test(title, async () => {
+    const hiding =
+      interruption === "hidden" || interruption === "hidden-early-display";
     const session = await createPetTestSession({
       dock: "empty",
       behavior: { random: 0.1 },
@@ -72,7 +79,7 @@ for (const { title, interruption } of [
     expect(elapsed.inputFailure).toBe(
       interruption === "second"
         ? "A second work-area cancellation exceeded this input transaction"
-        : interruption === "hidden"
+        : hiding
           ? "Controlled behavior input is no longer current"
           : undefined,
     );
@@ -102,7 +109,7 @@ for (const { title, interruption } of [
       );
       expect(frame?.presentation.posture).toBe("resting");
       expect(frame?.presentation.visibility).toBe(
-        interruption === "hidden" ? "hidden" : "visible",
+        hiding ? "hidden" : "visible",
       );
       expect(frame?.scaleFactor).toBe(
         Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),

@@ -1,6 +1,12 @@
 import type { Presentation } from "../../src/shared/contract";
 
-type Interruption = "none" | "work-area" | "unmatched" | "second" | "hidden";
+type Interruption =
+  | "none"
+  | "work-area"
+  | "unmatched"
+  | "second"
+  | "hidden"
+  | "hidden-early-display";
 
 // Serialized directly by Playwright into the owned test application's main.
 // Supply the original direct input or the walking-publication reentry input;
@@ -23,6 +29,8 @@ export async function exerciseBehaviorDeadline(
     interruption?: Interruption;
   },
 ) {
+  const hiding =
+    interruption === "hidden" || interruption === "hidden-early-display";
   // Synchronous bounded trace writes preserve failures but may affect timing.
   // Lines reflect observer execution order, not inferred OS arrival order.
   const { appendFileSync } = process.getBuiltinModule("node:fs");
@@ -128,16 +136,20 @@ export async function exerciseBehaviorDeadline(
         : undefined;
     record("work-area-boundary-before", displayBefore);
   };
-  const afterDisplayChange = () => {
+  const afterDisplayChange = (
+    _event: Electron.Event,
+    display: Electron.Display,
+  ) => {
     const boundary = displayBefore;
     displayBefore = undefined;
     if (!boundary) return;
     const before = boundary.presentation;
     if (displayCancellation) {
-      displayFailure = new Error(
+      const failure = new Error(
         "A second work-area cancellation exceeded this input transaction",
       );
-      record("new-idle-input-refused", displayFailure.message);
+      displayFailure ??= failure;
+      record("new-idle-input-refused", failure.message);
       return;
     }
     if (
@@ -196,6 +208,17 @@ export async function exerciseBehaviorDeadline(
           record("new-idle-input-refused", error.message);
         },
       );
+    // A real OS event can establish this boundary before our replay timer.
+    // Inject the scenario's interruption while THIS input is still queued.
+    if (hiding) pet.hide();
+    if (interruption === "second")
+      setTimeout(() => {
+        record("second-display-event-replay", {
+          metrics: ["workArea"],
+          workArea: display.workArea,
+        });
+        screen.emit("display-metrics-changed", {}, display, ["workArea"]);
+      }, 20);
   };
   const stopDisplayRecovery = () => {
     transactionOpen = false;
@@ -309,7 +332,24 @@ export async function exerciseBehaviorDeadline(
       !displayReplayScheduled
     ) {
       displayReplayScheduled = true;
+      if (interruption === "hidden-early-display")
+        setTimeout(() => {
+          const display = screen.getPrimaryDisplay();
+          const replay = {
+            ...display,
+            workArea: {
+              ...display.workArea,
+              height: display.workArea.height - 1,
+            },
+          };
+          record("early-display-event-replay", replay.workArea);
+          screen.emit("display-metrics-changed", {}, replay, ["workArea"]);
+        }, 60);
       setTimeout(() => {
+        if (displayCancellation) {
+          record("display-replay-already-satisfied");
+          return;
+        }
         const display = screen.getPrimaryDisplay();
         const replay = {
           ...display,
@@ -326,15 +366,6 @@ export async function exerciseBehaviorDeadline(
         });
         // Replay the public event; the actual OS work area is unchanged.
         screen.emit("display-metrics-changed", {}, replay, metrics);
-        if (interruption === "hidden") pet.hide();
-        if (interruption === "second")
-          setTimeout(() => {
-            record("second-display-event-replay", {
-              metrics,
-              workArea: replay.workArea,
-            });
-            screen.emit("display-metrics-changed", {}, replay, metrics);
-          }, 20);
       }, 220);
     }
     if (!duringPublication || injected) return;
