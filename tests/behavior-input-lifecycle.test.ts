@@ -25,6 +25,11 @@ for (const { title, interruption } of [
     interruption: "unmatched",
   },
   {
+    title:
+      "a pending native work-area event cannot turn an unrelated cancellation into recovery",
+    interruption: "unmatched-early-display",
+  },
+  {
     title: "a second work-area cancellation refuses another idle-cycle input",
     interruption: "second",
   },
@@ -42,6 +47,9 @@ for (const { title, interruption } of [
   test(title, async () => {
     const hiding =
       interruption === "hidden" || interruption === "hidden-early-display";
+    const unmatched =
+      interruption === "unmatched" ||
+      interruption === "unmatched-early-display";
     const session = await createPetTestSession({
       dock: "empty",
       behavior: { random: 0.1 },
@@ -67,15 +75,14 @@ for (const { title, interruption } of [
       ),
     );
     expect(elapsed.firstSettling?.posture).toBe("settling");
-    if (interruption !== "none" && interruption !== "unmatched") {
+    if (interruption !== "none" && !unmatched) {
       expect(elapsed.displayCancellation?.before.posture).toBe("settling");
       expect(elapsed.displayCancellation?.after.posture).toBe("resting");
       expect(elapsed.displayCancellation?.after.actionId).toBeGreaterThan(
         elapsed.displayCancellation!.before.actionId,
       );
     }
-    if (interruption === "unmatched")
-      expect(elapsed.displayCancellation).toBeUndefined();
+    if (unmatched) expect(elapsed.displayCancellation).toBeUndefined();
     expect(elapsed.inputFailure).toBe(
       interruption === "second"
         ? "A second work-area cancellation exceeded this input transaction"

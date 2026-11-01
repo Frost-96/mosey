@@ -4,6 +4,7 @@ type Interruption =
   | "none"
   | "work-area"
   | "unmatched"
+  | "unmatched-early-display"
   | "second"
   | "hidden"
   | "hidden-early-display";
@@ -31,6 +32,8 @@ export async function exerciseBehaviorDeadline(
 ) {
   const hiding =
     interruption === "hidden" || interruption === "hidden-early-display";
+  const unmatched =
+    interruption === "unmatched" || interruption === "unmatched-early-display";
   // Synchronous bounded trace writes preserve failures but may affect timing.
   // Lines reflect observer execution order, not inferred OS arrival order.
   const { appendFileSync } = process.getBuiltinModule("node:fs");
@@ -273,6 +276,19 @@ export async function exerciseBehaviorDeadline(
         firstWakeup: { wall: number; monotonic: number } | undefined;
       }>
     | undefined;
+  const replayDisplay = (event: string, metrics: string[]) => {
+    const display = screen.getPrimaryDisplay();
+    const replay = {
+      ...display,
+      workArea: {
+        ...display.workArea,
+        height: display.workArea.height - 1,
+      },
+    };
+    record(event, { metrics, workArea: replay.workArea });
+    // Replay the public event; the actual OS work area is unchanged.
+    screen.emit("display-metrics-changed", {}, replay, metrics);
+  };
   const advanceInput = async () => {
     const wall = Date.now();
     const monotonic = performance.now();
@@ -303,6 +319,10 @@ export async function exerciseBehaviorDeadline(
       latestPresentation?.posture === "settling"
         ? latestPresentation
         : undefined;
+    // Establish the negative case before returning to the native event loop.
+    // A real workArea event arriving first would correctly authorize recovery
+    // and would no longer test cancellation by an unrelated bounds event.
+    if (unmatched) replayDisplay("display-event-replay", ["bounds"]);
     const immediately = Date.now() - wall;
     await timeout;
     return {
@@ -332,41 +352,22 @@ export async function exerciseBehaviorDeadline(
       !displayReplayScheduled
     ) {
       displayReplayScheduled = true;
-      if (interruption === "hidden-early-display")
+      if (
+        interruption === "hidden-early-display" ||
+        interruption === "unmatched-early-display"
+      )
+        setTimeout(
+          () => replayDisplay("early-display-event-replay", ["workArea"]),
+          60,
+        );
+      if (!unmatched)
         setTimeout(() => {
-          const display = screen.getPrimaryDisplay();
-          const replay = {
-            ...display,
-            workArea: {
-              ...display.workArea,
-              height: display.workArea.height - 1,
-            },
-          };
-          record("early-display-event-replay", replay.workArea);
-          screen.emit("display-metrics-changed", {}, replay, ["workArea"]);
-        }, 60);
-      setTimeout(() => {
-        if (displayCancellation) {
-          record("display-replay-already-satisfied");
-          return;
-        }
-        const display = screen.getPrimaryDisplay();
-        const replay = {
-          ...display,
-          workArea: {
-            ...display.workArea,
-            height: display.workArea.height - 1,
-          },
-        };
-        const metrics =
-          interruption === "unmatched" ? ["bounds"] : ["workArea"];
-        record("display-event-replay", {
-          metrics,
-          workArea: replay.workArea,
-        });
-        // Replay the public event; the actual OS work area is unchanged.
-        screen.emit("display-metrics-changed", {}, replay, metrics);
-      }, 220);
+          if (displayCancellation) {
+            record("display-replay-already-satisfied");
+            return;
+          }
+          replayDisplay("display-event-replay", ["workArea"]);
+        }, 220);
     }
     if (!duringPublication || injected) return;
     observations.push({
