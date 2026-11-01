@@ -177,6 +177,23 @@ test("lifecycle pause and stop prevent later activity, while resume starts a fre
   expect(behavior.getSnapshot().value).toBe("walking");
 });
 
+test("changing character cancels the old walk and uses the new character's duration", () => {
+  const { adapter, behavior } = controlledPet();
+  adapter.advanceBy(18000);
+  expect(behavior.getSnapshot().value).toBe("walking");
+  adapter.advanceBy(700);
+  behavior.send({ type: "CHARACTER", walkDurationMs: 3200, paused: false });
+  expect(behavior.getSnapshot().value).toBe("resting");
+  adapter.advanceBy(17999);
+  expect(behavior.getSnapshot().value).toBe("resting");
+  adapter.advanceBy(1);
+  expect(behavior.getSnapshot().value).toBe("walking");
+  adapter.advanceBy(3199);
+  expect(behavior.getSnapshot().value).toBe("walking");
+  adapter.advanceBy(1);
+  expect(behavior.getSnapshot().value).toBe("resting");
+});
+
 test("advancing behavior time leaves wall deadlines and another pet's behavior untouched", () => {
   let wallDeadlineExpired = false;
   const wallDeadline = Date.now() + 15000;

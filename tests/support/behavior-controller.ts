@@ -22,11 +22,20 @@ export function createBehaviorController(options: ControlledBehaviorOptions) {
   // Inspector evaluation can arrive while the pump is dispatching a behavior
   // callback. Enter through the event loop so one input cannot rewind another
   // advance or make an actor process its queued event at the wrong time.
-  const update = (input: BehaviorInput) =>
+  const update = (input: BehaviorInput, stillCurrent?: () => boolean) =>
     new Promise<void>((resolve, reject) => {
       setImmediate(() => {
         try {
+          // A caller may authorize a follow-up from a public native boundary.
+          // Check that Electron-local evidence where the queued input executes,
+          // including after the normal pump, before applying requested changes.
+          const current = () => {
+            if (stillCurrent && !stillCurrent())
+              throw new Error("Controlled behavior input is no longer current");
+          };
+          current();
           pump();
+          current();
           if (input.random !== undefined) {
             if (
               !Number.isFinite(input.random) ||

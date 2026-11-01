@@ -1,7 +1,11 @@
-import { expect, test } from "vitest";
+import { expect, onTestFinished, test } from "vitest";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
+import { matchPaintedFrames } from "./support/pixels";
+import { controlBehavior } from "./support/controlled-behavior";
+import { openSettings, closeSettings } from "./support/settings";
+import { exerciseBehaviorDeadline } from "./support/behavior-deadline";
 
 // Application wiring and real deadlines are observed in the actual Electron
 // process. The control object supplies inputs; all pet assertions use IPC/paint.
@@ -25,138 +29,10 @@ test("controlled behavior reaches sleep without advancing an unrelated real dead
   const elapsed = await session.run(
     "real-deadline-during-behavior-advance",
     () =>
-      app.evaluate(
-        async (
-          { BrowserWindow, screen, powerMonitor, ipcMain, app },
-          journal,
-        ) => {
-          // Preserve public observations if the later sleep assertion fails.
-          // Synchronous writes can affect scheduling; this trace is diagnostic.
-          const { appendFileSync } = process.getBuiltinModule("node:fs");
-          let entries = 0;
-          let bytes = 0;
-          let stopped = false;
-          const record = (event: string, detail?: unknown) => {
-            if (stopped) return;
-            const line =
-              JSON.stringify({
-                event,
-                at: Date.now(),
-                monotonic: performance.now(),
-                detail,
-              }) + "\n";
-            const length = Buffer.byteLength(line);
-            // Match the lifecycle trace bound, with room for the limit marker.
-            if (++entries > 256 || bytes + length > 63 * 1024) {
-              stopped = true;
-              appendFileSync(
-                journal,
-                JSON.stringify({ event: "trace-limit", at: Date.now() }) + "\n",
-              );
-              return;
-            }
-            appendFileSync(journal, line);
-            bytes += length;
-          };
-          const pet = BrowserWindow.getAllWindows().find(
-            (window) => window.getTitle() === "Mosey",
-          )!;
-          const contents = pet.webContents;
-          const originalSend = contents.send;
-          contents.send = function (channel, ...args) {
-            originalSend.call(this, channel, ...args);
-            if (
-              channel === "pet:presentation" ||
-              channel === "pet:gesture-cancellation"
-            )
-              record(channel, args[0]);
-          };
-          // Bracket the installed application handlers. Publications are logged
-          // after forwarding; these timestamps describe observer execution order.
-          ipcMain.prependListener("pet:input", (_event, input) =>
-            record("input-arrived", input),
-          );
-          ipcMain.on("pet:input", (_event, input) =>
-            record("input-handled", input),
-          );
-          screen.on("display-metrics-changed", (_event, display, metrics) =>
-            record("display-metrics-changed", {
-              metrics,
-              workArea: display.workArea,
-            }),
-          );
-          screen.on("display-added", (_event, display) =>
-            record("display-added", display.workArea),
-          );
-          screen.on("display-removed", (_event, display) =>
-            record("display-removed", display.workArea),
-          );
-          powerMonitor.on("resume", () => record("resume"));
-          powerMonitor.on("suspend", () => record("suspend"));
-          powerMonitor.on("unlock-screen", () => record("unlock-screen"));
-          powerMonitor.on("lock-screen", () => record("lock-screen"));
-          pet.on("move", () => record("move", pet.getBounds()));
-          pet.on("resize", () => record("resize", pet.getBounds()));
-          pet.on("show", () => record("show"));
-          pet.on("hide", () => record("hide"));
-          pet.on("focus", () => record("focus"));
-          pet.on("blur", () => record("blur"));
-          pet.on("unresponsive", () => record("unresponsive"));
-          contents.on("did-start-loading", () => record("did-start-loading"));
-          contents.on("did-finish-load", () => record("did-finish-load"));
-          contents.on("render-process-gone", (_event, details) =>
-            record("render-process-gone", details),
-          );
-          app.once("before-quit", () => {
-            record("before-quit");
-            contents.send = originalSend;
-            stopped = true;
-          });
-          record("initial-window", {
-            bounds: pet.getBounds(),
-            visible: pet.isVisible(),
-            workArea: screen.getPrimaryDisplay().workArea,
-          });
-          const controller = Reflect.get(
-            globalThis,
-            Symbol.for("mosey.test.behavior"),
-          );
-          if (!controller)
-            throw new Error("Controlled behavior build was not installed");
-          const wall = Date.now();
-          const monotonic = performance.now();
-          let firstWakeup: { wall: number; monotonic: number } | undefined;
-          const timeout = new Promise<void>((resolve) => {
-            // A timer callback can arrive before its nominal delay. Keep the
-            // deadline at 300 real milliseconds; only rearm its remaining time.
-            const check = () => {
-              const elapsed = {
-                wall: Date.now() - wall,
-                monotonic: performance.now() - monotonic,
-              };
-              record("deadline-wakeup", elapsed);
-              firstWakeup ??= elapsed;
-              const remaining = 300 - Math.min(elapsed.wall, elapsed.monotonic);
-              if (remaining > 0) setTimeout(check, remaining);
-              else resolve();
-            };
-            setTimeout(check, 300);
-          });
-          record("advance-requested", 180000);
-          await controller.update({ advanceBy: 180000 });
-          record("advance-complete", 180000);
-          const immediately = Date.now() - wall;
-          await timeout;
-          record("input-evaluation-return");
-          return {
-            immediately,
-            firstWakeup,
-            wall: Date.now() - wall,
-            monotonic: performance.now() - monotonic,
-          };
-        },
-        path.join(session.evidence, "behavior-third-events.jsonl"),
-      ),
+      app.evaluate(exerciseBehaviorDeadline, {
+        journal: path.join(session.evidence, "behavior-third-events.jsonl"),
+        duringPublication: false,
+      }),
   );
   const after = await session.run(
     "advanced-behavior-presentation",
@@ -174,6 +50,7 @@ test("controlled behavior reaches sleep without advancing an unrelated real dead
       ),
     ),
   );
+  expect(elapsed.inputFailure).toBeUndefined();
   expect(elapsed.immediately).toBeLessThan(300);
   expect(elapsed.wall).toBeGreaterThanOrEqual(300);
   expect(elapsed.monotonic).toBeGreaterThanOrEqual(300);
@@ -213,9 +90,10 @@ test("controlled behavior reaches sleep without advancing an unrelated real dead
   await session.close();
 });
 
-test("production-default application paints without a behavior controller", async () => {
+test("advancing behavior time preserves a cold character preparation deadline", async () => {
   const session = await createPetTestSession({
     dock: "empty",
+    behavior: { random: 0.1, running: false },
     preferences: {
       version: 3,
       character: "corgi",
@@ -224,22 +102,186 @@ test("production-default application paints without a behavior controller", asyn
     },
   });
   const { app, renderer } = await session.launch();
-  expect(
-    await session.run("production-controller-absent", () =>
-      app.evaluate(() =>
-        Reflect.has(globalThis, Symbol.for("mosey.test.behavior")),
-      ),
-    ),
-  ).toBe(false);
-  const frame = await session.run(
-    "behavior-paint",
-    () => renderer.waitUntilReady({ paintedPixels: 600 }),
-    { timeout: 10000 },
+  const settings = await openSettings(app, { run: session.run });
+  await renderer.withColdImages(
+    async (release) => {
+      await session.run("select-cold-character", () =>
+        settings.getByRole("combobox", { name: "角色" }).selectOption("whale"),
+      );
+      await expect
+        .poll(() =>
+          session.run("cold-character-requested", () =>
+            app.evaluate(() =>
+              Reflect.get(globalThis, "recoveryImageRequested"),
+            ),
+          ),
+        )
+        .toBe(true);
+      await session.run("delayed-character-control", () =>
+        app.evaluate(
+          () => new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+        ),
+      );
+      // Ten behavior minutes exceed the 15s preparation budget. Keep the image
+      // request held across slow driver work until this assertion has finished.
+      await session.run("advance-during-character-preparation", () =>
+        controlBehavior(app, { advanceBy: 600000 }),
+      );
+      const pending = await session.run("cold-character-pending", () =>
+        settings.evaluate(() => window.moseySettings.get()),
+      );
+      expect(pending.character).toBe("corgi");
+      expect(pending.pendingCharacter).toEqual({
+        target: "whale",
+        phase: "loading",
+      });
+      expect(pending.failedCharacter).toBeUndefined();
+      await release();
+      await expect
+        .poll(
+          async () =>
+            (
+              await session.run(
+                "prepared-character-presentation",
+                renderer.read,
+              )
+            )?.presentation.character,
+          { timeout: 10000 },
+        )
+        .toBe("whale");
+    },
+    session.run,
+    { holdUntilReleased: true },
   );
-  expect(frame.presentation.posture).toBe("resting");
-  expect(frame.scaleFactor).toBe(
-    Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+  const frame = await session.run("prepared-character-paint", () =>
+    renderer.waitUntilReady({ paintedPixels: 600 }),
   );
+  expect(frame.presentation.character).toBe("whale");
+  expect(frame.label).toBe("鲸鱼娘 · 待机");
+  await closeSettings(app, { run: session.run });
   await session.quit();
   await session.close();
 });
+
+test.each(["corgi", "whale"] as const)(
+  "production-default %s keeps its real activity cadence without a behavior controller",
+  async (character) => {
+    const session = await createPetTestSession({
+      dock: "empty",
+      preferences: {
+        version: 3,
+        character,
+        size: 160,
+        visibility: "visible",
+      },
+    });
+    const { app, renderer } = await session.launch();
+    expect(
+      await session.run("production-controller-absent", () =>
+        app.evaluate(() =>
+          Reflect.has(globalThis, Symbol.for("mosey.test.behavior")),
+        ),
+      ),
+    ).toBe(false);
+    const frame = await session.run(
+      "behavior-paint",
+      () => renderer.waitUntilReady({ paintedPixels: 600 }),
+      { timeout: 10000 },
+    );
+    expect(frame.presentation.posture).toBe("resting");
+    expect(frame.scaleFactor).toBe(
+      Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"),
+    );
+
+    // Observe ordinary presentation and pixels. Do not substitute randomness or
+    // advance behavior time: any of the three natural activities is acceptable.
+    const observations = [frame.presentation];
+    onTestFinished(() =>
+      writeFile(
+        path.join(session.evidence, "real-behavior.json"),
+        JSON.stringify(
+          { character, scale: frame.scaleFactor, observations },
+          null,
+          2,
+        ),
+      ),
+    );
+    let rest = frame.presentation;
+    const idleFrames = new Set([frame.pixels, frame.mirroredPixels]);
+    let activity: typeof frame | null = null;
+    await expect
+      .poll(
+        async () => {
+          activity = await session.run(
+            "real-activity-presentation",
+            renderer.read,
+          );
+          if (!activity) return undefined;
+          const presentation = activity.presentation;
+          if (observations.at(-1)?.actionId !== presentation.actionId)
+            observations.push(presentation);
+          if (presentation.posture === "resting") {
+            rest = presentation;
+            idleFrames.add(activity.pixels);
+            idleFrames.add(activity.mirroredPixels);
+          }
+          return presentation.posture;
+        },
+        { timeout: 35000, interval: 100 },
+      )
+      .toMatch(/^(walking|stretching|playing)$/);
+    const active = activity!;
+    const restDuration = active.presentation.startedAt - rest.startedAt;
+    // The 18–32s product window is unchanged. Allow ordinary event-loop delivery
+    // latency, never a shorter rest; deterministic coverage checks exact edges.
+    expect(restDuration).toBeGreaterThanOrEqual(17999);
+    expect(restDuration).toBeLessThan(33000);
+    expect(active.presentation.character).toBe(character);
+    expect(active.opaquePixels).toBeGreaterThan(600);
+    expect(active.presentation.frozenAt).toBeUndefined();
+    const matchesIdle = matchPaintedFrames(idleFrames);
+    await expect
+      .poll(
+        async () => {
+          const painted = await session.run(
+            "real-activity-paint",
+            renderer.read,
+          );
+          return (
+            painted?.presentation.actionId === active.presentation.actionId &&
+            painted.opaquePixels > 600 &&
+            !matchesIdle(painted.pixels)
+          );
+        },
+        { timeout: 1000, interval: 25 },
+      )
+      .toBe(true);
+
+    let returned: typeof frame | null = null;
+    await expect
+      .poll(
+        async () => {
+          returned = await session.run(
+            "real-activity-completion",
+            renderer.read,
+          );
+          return returned?.presentation.posture;
+        },
+        { timeout: 5000, interval: 50 },
+      )
+      .toBe("resting");
+    observations.push(returned!.presentation);
+    const durations: Record<string, number> =
+      character === "corgi"
+        ? { walking: 2400, stretching: 1900, playing: 1760 }
+        : { walking: 2160, stretching: 1280, playing: 1120 };
+    const duration = durations[active.presentation.posture]!;
+    const elapsed =
+      returned!.presentation.startedAt - active.presentation.startedAt;
+    expect(elapsed).toBeGreaterThanOrEqual(duration - 1);
+    expect(elapsed).toBeLessThan(duration + 1000);
+    expect(returned!.opaquePixels).toBeGreaterThan(600);
+    await session.quit();
+    await session.close();
+  },
+);

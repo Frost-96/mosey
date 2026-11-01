@@ -144,14 +144,21 @@ export function observePetRenderer(app: ElectronApplication) {
       );
     },
     async withColdImages<T>(
-      action: () => Promise<T>,
+      action: (release: () => Promise<void>) => Promise<T>,
       run: SessionOperation,
+      { holdUntilReleased = false } = {},
     ): Promise<T> {
       await run("cold-images-install", () =>
-        app.evaluate(({ BrowserWindow }) => {
+        app.evaluate(({ BrowserWindow }, holdUntilReleased) => {
           const contents = BrowserWindow.getAllWindows().find(
             (window) => window.getTitle() === "Mosey",
           )!.webContents;
+          let holding = holdUntilReleased;
+          const pending: (() => void)[] = [];
+          Reflect.set(globalThis, "releaseRecoveryImages", () => {
+            holding = false;
+            for (const release of pending.splice(0)) release();
+          });
           Reflect.set(globalThis, "recoveryImageRequested", false);
           contents.session.webRequest.onBeforeRequest((details, callback) => {
             if (
@@ -159,14 +166,22 @@ export function observePetRenderer(app: ElectronApplication) {
               details.resourceType === "image"
             ) {
               Reflect.set(globalThis, "recoveryImageRequested", true);
-              setTimeout(() => callback({ cancel: false }), 2000);
+              if (holding) pending.push(() => callback({ cancel: false }));
+              else if (holdUntilReleased) callback({ cancel: false });
+              else setTimeout(() => callback({ cancel: false }), 2000);
             } else callback({ cancel: false });
           });
-        }),
+        }, holdUntilReleased),
       );
+      const release = () =>
+        run("cold-images-release", () =>
+          app.evaluate(() =>
+            Reflect.get(globalThis, "releaseRecoveryImages")(),
+          ),
+        );
       let outcome: { value: T } | { error: unknown };
       try {
-        const result = await action();
+        const result = await action(release);
         // This checks that the network fault was exercised, not an internal
         // renderer field or a timer call count. Pixels remain the acceptance.
         expect(
@@ -186,6 +201,8 @@ export function observePetRenderer(app: ElectronApplication) {
             BrowserWindow.getAllWindows()
               .find((window) => window.getTitle() === "Mosey")
               ?.webContents.session.webRequest.onBeforeRequest(null);
+            Reflect.get(globalThis, "releaseRecoveryImages")();
+            Reflect.deleteProperty(globalThis, "releaseRecoveryImages");
           }),
           1000,
           "Cold image interception cleanup did not finish within 1000ms",
