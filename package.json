@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:dev": "vitest run --project development",
     "test:packaged": "vitest run --project packaged",
+    "test:tooling": "node --test tools/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

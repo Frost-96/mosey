@@ -1,7 +1,28 @@
 import { createHitRows } from "./asset-hit-rows.ts";
 import sharp, { type Metadata } from "sharp";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { atlasSchema } from "../src/shared/assets.ts";
+import { prepareBuild } from "./incremental-build.ts";
+
+const build = await prepareBuild({
+  name: "character-assets",
+  inputs: [
+    "tools/build-assets.ts",
+    "tools/build-whale-assets.ts",
+    "tools/asset-hit-rows.ts",
+    "src/shared/assets.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/assets/characters/whale/processing.json",
+    "src/assets/characters/whale/source",
+    ...(await readdir("src/assets"))
+      .filter((name) => name.endsWith(".png"))
+      .map((name) => `src/assets/${name}`),
+  ],
+  outputs: ["src/assets/generated"],
+  identity: { node: process.version, sharp: sharp.versions },
+});
+if (build.current) process.exit(0);
 
 // Use only the first sample pose: the other sample poses change facial/body details.
 // Remove low-alpha generation fringe, crop the known solid identity, then resize at 2x.
@@ -428,3 +449,4 @@ for (const { action, source, sequence, loop } of actionConfigs) {
 }
 
 await import("./build-whale-assets.ts");
+await build.complete();

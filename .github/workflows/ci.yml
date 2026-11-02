@@ -1,49 +1,174 @@
 name: Application checks
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  # Unique groups protect pending main runs too: false alone still allows
+  # newer pushes to replace an older pending run in the same group.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  macos:
-    name: macos (${{ matrix.scale }}x)
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.paths.outputs.code }}
+    steps:
+      # Workflow-level paths-ignore would leave required checks pending.
+      - uses: actions/github-script@v8
+        id: paths
+        with:
+          script: |
+            let files;
+            if (context.eventName === 'pull_request') {
+              files = await github.paginate(github.rest.pulls.listFiles, {
+                ...context.repo, pull_number: context.issue.number, per_page: 100,
+              });
+              // The PR endpoint caps its response at 3,000 files. Fail open.
+              if (files.length >= 3000) files = undefined;
+            } else if (context.eventName === 'push' && !/^0+$/.test(context.payload.before)) {
+              const comparison = await github.rest.repos.compareCommits({
+                ...context.repo, base: context.payload.before, head: context.sha,
+              });
+              files = comparison.data.files;
+              // Compare responses contain at most 300 files. Never skip an
+              // incompletely enumerated change, including large pushes.
+              if (files?.length >= 300) files = undefined;
+            }
+            const documentation = /^(?:README\.md|GLOSSARY\.md|AGENTS\.md|docs\/.*\.md)$/;
+            const code = !files?.length || files.some(file =>
+              !documentation.test(file.filename) ||
+              (file.previous_filename && !documentation.test(file.previous_filename)));
+            core.setOutput('code', String(code));
+            core.summary.addRaw(code ? 'Full application validation.' : 'Documentation only; application jobs skipped.');
+            await core.summary.write();
+
+  static:
+    name: Static and deterministic checks
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+        with:
+          install-scripts: "false"
+      - run: pnpm check
+      - run: pnpm test:tooling
+      - run: pnpm exec vitest run --project deterministic
+
+  package:
+    name: Package preparation
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - run: pnpm package:mac
+      - name: Archive local unsigned app
+        run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple-silicon-app
+          path: out/Mosey-darwin-arm64.zip
+          compression-level: 0
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-preparation-evidence
+          path: build/timings.jsonl
+          retention-days: 7
+
+  development:
+    name: Development (${{ matrix.scale }}x, ${{ matrix.shard }}/2)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
         scale: ["1", "2"]
+        shard: [1, 2]
     env:
       MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
-    # Both serial suites include real-time Dock recovery and renderer lifecycles.
-    timeout-minutes: 75
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .node-version
-          package-manager-cache: false
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12.11.2
-          run_install: false
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - name: Development diagnostic reentry
-        run: pnpm test:dev tests/dock-status.test.ts
-      - name: Development geometry and settings
-        run: pnpm test:dev tests/dock.test.ts tests/size-autonomy.test.ts tests/settings.test.ts tests/size.test.ts
-      - name: Development Dock ground recovery
-        run: pnpm test:dev tests/dock-recovery.test.ts -t "Unstable bottom contact"
-      - name: Remaining development checks
-        run: pnpm test:dev --exclude tests/size.test.ts --exclude tests/dock-status.test.ts --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts --testNamePattern "^(?!.*Unstable bottom contact)"
-      - run: pnpm package:mac
-      - run: pnpm test:packaged
-      - name: Archive local unsigned app
-        run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
+      - uses: ./.github/actions/setup
+      - name: Development application acceptance
+        run: pnpm test:dev --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/tests.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-silicon-app-and-test-evidence-${{ matrix.scale }}x
+          name: development-${{ matrix.scale }}x-${{ matrix.shard }}-evidence
           path: |
-            out/Mosey-darwin-arm64.zip
             test-results/
+            build/timings.jsonl
+          retention-days: 7
+
+  packaged:
+    name: Packaged (${{ matrix.scale }}x, ${{ matrix.shard }}/2)
+    # Only this channel consumes the package; development failures cannot
+    # prevent packaged validation and neither channel waits for static checks.
+    needs: package
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        scale: ["1", "2"]
+        shard: [1, 2]
+    env:
+      MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+        with:
+          install-scripts: "false"
+      - uses: actions/download-artifact@v4
+        with:
+          name: apple-silicon-app
+          path: out
+      - name: Unpack the application built by this run
+        run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+      - name: Packaged application acceptance
+        run: pnpm test:packaged --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/tests.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: packaged-${{ matrix.scale }}x-${{ matrix.shard }}-evidence
+          path: test-results/
+          retention-days: 7
+
+  checks:
+    name: Application checks
+    if: always()
+    needs: [changes, static, package, development, packaged]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every applicable validation channel
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node --input-type=module <<'JS'
+          const results = JSON.parse(process.env.RESULTS);
+          if (results.changes.result !== 'success') process.exit(1);
+          const expected = results.changes.outputs.code === 'true' ? 'success' : 'skipped';
+          for (const name of ['static', 'package', 'development', 'packaged']) {
+            if (results[name].result !== expected) {
+              console.error(`${name}: expected ${expected}, received ${results[name].result}`);
+              process.exitCode = 1;
+            }
+          }
+          JS

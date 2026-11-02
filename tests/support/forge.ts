@@ -1,12 +1,20 @@
 import { expect } from "vitest";
 import { spawn } from "node:child_process";
-import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  chmod,
+  mkdir,
+  mkdtemp,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 // Let Forge prepare the real dev build/server without launching an unmanaged
 // app. Each caller owns one cleanup function, including on readiness failure.
 export async function startForge(): Promise<() => Promise<void>> {
+  const started = performance.now();
   const shim = await mkdtemp(path.join(os.tmpdir(), "mosey-forge-"));
   const executable = path.join(shim, "Electron.app/Contents/MacOS/Electron");
   let server: ReturnType<typeof spawn> | undefined;
@@ -86,6 +94,11 @@ export async function startForge(): Promise<() => Promise<void>> {
         { timeout: 60000 },
       )
       .toContain("MOSEY_TEST_READY");
+    await mkdir("test-results", { recursive: true });
+    await appendFile(
+      "test-results/forge-preparation.jsonl",
+      JSON.stringify({ seconds: (performance.now() - started) / 1000 }) + "\n",
+    );
     return stop;
   } catch (error) {
     await stop();
