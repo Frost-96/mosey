@@ -53,3 +53,5 @@ Dock 交互需要当前应用启动链的屏幕录制权限。应用不会主动
 - [Dock 原生桥接与权限边界](docs/adr/0003-dock-native-bridge.md)
 
 待办与历史记录保存在 [GitHub Issues](https://github.com/Frost-96/mosey/issues)，仓库不维护已完成功能的镜像规格或验收流水账。
+
+<!-- Temporary documentation-only CI validation for PR #93. -->
