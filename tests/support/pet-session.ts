@@ -109,34 +109,37 @@ export async function createPetTestSession(options: SessionOptions) {
       if (errors.length)
         throw new AggregateError(errors, "Pet session cleanup failed");
     })());
+  const captureProcess = () => {
+    const child = appProcess;
+    if (!child?.pid || child.exitCode !== null || child.signalCode !== null)
+      return;
+    try {
+      record("owned-process-group", processGroup(child.pid));
+    } catch (error) {
+      record("process-group-unavailable", String(error));
+    }
+    try {
+      execFileSync(
+        "/usr/bin/sample",
+        [
+          String(child.pid),
+          "1",
+          "1",
+          "-file",
+          path.join(evidence, `process-${child.pid}.txt`),
+        ],
+        { timeout: 5000, stdio: "ignore" },
+      );
+    } catch (error) {
+      record("sample-unavailable", String(error));
+    }
+  };
   onTestFinished(async ({ task }) => {
     // Vitest runs onTestFinished before onTestFailed. Capture the failing
     // stage and live OS process here, before cleanup interrupts pending calls.
     if (task.result?.state === "fail") {
       record("test-failed", task.result.errors);
-      const child = appProcess;
-      if (child?.pid && child.exitCode === null && child.signalCode === null) {
-        try {
-          record("owned-process-group", processGroup(child.pid));
-        } catch (error) {
-          record("process-group-unavailable", String(error));
-        }
-        try {
-          execFileSync(
-            "/usr/bin/sample",
-            [
-              String(child.pid),
-              "1",
-              "1",
-              "-file",
-              path.join(evidence, `process-${child.pid}.txt`),
-            ],
-            { timeout: 5000, stdio: "ignore" },
-          );
-        } catch (error) {
-          record("sample-unavailable", String(error));
-        }
-      }
+      captureProcess();
     }
     await close();
   });
@@ -409,6 +412,9 @@ setInterval(() => {
         return await launching;
       } catch (error) {
         record("launch-failed", String(error));
+        // launch() cleans up before onTestFinished runs. Preserve the live
+        // startup stack here so an absent window is not reduced to a timeout.
+        captureProcess();
         try {
           await close();
         } catch (cleanup) {
