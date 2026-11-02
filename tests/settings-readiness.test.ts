@@ -1,33 +1,12 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
 
-const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("opening settings waits for confirmed values instead of the initial React view", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-ready-"));
-  let app: ElectronApplication | undefined;
-  let stop: (() => Promise<void>) | undefined;
+  const session = await createPetTestSession({ dock: "real" });
   try {
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${path.join(root, "profile")}`],
-          }
-        : { args: [".", `--user-data-dir=${path.join(root, "profile")}`] },
-    );
-    await app.firstWindow();
+    const { app } = await session.launch();
+    session.mark("read-initial-settings");
     const first = await openSettings(app);
     const snapshot = await first.evaluate(() => window.moseySettings.get());
     await closeSettings(app);
@@ -72,6 +51,7 @@ test("opening settings waits for confirmed values instead of the initial React v
         };
       });
     }, snapshot);
+    session.mark("delayed-settings-confirmation");
     const settings = await openSettings(app);
     expect(await settings.locator("output").textContent()).toBe("110");
     expect(await settings.getByRole("checkbox").isChecked()).toBe(false);
@@ -80,8 +60,6 @@ test("opening settings waits for confirmed values instead of the initial React v
       "等待批准",
     );
   } finally {
-    await app?.close();
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    await session.close();
   }
 });

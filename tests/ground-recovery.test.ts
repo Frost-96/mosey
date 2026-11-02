@@ -1,11 +1,7 @@
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import type { ElectronApplication } from "playwright";
 import { distanceFromGround } from "./support/ground";
-import { execFileSync } from "node:child_process";
+import { createPetTestSession } from "./support/pet-session";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
 test.each([
@@ -17,38 +13,25 @@ test.each([
 ])(
   "$size DIP follows a $delta DIP work-area change (metrics notification: $notifyMetrics)",
   async ({ size, delta, notifyMetrics }) => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "mosey-ground-repro-"));
+    const session = await createPetTestSession({
+      dock: "real",
+      preferences: {
+        version: 3,
+        character: "corgi",
+        size,
+        visibility: "visible",
+      },
+    });
     let app: ElectronApplication | undefined;
-    let stop: (() => Promise<void>) | undefined;
     try {
-      await writeFile(
-        path.join(root, "preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: "corgi",
-          size,
-          visibility: "visible",
-        }),
-      );
-      if (!packaged) stop = await startForge();
-      else
-        execFileSync("/usr/bin/ditto", [
-          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-          path.join(root, "Mosey.app"),
-        ]);
-      app = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${root}`],
-            }
-          : { args: [".", `--user-data-dir=${root}`] },
-      );
-      const page = await app.firstWindow();
+      const launched = await session.launch();
+      app = launched.app;
+      const page = launched.pet;
       await page.waitForLoadState("networkidle");
       await expect
         .poll(() => page.locator("canvas").getAttribute("width"))
         .not.toBeNull();
+      session.mark("work-area-change");
       const result = await app.evaluate(
         ({ BrowserWindow, screen }, { delta, notifyMetrics }) => {
           const pet = BrowserWindow.getAllWindows()[0]!;
@@ -84,6 +67,7 @@ test.each([
         },
         { delta, notifyMetrics },
       );
+      session.mark("ground-recovery");
       if (!notifyMetrics) {
         // The screen boundary exposes a new work area before its native
         // notification. Observe recovery against the live floor, not a stale y.
@@ -106,13 +90,12 @@ test.each([
         ?.windows()[0]
         ?.screenshot({
           path: `test-results/failure-ground-${packaged ? "packaged" : "development"}.png`,
+          timeout: 3000,
         })
         .catch(() => {});
       throw error;
     } finally {
-      await app?.close();
-      await stop?.();
-      await rm(root, { recursive: true, force: true });
+      await session.close();
     }
   },
 );
