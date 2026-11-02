@@ -77,10 +77,17 @@ jobs:
       - run: pnpm package:mac
       - name: Archive local unsigned app
         run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
+      - name: Share verified preparation within this run
+        # Native outputs are small; the 50 MB generated assets already exist
+        # in the checkout. Their receipt is only a hint: a differing/missing
+        # generated file still forces a rebuild through output verification.
+        run: tar -czf out/build-preparation.tar.gz build/native build/incremental
       - uses: actions/upload-artifact@v4
         with:
           name: apple-silicon-app
-          path: out/Mosey-darwin-arm64.zip
+          path: |
+            out/Mosey-darwin-arm64.zip
+            out/build-preparation.tar.gz
           compression-level: 0
           retention-days: 7
       - uses: actions/upload-artifact@v4
@@ -115,7 +122,9 @@ jobs:
           path: out
       - name: Unpack the application built by this run
         if: needs.package.result == 'success'
-        run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+        run: |
+          ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+          tar -xzf out/build-preparation.tar.gz
       - name: Development and packaged application acceptance
         run: pnpm test:ci --shard=${{ matrix.shard }}/5
       - uses: actions/upload-artifact@v4
