@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFailed } from "vitest";
 import {
@@ -22,18 +23,22 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
   let stop: (() => Promise<void>) | undefined;
   let settings: Page | undefined;
   const profile = path.join(root, "profile");
-  const progressFile = `test-results/${packaged ? "packaged" : "development"}-settings-progress.json`;
+  const progressFile = evidencePath(
+    `${packaged ? "packaged" : "development"}-settings-progress.json`,
+  );
   const progress: { stage: string; at: number }[] = [];
   const stage = async (name: string) => {
     progress.push({ stage: name, at: Date.now() });
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(progressFile, JSON.stringify(progress, null, 2));
   };
   onTestFailed(async () => {
     await stage("test failed");
     await (settings ?? app?.windows()[0])
       ?.screenshot({
-        path: `test-results/failure-settings-${packaged ? "packaged" : "development"}.png`,
+        path: evidencePath(
+          `failure-settings-${packaged ? "packaged" : "development"}.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});
@@ -150,7 +155,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .poll(() => settings!.locator(".error [role=alert]").textContent())
       .toContain("保存失败");
     expect((await petState()).bounds.width).toBe(70);
-    await mkdir("test-results", { recursive: true });
+
     expect(
       await settings
         .locator("body")
@@ -167,7 +172,9 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await stage("save-error screenshot");
     await settings.screenshot({
       fullPage: true,
-      path: `test-results/settings-${packaged ? "packaged" : "development"}-save-error.png`,
+      path: evidencePath(
+        `settings-${packaged ? "packaged" : "development"}-save-error.png`,
+      ),
     });
     await stage("retry failed size");
     await rm(file, { recursive: true });
@@ -198,7 +205,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await settings.getByRole("button", { name: "中（默认）" }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
-    await mkdir("test-results", { recursive: true });
+
     expect(
       await settings
         .locator("body")
@@ -219,7 +226,9 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .scrollIntoViewIfNeeded();
     await stage("settings screenshot");
     await settings.screenshot({
-      path: `test-results/settings-${packaged ? "packaged" : "development"}.png`,
+      path: evidencePath(
+        `settings-${packaged ? "packaged" : "development"}.png`,
+      ),
     });
     await stage("close settings");
     await settings.close();
@@ -244,10 +253,11 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       visibility: "hidden",
     });
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     await (settings ?? app?.windows()[0])
       ?.screenshot({
-        path: `test-results/failure-settings-${packaged ? "packaged" : "development"}.png`,
+        path: evidencePath(
+          `failure-settings-${packaged ? "packaged" : "development"}.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});

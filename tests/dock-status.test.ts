@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -141,9 +142,11 @@ test("diagnostic status keeps the latest Retry during a native permission query"
       )
       .toBe(true);
     const final = await diagnostic.getByRole("status").innerText();
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-dock-status-reentry.json`,
+      evidencePath(
+        `${packaged ? "packaged" : "development"}-dock-status-reentry.json`,
+      ),
       JSON.stringify({
         scope:
           "Controlled public input interleaving; real permission result; no capture; not proof that the native API caused historical runs",

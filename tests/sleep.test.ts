@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
@@ -16,7 +17,7 @@ const recording =
   whale && process.env.MOSEY_RECORD_SAMPLE === "1"
     ? {
         recordVideo: {
-          dir: "test-results/whale-sleep-video",
+          dir: evidencePath("whale-sleep-video"),
           size: { width: 240, height: 240 },
           fps: 60,
         },
@@ -185,10 +186,10 @@ test(
       });
       await waitForSleep();
       const mode = evidence;
-      await mkdir("test-results", { recursive: true });
+
       const screenshot = (name: string) =>
         pet.screenshot({
-          path: `test-results/${mode}-sleep-${name}.png`,
+          path: evidencePath(`${mode}-sleep-${name}.png`),
           omitBackground: true,
         });
       const bounds = () =>
@@ -430,7 +431,7 @@ test(
       await expect.poll(height).toBeGreaterThan(180);
       expect(await bounds()).toEqual(suspended);
       await writeFile(
-        `test-results/${mode}-sleep.json`,
+        evidencePath(`${mode}-sleep.json`),
         JSON.stringify(
           {
             rapidGapMs: rapidGap,
@@ -447,11 +448,10 @@ test(
         ),
       );
     } catch (error) {
-      await mkdir("test-results", { recursive: true });
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-${evidence}-sleep.png`,
+          path: evidencePath(`failure-${evidence}-sleep.png`),
         })
         .catch(() => {});
       throw error;

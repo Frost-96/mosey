@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -31,9 +32,9 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
       await chmod(dockHelper, originalDockMode);
       const restored = await readFile(dockHelper);
       const sameBytes = restored.equals(originalDockHelper);
-      await mkdir("test-results", { recursive: true });
+
       await writeFile(
-        "test-results/development-size-empty-dock-restoration.json",
+        evidencePath("development-size-empty-dock-restoration.json"),
         JSON.stringify({
           originalSHA256: createHash("sha256")
             .update(originalDockHelper)
@@ -204,7 +205,9 @@ setTimeout(()=>process.exit(0),120000);
         )
         .toEqual({ width: side, bottom: side, visible: true });
       await pet.screenshot({
-        path: `test-results/${packaged ? "packaged" : "development"}-size-${label.toLowerCase()}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.png`,
+        path: evidencePath(
+          `${packaged ? "packaged" : "development"}-size-${label.toLowerCase()}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.png`,
+        ),
         omitBackground: true,
       });
       const idle = new Set<string>();
@@ -422,11 +425,12 @@ setTimeout(()=>process.exit(0),120000);
       "Unable to save pet size",
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-size.png`,
+        path: evidencePath(
+          `failure-${packaged ? "packaged" : "development"}-size.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});

@@ -1,6 +1,7 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, mkdir } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
@@ -278,10 +279,12 @@ test("login settings explain availability and follow system approval, failure an
     await expect
       .poll(() => finalSettings.getByRole("checkbox").isChecked())
       .toBe(true);
-    await mkdir("test-results", { recursive: true });
+
     await finalSettings.screenshot({
       fullPage: true,
-      path: `test-results/settings-login-${packaged ? "packaged" : "development"}-controlled.png`,
+      path: evidencePath(
+        `settings-login-${packaged ? "packaged" : "development"}-controlled.png`,
+      ),
     });
     expect(runtimeErrors).toEqual([]);
     expect(await settingsScriptsInPet()).toEqual([]);

@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, readFile, mkdir, writeFile } from "node:fs/promises";
@@ -252,7 +253,6 @@ test("slider previews without saving, commits on release, and persists nonpreset
       ),
     ).toBe(false);
   } catch (error) {
-    await mkdir("test-results", { recursive: true }).catch(() => {});
     const settings = app
       ?.windows()
       .find((page) => new URL(page.url()).searchParams.has("settings"));
@@ -274,7 +274,9 @@ test("slider previews without saving, commits on release, and persists nonpreset
       }))
       .catch(() => undefined);
     await writeFile(
-      `test-results/failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
+      evidencePath(
+        `failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
+      ),
       JSON.stringify({ renderer, native }, null, 2),
     ).catch(() => {});
     for (const page of app?.windows() ?? []) {
@@ -283,7 +285,9 @@ test("slider previews without saving, commits on release, and persists nonpreset
         : "pet";
       await page
         .screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-slider-${name}.png`,
+          path: evidencePath(
+            `failure-${packaged ? "packaged" : "development"}-slider-${name}.png`,
+          ),
           timeout: 3000,
         })
         .catch(() => {});

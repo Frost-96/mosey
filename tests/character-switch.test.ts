@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import type { Page } from "playwright";
 import { rm, mkdir, writeFile } from "node:fs/promises";
@@ -403,7 +404,9 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
         ),
       ]);
       await writeFile(
-        `test-results/preparation-timeout-${process.env.MOSEY_TEST_MODE}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.json`,
+        evidencePath(
+          `preparation-timeout-${process.env.MOSEY_TEST_MODE}-${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}x.json`,
+        ),
         JSON.stringify({ error: String(error), observation }, null, 2),
       );
       throw error;

@@ -1,7 +1,8 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
@@ -211,10 +212,12 @@ test("settings protects edits while independently merging IPC results and notifi
     expect(await settings.locator(".error").textContent()).toContain(
       "无法确认保存结果",
     );
-    await mkdir("test-results", { recursive: true });
+
     await settings.screenshot({
       fullPage: true,
-      path: `test-results/settings-state-${packaged ? "packaged" : "development"}-transport-error.png`,
+      path: evidencePath(
+        `settings-state-${packaged ? "packaged" : "development"}-transport-error.png`,
+      ),
     });
     await settings.getByRole("button", { name: "重试", exact: true }).click();
     await expect.poll(() => count("settings:size")).toBe(5);
@@ -299,10 +302,12 @@ test("settings protects edits while independently merging IPC results and notifi
       .poll(() => reopened.getByRole("combobox").inputValue())
       .toBe("whale");
     expect(await reopened.locator("#character-error").isVisible()).toBe(false);
-    await mkdir("test-results", { recursive: true });
+
     await reopened.screenshot({
       fullPage: true,
-      path: `test-results/settings-state-${packaged ? "packaged" : "development"}.png`,
+      path: evidencePath(
+        `settings-state-${packaged ? "packaged" : "development"}.png`,
+      ),
     });
   } finally {
     await app?.close();

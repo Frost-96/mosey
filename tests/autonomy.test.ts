@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { startForge } from "./support/forge";
@@ -20,8 +21,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   let restoreDockCapture: (() => Promise<void>) | undefined;
-  await mkdir("test-results", { recursive: true });
-  const tracePath = `test-results/${evidence}-autonomy-progress.jsonl`;
+
+  const tracePath = evidencePath(`${evidence}-autonomy-progress.jsonl`);
   await writeFile(tracePath, "");
   const checkpoint = (stage: string) => {
     const entry = JSON.stringify({ stage, at: performance.now() });
@@ -251,7 +252,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     for (const [index, url] of [...idleFrames].entries()) {
       const buffer = Buffer.from(url.split(",")[1]!, "base64");
       await writeFile(
-        `test-results/${evidence}-autonomy-idle-${index}.png`,
+        evidencePath(`${evidence}-autonomy-idle-${index}.png`),
         buffer,
       );
       const image = PNG.sync.read(buffer);
@@ -275,14 +276,14 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       });
     }
     await writeFile(
-      `test-results/${evidence}-autonomy-baseline.json`,
+      evidencePath(`${evidence}-autonomy-baseline.json`),
       JSON.stringify(
         { observedFrames: observedIdle.size, references },
         null,
         2,
       ),
     );
-    await mkdir("test-results", { recursive: true });
+
     await app.evaluate(() => {
       Math.random = () => 0.1;
       const timeout = globalThis.setTimeout;
@@ -308,7 +309,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       })
       .toBeGreaterThan(15);
     await pet.screenshot({
-      path: `test-results/${evidence}-walking.png`,
+      path: evidencePath(`${evidence}-walking.png`),
       omitBackground: true,
     });
     checkpoint("walking-screenshot-complete");
@@ -380,7 +381,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       await new Promise((resolve) => setTimeout(resolve, 450));
       expect(idleFrames.has(await pixels())).toBe(false);
       await pet.screenshot({
-        path: `test-results/${evidence}-${action}.png`,
+        path: evidencePath(`${evidence}-${action}.png`),
         omitBackground: true,
       });
       checkpoint(`${action}-screenshot-complete`);
@@ -473,13 +474,13 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     expect(await bounds()).toEqual(held);
     const heldPixels = await pixels();
     await writeFile(
-      `test-results/${evidence}-autonomy-held-canvas.png`,
+      evidencePath(`${evidence}-autonomy-held-canvas.png`),
       Buffer.from(heldPixels.split(",")[1]!, "base64"),
     );
     expect(idleFrames.has(heldPixels)).toBe(true);
     await pet.mouse.up();
     await writeFile(
-      `test-results/${evidence}-autonomy.json`,
+      evidencePath(`${evidence}-autonomy.json`),
       JSON.stringify(
         {
           origin,
@@ -501,7 +502,7 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     checkpoint("complete");
   } catch (error) {
     checkpoint("failure");
-    await mkdir("test-results", { recursive: true });
+
     const externalState = await app
       ?.evaluate(({ Menu, BrowserWindow, app }) => ({
         applicationHidden: app.isHidden(),
@@ -530,13 +531,13 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       "utf8",
     ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
     await writeFile(
-      `test-results/failure-${evidence}-autonomy-state.json`,
+      evidencePath(`failure-${evidence}-autonomy-state.json`),
       JSON.stringify({ externalState, inputTrace, preferences }, null, 2),
     );
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${evidence}-autonomy.png`,
+        path: evidencePath(`failure-${evidence}-autonomy.png`),
         timeout: 3000,
       })
       .catch(() => {});

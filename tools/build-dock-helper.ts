@@ -2,10 +2,19 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { prepareBuild } from "./incremental-build.ts";
 
 const directory = path.resolve("build/native");
 const flags = ["-O", "-target", "arm64-apple-macos15.0", "-parse-as-library"];
 const sha = (data: Buffer) => createHash("sha256").update(data).digest("hex");
+const xcrun = (...args: string[]) =>
+  execFileSync("/usr/bin/xcrun", args, { encoding: "utf8" }).trim();
+const toolchain = {
+  compiler: xcrun("--find", "swiftc"),
+  swiftVersion: xcrun("swiftc", "--version"),
+  sdk: xcrun("--show-sdk-path"),
+  sdkVersion: xcrun("--show-sdk-version"),
+};
 await mkdir(directory, { recursive: true });
 
 async function buildHelper({
@@ -21,6 +30,13 @@ async function buildHelper({
 }) {
   const source = path.resolve(sourceFile);
   const binary = path.join(directory, outputName);
+  const build = await prepareBuild({
+    name: outputName,
+    inputs: [source, "tools/build-dock-helper.ts"],
+    outputs: [binary, path.join(directory, receiptName)],
+    identity: { ...toolchain, flags, identifier },
+  });
+  if (build.current) return;
   execFileSync(
     "/usr/bin/xcrun",
     [
@@ -49,9 +65,7 @@ async function buildHelper({
       {
         sourceSHA256: sha(await readFile(source)),
         buildHelperSHA256: sha(await readFile(binary)),
-        swiftVersion: execFileSync("/usr/bin/xcrun", ["swiftc", "--version"], {
-          encoding: "utf8",
-        }).trim(),
+        swiftVersion: toolchain.swiftVersion,
         flags,
         signature,
       },
@@ -59,6 +73,7 @@ async function buildHelper({
       2,
     ),
   );
+  await build.complete();
 }
 
 // Product and historical validation keep separate source, binary and signing

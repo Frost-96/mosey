@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
@@ -378,7 +379,9 @@ test(
         );
         await grounded();
         await pet.screenshot({
-          path: `test-results/${packaged ? "packaged" : "development"}-size-autonomy-${side}-walking.png`,
+          path: evidencePath(
+            `${packaged ? "packaged" : "development"}-size-autonomy-${side}-walking.png`,
+          ),
           omitBackground: true,
         });
         const idle = references.get(side)!;
@@ -517,7 +520,9 @@ test(
           await expect.poll(footprint).toEqual({ width: side, bottom: side });
           await grounded();
           await pet.screenshot({
-            path: `test-results/${packaged ? "packaged" : "development"}-size-autonomy-${side}-${action}.png`,
+            path: evidencePath(
+              `${packaged ? "packaged" : "development"}-size-autonomy-${side}-${action}.png`,
+            ),
             omitBackground: true,
           });
           // Keep synthetic capture away from the real OS cursor, as #4 does.
@@ -632,7 +637,9 @@ test(
         boundary: await desktop(),
       });
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-size-autonomy.json`,
+        evidencePath(
+          `${packaged ? "packaged" : "development"}-size-autonomy.json`,
+        ),
         JSON.stringify(
           {
             evidence,
@@ -644,7 +651,6 @@ test(
         ),
       );
     } catch (error) {
-      await mkdir("test-results", { recursive: true });
       const failureState = await app
         ?.evaluate(({ Menu, BrowserWindow }) => ({
           menus: Menu.getApplicationMenu()?.items.map((item) => ({
@@ -659,7 +665,9 @@ test(
         }))
         .catch(() => undefined);
       await writeFile(
-        `test-results/failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
+        evidencePath(
+          `failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
+        ),
         JSON.stringify(
           { error: String(error), failureState, diagnostics, settingsEvents },
           null,
@@ -669,7 +677,9 @@ test(
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-size-autonomy.png`,
+          path: evidencePath(
+            `failure-${packaged ? "packaged" : "development"}-size-autonomy.png`,
+          ),
           timeout: 3000,
         })
         .catch(() => {});

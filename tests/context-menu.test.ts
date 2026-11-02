@@ -1,54 +1,30 @@
-import { emptyDockCapture } from "./support/empty-dock";
+import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import os from "node:os";
+import type { ElectronApplication } from "playwright";
+import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
 import { matchPaintedFrames } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
-// Exercise the CI 1x raster path on Retina developer machines too.
-const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("body secondary clicks open a native menu and cancel without changing the pet", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-menu-"));
+  const session = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 240,
+      visibility: "visible",
+    },
+  });
   let app: ElectronApplication | undefined;
-  let stopForge: (() => Promise<void>) | undefined;
-  let restoreDock: (() => Promise<void>) | undefined;
   try {
-    await mkdir(path.join(root, "profile"), { recursive: true });
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "corgi",
-        size: 240,
-        visibility: "visible",
-      }),
-    );
-    if (!packaged) stopForge = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    restoreDock = await emptyDockCapture(
-      packaged
-        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-        : path.resolve("build/native/dock-runtime"),
-    );
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
-          }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
-    );
-    const pet = await app.firstWindow();
+    const launched = await session.launch();
+    app = launched.app;
+    const pet = launched.pet;
+    session.mark("native-menu-scenarios");
     await pet.waitForLoadState("networkidle");
     await app.evaluate(({ Menu }) => {
       const popup = Menu.prototype.popup;
@@ -596,7 +572,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
       .toBe(false);
     expect(
       JSON.parse(
-        await readFile(path.join(root, "profile/preferences.json"), "utf8"),
+        await readFile(path.join(session.profile, "preferences.json"), "utf8"),
       ).visibility,
     ).toBe("hidden");
     await releaseSecondary();
@@ -622,6 +598,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await closeMenu();
     await expect.poll(pixels).not.toBe(await pixels());
     await openMenu();
+    session.mark("quit-from-native-menu");
     const exited = app.waitForEvent("close");
     await app
       .evaluate(() => {
@@ -632,16 +609,8 @@ test("body secondary clicks open a native menu and cancel without changing the p
       })
       .catch(() => {});
     await exited;
-    app = undefined;
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
-          }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
-    );
-    await app.firstWindow();
+    app = (await session.restart()).app;
+    session.mark("persisted-size-after-relaunch");
     expect((await bounds()).width).toBe(160);
     expect(
       await app.evaluate(({ Menu }) =>
@@ -652,9 +621,9 @@ test("body secondary clicks open a native menu and cancel without changing the p
           .map((item) => item.label),
       ),
     ).toEqual(["Medium"]);
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-menu.json`,
+      evidencePath(`${packaged ? "packaged" : "development"}-menu.json`),
       JSON.stringify(
         {
           nativeMenu:
@@ -684,26 +653,17 @@ test("body secondary clicks open a native menu and cancel without changing the p
       ),
     );
   } catch (error) {
-    console.log(
-      "Native menu events",
-      await app?.evaluate(() => Reflect.get(globalThis, "nativeEvents")),
-    );
-    await mkdir("test-results", { recursive: true });
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-menu.png`,
+        path: evidencePath(
+          `failure-${packaged ? "packaged" : "development"}-menu.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});
     throw error;
   } finally {
-    await app
-      ?.evaluate(() => Reflect.get(globalThis, "menus")?.at(-1)?.closePopup())
-      .catch(() => {});
-    await app?.close().catch(() => {});
-    await restoreDock?.();
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await session.close();
   }
 });

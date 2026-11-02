@@ -1,0 +1,27 @@
+name: Install locked JavaScript dependencies
+description: Use setup-node's pnpm store cache, without caching build outputs or node_modules.
+inputs:
+  install-scripts:
+    description: Install Electron only for jobs that launch the development host or package it.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 12.11.2
+        run_install: false
+    - uses: actions/setup-node@v5
+      with:
+        node-version-file: .node-version
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
+    - shell: bash
+      env:
+        INSTALL_SCRIPTS: ${{ inputs.install-scripts }}
+      run: |
+        if [[ "$INSTALL_SCRIPTS" == "true" ]]; then
+          pnpm install --frozen-lockfile
+        else
+          pnpm install --frozen-lockfile --ignore-scripts
+        fi

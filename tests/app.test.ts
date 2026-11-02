@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
@@ -5,7 +6,6 @@ import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import {
-  mkdir,
   mkdtemp,
   writeFile,
   rm,
@@ -386,7 +386,9 @@ async function exercisePet() {
       await new Promise((resolve) => setTimeout(resolve, 600));
       responses.add(await pixels());
       await window.screenshot({
-        path: `test-results/${packaged ? "packaged" : "development"}-response-${random}.png`,
+        path: evidencePath(
+          `${packaged ? "packaged" : "development"}-response-${random}.png`,
+        ),
         omitBackground: true,
       });
       // A burst during a response must not leave queued actions playing later.
@@ -504,7 +506,7 @@ async function exercisePet() {
     await new Promise((resolve) => setTimeout(resolve, 1800));
     expect(await petBounds()).toEqual(held);
     await window.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-held.png`,
+      path: evidencePath(`${packaged ? "packaged" : "development"}-held.png`),
       omitBackground: true,
     });
     await window.mouse.up();
@@ -512,7 +514,9 @@ async function exercisePet() {
     expect(await petBounds()).toEqual(held);
     expect(idleFrames.has(await pixels())).toBe(false);
     await window.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-flutter.png`,
+      path: evidencePath(
+        `${packaged ? "packaged" : "development"}-flutter.png`,
+      ),
       omitBackground: true,
     });
     await expect
@@ -520,7 +524,9 @@ async function exercisePet() {
       .toBeGreaterThan(held.y + 20);
     await waitForGround();
     await window.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-landing.png`,
+      path: evidencePath(
+        `${packaged ? "packaged" : "development"}-landing.png`,
+      ),
       omitBackground: true,
     });
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
@@ -1015,9 +1021,9 @@ async function exercisePet() {
     const quitRun = await inspectRun();
     expect(quitRun.localLog).not.toBe(secondRun.localLog);
     if (quitRun.capturing) process.kill(quitRun.nativePID, "SIGSTOP");
-    await mkdir("test-results", { recursive: true });
+
     await window.screenshot({
-      path: `test-results/${packaged ? "packaged" : "development"}-corgi.png`,
+      path: evidencePath(`${packaged ? "packaged" : "development"}-corgi.png`),
       omitBackground: true,
     });
     const child = app.process();
@@ -1036,32 +1042,39 @@ async function exercisePet() {
     await waitGone(quitRun.nativePID);
     for (const [index, run] of runs.entries())
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+        evidencePath(
+          `${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+        ),
         await readFile(run.localLog),
       );
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-dock-lifecycle.json`,
+      evidencePath(
+        `${packaged ? "packaged" : "development"}-dock-lifecycle.json`,
+      ),
       JSON.stringify(runs, null, 2),
     );
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-runtime.json`,
+      evidencePath(`${packaged ? "packaged" : "development"}-runtime.json`),
       JSON.stringify(runtime, null, 2),
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     // Keep bounded native evidence before an isolated profile is removed.
     for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
       const info = await stat(localLog).catch(() => undefined);
       if (info && info.size <= 8 * 1024 * 1024)
         await copyFile(
           localLog,
-          `test-results/failure-${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+          evidencePath(
+            `failure-${packaged ? "packaged" : "development"}-dock-run-${index + 1}.jsonl`,
+          ),
         ).catch(() => {});
     }
     for (const [i, window] of (app?.windows() ?? []).entries())
       await window
         .screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-${i}.png`,
+          path: evidencePath(
+            `failure-${packaged ? "packaged" : "development"}-${i}.png`,
+          ),
         })
         .catch(() => {});
     throw error;

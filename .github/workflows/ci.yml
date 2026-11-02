@@ -1,49 +1,180 @@
 name: Application checks
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  # Unique groups protect pending main runs too: false alone still allows
+  # newer pushes to replace an older pending run in the same group.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  macos:
-    name: macos (${{ matrix.scale }}x)
-    runs-on: macos-15
-    strategy:
-      fail-fast: false
-      matrix:
-        scale: ["1", "2"]
-    env:
-      MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
-    # Both serial suites include real-time Dock recovery and renderer lifecycles.
-    timeout-minutes: 75
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.paths.outputs.code }}
+    steps:
+      # Workflow-level paths-ignore would leave required checks pending.
+      - uses: actions/github-script@v8
+        id: paths
+        with:
+          script: |
+            let files;
+            if (context.eventName === 'pull_request') {
+              files = await github.paginate(github.rest.pulls.listFiles, {
+                ...context.repo, pull_number: context.issue.number, per_page: 100,
+              });
+              // The PR endpoint caps its response at 3,000 files. Fail open.
+              if (files.length >= 3000) files = undefined;
+            } else if (context.eventName === 'push' && !/^0+$/.test(context.payload.before)) {
+              const comparison = await github.rest.repos.compareCommits({
+                ...context.repo, base: context.payload.before, head: context.sha,
+              });
+              files = comparison.data.files;
+              // Compare responses contain at most 300 files. Never skip an
+              // incompletely enumerated change, including large pushes.
+              if (files?.length >= 300) files = undefined;
+            }
+            const documentation = /^(?:README\.md|GLOSSARY\.md|AGENTS\.md|docs\/.*\.md)$/;
+            const code = !files?.length || files.some(file =>
+              !documentation.test(file.filename) ||
+              (file.previous_filename && !documentation.test(file.previous_filename)));
+            core.setOutput('code', String(code));
+            core.summary.addRaw(code ? 'Full application validation.' : 'Documentation only; application jobs skipped.');
+            await core.summary.write();
+
+  static:
+    name: Static and deterministic checks
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: .node-version
-          package-manager-cache: false
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12.11.2
-          run_install: false
-      - run: pnpm install --frozen-lockfile
+          install-scripts: "false"
       - run: pnpm check
-      - name: Development diagnostic reentry
-        run: pnpm test:dev tests/dock-status.test.ts
-      - name: Development geometry and settings
-        run: pnpm test:dev tests/dock.test.ts tests/size-autonomy.test.ts tests/settings.test.ts tests/size.test.ts
-      - name: Development Dock ground recovery
-        run: pnpm test:dev tests/dock-recovery.test.ts -t "Unstable bottom contact"
-      - name: Remaining development checks
-        run: pnpm test:dev --exclude tests/size.test.ts --exclude tests/dock-status.test.ts --exclude tests/dock.test.ts --exclude tests/size-autonomy.test.ts --exclude tests/settings.test.ts --testNamePattern "^(?!.*Unstable bottom contact)"
+      - run: pnpm test:tooling
+      - run: pnpm exec vitest run --project deterministic
+
+  package:
+    name: Package preparation
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
       - run: pnpm package:mac
-      - run: pnpm test:packaged
       - name: Archive local unsigned app
         run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
+      - name: Share verified preparation within this run
+        # Native outputs are small; the 50 MB generated assets already exist
+        # in the checkout. Their receipt is only a hint: a differing/missing
+        # generated file still forces a rebuild through output verification.
+        run: tar -czf out/build-preparation.tar.gz build/native build/incremental
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple-silicon-app
+          path: |
+            out/Mosey-darwin-arm64.zip
+            out/build-preparation.tar.gz
+          compression-level: 0
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-silicon-app-and-test-evidence-${{ matrix.scale }}x
+          name: package-preparation-evidence
+          path: build/timings.jsonl
+          retention-days: 7
+
+  acceptance:
+    name: Application acceptance (${{ matrix.shard }}/5)
+    # Every shard consumes the same package, then owns an isolated serial
+    # desktop. On package failure the development channels still run.
+    needs: [changes, package]
+    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        shard: [1, 2, 3, 4, 5]
+    env:
+      MOSEY_CI_PACKAGE_READY: ${{ needs.package.result == 'success' }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        if: needs.package.result == 'success'
+        with:
+          name: apple-silicon-app
+          path: out
+      - name: Unpack the application built by this run
+        if: needs.package.result == 'success'
+        run: |
+          ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+          tar -xzf out/build-preparation.tar.gz
+      - name: Development and packaged application acceptance
+        run: pnpm test:ci --shard=${{ matrix.shard }}/5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matrix-${{ matrix.shard }}
+          path: test-results/ci-matrix.json
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-${{ matrix.shard }}-evidence
           path: |
-            out/Mosey-darwin-arm64.zip
             test-results/
+            build/timings.jsonl
+          retention-days: 7
+
+  checks:
+    name: Application checks
+    if: always()
+    needs: [changes, static, package, acceptance]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every applicable validation channel
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node --input-type=module <<'JS'
+          const results = JSON.parse(process.env.RESULTS);
+          if (results.changes.result !== 'success') process.exit(1);
+          const expected = results.changes.outputs.code === 'true' ? 'success' : 'skipped';
+          for (const name of ['static', 'package', 'acceptance']) {
+            if (results[name].result !== expected) {
+              console.error(`${name}: expected ${expected}, received ${results[name].result}`);
+              process.exitCode = 1;
+            }
+          }
+          JS
+      - uses: actions/checkout@v5
+        if: needs.changes.outputs.code == 'true'
+      - uses: actions/setup-node@v5
+        if: needs.changes.outputs.code == 'true'
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: actions/download-artifact@v4
+        if: needs.changes.outputs.code == 'true'
+        with:
+          pattern: matrix-*
+          path: test-results/ci-coverage
+      - name: Verify complete mode and scale coverage without duplicates
+        if: needs.changes.outputs.code == 'true'
+        run: node tools/check-ci-coverage.ts test-results/ci-coverage
