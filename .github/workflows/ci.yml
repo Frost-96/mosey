@@ -126,7 +126,7 @@ jobs:
           ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
           tar -xzf out/build-preparation.tar.gz
       - name: Development and packaged application acceptance
-        run: pnpm test:ci --shard=${{ matrix.shard }}/5 tests/ground-recovery.test.ts
+        run: pnpm test:ci --project=packaged-2x tests/renderer-recovery.test.ts tests/ground-recovery.test.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
