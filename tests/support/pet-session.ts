@@ -1,3 +1,4 @@
+import { evidencePath } from "./evidence";
 import { expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -47,8 +48,8 @@ const processGroup = (pid: number) =>
 // reverse order, continuing even when one release fails. Test exit is a safety
 // net; close() also permits several independent profiles in a single scenario.
 export async function createPetTestSession(options: SessionOptions) {
-  const evidence = path.resolve(
-    "test-results/pet-sessions",
+  const evidence = evidencePath(
+    "pet-sessions",
     `${process.env.MOSEY_TEST_MODE}-${randomUUID()}`,
   );
   mkdirSync(evidence, { recursive: true });

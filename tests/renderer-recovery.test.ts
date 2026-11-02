@@ -1,5 +1,6 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
@@ -203,9 +204,10 @@ test.each([
     await new Promise((resolve) => setTimeout(resolve, 2600));
     const recoveredPixels = await pixels();
     if (!matchesIdle(recoveredPixels)) {
-      await mkdir("test-results", { recursive: true });
       await writeFile(
-        `test-results/recovery-${phase}-${packaged ? "packaged" : "development"}.png`,
+        evidencePath(
+          `recovery-${phase}-${packaged ? "packaged" : "development"}.png`,
+        ),
         Buffer.from(recoveredPixels.split(",")[1]!, "base64"),
       );
       const state = (await renderer.read())?.presentation;

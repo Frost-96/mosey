@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import {
   _electron as electron,
@@ -464,13 +465,13 @@ setInterval(()=>{
       invoke,
       app,
     });
-    await mkdir("test-results", { recursive: true });
+
     const name = expect
       .getState()
       .currentTestName!.replace(/[^a-z0-9]+/gi, "-")
       .toLowerCase();
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-${name}.json`,
+      evidencePath(`${packaged ? "packaged" : "development"}-${name}.json`),
       JSON.stringify(
         {
           evidence:
@@ -505,13 +506,14 @@ setInterval(()=>{
       ),
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     const name = expect
       .getState()
       .currentTestName!.replace(/[^a-z0-9]+/gi, "-")
       .toLowerCase();
     await writeFile(
-      `test-results/failure-${packaged ? "packaged" : "development"}-${name}.json`,
+      evidencePath(
+        `failure-${packaged ? "packaged" : "development"}-${name}.json`,
+      ),
       JSON.stringify(
         {
           producerLedger: await ledger(),
@@ -548,7 +550,9 @@ setInterval(()=>{
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-dock-recovery.png`,
+        path: evidencePath(
+          `failure-${packaged ? "packaged" : "development"}-dock-recovery.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});

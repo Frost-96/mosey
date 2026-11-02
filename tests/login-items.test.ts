@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import {
   _electron as electron,
@@ -5,15 +6,14 @@ import {
   type ElectronApplication,
 } from "playwright";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { openSettings } from "./support/settings";
 
 test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
   "login launch follows the packaged app service across changes, quit and restart",
   async () => {
-    await mkdir("test-results", { recursive: true });
-    const root = await mkdtemp(path.resolve("test-results/mosey-login-"));
+    const root = await mkdtemp(evidencePath("mosey-login-"));
     const bundle = path.join(root, "Mosey.app");
     const identity = `dev.frost.mosey.login-test-${Date.now()}`;
     const lsregister =
@@ -206,7 +206,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       failure = error;
       await app
         ?.windows()[0]
-        ?.screenshot({ path: "test-results/login-items-failure.png" })
+        ?.screenshot({ path: evidencePath("login-items-failure.png") })
         .catch(() => {});
     } finally {
       if (prepared) {
@@ -249,7 +249,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       }
       try {
         await writeFile(
-          "test-results/packaged-login-items.json",
+          evidencePath("packaged-login-items.json"),
           JSON.stringify(
             {
               identity,

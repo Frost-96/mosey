@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import type { ElectronApplication } from "playwright";
 import { distanceFromGround } from "./support/ground";
@@ -89,7 +90,9 @@ test.each([
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-ground-${packaged ? "packaged" : "development"}.png`,
+          path: evidencePath(
+            `failure-ground-${packaged ? "packaged" : "development"}.png`,
+          ),
           timeout: 3000,
         })
         .catch(() => {});

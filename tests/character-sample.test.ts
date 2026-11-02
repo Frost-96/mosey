@@ -1,5 +1,6 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
 
@@ -8,7 +9,6 @@ const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 const evidence = `${packaged ? "packaged" : "development"}${scaleFactor === "1" ? "" : `-${scaleFactor}x`}`;
 
 test("selected whale paints one character, walks, yields to dragging and returns to the ground", async () => {
-  await mkdir("test-results", { recursive: true });
   const session = await createPetTestSession({
     dock: "empty",
     preferences: {
@@ -21,7 +21,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
     ...(process.env.MOSEY_RECORD_SAMPLE === "1"
       ? {
           recordVideo: {
-            dir: "test-results/whale-video",
+            dir: evidencePath("whale-video"),
             size: { width: 240, height: 240 },
             fps: 60,
           },
@@ -67,7 +67,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
     }
     expect(idle.size).toBeGreaterThan(1);
     await pet.screenshot({
-      path: `test-results/${evidence}-whale-idle.png`,
+      path: evidencePath(`${evidence}-whale-idle.png`),
       omitBackground: true,
     });
     const responseFrames = new Set<string>();
@@ -104,7 +104,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
       await new Promise((resolve) => setTimeout(resolve, 150));
       responseFrames.add((await painted()).pixels);
       await pet.screenshot({
-        path: `test-results/${evidence}-whale-${response}.png`,
+        path: evidencePath(`${evidence}-whale-${response}.png`),
         omitBackground: true,
       });
       for (let click = 0; click < 3; click++)
@@ -159,7 +159,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
     expect(moving.width).toBe(160);
     expect(idle.has((await painted()).pixels)).toBe(false);
     await pet.screenshot({
-      path: `test-results/${evidence}-whale-walking.png`,
+      path: evidencePath(`${evidence}-whale-walking.png`),
       omitBackground: true,
     });
     if (process.env.MOSEY_RECORD_SAMPLE === "1") {
@@ -175,7 +175,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
         await new Promise((resolve) => setTimeout(resolve, 33));
       }
       await writeFile(
-        `test-results/${evidence}-whale-recording.json`,
+        evidencePath(`${evidence}-whale-recording.json`),
         JSON.stringify({
           scope:
             "Real Electron canvas and native window bounds sampled at recorded elapsed times; not a desktop screen recording.",
@@ -247,7 +247,7 @@ test("selected whale paints one character, walks, yields to dragging and returns
         .toBeGreaterThan(size === 70 ? 100 : 1000);
       expect(await windowState()).toHaveLength(1);
       await pet.screenshot({
-        path: `test-results/${evidence}-whale-${size}.png`,
+        path: evidencePath(`${evidence}-whale-${size}.png`),
         omitBackground: true,
       });
     }

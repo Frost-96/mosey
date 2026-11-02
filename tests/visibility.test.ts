@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { startForge } from "./support/forge";
 import { test, expect, onTestFailed } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -19,8 +20,8 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("manual visibility survives restart, duplicate launches and damaged preferences", async () => {
   const started = performance.now();
   const evidence = packaged ? "packaged" : "development";
-  const progressFile = `test-results/${evidence}-visibility-progress.jsonl`;
-  await mkdir("test-results", { recursive: true });
+  const progressFile = evidencePath(`${evidence}-visibility-progress.jsonl`);
+
   await writeFile(progressFile, "");
   const mark = (stage: string) => {
     appendFileSync(
@@ -49,7 +50,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
             "1",
             "1",
             "-file",
-            path.resolve(`test-results/${evidence}-visibility-process.txt`),
+            evidencePath(`${evidence}-visibility-process.txt`),
           ],
           { timeout: 5000, stdio: "ignore" },
         );
@@ -312,9 +313,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     expect(log).toContain("Invalid pet preferences");
     expect(log).toContain("Unable to save pet visibility");
     expect((await stat(logPath)).size).toBeLessThanOrEqual(1024 * 1024);
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-visibility.json`,
+      evidencePath(`${packaged ? "packaged" : "development"}-visibility.json`),
       JSON.stringify(
         {
           idleRendererWorkOver1200Ms: idleWork,
@@ -335,11 +336,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       ),
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     for (const [index, window] of (app?.windows() ?? []).entries()) {
       await window
         .screenshot({
-          path: `test-results/failure-${packaged ? "packaged" : "development"}-visibility-${index}.png`,
+          path: evidencePath(
+            `failure-${packaged ? "packaged" : "development"}-visibility-${index}.png`,
+          ),
           timeout: 3000,
         })
         .catch(() => {});

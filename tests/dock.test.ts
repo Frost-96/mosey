@@ -1,3 +1,4 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -603,7 +604,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       })
       .toBe(floor - 75);
     await pet.screenshot({
-      path: `test-results/${evidence}-dock-supported.png`,
+      path: evidencePath(`${evidence}-dock-supported.png`),
       omitBackground: true,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -909,9 +910,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         })
         .toBe(floor);
     }
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${evidence}-dock.json`,
+      evidencePath(`${evidence}-dock.json`),
       JSON.stringify(
         {
           display,
@@ -985,7 +986,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         )
         .catch(() => undefined),
     );
-    await mkdir("test-results", { recursive: true });
+
     const navigationState = await app
       ?.evaluate(async ({ app, BrowserWindow }) => ({
         ...(Reflect.get(globalThis, "dockNavigationTrace") ?? {
@@ -1083,7 +1084,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       }))
       .catch((failure: unknown) => ({ unavailable: String(failure) }));
     await writeFile(
-      `test-results/failure-${evidence}-dock-navigation.json`,
+      evidencePath(`failure-${evidence}-dock-navigation.json`),
       JSON.stringify(
         {
           runtimeProvenance,
@@ -1099,7 +1100,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${evidence}-dock.png`,
+        path: evidencePath(`failure-${evidence}-dock.png`),
         timeout: 3000,
       })
       .catch(() => {});
@@ -1250,9 +1251,9 @@ test("real Dock helper clears its capability and exits when transport stops or t
     app = undefined;
     if (restarted)
       await expect.poll(() => alive(restarted), { timeout: 4000 }).toBe(false);
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${evidence}-real-dock.json`,
+      evidencePath(`${evidence}-real-dock.json`),
       JSON.stringify(
         {
           initialStatus,
@@ -1268,20 +1269,18 @@ test("real Dock helper clears its capability and exits when transport stops or t
       ),
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${evidence}-real-dock.png`,
+        path: evidencePath(`failure-${evidence}-real-dock.png`),
         timeout: 3000,
       })
       .catch(() => {});
     throw error;
   } finally {
     try {
-      await mkdir("test-results", { recursive: true });
       await writeFile(
-        `test-results/${evidence}-real-dock-readiness.json`,
+        evidencePath(`${evidence}-real-dock-readiness.json`),
         JSON.stringify(readiness, null, 2),
       );
     } finally {

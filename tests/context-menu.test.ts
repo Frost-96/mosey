@@ -1,7 +1,8 @@
+import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { test, expect } from "vitest";
 import type { ElectronApplication } from "playwright";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
@@ -620,9 +621,9 @@ test("body secondary clicks open a native menu and cancel without changing the p
           .map((item) => item.label),
       ),
     ).toEqual(["Medium"]);
-    await mkdir("test-results", { recursive: true });
+
     await writeFile(
-      `test-results/${packaged ? "packaged" : "development"}-menu.json`,
+      evidencePath(`${packaged ? "packaged" : "development"}-menu.json`),
       JSON.stringify(
         {
           nativeMenu:
@@ -652,11 +653,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
       ),
     );
   } catch (error) {
-    await mkdir("test-results", { recursive: true });
     await app
       ?.windows()[0]
       ?.screenshot({
-        path: `test-results/failure-${packaged ? "packaged" : "development"}-menu.png`,
+        path: evidencePath(
+          `failure-${packaged ? "packaged" : "development"}-menu.png`,
+        ),
         timeout: 3000,
       })
       .catch(() => {});

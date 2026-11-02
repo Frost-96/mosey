@@ -1,6 +1,7 @@
+import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
@@ -154,9 +155,11 @@ test.each([
       const preferences: unknown = JSON.parse(
         await readFile(path.join(root, "preferences.json"), "utf8"),
       );
-      await mkdir("test-results", { recursive: true });
+
       await writeFile(
-        `test-results/${packaged ? "packaged" : "development"}-menu-reentry-${boundary}-${visible ? "show" : "hide"}.json`,
+        evidencePath(
+          `${packaged ? "packaged" : "development"}-menu-reentry-${boundary}-${visible ? "show" : "hide"}.json`,
+        ),
         JSON.stringify(
           {
             scope:
@@ -177,11 +180,12 @@ test.each([
       expect(observed.menu).toContain(visible ? "Hide Mosey" : "Show Mosey");
       expect(observed.menu).not.toContain(command);
     } catch (error) {
-      await mkdir("test-results", { recursive: true });
       await app
         ?.windows()[0]
         ?.screenshot({
-          path: `test-results/failure-menu-reentry-${boundary}-${visible ? "show" : "hide"}-${packaged ? "packaged" : "development"}.png`,
+          path: evidencePath(
+            `failure-menu-reentry-${boundary}-${visible ? "show" : "hide"}-${packaged ? "packaged" : "development"}.png`,
+          ),
           timeout: 3000,
         })
         .catch(() => {});

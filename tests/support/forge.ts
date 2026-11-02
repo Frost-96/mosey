@@ -1,3 +1,4 @@
+import { evidencePath } from "./evidence";
 import { expect } from "vitest";
 import { spawn } from "node:child_process";
 import {
@@ -94,9 +95,9 @@ export async function startForge(): Promise<() => Promise<void>> {
         { timeout: 60000 },
       )
       .toContain("MOSEY_TEST_READY");
-    await mkdir("test-results", { recursive: true });
+
     await appendFile(
-      "test-results/forge-preparation.jsonl",
+      evidencePath("forge-preparation.jsonl"),
       JSON.stringify({ seconds: (performance.now() - started) / 1000 }) + "\n",
     );
     return stop;
