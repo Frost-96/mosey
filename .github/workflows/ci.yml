@@ -90,71 +90,53 @@ jobs:
           path: build/timings.jsonl
           retention-days: 7
 
-  development:
-    name: Development (${{ matrix.scale }}x, ${{ matrix.shard }}/2)
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
+  acceptance:
+    name: Application acceptance (${{ matrix.shard }}/5)
+    # Every shard consumes the same package, then owns an isolated serial
+    # desktop. On package failure the development channels still run.
+    needs: [changes, package]
+    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
     runs-on: macos-15
     strategy:
       fail-fast: false
+      max-parallel: 5
       matrix:
-        scale: ["1", "2"]
-        shard: [1, 2]
+        shard: [1, 2, 3, 4, 5]
     env:
-      MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
+      MOSEY_CI_PACKAGE_READY: ${{ needs.package.result == 'success' }}
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
-      - name: Development application acceptance
-        run: pnpm test:dev --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/tests.json
+      - uses: actions/download-artifact@v4
+        if: needs.package.result == 'success'
+        with:
+          name: apple-silicon-app
+          path: out
+      - name: Unpack the application built by this run
+        if: needs.package.result == 'success'
+        run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
+      - name: Development and packaged application acceptance
+        run: pnpm test:ci --shard=${{ matrix.shard }}/5
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: development-${{ matrix.scale }}x-${{ matrix.shard }}-evidence
+          name: matrix-${{ matrix.shard }}
+          path: test-results/ci-matrix.json
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-${{ matrix.shard }}-evidence
           path: |
             test-results/
             build/timings.jsonl
           retention-days: 7
 
-  packaged:
-    name: Packaged (${{ matrix.scale }}x, ${{ matrix.shard }}/2)
-    # Only this channel consumes the package; development failures cannot
-    # prevent packaged validation and neither channel waits for static checks.
-    needs: package
-    runs-on: macos-15
-    strategy:
-      fail-fast: false
-      matrix:
-        scale: ["1", "2"]
-        shard: [1, 2]
-    env:
-      MOSEY_TEST_SCALE_FACTOR: ${{ matrix.scale }}
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup
-        with:
-          install-scripts: "false"
-      - uses: actions/download-artifact@v4
-        with:
-          name: apple-silicon-app
-          path: out
-      - name: Unpack the application built by this run
-        run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
-      - name: Packaged application acceptance
-        run: pnpm test:packaged --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/tests.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: packaged-${{ matrix.scale }}x-${{ matrix.shard }}-evidence
-          path: test-results/
-          retention-days: 7
-
   checks:
     name: Application checks
     if: always()
-    needs: [changes, static, package, development, packaged]
+    needs: [changes, static, package, acceptance]
     runs-on: ubuntu-latest
     steps:
       - name: Require every applicable validation channel
@@ -165,10 +147,25 @@ jobs:
           const results = JSON.parse(process.env.RESULTS);
           if (results.changes.result !== 'success') process.exit(1);
           const expected = results.changes.outputs.code === 'true' ? 'success' : 'skipped';
-          for (const name of ['static', 'package', 'development', 'packaged']) {
+          for (const name of ['static', 'package', 'acceptance']) {
             if (results[name].result !== expected) {
               console.error(`${name}: expected ${expected}, received ${results[name].result}`);
               process.exitCode = 1;
             }
           }
           JS
+      - uses: actions/checkout@v5
+        if: needs.changes.outputs.code == 'true'
+      - uses: actions/setup-node@v5
+        if: needs.changes.outputs.code == 'true'
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: actions/download-artifact@v4
+        if: needs.changes.outputs.code == 'true'
+        with:
+          pattern: matrix-*
+          path: test-results/ci-coverage
+      - name: Verify complete mode and scale coverage without duplicates
+        if: needs.changes.outputs.code == 'true'
+        run: node tools/check-ci-coverage.ts test-results/ci-coverage
