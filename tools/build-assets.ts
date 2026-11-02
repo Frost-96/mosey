@@ -13,6 +13,7 @@ const build = await prepareBuild({
     "src/shared/assets.ts",
     "package.json",
     "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "src/assets/characters/whale/processing.json",
     "src/assets/characters/whale/source",
     ...(await readdir("src/assets"))
