@@ -60,7 +60,7 @@ test.each([
         .toBe("whale");
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
-        .toBe("鲸鱼娘 · 待机");
+        .toBe("DeepSeek · 待机");
       const actual = await app.evaluate(({ BrowserWindow }) => {
         const pet = BrowserWindow.getAllWindows().find(
           (w) => w.getTitle() === "Mosey",
@@ -171,7 +171,7 @@ test("failed persistence keeps the actual and saved character, and retries the f
       })
       .toContain("保存失败");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
-      "鲸鱼娘 · 待机",
+      "DeepSeek · 待机",
     );
     expect(
       await settings.getByRole("combobox", { name: "角色" }).inputValue(),
@@ -267,7 +267,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     settings = await openSettings(app);
     await expect
       .poll(() => settings.locator("#character-status").textContent())
-      .toContain("正在准备鲸鱼娘");
+      .toContain("正在准备DeepSeek");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("corgi");
@@ -299,7 +299,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 10000,
       })
-      .toBe("鲸鱼娘 · 待机");
+      .toBe("DeepSeek · 待机");
     await expect.poll(() => paintedCharacter(pet)).toBe("whale");
     await settings
       .getByRole("combobox", { name: "角色" })
@@ -321,7 +321,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     expect(await paintedCharacter(pet)).toBe("whale");
     expect(await settings.locator("#character-error").isVisible()).toBe(false);
     expect(await settings.locator("#character-status").textContent()).toBe(
-      "当前角色：鲸鱼娘",
+      "当前角色：DeepSeek",
     );
   } finally {
     await f.close();
@@ -437,7 +437,7 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
     });
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(await settings.locator("#character-status").textContent()).toContain(
-      "正在准备鲸鱼娘",
+      "正在准备DeepSeek",
     );
     expect(await paintedCharacter(pet)).toBe("corgi");
     // Restart with the retry still loading: neither request was committed.
@@ -477,7 +477,7 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
       .toBeGreaterThan(0);
     expect(await paintedCharacter(pet)).toBe("corgi");
     expect(await settings.locator("#character-status").textContent()).toContain(
-      "正在准备鲸鱼娘",
+      "正在准备DeepSeek",
     );
     // A cold atlas can legitimately take more than expect.poll's default 1s.
     // Hold it beyond that boundary, while retaining the application's finite
@@ -645,7 +645,7 @@ test("a held and falling pet keeps its old character until landing, then uses th
       })
       .toContain("等待宠物站稳");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toContain(
-      "鲸鱼娘",
+      "DeepSeek",
     );
     await pet.mouse.up();
     await expect
@@ -762,7 +762,7 @@ test("renderer recovery retires a pending preparation and permits an explicit re
     await settings.getByRole("button", { name: "重试角色" }).click();
     await expect
       .poll(actual, { timeout: 10000 })
-      .toEqual({ id, visible: false, label: "鲸鱼娘 · 待机" });
+      .toEqual({ id, visible: false, label: "DeepSeek · 待机" });
   } finally {
     await f.close();
   }
@@ -804,7 +804,7 @@ test("walking switches preserve left facing and ground placement at both end siz
         .click();
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
-        .toBe("鲸鱼娘 · 走路");
+        .toBe("DeepSeek · 走路");
       const before = await pet.evaluate(() => window.mosey.getPresentation());
       expect(before.direction).toBe("left");
       await app.evaluate(() => Reflect.get(globalThis, "restoreRestClock")());
@@ -853,7 +853,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
     const settings = await openSettings(app);
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
-      .toBe("鲸鱼娘 · 待机");
+      .toBe("DeepSeek · 待机");
     const native = () =>
       app.evaluate(({ BrowserWindow, screen }) => {
         const pet = BrowserWindow.getAllWindows().find(
@@ -914,7 +914,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 5000,
       })
-      .toBe("鲸鱼娘 · 攀爬");
+      .toBe("DeepSeek · 攀爬");
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("corgi");
@@ -924,7 +924,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
       })
       .toContain("等待宠物站稳");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
-      "鲸鱼娘 · 攀爬",
+      "DeepSeek · 攀爬",
     );
     await app.evaluate(({ BrowserWindow }) => {
       Reflect.get(globalThis, "restoreClimbClock")();
@@ -947,7 +947,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
       .selectOption("whale");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
-      .toBe("鲸鱼娘 · 待机");
+      .toBe("DeepSeek · 待机");
     expect((await native()).bounds).toEqual(next.bounds);
   } finally {
     await f.close();

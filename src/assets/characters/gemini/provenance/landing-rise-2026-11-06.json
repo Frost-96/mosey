@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-06",
+  "frames": [10, 11],
+  "previousAtlasSha256": "02f1232c4c97440f65b3059465c2afb7f544f9943297488f78cd9549617c6dd6",
+  "atlasSha256": "6d622f6378a6b7f1e8deb106006c48597f25d9985a6b99fa2e81c4cc01d34f69",
+  "source": {
+    "file": "provenance/images/f19b73a909f8-gemini-rise-edit-1.png",
+    "sha256": "f19b73a909f8af77de514520d82c20ea8718a5553b4f8e14a760093a4e623984"
+  },
+  "normalization": [
+    {
+      "frame": 10,
+      "sourceCell": 2,
+      "sourceRegion": {
+        "x": 627,
+        "y": 0,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7330595482546202,
+      "resizedSide": 460,
+      "translation": {
+        "x": 4,
+        "y": 21
+      },
+      "targetHeight": 357,
+      "finalOpaqueBounds": {
+        "left": 64,
+        "top": 104,
+        "right": 404,
+        "bottom": 461,
+        "width": 341,
+        "height": 358
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    },
+    {
+      "frame": 11,
+      "sourceCell": 3,
+      "sourceRegion": {
+        "x": 0,
+        "y": 627,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7142857142857143,
+      "resizedSide": 448,
+      "translation": {
+        "x": 15,
+        "y": 31
+      },
+      "targetHeight": 375,
+      "finalOpaqueBounds": {
+        "left": 76,
+        "top": 87,
+        "right": 402,
+        "bottom": 461,
+        "width": 327,
+        "height": 375
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    }
+  ],
+  "verification": "Only landing frame 10 and frame 11 RGBA pixels and derived hit rows changed. All other frames, frame regions, foot anchors, durations and loop mode are byte-equivalent or structurally identical.",
+  "requests": [
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: blue/purple long-haired cat girl with blue fluffy tail, two cat ears, small gold star hair ornament, viewer-left magenta eye and viewer-right gold eye, purple star-trimmed outfit and purple boots. Frame 10 both hands stay low and gently assist against her knees/thighs; frame 11 both arms lower close to her sides toward the final pose. Keep ears, eye colors, tail and costume EXACT.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gemini-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gemini-frames09-12.png",
+          "file": "provenance/images/69fd62fc086e-gemini-rise-reference-1.png",
+          "sha256": "69fd62fc086ee39a50421323b9c69cc6473205dd31e2632da7123516a07afd6d"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/f19b73a909f8-gemini-rise-edit-1.png",
+        "sha256": "f19b73a909f8af77de514520d82c20ea8718a5553b4f8e14a760093a4e623984"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ]
+}

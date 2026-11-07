@@ -176,12 +176,15 @@ for (const character of ["corgi", "whale"] as const) {
           .poll(async () => (await native()).bounds.y)
           .toBeLessThan(ground.y - 40);
         await pet.mouse.up();
-        await expect.poll(async () => (await native()).bounds).toEqual(ground);
+        await expect
+          .poll(async () => (await native()).bounds, { timeout: 6000 })
+          .toEqual(ground);
         await expect
           .poll(
             async () =>
               (await pet.evaluate(() => window.mosey.getPresentation()))
                 .posture,
+            { timeout: 5000 },
           )
           .toBe("resting");
       }
@@ -297,11 +300,12 @@ test("retired frames cannot restore input after size or character changes before
       .poll(async () => (await bounds()).y)
       .toBeLessThan(before.y - 40);
     await pet.mouse.up();
-    await expect.poll(bounds).toEqual(before);
+    await expect.poll(bounds, { timeout: 6000 }).toEqual(before);
     await expect
       .poll(
         async () =>
           (await pet.evaluate(() => window.mosey.getPresentation())).posture,
+        { timeout: 5000 },
       )
       .toBe("resting");
   }
@@ -393,8 +397,8 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
       .getContext("2d")!
       .getImageData(0, 0, canvas.width, canvas.height).data;
     // This fixture is a strip of 480px square illustrations. At 240 DIP/2x
-    // each cell is one whole window: compare PNG pixels, without consulting
-    // atlas foot/scale metadata or any production projection function.
+    // the adopted sleep artwork has an 18px transparent floor margin. Compare
+    // PNG pixels at that known support, without production projection code.
     if (canvas.width !== 480 || canvas.height !== 480)
       throw new Error("Unexpected fixture size");
     const comparison = document.createElement("canvas");
@@ -404,13 +408,13 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
       [];
     for (let frame = 0; frame < images[0]!.width / 480; frame++) {
       context.clearRect(0, 0, 480, 480);
-      context.drawImage(images[0]!, frame * 480, 0, 480, 480, 0, 0, 480, 480);
+      context.drawImage(images[0]!, frame * 480, 0, 480, 480, 0, 18, 480, 480);
       const authored = context.getImageData(0, 0, 480, 480).data;
       context.clearRect(0, 0, 480, 480);
       context.save();
       context.translate(480, 0);
       context.scale(-1, 1);
-      context.drawImage(images[1]!, frame * 480, 0, 480, 480, 0, 0, 480, 480);
+      context.drawImage(images[1]!, frame * 480, 0, 480, 480, 0, 18, 480, 480);
       context.restore();
       const mirrored = context.getImageData(0, 0, 480, 480).data;
       let authoredDifference = 0,

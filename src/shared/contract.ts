@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { petSizeSchema } from "./size";
-export const characterSchema = z.enum(["corgi", "whale"]);
+import { characterSchema } from "./character-catalog";
+export { characterSchema } from "./character-catalog";
 export const presentationSchema = z.strictObject({
   character: characterSchema,
   size: petSizeSchema,

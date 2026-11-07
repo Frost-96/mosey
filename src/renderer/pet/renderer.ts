@@ -4,6 +4,7 @@ import {
   type CharacterId,
 } from "../../shared/characters";
 import { characterGeometry } from "../../shared/character-geometry";
+import { characterNames } from "../../shared/character-catalog";
 import type { Presentation } from "../../shared/contract";
 
 try {
@@ -276,7 +277,7 @@ try {
     };
     canvas!.setAttribute(
       "aria-label",
-      `${value.character === "whale" ? "鲸鱼娘" : "柯基"} · ${actionNames[value.posture]}`,
+      `${characterNames[value.character]} · ${actionNames[value.posture]}`,
     );
     cancelDrawing();
     requestDraw();

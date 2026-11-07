@@ -1,0 +1,2203 @@
+{
+  "adoptedOn": "2026-11-04",
+  "previewRevision": "unified-v8-air",
+  "previewManifestSha256": "275b4a765f5781543869bdb3aa108a52090980d3b6e91b10fa642b93827b2ab2",
+  "character": "whale",
+  "displayName": "DeepSeek",
+  "attribution": "Community personifications attributed to ZipZipPipe; not vendor official characters. Whale follows existing project provenance and local review scope.",
+  "identityOrigin": {
+    "date": "2026-10-27",
+    "status": "exploration-unselected",
+    "tool": "built-in image_gen",
+    "model": null,
+    "seed": null,
+    "sourceAttribution": "Existing Claude, Gemini and GPT personifications attributed to ZipZipPipe in shuaizenge/ai-girls; reference images are archived video demonstration frames, not original transparent chibi masters. No new rights assumed.",
+    "sources": [
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/claude",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gemini",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gpt"
+    ]
+  },
+  "actions": {
+    "resting": {
+      "image": "sprites/resting.webp",
+      "sha256": "0177db96c0db44a1a202b2c7b2c0849b142cf00f3a4a840a2929e17f6a4fad69",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 1500,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 400,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 60,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 45,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 90,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 45,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 60,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 600,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": []
+    },
+    "walking": {
+      "image": "sprites/walking.webp",
+      "sha256": "732e821c4f467ffc56205a798aac8ca25ff5a487bb8e225ae12e2a913ba8a641",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 27,
+            "y": 26,
+            "width": 388,
+            "height": 413
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 439
+          },
+          "opaquePixels": 93544,
+          "sourceRegion": {
+            "x": 0,
+            "y": 0,
+            "width": 444,
+            "height": 447
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 28,
+            "y": 27,
+            "width": 386,
+            "height": 412
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 439
+          },
+          "opaquePixels": 92195,
+          "sourceRegion": {
+            "x": 443,
+            "y": 0,
+            "width": 441,
+            "height": 447
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 27,
+            "y": 26,
+            "width": 383,
+            "height": 413
+          },
+          "sourceAnchor": {
+            "x": 252,
+            "y": 439
+          },
+          "opaquePixels": 93679,
+          "sourceRegion": {
+            "x": 883,
+            "y": 0,
+            "width": 442,
+            "height": 447
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 385,
+            "height": 409
+          },
+          "sourceAnchor": {
+            "x": 257,
+            "y": 435
+          },
+          "opaquePixels": 93574,
+          "sourceRegion": {
+            "x": 1324,
+            "y": 0,
+            "width": 450,
+            "height": 447
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 27,
+            "y": 9,
+            "width": 387,
+            "height": 412
+          },
+          "sourceAnchor": {
+            "x": 255,
+            "y": 421
+          },
+          "opaquePixels": 93056,
+          "sourceRegion": {
+            "x": 0,
+            "y": 446,
+            "width": 443,
+            "height": 441
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 29,
+            "y": 7,
+            "width": 386,
+            "height": 414
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 421
+          },
+          "opaquePixels": 92136,
+          "sourceRegion": {
+            "x": 442,
+            "y": 446,
+            "width": 442,
+            "height": 441
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 27,
+            "y": 9,
+            "width": 387,
+            "height": 411
+          },
+          "sourceAnchor": {
+            "x": 255,
+            "y": 420
+          },
+          "opaquePixels": 93835,
+          "sourceRegion": {
+            "x": 883,
+            "y": 446,
+            "width": 445,
+            "height": 441
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 30,
+            "y": 10,
+            "width": 385,
+            "height": 408
+          },
+          "sourceAnchor": {
+            "x": 258,
+            "y": 418
+          },
+          "opaquePixels": 93444,
+          "sourceRegion": {
+            "x": 1327,
+            "y": 446,
+            "width": 447,
+            "height": 441
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/a6a54f28ee0c-final-gait-v4.png",
+          "sha256": "a6a54f28ee0c593b436b292a8a622eaf0f3ba55a39709819358fe985e0b1667b"
+        }
+      ]
+    },
+    "settling": {
+      "image": "sprites/settling.webp",
+      "sha256": "9031a62ee9d380ce6ee3094b742f4cac80923d4cd83b015368d8bf013ba5eba4",
+      "previewFrames": [
+        {
+          "source": "baseline/whale/resting",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 0,
+          "durationMs": 250,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 1,
+          "durationMs": 350,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 2,
+          "durationMs": 400,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 3,
+          "durationMs": 400,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 4,
+          "durationMs": 400,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 5,
+          "durationMs": 500,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-sleep-v1",
+          "index": 0,
+          "durationMs": 350,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/6b4e55f86983-whale-transitions-v1.png",
+          "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2"
+        },
+        {
+          "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+          "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+        }
+      ]
+    },
+    "sleeping": {
+      "image": "sprites/sleeping.webp",
+      "sha256": "8effdf91c612e85981e94872ff296401dc03f4762020b2fe6a85f0090eefdbaf",
+      "previewFrames": [
+        {
+          "source": "whale-sleep-v1",
+          "index": 0,
+          "durationMs": 950,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-sleep-v1",
+          "index": 1,
+          "durationMs": 750,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-sleep-v1",
+          "index": 2,
+          "durationMs": 950,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-sleep-v1",
+          "index": 3,
+          "durationMs": 750,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+          "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+        }
+      ]
+    },
+    "ear": {
+      "image": "sprites/ear.webp",
+      "sha256": "eabfd6d7e93878ade4c750ebb3a8913fc8831d35d1ed16690415a0a13492db48",
+      "previewFrames": [
+        {
+          "source": "whale-sleep-v1",
+          "index": 0,
+          "durationMs": 120,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 7,
+          "durationMs": 220,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-sleep-v1",
+          "index": 0,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+          "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+        },
+        {
+          "file": "provenance/images/6b4e55f86983-whale-transitions-v1.png",
+          "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2"
+        }
+      ]
+    },
+    "waking": {
+      "image": "sprites/waking.webp",
+      "sha256": "e22e2c3fa9aa3e193e400533c4f7f0f4af0784d4b94620d1a0b239ea90aa7f3d",
+      "previewFrames": [
+        {
+          "source": "whale-sleep-v1",
+          "index": 0,
+          "durationMs": 160,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 5,
+          "durationMs": 160,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 4,
+          "durationMs": 200,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 3,
+          "durationMs": 240,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 2,
+          "durationMs": 240,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 1,
+          "durationMs": 220,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-transitions-v1",
+          "index": 0,
+          "durationMs": 200,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "baseline/whale/resting",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+          "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+        },
+        {
+          "file": "provenance/images/6b4e55f86983-whale-transitions-v1.png",
+          "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2"
+        }
+      ]
+    },
+    "tilt": {
+      "image": "sprites/tilt.webp",
+      "sha256": "39f705a70cdffb90e3b3cb81d114ea3f4bc444cd33496bc4dab592a346239d33",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 80,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 90,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 90,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 80,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    },
+    "paw": {
+      "image": "sprites/paw.webp",
+      "sha256": "7a9dba388c659675cf3a3ce1ef23547232edb3edf4722afba76e9ec6d5c3a3fb",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 80,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    },
+    "belly": {
+      "image": "sprites/belly.webp",
+      "sha256": "a95337a1b716081f36fb3c47998ee71154726a895d31b172fb7ff0e332beb1f6",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 80,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 240,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    },
+    "playing": {
+      "image": "sprites/playing.webp",
+      "sha256": "6ab0ed1f3d7755d3216119bcc041bd51600da09d1b4be62169a697cfc11cb633",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 200,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 100,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 180,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    },
+    "stretching": {
+      "image": "sprites/stretching.webp",
+      "sha256": "f5ce14a3e50f5a9360304bc2a96d8ff9fd37ddee5b83051a100594457e7d96e0",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 500,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 120,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 140,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    },
+    "dragging": {
+      "image": "sprites/dragging.webp",
+      "sha256": "3b24755848de9b9057ffdf65429827e4f2ed512348fcee083b29af0762b46255",
+      "previewFrames": [
+        {
+          "source": "whale-air-v1",
+          "index": 0,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 1,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 2,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 3,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
+          "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+        }
+      ]
+    },
+    "flutter": {
+      "image": "sprites/flutter.webp",
+      "sha256": "f3c79c374f87fbfda1e1f3aa8405c7521d7c2aec79218181948f0a512b11a084",
+      "previewFrames": [
+        {
+          "source": "whale-air-v1",
+          "index": 4,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 5,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 6,
+          "durationMs": 70,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 7,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
+          "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+        }
+      ]
+    },
+    "falling": {
+      "image": "sprites/falling.webp",
+      "sha256": "e9dc33edb08cfd7de78bcc7c8547634c9336a5533f3540024153df4cdebc24f0",
+      "previewFrames": [
+        {
+          "source": "whale-air-v1",
+          "index": 8,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 9,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 10,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-air-v1",
+          "index": 11,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
+          "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+        }
+      ]
+    },
+    "landing": {
+      "image": "sprites/landing.webp",
+      "sha256": "ce29c608db0dcc37457e2e5c4a49b9838122dfc0a8bcc87d54fc907be2ca13c8",
+      "previewFrames": [
+        {
+          "source": "whale-landing-v1",
+          "index": 0,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 1,
+          "durationMs": 80,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 2,
+          "durationMs": 100,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 3,
+          "durationMs": 500,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 4,
+          "durationMs": 220,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 5,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 7,
+          "durationMs": 200,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 8,
+          "durationMs": 180,
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "whale-landing-v1",
+          "index": 11,
+          "durationMs": 200,
+          "region": {
+            "x": 5280,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "baseline/whale/resting",
+          "index": 0,
+          "durationMs": 700,
+          "region": {
+            "x": 5760,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/446819d13c96-whale-landing-v1.png",
+          "sha256": "446819d13c96421472e9c69526e42bababd2f8efa892c4913b707da549f56a42"
+        }
+      ],
+      "frameOverrides": {
+        "10": {
+          "source": "provenance/images/7936ca0afcf5-whale-rise-edit-1.png",
+          "sourceCell": 2,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        },
+        "11": {
+          "source": "provenance/images/7936ca0afcf5-whale-rise-edit-1.png",
+          "sourceCell": 3,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        }
+      }
+    },
+    "climbing": {
+      "image": "sprites/climbing.webp",
+      "sha256": "ff7801828056fe1c8cb835a6b812989c3df7553f5242bf6014ed5ae94c4e645a",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 160,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 240,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 260,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "durationMs": 160,
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 480
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": []
+    }
+  },
+  "requests": [
+    {
+      "id": "whale-final-gait-v4",
+      "prompt": "Use case: precise-object-edit. ONLY recolor the two diagnostic leg colors in this8-frame sheet. Everything else, including EXACT foot shapes/positions/which shoe is lifted, near/far overlap, head, hair, upperbody, costume,8-cell layout, scale and transparent alpha, stays identical. No new drawing poses.\nPINK/NEAR shoe is medium NAVY BLUE (#263e88), WHITE strap and WHITE narrow sock. CYAN/FAR shoe is deep SHADOW NAVY (#0b1644), visibly GRAY-LAVENDER strap and sock (#aab2cc). The far shoe/strap/sock must be clearly darker in every pose, including forward/right in5 and lifted in3.\nCOLOR MAP IS FIXED BY DIAGNOSTIC PIXELS, NOT SCREEN SIDE: replace ALL PINK regions by NEAR palette, and ALL CYAN regions by FAR palette. Do not decide brightness by which shoe is forward. In row1frame1 the front/right shoe was PINK so remains BRIGHT; in row2frame5 the front/right shoe was CYAN so MUST BE DARK SHADOW, and the back/left shoe was PINK so MUST BE BRIGHT. In3 the RAISED shoe was CYAN so DARK; in7 the RAISED shoe was PINK so BRIGHT. Preserve exact existing poses. This constant shadow distinction is essential for seeing the two legs alternate.\nNo diagnostic magenta/cyan remains. Same4columns x2rows full figure sheet, real transparency, no text, grid, floor or added props. Do not repeat the same bright front-leg four frames twice.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/whale/color-gait-v2.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/whale/final-gait-v4.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-aea135a8-c1f6-4cf2-9bcd-f125444c0172.png",
+      "outputSha256": "a6a54f28ee0c593b436b292a8a622eaf0f3ba55a39709819358fe985e0b1667b",
+      "inputs": [
+        {
+          "file": "source/whale/color-gait-v2.png",
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/whale/color-gait-v2.png",
+          "sha256": "93be5064e51f5736a628573228c899850306225a101e14044461ffe8ac420280"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/a6a54f28ee0c-final-gait-v4.png",
+        "sha256": "a6a54f28ee0c593b436b292a8a622eaf0f3ba55a39709819358fe985e0b1667b"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/whale/color-gait-v2.png",
+          "file": "provenance/images/93be5064e51f-color-gait-v2.png",
+          "sha256": "93be5064e51f5736a628573228c899850306225a101e14044461ffe8ac420280"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "whale",
+      "prompt": "Use case: identity-preserve. Asset: transparent chibi desktop-pet sleep animation spritesheet, exactly 2 columns by 2 rows, 4 equal square cells. Input 1 is the DeepSeek / whale girl identity reference. Input 2 is another character's sleeping pose/style reference ONLY: do not copy the cat ears, colors or tail. Redraw ONLY the whale girl in four actual authored breathing poses of the SAME natural sleeping position. She is resting on the floor, curled onto her side with the large head gently resting on her folded hands near the floor, knees tucked to her chest, short legs entirely relaxed and not bearing weight. Her blue whale tail curves around the tucked legs and body like a cozy crescent, long blue hair rests on the floor. Clearly horizontal/reclined low silhouette, not upright sitting and absolutely not standing with eyes shut. Preserve the original large round head, very short body and legs, navy and cyan hair, white maid headband, whale-fin ears, navy maid dress, white apron with small blue whale emblem, shoes and whale tail identity. Keep the outfit fully covering her. No bed, furniture or new prop. All four poses same side-view 3/4 orientation, identical head size, floor contact, body scale and composition. Eyes closed and peaceful. Across four frames: relaxed exhale, gentle inhale, peak gentle inhale, return toward exhale, only tiny head/shoulder/hair/tail changes. Include the familiar small blue water dream bubble above and beside the head containing exactly \"ZZZ\" in dark blue, gently floats up and breathes through the frames; not in front of face. Simple bold dark outlines, flat colors and minimal shadow exactly matching references. Transparent background, clear wide transparent gutters, no grid, no labels or frame numbers, no cropping. Each whole pose including bubble contained within its own cell.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gemini-sleep-grid.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/whale-sleep-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a06ff54a-0096-4660-a440-5ae15a0b70aa.png",
+      "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gemini-sleep-grid.png": "4153523a2c170bd68242f67dbde412598ef7324be493e28e1974e1e7fa45411a"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+        "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gemini-sleep-grid.png",
+          "file": "provenance/images/4153523a2c17-gemini-sleep-grid.png",
+          "sha256": "4153523a2c170bd68242f67dbde412598ef7324be493e28e1974e1e7fa45411a"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "prompt": "Use case: identity-preserve. Asset: eight actual authored transition poses for a chibi desktop pet, exactly FOUR equal columns by TWO equal rows, read left to right top to bottom. Input 1 is the whale-girl standing identity reference; Input 2 is the adopted new sleeping sprite sheet, use its low reclined pose as the EXACT final pose target. Preserve identity, blue hair, maid headband, fin ears, whale apron emblem, compact large head/short body/short legs, shoes and blue whale tail. Match the simple thick-outline flat-color style. No added objects, no floor drawing. Every pose fully contained in its own equal cell with ample transparent gutters. Fixed identical anatomical head size across all eight cells; changing overall body height is due only to kneeling or lying down, never shrink the head to fit.\nFrame 1 (top-left): original small standing pose with sleepy half-closed eyes, same short legs as input 1.\nFrame 2: slowly bending both knees, lowering her hips while torso stays balanced, sleepy eyes.\nFrame 3: sitting on the floor with knees tucked at her right side, one hand reaching toward the floor on her left.\nFrame 4: supporting herself on both hands on the floor to her left, bending elbows, head lowers diagonally, hips and tucked legs already resting on the floor.\nFrame 5 (bottom-left): fully reclined on her left side, head resting on folded hands, knees tucked to her chest on the right, tail curved around hips, eyes half open.\nFrame 6: same exact low sleeping pose as input 2 frame 1 but WITHOUT any dream bubble, eyes peacefully closed, hair and head resting on floor, preserve head size.\nFrame 7: stay lying in this exact pose, briefly open one eye sleepily and twitch one fin ear by a tiny amount; do not raise body or stand.\nFrame 8: back to the exact closed-eye low curled sleep pose, one tiny relaxed exhale.\nDo not put any ZZZ, dream bubbles, words, numbers, grid, labels, background, borders, effects or shadows outside the character. Only eight characters on genuinely transparent alpha. Frame 5 through 8 must be horizontally reclined and low, never sitting upright or standing. Keep head size and floor baseline consistent so these can be cropped into animation frames.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/whale-sleep-v1.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/whale-transitions-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-9e868beb-5c0f-4eb0-bc86-ee15856e1185.png",
+      "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/whale-sleep-v1.png": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/6b4e55f86983-whale-transitions-v1.png",
+        "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/whale-sleep-v1.png",
+          "file": "provenance/images/379ea79e1566-whale-sleep-v1.png",
+          "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "whale",
+      "prompt": "Use case: identity-preserve. Asset: a production spritesheet of EXACTLY 12 actual authored poses, FOUR equal columns by THREE rows, reading left to right. One character per cell. Input is the character identity/style reference. Preserve the same large head, tiny torso, short legs, face, palette, costume and thick dark simple chibi outlines. Generate new frantic airborne poses. This is a cute exaggerated cartoon emergency with surprise, no injury or gore. She is lifted and dangling IN THE AIR, not standing on anything. In every pose two arms extend away from the torso with two visible hands. The arms must visibly change angular positions radically across frames; not just the whole character moving, hair changing, or wings flapping. Only TWO arms and hands in each frame, no ghost limbs. Keep consistent anatomical size across all 12 cells and ample space above hands. No ground/floor line, hook, human hand, cursor, text, letters, numbering, motion-blur duplicates, stars or effects. Fully transparent background, broad transparent gutters and outer margins. All hands, hair and tail must be inside their cell. Keep a consistent near-front 3/4 view.\nROW 1 = being lifted/dangling panic, four distinct alternating arm poses:\n1 left arm bent high above left ear, right arm reaches diagonally down and away; left knee up, right short leg dangles.\n2 both arms thrown OUT sideways with bent elbows and open hands, legs kick in opposite directions.\n3 right arm bent high above right ear, left arm reaches diagonally down; opposite knee raised. Clearly exchange the two sides from frame 1.\n4 both arms thrown above the head, elbows asymmetrical, legs curled and separated.\nROW 2 = frantic effort to balance, four distinct exaggerated windmill poses:\n5 tilt body slightly left, left hand sweeps forward high, right hand behind and low.\n6 torso rebounds through center, both hands spread very wide at shoulder level, fingers splayed.\n7 tilt slightly right, right hand high, left hand low, opposite of 5.\n8 both arms swing up unevenly, feet flail inward then outward, alarmed expression.\nROW 3 = falling downward, four frantic poses:\n9 hair and tail stream UP, both hands reach upward and sideways, knees tuck.\n10 left hand above head, right hand thrust forward to the side, body pitches forward, feet off balance.\n11 exchange arms: right hand high, left hand forward, body tumbles slightly sideways, short legs kick.\n12 both arms reach forward and down in a scramble to catch the fall, head and torso lean forward, legs tucked behind, face squints with anticipation. This leads into a belly/side flop, NOT a neat feet-first landing.\nAll three rows must look chaotic and flailing, with clearly alternate hand positions. Match the supplied simple character style, not extra detailed. \nCharacter-specific invariants: blue whale girl, white maid headband, whale-fin ears, blue eyes, navy maid dress with white apron and blue whale emblem, very short legs, blue whale tail. Both actual human arms and open hands visibly windmill; tail and hair lag behind.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/whale-air-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-41a6bf2e-767f-4879-a92a-6f472b742f76.png",
+      "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
+        "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png",
+          "file": "provenance/images/0d7b14bb0bde-whale-identity.png",
+          "sha256": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "whale",
+      "prompt": "Use case: identity-preserve. Asset: 12-frame cartoon fall, FLOP ONTO THE FLOOR, and GET-UP sequence for a chibi desktop pet. Exactly FOUR equal columns by THREE rows, 12 separate full characters, reading left to right. Input 1 is the exact standing identity and final pose reference. Input 2 is the adopted frantic airborne sprite sheet, especially its last cell (row 3 column 4) as the incoming pose. Keep the same anatomical HEAD SIZE and short-body proportions throughout, even when lying horizontally; do not shrink flat poses to fit. Keep enough transparent space in each cell. Fully transparent background; no visible floor lines, boxes, text, captions, numbers, stars, impact clouds or foreign props. Every hand, hair and tail fully inside its own cell with broad transparent gutters. Same simple thick-outline, low-detail chibi rendering and costume colors.\nThis must visibly progress through a real belly/side FLOP, a readable lying-down pause, and a proper hands-and-knees rise. NOT a graceful feet-first landing or immediate return to standing. Cute startled clumsiness, no injury.\n12 consecutive actual authored poses:\n1 coming down low from input 2 last pose: body tilted forward almost horizontal, BOTH hands extended toward the ground, tiny legs trail behind, eyes squeeze shut.\n2 BOTH palms first touch the floor, elbows buckle, chest and hips descend, hair and tail still fly upward.\n3 body has flopped onto belly and slightly to one side, legs sprawled behind, arms out in front, cheek close to floor, tail beginning to flop down; surprised squinty expression.\n4 fully collapsed, lying low and horizontal, both arms relaxed out on the floor, hair and tail settled, dizzy embarrassed eyes, cheeks softly squashed. No standing legs.\n5 still lying on the floor in this SAME position, opens eyes and lifts only head a little to recover. Both legs and belly remain grounded.\n6 brings BOTH palms underneath shoulders, elbows bent, starts to push up; chest begins lifting, knees remain on floor.\n7 arms extend and lift chest; now on BOTH hands and BOTH bent knees, back horizontal, head looks forward. Anatomically clear support.\n8 brings one short foot forward while the other knee remains on the floor; one palm still supporting the body.\n9 small low crouch with both feet on floor and hands still forward for balance.\n10 rises into an unsteady half-standing pose, knees bent, both arms extend sideways to balance.\n11 nearly upright, wobbles gently with one hand higher and one lower, regains balance.\n12 fully standing stable in the exact quiet identity pose from input 1, calm relieved face; hands and carried item return to original resting position.\nThe middle frames 3-5 must unmistakably lie flat on the ground. The rise in 6-11 must be distinct and progressive, not repeated standing drawings. Consistent head size, camera angle and palette; changes in silhouette height must come from posture only. Clothing stays fully covering the body.\nCharacter-specific identity: blue whale girl, white maid headband, whale-fin ears, blue eyes, navy maid dress with white apron and blue whale emblem, very short legs, blue whale tail. Both actual human arms and open hands visibly windmill; tail and hair lag behind.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/whale-air-v1.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/whale-landing-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-c6db4b0a-6a77-4a6f-99a5-f47d2a5431ae.png",
+      "sha256": "446819d13c96421472e9c69526e42bababd2f8efa892c4913b707da549f56a42",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/whale-air-v1.png": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/446819d13c96-whale-landing-v1.png",
+        "sha256": "446819d13c96421472e9c69526e42bababd2f8efa892c4913b707da549f56a42"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/whale-identity.png",
+          "file": "provenance/images/0d7b14bb0bde-whale-identity.png",
+          "sha256": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/whale-air-v1.png",
+          "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
+          "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
+        }
+      ]
+    },
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: dark blue-haired whale-eared maid girl with blue eyes, white maid headband, navy dress with white apron and blue whale logo, dark blue whale tail, short white socks and dark shoes. Frame 10 both hands remain low near thighs/knees; frame 11 arms lower close beside the apron toward the final pose. Keep the simple chibi style, headband, whale ears, whale logo, tail and costume EXACT.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/whale-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/whale-frames09-12.png",
+          "file": "provenance/images/107f6622923b-whale-rise-reference-1.png",
+          "sha256": "107f6622923b8f21dcbc76fd0b5d352fecfdd972ee612d9b06943f44852c1b01"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/7936ca0afcf5-whale-rise-edit-1.png",
+        "sha256": "7936ca0afcf54c7d9eb2a2f6a0520c6d2d2ddb3ed16ff75870e6f646500c1088"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ],
+  "processing": "Adopted lossless preview atlases are the build inputs. PNG conversion preserves RGBA pixels; the build derives hit rows from those final pixels. Flutter plays three authored cycles then completes (840 ms). Dragging support is adjusted by at most 2 source pixels to avoid window clipping.",
+  "historicalWhaleSources": [
+    "generation-record.json",
+    "actions-generation-record.json",
+    "source-hashes.json",
+    "provenance/previous-whale-processing.json"
+  ],
+  "processingHistory": "provenance/processing-history.json",
+  "leftFacing": "The build mirrors each frame while counter-mirroring RGB in the recorded ZZZ regions. The alpha mask and hit geometry remain exact mirrors.",
+  "revisions": [
+    {
+      "date": "2026-11-06",
+      "action": "landing",
+      "frames": [10, 11],
+      "record": "provenance/landing-rise-2026-11-06.json",
+      "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    }
+  ]
+}

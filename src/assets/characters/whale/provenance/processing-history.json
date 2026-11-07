@@ -1,0 +1,2384 @@
+{
+  "previewDate": "2026-10-28",
+  "meaning": "Historical registration and extraction metadata for adopted preview pixels. Build from ../processing.json and ../sprites/.",
+  "base": {
+    "processing": "保留原图；移除 alpha<128 边缘及不足16像素的孤立碎点。按实际透明沟槽分帧；无直线沟槽时按互不相连的alpha人物轮廓分离，掩去邻格轮廓；每张源图固定缩放，支撑点注册。不使用姿势形变或插值。",
+    "sources": {
+      "whale/walk-short-v2": {
+        "file": "source/whale/walk-short-v2.png",
+        "width": 1774,
+        "height": 887,
+        "columns": 4,
+        "rows": 2,
+        "partition": "row-gutters",
+        "scale": 0.963855421686747,
+        "frames": [
+          {
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 441,
+              "height": 448
+            },
+            "bounds": {
+              "x": 23,
+              "y": 20,
+              "width": 388,
+              "height": 415
+            },
+            "anchor": {
+              "x": 249,
+              "y": 435
+            },
+            "opaquePixels": 96345
+          },
+          {
+            "region": {
+              "x": 440,
+              "y": 0,
+              "width": 445,
+              "height": 448
+            },
+            "bounds": {
+              "x": 30,
+              "y": 20,
+              "width": 385,
+              "height": 415
+            },
+            "anchor": {
+              "x": 254,
+              "y": 435
+            },
+            "opaquePixels": 94319
+          },
+          {
+            "region": {
+              "x": 884,
+              "y": 0,
+              "width": 444,
+              "height": 448
+            },
+            "bounds": {
+              "x": 29,
+              "y": 20,
+              "width": 385,
+              "height": 414
+            },
+            "anchor": {
+              "x": 254,
+              "y": 434
+            },
+            "opaquePixels": 95648
+          },
+          {
+            "region": {
+              "x": 1327,
+              "y": 0,
+              "width": 447,
+              "height": 448
+            },
+            "bounds": {
+              "x": 29,
+              "y": 20,
+              "width": 389,
+              "height": 415
+            },
+            "anchor": {
+              "x": 259,
+              "y": 435
+            },
+            "opaquePixels": 96192
+          },
+          {
+            "region": {
+              "x": 0,
+              "y": 447,
+              "width": 440,
+              "height": 440
+            },
+            "bounds": {
+              "x": 24,
+              "y": 14,
+              "width": 386,
+              "height": 410
+            },
+            "anchor": {
+              "x": 249,
+              "y": 424
+            },
+            "opaquePixels": 95227
+          },
+          {
+            "region": {
+              "x": 439,
+              "y": 447,
+              "width": 445,
+              "height": 440
+            },
+            "bounds": {
+              "x": 30,
+              "y": 14,
+              "width": 386,
+              "height": 408
+            },
+            "anchor": {
+              "x": 255,
+              "y": 422
+            },
+            "opaquePixels": 93007
+          },
+          {
+            "region": {
+              "x": 883,
+              "y": 447,
+              "width": 445,
+              "height": 440
+            },
+            "bounds": {
+              "x": 29,
+              "y": 13,
+              "width": 386,
+              "height": 409
+            },
+            "anchor": {
+              "x": 256,
+              "y": 422
+            },
+            "opaquePixels": 94355
+          },
+          {
+            "region": {
+              "x": 1327,
+              "y": 447,
+              "width": 447,
+              "height": 440
+            },
+            "bounds": {
+              "x": 30,
+              "y": 14,
+              "width": 388,
+              "height": 409
+            },
+            "anchor": {
+              "x": 259,
+              "y": 423
+            },
+            "opaquePixels": 94151
+          }
+        ],
+        "cleanup": {
+          "lowAlphaPixelsRemoved": 61169,
+          "isolatedOpaquePixelsRemoved": 0
+        },
+        "sha256": "d034ffe06bb4f150e6744c48eab9355c02b023215ec23cb3faed9c8f8a6f98df"
+      }
+    }
+  },
+  "gait-lab": {
+    "processing": "保留原图；测量透明沟槽，必要时按独立alpha轮廓分帧；源图固定缩放；按头部水平轴与支撑鞋底注册，无姿势形变或插值。",
+    "sources": {},
+    "characters": {
+      "whale": {
+        "image": "atlases/whale-walking.webp",
+        "loop": "repeat",
+        "cycleDistancePixels": 186.97267259709787,
+        "frames": [
+          {
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 27,
+              "y": 26,
+              "width": 388,
+              "height": 413
+            },
+            "sourceAnchor": {
+              "x": 256,
+              "y": 439
+            },
+            "opaquePixels": 93544,
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 444,
+              "height": 447
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 28,
+              "y": 27,
+              "width": 386,
+              "height": 412
+            },
+            "sourceAnchor": {
+              "x": 256,
+              "y": 439
+            },
+            "opaquePixels": 92195,
+            "sourceRegion": {
+              "x": 443,
+              "y": 0,
+              "width": 441,
+              "height": 447
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 27,
+              "y": 26,
+              "width": 383,
+              "height": 413
+            },
+            "sourceAnchor": {
+              "x": 252,
+              "y": 439
+            },
+            "opaquePixels": 93679,
+            "sourceRegion": {
+              "x": 883,
+              "y": 0,
+              "width": 442,
+              "height": 447
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 32,
+              "y": 26,
+              "width": 385,
+              "height": 409
+            },
+            "sourceAnchor": {
+              "x": 257,
+              "y": 435
+            },
+            "opaquePixels": 93574,
+            "sourceRegion": {
+              "x": 1324,
+              "y": 0,
+              "width": 450,
+              "height": 447
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 27,
+              "y": 9,
+              "width": 387,
+              "height": 412
+            },
+            "sourceAnchor": {
+              "x": 255,
+              "y": 421
+            },
+            "opaquePixels": 93056,
+            "sourceRegion": {
+              "x": 0,
+              "y": 446,
+              "width": 443,
+              "height": 441
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 29,
+              "y": 7,
+              "width": 386,
+              "height": 414
+            },
+            "sourceAnchor": {
+              "x": 256,
+              "y": 421
+            },
+            "opaquePixels": 92136,
+            "sourceRegion": {
+              "x": 442,
+              "y": 446,
+              "width": 442,
+              "height": 441
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 27,
+              "y": 9,
+              "width": 387,
+              "height": 411
+            },
+            "sourceAnchor": {
+              "x": 255,
+              "y": 420
+            },
+            "opaquePixels": 93835,
+            "sourceRegion": {
+              "x": 883,
+              "y": 446,
+              "width": 445,
+              "height": 441
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          },
+          {
+            "region": {
+              "x": 3360,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "bounds": {
+              "x": 30,
+              "y": 10,
+              "width": 385,
+              "height": 408
+            },
+            "sourceAnchor": {
+              "x": 258,
+              "y": 418
+            },
+            "opaquePixels": 93444,
+            "sourceRegion": {
+              "x": 1327,
+              "y": 446,
+              "width": 447,
+              "height": 441
+            },
+            "anchor": {
+              "x": 240,
+              "y": 462
+            },
+            "durationMs": 100
+          }
+        ],
+        "source": {
+          "file": "source/whale/final-gait-v4.png",
+          "width": 1774,
+          "height": 887,
+          "partition": "row-gutters",
+          "scale": 0.9685230024213075,
+          "cleanup": {
+            "lowAlphaPixelsRemoved": 40946,
+            "isolatedOpaquePixelsRemoved": 0
+          },
+          "sha256": "a6a54f28ee0c593b436b292a8a622eaf0f3ba55a39709819358fe985e0b1667b"
+        },
+        "review": "phase-and-final-silhouette-verified-preview-adopted"
+      }
+    }
+  },
+  "sleep-lab": {
+    "processing": "Authored image_gen poses; alpha cleanup, transparent-gutter partition, one fixed scale per source sheet, body-center/floor registration, atlas export. No pose deformation or interpolated frames.",
+    "sources": {
+      "whale-transitions-v1": {
+        "file": "source/whale-transitions-v1.png",
+        "sha256": "6b4e55f86983c21eb17986f1e8d2ec6d7a5c7df306fb41383eef553c991a6fc2",
+        "width": 1774,
+        "height": 887,
+        "columns": 4,
+        "rows": 2,
+        "cleanup": {
+          "lowAlphaPixelsRemoved": 45984,
+          "isolatedPixelsRemoved": 0
+        },
+        "cells": [
+          {
+            "region": {
+              "left": 0,
+              "top": 0,
+              "width": 439,
+              "height": 563
+            },
+            "bounds": {
+              "l": 36,
+              "t": 54,
+              "r": 418,
+              "b": 506,
+              "width": 383,
+              "height": 453,
+              "edge": 0
+            },
+            "body": {
+              "l": 36,
+              "t": 54,
+              "r": 418,
+              "b": 506,
+              "width": 383,
+              "height": 453
+            },
+            "anchor": {
+              "x": 227,
+              "y": 507
+            }
+          },
+          {
+            "region": {
+              "left": 439,
+              "top": 0,
+              "width": 429,
+              "height": 563
+            },
+            "bounds": {
+              "l": 20,
+              "t": 93,
+              "r": 399,
+              "b": 509,
+              "width": 380,
+              "height": 417,
+              "edge": 0
+            },
+            "body": {
+              "l": 20,
+              "t": 93,
+              "r": 399,
+              "b": 509,
+              "width": 380,
+              "height": 417
+            },
+            "anchor": {
+              "x": 209.5,
+              "y": 510
+            }
+          },
+          {
+            "region": {
+              "left": 868,
+              "top": 0,
+              "width": 440,
+              "height": 563
+            },
+            "bounds": {
+              "l": 29,
+              "t": 159,
+              "r": 422,
+              "b": 508,
+              "width": 394,
+              "height": 350,
+              "edge": 0
+            },
+            "body": {
+              "l": 29,
+              "t": 159,
+              "r": 422,
+              "b": 508,
+              "width": 394,
+              "height": 350
+            },
+            "anchor": {
+              "x": 225.5,
+              "y": 509
+            }
+          },
+          {
+            "region": {
+              "left": 1308,
+              "top": 0,
+              "width": 466,
+              "height": 563
+            },
+            "bounds": {
+              "l": 17,
+              "t": 217,
+              "r": 438,
+              "b": 513,
+              "width": 422,
+              "height": 297,
+              "edge": 0
+            },
+            "body": {
+              "l": 17,
+              "t": 217,
+              "r": 438,
+              "b": 513,
+              "width": 422,
+              "height": 297
+            },
+            "anchor": {
+              "x": 227.5,
+              "y": 514
+            }
+          },
+          {
+            "region": {
+              "left": 0,
+              "top": 563,
+              "width": 445,
+              "height": 324
+            },
+            "bounds": {
+              "l": 14,
+              "t": 51,
+              "r": 434,
+              "b": 299,
+              "width": 421,
+              "height": 249,
+              "edge": 0
+            },
+            "body": {
+              "l": 14,
+              "t": 51,
+              "r": 434,
+              "b": 299,
+              "width": 421,
+              "height": 249
+            },
+            "anchor": {
+              "x": 224,
+              "y": 300
+            }
+          },
+          {
+            "region": {
+              "left": 445,
+              "top": 563,
+              "width": 441,
+              "height": 324
+            },
+            "bounds": {
+              "l": 10,
+              "t": 53,
+              "r": 432,
+              "b": 302,
+              "width": 423,
+              "height": 250,
+              "edge": 0
+            },
+            "body": {
+              "l": 10,
+              "t": 53,
+              "r": 432,
+              "b": 302,
+              "width": 423,
+              "height": 250
+            },
+            "anchor": {
+              "x": 221,
+              "y": 303
+            }
+          },
+          {
+            "region": {
+              "left": 886,
+              "top": 563,
+              "width": 441,
+              "height": 324
+            },
+            "bounds": {
+              "l": 8,
+              "t": 50,
+              "r": 429,
+              "b": 301,
+              "width": 422,
+              "height": 252,
+              "edge": 0
+            },
+            "body": {
+              "l": 8,
+              "t": 50,
+              "r": 429,
+              "b": 301,
+              "width": 422,
+              "height": 252
+            },
+            "anchor": {
+              "x": 218.5,
+              "y": 302
+            }
+          },
+          {
+            "region": {
+              "left": 1327,
+              "top": 563,
+              "width": 447,
+              "height": 324
+            },
+            "bounds": {
+              "l": 12,
+              "t": 54,
+              "r": 434,
+              "b": 302,
+              "width": 423,
+              "height": 249,
+              "edge": 0
+            },
+            "body": {
+              "l": 12,
+              "t": 54,
+              "r": 434,
+              "b": 302,
+              "width": 423,
+              "height": 249
+            },
+            "anchor": {
+              "x": 223,
+              "y": 303
+            }
+          }
+        ],
+        "scale": 0.8675496688741722,
+        "requestedScale": 0.8675496688741722
+      },
+      "whale-sleep-v1": {
+        "file": "source/whale-sleep-v1.png",
+        "sha256": "379ea79e15668c25afa3bb94aa40b8a5cbb56eba52c9b051e69ec0abca1be6dd",
+        "width": 1254,
+        "height": 1254,
+        "columns": 2,
+        "rows": 2,
+        "cleanup": {
+          "lowAlphaPixelsRemoved": 40122,
+          "isolatedPixelsRemoved": 0
+        },
+        "cells": [
+          {
+            "region": {
+              "left": 0,
+              "top": 0,
+              "width": 633,
+              "height": 660
+            },
+            "bounds": {
+              "l": 41,
+              "t": 194,
+              "r": 598,
+              "b": 580,
+              "width": 558,
+              "height": 387,
+              "edge": 0
+            },
+            "body": {
+              "l": 41,
+              "t": 220,
+              "r": 598,
+              "b": 580,
+              "width": 558,
+              "height": 361
+            },
+            "anchor": {
+              "x": 319.5,
+              "y": 581
+            }
+          },
+          {
+            "region": {
+              "left": 633,
+              "top": 0,
+              "width": 621,
+              "height": 660
+            },
+            "bounds": {
+              "l": 35,
+              "t": 166,
+              "r": 594,
+              "b": 580,
+              "width": 560,
+              "height": 415,
+              "edge": 0
+            },
+            "body": {
+              "l": 35,
+              "t": 212,
+              "r": 594,
+              "b": 580,
+              "width": 560,
+              "height": 369
+            },
+            "anchor": {
+              "x": 314.5,
+              "y": 581
+            }
+          },
+          {
+            "region": {
+              "left": 0,
+              "top": 660,
+              "width": 635,
+              "height": 594
+            },
+            "bounds": {
+              "l": 41,
+              "t": 79,
+              "r": 602,
+              "b": 520,
+              "width": 562,
+              "height": 442,
+              "edge": 0
+            },
+            "body": {
+              "l": 41,
+              "t": 158,
+              "r": 602,
+              "b": 520,
+              "width": 562,
+              "height": 363
+            },
+            "anchor": {
+              "x": 321.5,
+              "y": 521
+            }
+          },
+          {
+            "region": {
+              "left": 635,
+              "top": 660,
+              "width": 619,
+              "height": 594
+            },
+            "bounds": {
+              "l": 33,
+              "t": 142,
+              "r": 592,
+              "b": 520,
+              "width": 560,
+              "height": 379,
+              "edge": 0
+            },
+            "body": {
+              "l": 33,
+              "t": 163,
+              "r": 592,
+              "b": 520,
+              "width": 560,
+              "height": 358
+            },
+            "anchor": {
+              "x": 312.5,
+              "y": 521
+            }
+          }
+        ],
+        "scale": 0.6576586199530015,
+        "requestedScale": 0.6576586199530015
+      }
+    },
+    "characters": {
+      "whale": {
+        "sleeping": {
+          "loop": "repeat",
+          "image": "atlases/whale-sleeping.webp",
+          "frames": [
+            {
+              "source": "whale-sleep-v1",
+              "index": 0,
+              "durationMs": 950,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-sleep-v1",
+              "index": 1,
+              "durationMs": 750,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-sleep-v1",
+              "index": 2,
+              "durationMs": 950,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-sleep-v1",
+              "index": 3,
+              "durationMs": 750,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "settling": {
+          "loop": "once",
+          "image": "atlases/whale-settling.webp",
+          "frames": [
+            {
+              "source": "baseline/whale/resting",
+              "index": 0,
+              "durationMs": 180,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 0,
+              "durationMs": 250,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 1,
+              "durationMs": 350,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 2,
+              "durationMs": 400,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 3,
+              "durationMs": 400,
+              "region": {
+                "x": 1920,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 4,
+              "durationMs": 400,
+              "region": {
+                "x": 2400,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 5,
+              "durationMs": 500,
+              "region": {
+                "x": 2880,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-sleep-v1",
+              "index": 0,
+              "durationMs": 350,
+              "region": {
+                "x": 3360,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "waking": {
+          "loop": "once",
+          "image": "atlases/whale-waking.webp",
+          "frames": [
+            {
+              "source": "whale-sleep-v1",
+              "index": 0,
+              "durationMs": 160,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 5,
+              "durationMs": 160,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 4,
+              "durationMs": 200,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 3,
+              "durationMs": 240,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 2,
+              "durationMs": 240,
+              "region": {
+                "x": 1920,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 1,
+              "durationMs": 220,
+              "region": {
+                "x": 2400,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 0,
+              "durationMs": 200,
+              "region": {
+                "x": 2880,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "baseline/whale/resting",
+              "index": 0,
+              "durationMs": 180,
+              "region": {
+                "x": 3360,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "ear": {
+          "loop": "once",
+          "image": "atlases/whale-ear.webp",
+          "frames": [
+            {
+              "source": "whale-sleep-v1",
+              "index": 0,
+              "durationMs": 120,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 6,
+              "durationMs": 180,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-transitions-v1",
+              "index": 7,
+              "durationMs": 220,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-sleep-v1",
+              "index": 0,
+              "durationMs": 220,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "air-lab": {
+    "processing": "Authored image_gen poses; alpha cleanup, transparent-gutter partition, one fixed scale per source sheet, fixed source grid registration in the air and body-center/floor registration on the ground, atlas export. No pose deformation or interpolated frames.",
+    "sources": {
+      "whale-landing-v1": {
+        "file": "source/whale-landing-v1.png",
+        "sha256": "446819d13c96421472e9c69526e42bababd2f8efa892c4913b707da549f56a42",
+        "width": 1448,
+        "height": 1086,
+        "columns": 4,
+        "rows": 3,
+        "partition": "12 separate alpha-connected silhouettes in reading order",
+        "cleanup": {
+          "lowAlphaPixelsRemoved": 63521,
+          "disconnectedDebrisRemoved": 0
+        },
+        "cells": [
+          {
+            "region": {
+              "left": 25,
+              "top": 26,
+              "width": 339,
+              "height": 351
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 336,
+              "b": 348,
+              "width": 335,
+              "height": 347,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 336,
+              "b": 348,
+              "width": 335,
+              "height": 347
+            },
+            "anchor": {
+              "x": 169,
+              "y": 349
+            }
+          },
+          {
+            "region": {
+              "left": 367,
+              "top": 87,
+              "width": 335,
+              "height": 339
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 332,
+              "b": 336,
+              "width": 331,
+              "height": 335,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 332,
+              "b": 336,
+              "width": 331,
+              "height": 335
+            },
+            "anchor": {
+              "x": 167,
+              "y": 337
+            }
+          },
+          {
+            "region": {
+              "left": 679,
+              "top": 198,
+              "width": 400,
+              "height": 229
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 397,
+              "b": 226,
+              "width": 396,
+              "height": 225,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 397,
+              "b": 226,
+              "width": 396,
+              "height": 225
+            },
+            "anchor": {
+              "x": 199.5,
+              "y": 227
+            }
+          },
+          {
+            "region": {
+              "left": 1058,
+              "top": 234,
+              "width": 385,
+              "height": 193
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 382,
+              "b": 190,
+              "width": 381,
+              "height": 189,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 382,
+              "b": 190,
+              "width": 381,
+              "height": 189
+            },
+            "anchor": {
+              "x": 192,
+              "y": 191
+            }
+          },
+          {
+            "region": {
+              "left": 0,
+              "top": 546,
+              "width": 381,
+              "height": 197
+            },
+            "bounds": {
+              "l": 1,
+              "t": 2,
+              "r": 377,
+              "b": 194,
+              "width": 377,
+              "height": 193,
+              "edge": 0
+            },
+            "body": {
+              "l": 1,
+              "t": 2,
+              "r": 377,
+              "b": 194,
+              "width": 377,
+              "height": 193
+            },
+            "anchor": {
+              "x": 189,
+              "y": 195
+            }
+          },
+          {
+            "region": {
+              "left": 375,
+              "top": 465,
+              "width": 353,
+              "height": 270
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 350,
+              "b": 267,
+              "width": 349,
+              "height": 266,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 350,
+              "b": 267,
+              "width": 349,
+              "height": 266
+            },
+            "anchor": {
+              "x": 176,
+              "y": 268
+            }
+          },
+          {
+            "region": {
+              "left": 700,
+              "top": 439,
+              "width": 383,
+              "height": 297
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 380,
+              "b": 294,
+              "width": 379,
+              "height": 293,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 380,
+              "b": 294,
+              "width": 379,
+              "height": 293
+            },
+            "anchor": {
+              "x": 191,
+              "y": 295
+            }
+          },
+          {
+            "region": {
+              "left": 1079,
+              "top": 439,
+              "width": 369,
+              "height": 297
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 366,
+              "b": 294,
+              "width": 365,
+              "height": 293,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 366,
+              "b": 294,
+              "width": 365,
+              "height": 293
+            },
+            "anchor": {
+              "x": 184,
+              "y": 295
+            }
+          },
+          {
+            "region": {
+              "left": 33,
+              "top": 754,
+              "width": 353,
+              "height": 303
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 350,
+              "b": 300,
+              "width": 349,
+              "height": 299,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 350,
+              "b": 300,
+              "width": 349,
+              "height": 299
+            },
+            "anchor": {
+              "x": 176,
+              "y": 301
+            }
+          },
+          {
+            "region": {
+              "left": 397,
+              "top": 736,
+              "width": 345,
+              "height": 320
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 342,
+              "b": 317,
+              "width": 341,
+              "height": 316,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 342,
+              "b": 317,
+              "width": 341,
+              "height": 316
+            },
+            "anchor": {
+              "x": 172,
+              "y": 318
+            }
+          },
+          {
+            "region": {
+              "left": 770,
+              "top": 739,
+              "width": 316,
+              "height": 332
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 313,
+              "b": 329,
+              "width": 312,
+              "height": 328,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 313,
+              "b": 329,
+              "width": 312,
+              "height": 328
+            },
+            "anchor": {
+              "x": 157.5,
+              "y": 330
+            }
+          },
+          {
+            "region": {
+              "left": 1127,
+              "top": 737,
+              "width": 296,
+              "height": 337
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 293,
+              "b": 334,
+              "width": 292,
+              "height": 333,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 293,
+              "b": 334,
+              "width": 292,
+              "height": 333
+            },
+            "anchor": {
+              "x": 147.5,
+              "y": 335
+            }
+          }
+        ],
+        "scale": 1.128463476070529,
+        "requestedScale": 1.1801801801801801,
+        "target": {
+          "x": 240,
+          "y": 462
+        }
+      },
+      "whale-air-v1": {
+        "file": "source/whale-air-v1.png",
+        "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166",
+        "width": 1448,
+        "height": 1086,
+        "columns": 4,
+        "rows": 3,
+        "partition": "12 separate alpha-connected silhouettes in reading order",
+        "cleanup": {
+          "lowAlphaPixelsRemoved": 73351,
+          "disconnectedDebrisRemoved": 0
+        },
+        "cells": [
+          {
+            "region": {
+              "left": 26,
+              "top": 10,
+              "width": 334,
+              "height": 350
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 331,
+              "b": 347,
+              "width": 330,
+              "height": 346,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 331,
+              "b": 347,
+              "width": 330,
+              "height": 346
+            },
+            "anchor": {
+              "x": 155,
+              "y": 171
+            }
+          },
+          {
+            "region": {
+              "left": 384,
+              "top": 13,
+              "width": 341,
+              "height": 338
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 338,
+              "b": 335,
+              "width": 337,
+              "height": 334,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 338,
+              "b": 335,
+              "width": 337,
+              "height": 334
+            },
+            "anchor": {
+              "x": 159,
+              "y": 168
+            }
+          },
+          {
+            "region": {
+              "left": 753,
+              "top": 12,
+              "width": 314,
+              "height": 348
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 311,
+              "b": 345,
+              "width": 310,
+              "height": 344,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 311,
+              "b": 345,
+              "width": 310,
+              "height": 344
+            },
+            "anchor": {
+              "x": 152,
+              "y": 169
+            }
+          },
+          {
+            "region": {
+              "left": 1100,
+              "top": 10,
+              "width": 326,
+              "height": 337
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 323,
+              "b": 334,
+              "width": 322,
+              "height": 333,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 323,
+              "b": 334,
+              "width": 322,
+              "height": 333
+            },
+            "anchor": {
+              "x": 167,
+              "y": 171
+            }
+          },
+          {
+            "region": {
+              "left": 27,
+              "top": 368,
+              "width": 338,
+              "height": 340
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 335,
+              "b": 337,
+              "width": 334,
+              "height": 336,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 335,
+              "b": 337,
+              "width": 334,
+              "height": 336
+            },
+            "anchor": {
+              "x": 154,
+              "y": 175
+            }
+          },
+          {
+            "region": {
+              "left": 382,
+              "top": 369,
+              "width": 354,
+              "height": 339
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 351,
+              "b": 336,
+              "width": 350,
+              "height": 335,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 351,
+              "b": 336,
+              "width": 350,
+              "height": 335
+            },
+            "anchor": {
+              "x": 161,
+              "y": 174
+            }
+          },
+          {
+            "region": {
+              "left": 757,
+              "top": 371,
+              "width": 335,
+              "height": 338
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 332,
+              "b": 335,
+              "width": 331,
+              "height": 334,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 332,
+              "b": 335,
+              "width": 331,
+              "height": 334
+            },
+            "anchor": {
+              "x": 148,
+              "y": 172
+            }
+          },
+          {
+            "region": {
+              "left": 1104,
+              "top": 371,
+              "width": 326,
+              "height": 337
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 323,
+              "b": 334,
+              "width": 322,
+              "height": 333,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 323,
+              "b": 334,
+              "width": 322,
+              "height": 333
+            },
+            "anchor": {
+              "x": 163,
+              "y": 172
+            }
+          },
+          {
+            "region": {
+              "left": 25,
+              "top": 727,
+              "width": 327,
+              "height": 322
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 324,
+              "b": 319,
+              "width": 323,
+              "height": 318,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 324,
+              "b": 319,
+              "width": 323,
+              "height": 318
+            },
+            "anchor": {
+              "x": 156,
+              "y": 178
+            }
+          },
+          {
+            "region": {
+              "left": 391,
+              "top": 733,
+              "width": 331,
+              "height": 340
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 328,
+              "b": 337,
+              "width": 327,
+              "height": 336,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 328,
+              "b": 337,
+              "width": 327,
+              "height": 336
+            },
+            "anchor": {
+              "x": 152,
+              "y": 172
+            }
+          },
+          {
+            "region": {
+              "left": 752,
+              "top": 735,
+              "width": 304,
+              "height": 312
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 301,
+              "b": 309,
+              "width": 300,
+              "height": 308,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 301,
+              "b": 309,
+              "width": 300,
+              "height": 308
+            },
+            "anchor": {
+              "x": 153,
+              "y": 170
+            }
+          },
+          {
+            "region": {
+              "left": 1096,
+              "top": 734,
+              "width": 322,
+              "height": 335
+            },
+            "bounds": {
+              "l": 2,
+              "t": 2,
+              "r": 319,
+              "b": 332,
+              "width": 318,
+              "height": 331,
+              "edge": 0
+            },
+            "body": {
+              "l": 2,
+              "t": 2,
+              "r": 319,
+              "b": 332,
+              "width": 318,
+              "height": 331
+            },
+            "anchor": {
+              "x": 171,
+              "y": 171
+            }
+          }
+        ],
+        "scale": 1.128463476070529,
+        "requestedScale": 1.128463476070529,
+        "target": {
+          "x": 227.5869017632242,
+          "y": 239.4357682619647
+        }
+      }
+    },
+    "characters": {
+      "whale": {
+        "dragging": {
+          "loop": "repeat",
+          "image": "atlases/whale-dragging.webp",
+          "frames": [
+            {
+              "source": "whale-air-v1",
+              "index": 0,
+              "durationMs": 80,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 1,
+              "durationMs": 70,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 2,
+              "durationMs": 80,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 3,
+              "durationMs": 70,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "flutter": {
+          "loop": "repeat",
+          "image": "atlases/whale-flutter.webp",
+          "frames": [
+            {
+              "source": "whale-air-v1",
+              "index": 4,
+              "durationMs": 70,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 5,
+              "durationMs": 70,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 6,
+              "durationMs": 70,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 7,
+              "durationMs": 70,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "falling": {
+          "loop": "repeat",
+          "image": "atlases/whale-falling.webp",
+          "frames": [
+            {
+              "source": "whale-air-v1",
+              "index": 8,
+              "durationMs": 80,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 9,
+              "durationMs": 70,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 10,
+              "durationMs": 80,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-air-v1",
+              "index": 11,
+              "durationMs": 70,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ]
+        },
+        "landing": {
+          "loop": "once",
+          "image": "atlases/whale-landing.webp",
+          "frames": [
+            {
+              "source": "whale-landing-v1",
+              "index": 0,
+              "durationMs": 70,
+              "region": {
+                "x": 0,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 1,
+              "durationMs": 80,
+              "region": {
+                "x": 480,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 2,
+              "durationMs": 100,
+              "region": {
+                "x": 960,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 3,
+              "durationMs": 500,
+              "region": {
+                "x": 1440,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 4,
+              "durationMs": 220,
+              "region": {
+                "x": 1920,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 5,
+              "durationMs": 180,
+              "region": {
+                "x": 2400,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 6,
+              "durationMs": 180,
+              "region": {
+                "x": 2880,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 7,
+              "durationMs": 200,
+              "region": {
+                "x": 3360,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 8,
+              "durationMs": 180,
+              "region": {
+                "x": 3840,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 9,
+              "durationMs": 180,
+              "region": {
+                "x": 4320,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 10,
+              "durationMs": 220,
+              "region": {
+                "x": 4800,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "whale-landing-v1",
+              "index": 11,
+              "durationMs": 200,
+              "region": {
+                "x": 5280,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            },
+            {
+              "source": "baseline/whale/resting",
+              "index": 0,
+              "durationMs": 700,
+              "region": {
+                "x": 5760,
+                "y": 0,
+                "width": 480,
+                "height": 480
+              },
+              "anchor": {
+                "x": 240,
+                "y": 462
+              }
+            }
+          ],
+          "stages": [
+            {
+              "name": "扑地",
+              "from": 0,
+              "to": 2
+            },
+            {
+              "name": "倒地停留",
+              "from": 3,
+              "to": 4
+            },
+            {
+              "name": "撑地爬起",
+              "from": 5,
+              "to": 9
+            },
+            {
+              "name": "重新站稳",
+              "from": 10,
+              "to": 12
+            }
+          ]
+        }
+      }
+    }
+  }
+}

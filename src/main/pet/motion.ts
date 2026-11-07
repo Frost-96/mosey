@@ -85,10 +85,9 @@ export class PetMotion {
           this.behavior.getSnapshot().context.actionId !== id
         )
           return this.stop();
-        const progress = Math.min(
-          1,
-          (this.scene.now - started) / (walk?.durationMs ?? autonomy.walkMs),
-        );
+        const progress = walk
+          ? walk.progress(this.scene.now - started)
+          : Math.min(1, (this.scene.now - started) / autonomy.walkMs);
         const bounds = this.pet.getBounds();
         // A size change preserves the moving foot, not the old window corner.
         // Preserve both corrections applied by this tick and any newer native

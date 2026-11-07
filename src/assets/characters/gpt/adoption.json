@@ -1,0 +1,2208 @@
+{
+  "adoptedOn": "2026-11-04",
+  "previewRevision": "unified-v8-air",
+  "previewManifestSha256": "275b4a765f5781543869bdb3aa108a52090980d3b6e91b10fa642b93827b2ab2",
+  "character": "gpt",
+  "displayName": "GPT",
+  "attribution": "Community personifications attributed to ZipZipPipe; not vendor official characters. Whale follows existing project provenance and local review scope.",
+  "identityOrigin": {
+    "date": "2026-10-27",
+    "status": "exploration-unselected",
+    "tool": "built-in image_gen",
+    "model": null,
+    "seed": null,
+    "sourceAttribution": "Existing Claude, Gemini and GPT personifications attributed to ZipZipPipe in shuaizenge/ai-girls; reference images are archived video demonstration frames, not original transparent chibi masters. No new rights assumed.",
+    "sources": [
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/claude",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gemini",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gpt"
+    ]
+  },
+  "actions": {
+    "resting": {
+      "image": "sprites/resting.webp",
+      "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 1550,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 1,
+          "durationMs": 400,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 2,
+          "durationMs": 120,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 3,
+          "durationMs": 700,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    },
+    "walking": {
+      "image": "sprites/walking.webp",
+      "sha256": "8f31955b2ae689d3b3d27cb0be0744dff5bbd1ea9e21f8fbed0ba7c2255bbf86",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 42,
+            "y": 17,
+            "width": 379,
+            "height": 423
+          },
+          "sourceAnchor": {
+            "x": 262,
+            "y": 440
+          },
+          "opaquePixels": 104321,
+          "sourceRegion": {
+            "x": 0,
+            "y": 0,
+            "width": 448,
+            "height": 443
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 26,
+            "y": 17,
+            "width": 376,
+            "height": 421
+          },
+          "sourceAnchor": {
+            "x": 244,
+            "y": 438
+          },
+          "opaquePixels": 101584,
+          "sourceRegion": {
+            "x": 447,
+            "y": 0,
+            "width": 436,
+            "height": 443
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 34,
+            "y": 16,
+            "width": 372,
+            "height": 420
+          },
+          "sourceAnchor": {
+            "x": 248,
+            "y": 436
+          },
+          "opaquePixels": 103582,
+          "sourceRegion": {
+            "x": 882,
+            "y": 0,
+            "width": 439,
+            "height": 443
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 33,
+            "y": 16,
+            "width": 381,
+            "height": 421
+          },
+          "sourceAnchor": {
+            "x": 254,
+            "y": 437
+          },
+          "opaquePixels": 105549,
+          "sourceRegion": {
+            "x": 1320,
+            "y": 0,
+            "width": 454,
+            "height": 443
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 41,
+            "y": 6,
+            "width": 375,
+            "height": 419
+          },
+          "sourceAnchor": {
+            "x": 255,
+            "y": 425
+          },
+          "opaquePixels": 103383,
+          "sourceRegion": {
+            "x": 0,
+            "y": 442,
+            "width": 445,
+            "height": 445
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 29,
+            "y": 3,
+            "width": 377,
+            "height": 422
+          },
+          "sourceAnchor": {
+            "x": 245,
+            "y": 425
+          },
+          "opaquePixels": 102927,
+          "sourceRegion": {
+            "x": 444,
+            "y": 442,
+            "width": 439,
+            "height": 445
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 33,
+            "y": 6,
+            "width": 373,
+            "height": 419
+          },
+          "sourceAnchor": {
+            "x": 246,
+            "y": 425
+          },
+          "opaquePixels": 102985,
+          "sourceRegion": {
+            "x": 882,
+            "y": 442,
+            "width": 440,
+            "height": 445
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 33,
+            "y": 6,
+            "width": 378,
+            "height": 419
+          },
+          "sourceAnchor": {
+            "x": 249,
+            "y": 425
+          },
+          "opaquePixels": 105010,
+          "sourceRegion": {
+            "x": 1321,
+            "y": 442,
+            "width": 453,
+            "height": 445
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/0ce388741de7-final-gait-v4.png",
+          "sha256": "0ce388741de7e617cfdbba24a34d8c34c07043ff304a4cdd8ec6c988cfc982cc"
+        }
+      ]
+    },
+    "settling": {
+      "image": "sprites/settling.webp",
+      "sha256": "c37917f8146a69bf44a8d32e97079315dc3d5da47fc03f118e13b9e041427757",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 0,
+          "durationMs": 350,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 1,
+          "durationMs": 350,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 2,
+          "durationMs": 400,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 3,
+          "durationMs": 450,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 4,
+          "durationMs": 450,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 5,
+          "durationMs": 550,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/d5beaff2e39c-sleep-v1.png",
+          "sha256": "d5beaff2e39ca4573b1c28ddab8705339cb59a5071044cd31dc7a8c0379f54e9"
+        }
+      ]
+    },
+    "sleeping": {
+      "image": "sprites/sleeping.webp",
+      "sha256": "0951a6994c1935a583afc98682e9f49dd42afb071a84724b157f2c120c8d5d0d",
+      "previewFrames": [
+        {
+          "source": "gpt-sleep-v1",
+          "index": 0,
+          "durationMs": 950,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-sleep-v1",
+          "index": 1,
+          "durationMs": 750,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-sleep-v1",
+          "index": 2,
+          "durationMs": 950,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-sleep-v1",
+          "index": 3,
+          "durationMs": 750,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/6384eeeb3ca4-gpt-sleep-v1.png",
+          "sha256": "6384eeeb3ca4d26c231af9fb17a8d368e9fde4095153a78d6bbf674f0ed0ac5f"
+        }
+      ]
+    },
+    "ear": {
+      "image": "sprites/ear.webp",
+      "sha256": "19342524124d520e7beef49d9d61ceab6b98e8f6de683561471f45ca946af5b5",
+      "previewFrames": [
+        {
+          "source": "gpt/sleep-v1",
+          "index": 8,
+          "durationMs": 100,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 9,
+          "durationMs": 160,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 10,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/d5beaff2e39c-sleep-v1.png",
+          "sha256": "d5beaff2e39ca4573b1c28ddab8705339cb59a5071044cd31dc7a8c0379f54e9"
+        }
+      ]
+    },
+    "waking": {
+      "image": "sprites/waking.webp",
+      "sha256": "f153b8d086b68b8ff1abfb438f8356769ff1b70091df209f0afe7b11d9ebef81",
+      "previewFrames": [
+        {
+          "source": "gpt/sleep-v1",
+          "index": 5,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 4,
+          "durationMs": 200,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 3,
+          "durationMs": 220,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 2,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 1,
+          "durationMs": 220,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/sleep-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/d5beaff2e39c-sleep-v1.png",
+          "sha256": "d5beaff2e39ca4573b1c28ddab8705339cb59a5071044cd31dc7a8c0379f54e9"
+        },
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    },
+    "tilt": {
+      "image": "sprites/tilt.webp",
+      "sha256": "af4e14dce4477cb894ffe0c39fd76c56be20efa4a5aa87a2907d1715a9afb626",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 0,
+          "durationMs": 100,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 1,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 2,
+          "durationMs": 450,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 3,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/ea86240f187b-reactions-v1.png",
+          "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+        }
+      ]
+    },
+    "paw": {
+      "image": "sprites/paw.webp",
+      "sha256": "38572a3e2fa204e749fd1efe896536e3e7725d65b75c4e37700357abfb825030",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 4,
+          "durationMs": 130,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 5,
+          "durationMs": 150,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 5,
+          "durationMs": 130,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 7,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/ea86240f187b-reactions-v1.png",
+          "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+        }
+      ]
+    },
+    "belly": {
+      "image": "sprites/belly.webp",
+      "sha256": "614cb5a6a76f9357040b848b9b78ba007df57c5b5a0c754b79f4e702de42371d",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 8,
+          "durationMs": 140,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 9,
+          "durationMs": 200,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 10,
+          "durationMs": 400,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/ea86240f187b-reactions-v1.png",
+          "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+        }
+      ]
+    },
+    "playing": {
+      "image": "sprites/playing.webp",
+      "sha256": "147c9867f4506dc1748fe6744b40151d34e5727783d1297a3180e760ed250650",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 8,
+          "durationMs": 160,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/ea86240f187b-reactions-v1.png",
+          "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+        }
+      ]
+    },
+    "stretching": {
+      "image": "sprites/stretching.webp",
+      "sha256": "460a84bf54f8e1280c28f76e36887f1ca8c19a853b19af5894eadfa20d017c26",
+      "previewFrames": [
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 12,
+          "durationMs": 170,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 13,
+          "durationMs": 200,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 14,
+          "durationMs": 650,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 13,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/reactions-v1",
+          "index": 15,
+          "durationMs": 230,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        },
+        {
+          "file": "provenance/images/ea86240f187b-reactions-v1.png",
+          "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+        }
+      ]
+    },
+    "dragging": {
+      "image": "sprites/dragging.webp",
+      "sha256": "c465e036b2d4f407668de9507ff67966f9629a87e220eb02b40f0446be47dc99",
+      "previewFrames": [
+        {
+          "source": "gpt-air-v1",
+          "index": 0,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 1,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 2,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 3,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/b7a763b3ff39-gpt-air-v1.png",
+          "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+        }
+      ]
+    },
+    "flutter": {
+      "image": "sprites/flutter.webp",
+      "sha256": "3b1c130106a5b69580decd99e0e216dd561ef1618c079345dd6b51a43fdb5687",
+      "previewFrames": [
+        {
+          "source": "gpt-air-v1",
+          "index": 4,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 5,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 6,
+          "durationMs": 70,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 7,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/b7a763b3ff39-gpt-air-v1.png",
+          "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+        }
+      ]
+    },
+    "falling": {
+      "image": "sprites/falling.webp",
+      "sha256": "28b0319d99c2193ab793831a183e06f9b9680b9e2d4b67fb86cae28eaeb66323",
+      "previewFrames": [
+        {
+          "source": "gpt-air-v1",
+          "index": 8,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 9,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 10,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-air-v1",
+          "index": 11,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/b7a763b3ff39-gpt-air-v1.png",
+          "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+        }
+      ]
+    },
+    "landing": {
+      "image": "sprites/landing.webp",
+      "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+      "previewFrames": [
+        {
+          "source": "gpt-landing-v1",
+          "index": 0,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 1,
+          "durationMs": 80,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 2,
+          "durationMs": 100,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 3,
+          "durationMs": 500,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 4,
+          "durationMs": 220,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 5,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 7,
+          "durationMs": 200,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 8,
+          "durationMs": 180,
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt-landing-v1",
+          "index": 11,
+          "durationMs": 200,
+          "region": {
+            "x": 5280,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "baseline/gpt/resting",
+          "index": 0,
+          "durationMs": 700,
+          "region": {
+            "x": 5760,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/8c6700f9140f-gpt-landing-v1.png",
+          "sha256": "8c6700f9140fe3b2f050e5f95dbfc43a878df4601e5dad74a927b6e7d78d683b"
+        }
+      ],
+      "frameOverrides": {
+        "10": {
+          "source": "provenance/images/5596c6a05aa4-gpt-rise-edit-1.png",
+          "sourceCell": 2,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        },
+        "11": {
+          "source": "provenance/images/5596c6a05aa4-gpt-rise-edit-1.png",
+          "sourceCell": 3,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        }
+      }
+    },
+    "climbing": {
+      "image": "sprites/climbing.webp",
+      "sha256": "62683baccb89a32bb6f8d2cb287eaeed6547693c83499e79504756abdf021e4e",
+      "previewFrames": [
+        {
+          "source": "gpt/physics-v1",
+          "index": 12,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/physics-v1",
+          "index": 13,
+          "durationMs": 260,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/physics-v1",
+          "index": 14,
+          "durationMs": 260,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/physics-v1",
+          "index": 15,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "gpt/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/0ce4b9ed4e96-physics-v1.png",
+          "sha256": "0ce4b9ed4e96dacecc0cfb91f5a4330a278f4e03862555e1c1d09ef278484298"
+        },
+        {
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    }
+  },
+  "requests": [
+    {
+      "id": "model-lineup-v1",
+      "prompt": "Use case: style-transfer. Asset: a coherent three-character desktop pet model lineup with true transparent background.\nInput image1 is the WHALE GIRL, the STRICT STYLE AND PROPORTION AUTHORITY. The new three must look like companions drawn by this exact same artist for the exact same sprite game. Input image2 supplies IDENTITY ONLY, use bottom row B Claude(left), Gemini(center), GPT(right). Their existing ornate illustration rendering is deliberately being replaced.\nDraw ONLY the three redesigned girls, left Claude, center Gemini, right GPT, one full-body neutral standing pose each, evenly separated in THREE columns on a landscape canvas, aim1536x1024. All three at SAME face/head drawing scale and SAME crown-to-sole scale, ignoring ears/horns. Generous empty transparent margins. No whale in output. No background, floor, shadows, labels, text, grid or borders.\nCRITICAL match image1: huge rounded head about HALF the crown-to-sole height, wide low cheek line, very short squat torso and tiny sturdy legs. Head just over half body height is welcome. Big simple oval eyes with dark upper eyelash and one or two simple highlights, tiny dot/U mouth. Short rounded mitten hands, round simple shoes. Dark clean confident OUTER OUTLINE of visibly similar thickness to whale. Broad clear color shapes, restrained ONE CEL SHADOW per material, tiny flat highlight accents. Thick simplified hair locks like whale; mostly4-6 broad locks, no dozens of thin wisps. NOT polished anime illustration, NOT delicate portrait linework, NO painterly shading, NO elaborate fabric folds, tiny lace, embroidery, glossy rendering, realistic anatomy or thin long legs. Think game sprite at70px window: face, hair silhouette and one signature object must read immediately. SAME eye construction, outline weight, head/body ratio and shading system for all3.\nCLAUDE identity: warm copper-orange LONG hair simplified into broad smooth locks, amber eyes, orange daisy and black ribbon hair ornament (simple6petals), cream capelet, cream sleeves, small cream/orange/black flared dress with only broad geometric panels. Tiny cream boots without lacing. One closed dark brown BOOK hugged to chest in left arm, simple orange flower mark on cover. Right mitten hand relaxed. Preserve long hair and gentle bookish character, NOT short bob.\nGEMINI identity: blue-purple LONG hair with just a few broad lavender tip blocks, blue cat ears with pink inside, one pink and one golden eye, ONE fluffy curled blue-purple cat tail. Four-color four-point STAR hairclip. Simple indigo/purple short dress with broad white underskirt and a single star at chest, tiny purple round shoes. Human mitten hands relaxed at sides. Reduce side buns to small simple rounded masses, no hair jewelry clutter. Curious cheerful expression.\nGPT identity: WHITE long hair with flat pale lavender shadow blocks; two small pale ribbed dragon horns (just2-3 broad divisions), pointed ears, big purple eyes, two compact lilac dragon wings behind shoulders, single pale lilac dragon tail curled beside legs with just3-4 large plate marks, NOT dozens of scales. Simple white/lilac flared dress and long broad sleeves; round white/lilac shoes. Small simplified knot/rosette hair ornament and waist emblem, no tassels or intricate knot linework. Hands together at waist. Calm gentle expression. Keep enough dark purple outline to read on white desktop.\nThe purpose is visibly simplifying and unifying these three into the whale sprite's family. Do not merely shrink or slightly retouch image2. Completely redraw using image1 graphic grammar. Full horns, tails and all feet fully inside each column.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png"
+      ],
+      "transparent_background": true,
+      "status": "identity-prototype",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "reference/unified-lineup-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-35f1e055-cb53-4b09-953d-d1db79381f92.png",
+      "limitations": "三人轮廓局部相接，不按等列直接裁切；后续各角色独立动作稿作为实际主造型。",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png": "1e884c997b12554692e51eace2676f49dedd6539fd03b8ae5096ba6f2fc4e3a8"
+      },
+      "outputSha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790",
+      "archivedOutput": {
+        "file": "provenance/images/05c205f53f70-unified-lineup-v1.png",
+        "sha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png",
+          "file": "provenance/images/1e884c997b12-previous-selected-design.png",
+          "sha256": "1e884c997b12554692e51eace2676f49dedd6539fd03b8ae5096ba6f2fc4e3a8"
+        }
+      ]
+    },
+    {
+      "id": "gpt-daily-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nGPT ONLY, right white dragon girl in model lineup. WHITE LONG hair in broad locks with pale lavender single cel shadow, two small pale DRAGON HORNS with2-3divisions, pointed ears, purple eyes, two compact lilac membranous DRAGON WINGS, ONE pale lilac DRAGON TAIL with only3-4 LARGE plate divisions. Simplified white/lilac short dress, long broad sleeves, tiny round white/lilac shoes. Replace intricate knots by simple small six-loop rosette silhouette; NO fine knot linework or tassels, no shoe emblem. Gentle composed personality. NO BOOK or handheld props, hands EMPTY throughout.\nInput2 model lineup: draw ONLY the specified girl; no other girl or whale in output.\nDraw TWELVE distinct chronological frames FOUR columns by THREE rows landscape2048x1536. Row1 is4 IDLE drawings FRONT view. Rows2+3 are8 WALK drawings consistently RIGHT-facing three-quarter SIDE view, no camera turning, all frames at same head size.\nIdle1 neutral pleasant eyes open, arms relaxed (Claude book hugged). Idle2 small inhale shoulders lift2px and freehand(s) move a little. Idle3 fully closed blink, tiny smile, shoulders relax. Idle4 eyes reopen and return nearly1, no stepping.\nWalk8 is TWO alternating steps. SHORT squat legs, small comfortable steps, shoes/knees visible beneath SHORT skirt.\nWalk1 FOREGROUND NEAR heel forward/right planted, FAR toe back/left.\nWalk2 NEAR stance knee flexes, FAR shoe clearly lifts behind with bent knee.\nWalk3 NEAR leg under pelvis, FAR bent knee passes FORWARD with shoe clearly off floor.\nWalk4 NEAR toe pushes back/left, FAR heel reaches forward ready contact.\nWalk5 FAR heel forward/right planted, FOREGROUND NEAR shoe BEHIND/left, OPPOSITE leading leg to1. Do not repeat the same leg.\nWalk6 FAR knee flexes, NEAR shoe lifts BEHIND with bent knee.\nWalk7 FAR leg under pelvis, NEAR bent knee passes FORWARD shoe off floor.\nWalk8 FAR toe pushes back, NEAR heel reaches forward preparing1.\nFree arm(s) counter-swing with legs, hair and tail follow gently backwards inside cell. GPT wings remain folded compact, no flight. Gemini tail counterbalances. Head bob <=3px. No kick, hop, run or high-knee marching. Stable face, costume and silhouette. Distinct contact/lift/passing drawings rather than eight similar straddled standing poses. FIRST idle frame is neutral master pose and must fit same style as whale.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/gpt/daily-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-0d82f641-53ac-40b2-b959-b43f6766c1c4.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+      },
+      "outputSha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3",
+      "archivedOutput": {
+        "file": "provenance/images/08ac699385e1-daily-v1.png",
+        "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png",
+          "file": "provenance/images/05c205f53f70-unified-lineup-v1.png",
+          "sha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+        }
+      ]
+    },
+    {
+      "id": "gpt-final-gait-v4",
+      "prompt": "Use case: precise-object-edit. ONLY recolor the two diagnostic leg colors in this8-frame sheet. Everything else, including EXACT foot shapes/positions/which shoe is lifted, near/far overlap, head, hair, upperbody, costume,8-cell layout, scale and transparent alpha, stays identical. No new drawing poses.\nPINK/NEAR shoe is bright ivory WHITE (#faf7ff), pale lavender edging, normal peach leg and white cuff. CYAN/FAR shoe is noticeably SHADOWED LAVENDER-GRAY (#aaa0c0), darker purple edging (#706284), and shaded peach/gray cuff. The far shoe must look clearly darker in every pose, including when it is in front/right in5 and lifted in3.\nCOLOR MAP IS FIXED BY DIAGNOSTIC PIXELS, NOT SCREEN SIDE: replace ALL PINK regions by NEAR palette, and ALL CYAN regions by FAR palette. Do not decide brightness by which shoe is forward. In row1frame1 the front/right shoe was PINK so remains BRIGHT; in row2frame5 the front/right shoe was CYAN so MUST BE DARK SHADOW, and the back/left shoe was PINK so MUST BE BRIGHT. In3 the RAISED shoe was CYAN so DARK; in7 the RAISED shoe was PINK so BRIGHT. Preserve exact existing poses. This constant shadow distinction is essential for seeing the two legs alternate.\nNo diagnostic magenta/cyan remains. Same4columns x2rows full figure sheet, real transparency, no text, grid, floor or added props. Do not repeat the same bright front-leg four frames twice.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/gpt/color-gait-v2.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/gpt/final-gait-v4.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-864df6e1-ab55-4cec-9c6a-4d31e4c2dc03.png",
+      "outputSha256": "0ce388741de7e617cfdbba24a34d8c34c07043ff304a4cdd8ec6c988cfc982cc",
+      "inputs": [
+        {
+          "file": "source/gpt/color-gait-v2.png",
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/gpt/color-gait-v2.png",
+          "sha256": "976411391fc95a546e7cb10bd1415d63d9cf7fa4b4854dd153b2abbbf29be8dc"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/0ce388741de7-final-gait-v4.png",
+        "sha256": "0ce388741de7e617cfdbba24a34d8c34c07043ff304a4cdd8ec6c988cfc982cc"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/gpt/color-gait-v2.png",
+          "file": "provenance/images/976411391fc9-color-gait-v2.png",
+          "sha256": "976411391fc95a546e7cb10bd1415d63d9cf7fa4b4854dd153b2abbbf29be8dc"
+        }
+      ]
+    },
+    {
+      "id": "gpt-sleep-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nGPT ONLY, right white dragon girl in model lineup. WHITE LONG hair in broad locks with pale lavender single cel shadow, two small pale DRAGON HORNS with2-3divisions, pointed ears, purple eyes, two compact lilac membranous DRAGON WINGS, ONE pale lilac DRAGON TAIL with only3-4 LARGE plate divisions. Simplified white/lilac short dress, long broad sleeves, tiny round white/lilac shoes. Replace intricate knots by simple small six-loop rosette silhouette; NO fine knot linework or tassels, no shoe emblem. Gentle composed personality. NO BOOK or handheld props, hands EMPTY throughout.\nInput2 is ACTUAL new simplified daily sheet; exactly match this model.\nDraw TWELVE chronological drawings THREE columns by FOUR rows PORTRAIT1536x2048. Same FRONT three-quarter camera, same head width and drawing scale in every pose, soles/supportline420 in nominal512squarecell. Seated head must NOT shrink. Compact hair and tail keep full silhouette inside each cell with generous70px transparent gutters.\n1 standing near idle, sleepy halfclosed eyes.\n2 knees bend a little and body lowers20px, hands guide outfit/held object.\n3 lowers into compact squat, body down50px, same headsize.\n4 seated on ground legs folded modestly below skirt, head at natural lower height, hands rest in lap.\n5 seated, eyelids nearlyclosed, head begins gentle tilt into its resting support.\n6 stable seated SLEEP pose, eyes fully closed, tiny relaxed smile.\n7 SAME sleep pose small inhale: shoulders lift2px, hair and support object subtly follow.\n8 SAME sleep pose exhale: shoulders settle toward6. Closed eyes throughout6-8; gentle sleep loop.\n9 SAME seated sleep pose, one eye cracks open sleepily, head lifts a few pixels and ear/wing/hairtip reacts to touch.\n10 both eyes sleepy halfopen, right hand rubs cheek/eye if free, mild quiet reaction, no standing.\n11 eyes close again, hand lowers and head settles.\n12 fully asleep seated pose again, matching6 closely, gentle exhale.\nNO Zzz, no text, bubbles, floating effects or additional props. No bed, cushion, blanket or furniture. Same large simple eyes and round face as whale; simple solid shapes, no fine new lines.\nGPT sits with hands resting together in lap, pale dragon tail curved around feet, small wings cupped beside body. At6 head nods slightly toward hands, wings folded in protective shape but face visible. One wingtip twitches at9; stay seated. Empty hands, no book or added object.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/gpt/sleep-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-2b8dea2f-5ac4-4e6e-952f-41b0715ad784.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+      },
+      "outputSha256": "d5beaff2e39ca4573b1c28ddab8705339cb59a5071044cd31dc7a8c0379f54e9",
+      "archivedOutput": {
+        "file": "provenance/images/d5beaff2e39c-sleep-v1.png",
+        "sha256": "d5beaff2e39ca4573b1c28ddab8705339cb59a5071044cd31dc7a8c0379f54e9"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png",
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "gpt",
+      "prompt": "Use case: precise-object-edit. Asset: transparent chibi desktop-pet sleep animation spritesheet, exactly 2 columns by 2 rows, 4 equally sized square cells, read left to right top to bottom. The supplied image is the edit target. Preserve the character identity, existing seated or curled sleeping poses, closed eyes, clothing, hair, body and head proportions, outlines, colors, and ground contact. Only add a characteristic dream bubble and preserve tiny breathing variation already in the four frames. Keep the character centered at the same scale and same floor level in every cell. Keep ample fully transparent gutters and outer margins; all art must be contained inside its cell, no overlap across cells. No frame border, grid line, numbers, captions, floor, or scene. Background must be genuinely transparent. Bubble is a small accent near the upper-right of the sleeping head, in the empty space, no covering face or hair. It floats subtly upward through the four authored frames, with a very slight inhale/exhale rhythm. Keep the bubble readable but subordinate to the character. Bubble text must be exactly \"ZZZ\", all three Latin capital Z letters, hand-drawn and dark enough to read, in every frame. Do not use DeepSeek-style blue circular soap bubbles. GPT-specific dream bubble: a pale lavender compact cloud-shaped dream bubble with two tiny dragon-wing lobes, one on either side; dark plum ZZZ centered inside. Rounded scalloped middle, wings small and soft, simple flat icon. No stars, no book, no soap bubbles. Preserve the white-haired horned dragon girl asleep sitting with short legs tucked in front and wings relaxed around her.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gpt-sleep-grid.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/gpt-sleep-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-8d38ef2c-e304-4125-a26c-9d2af32ec567.png",
+      "sha256": "6384eeeb3ca4d26c231af9fb17a8d368e9fde4095153a78d6bbf674f0ed0ac5f",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gpt-sleep-grid.png": "eb7983142c12cf2aa9977e6c350d7a39d25a3dfa9faff46bdd7605fe695c4f0e"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/6384eeeb3ca4-gpt-sleep-v1.png",
+        "sha256": "6384eeeb3ca4d26c231af9fb17a8d368e9fde4095153a78d6bbf674f0ed0ac5f"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/gpt-sleep-grid.png",
+          "file": "provenance/images/eb7983142c12-gpt-sleep-grid.png",
+          "sha256": "eb7983142c12cf2aa9977e6c350d7a39d25a3dfa9faff46bdd7605fe695c4f0e"
+        }
+      ]
+    },
+    {
+      "id": "gpt-reactions-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nGPT ONLY, right white dragon girl in model lineup. WHITE LONG hair in broad locks with pale lavender single cel shadow, two small pale DRAGON HORNS with2-3divisions, pointed ears, purple eyes, two compact lilac membranous DRAGON WINGS, ONE pale lilac DRAGON TAIL with only3-4 LARGE plate divisions. Simplified white/lilac short dress, long broad sleeves, tiny round white/lilac shoes. Replace intricate knots by simple small six-loop rosette silhouette; NO fine knot linework or tassels, no shoe emblem. Gentle composed personality. NO BOOK or handheld props, hands EMPTY throughout.\nInput2 is the ACTUAL new simplified daily sheet; preserve this exact model, do not revert to ornate illustration.\nDraw SIXTEEN distinct chronological drawings FOUR columns by FOUR rows, square2048x2048. Each ROW is its own four-pose action, same FRONT view, feet grounded. Real pose changes but exact same face, headsize and outfit in all16. Keep figures small and fully separated, more empty transparency than character.\nROW1 curiosity:1 gaze shifts aside free hand(s) start near chest;2 headtilts6degrees right and one hand rises;3 headtilts12degrees with mitten near chin, curious eyes;4 head straightens nearlyneutral and hand lowers.\nROW2 greeting:1 right palm starts rising from chest;2 right mitten palm beside cheek;3 small outward wave with happy eyes;4 hand lowers nearneutral. Arm and face move, not only fingers. Left arm remains in its natural position.\nROW3 happy response:1 hands near chest;2 closed-eye warm smile with hands close to heart;3 cheerful smile and free hand(s) open toward viewer;4 eyes reopen and hands lower.\nROW4 stretch:1 free elbow(s) start lifting outward;2 free arm(s) reach overhead, eyes closed and tiny yawn;3 full gentle stretch held, body length stays squat, head SAME size, optional tail/wing soft extension;4 elbow(s) lower beside head and eyes reopen.\nShort round mitten hands; no individually detailed fingers. Strong clear outlines and broad simple cel shading like whale. Tail/wings/hair remain complete inside cells, no costume details reintroduced.\nGPT has EMPTY hands. Small wings ease open during greeting and happy response; both arms and wings gently stretch at row4, then fold compactly. Keep horns complete and tail attached. No book or handheld props.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/gpt/reactions-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-4f843067-e9df-44e0-92b0-ad9fe983e81a.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+      },
+      "outputSha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7",
+      "archivedOutput": {
+        "file": "provenance/images/ea86240f187b-reactions-v1.png",
+        "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png",
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "gpt",
+      "prompt": "Use case: identity-preserve. Asset: a production spritesheet of EXACTLY 12 actual authored poses, FOUR equal columns by THREE rows, reading left to right. One character per cell. Input is the character identity/style reference. Preserve the same large head, tiny torso, short legs, face, palette, costume and thick dark simple chibi outlines. Generate new frantic airborne poses. This is a cute exaggerated cartoon emergency with surprise, no injury or gore. She is lifted and dangling IN THE AIR, not standing on anything. In every pose two arms extend away from the torso with two visible hands. The arms must visibly change angular positions radically across frames; not just the whole character moving, hair changing, or wings flapping. Only TWO arms and hands in each frame, no ghost limbs. Keep consistent anatomical size across all 12 cells and ample space above hands. No ground/floor line, hook, human hand, cursor, text, letters, numbering, motion-blur duplicates, stars or effects. Fully transparent background, broad transparent gutters and outer margins. All hands, hair and tail must be inside their cell. Keep a consistent near-front 3/4 view.\nROW 1 = being lifted/dangling panic, four distinct alternating arm poses:\n1 left arm bent high above left ear, right arm reaches diagonally down and away; left knee up, right short leg dangles.\n2 both arms thrown OUT sideways with bent elbows and open hands, legs kick in opposite directions.\n3 right arm bent high above right ear, left arm reaches diagonally down; opposite knee raised. Clearly exchange the two sides from frame 1.\n4 both arms thrown above the head, elbows asymmetrical, legs curled and separated.\nROW 2 = frantic effort to balance, four distinct exaggerated windmill poses:\n5 tilt body slightly left, left hand sweeps forward high, right hand behind and low.\n6 torso rebounds through center, both hands spread very wide at shoulder level, fingers splayed.\n7 tilt slightly right, right hand high, left hand low, opposite of 5.\n8 both arms swing up unevenly, feet flail inward then outward, alarmed expression.\nROW 3 = falling downward, four frantic poses:\n9 hair and tail stream UP, both hands reach upward and sideways, knees tuck.\n10 left hand above head, right hand thrust forward to the side, body pitches forward, feet off balance.\n11 exchange arms: right hand high, left hand forward, body tumbles slightly sideways, short legs kick.\n12 both arms reach forward and down in a scramble to catch the fall, head and torso lean forward, legs tucked behind, face squints with anticipation. This leads into a belly/side flop, NOT a neat feet-first landing.\nAll three rows must look chaotic and flailing, with clearly alternate hand positions. Match the supplied simple character style, not extra detailed. \nCharacter-specific invariants: white-lavender-haired dragon girl, two cream horns, pointed ears, lavender eyes, white-lavender dress, small lilac dragon wings and tail. Her little wings cannot stabilize her: wings flap unevenly while BOTH actual human arms and hands visibly windmill.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/gpt-air-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-68f06813-fd7e-462a-bcfe-49af2da4e791.png",
+      "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/b7a763b3ff39-gpt-air-v1.png",
+        "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png",
+          "file": "provenance/images/b04c5cc28139-gpt-identity.png",
+          "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "gpt",
+      "prompt": "Use case: identity-preserve. Asset: 12-frame cartoon fall, FLOP ONTO THE FLOOR, and GET-UP sequence for a chibi desktop pet. Exactly FOUR equal columns by THREE rows, 12 separate full characters, reading left to right. Input 1 is the exact standing identity and final pose reference. Input 2 is the adopted frantic airborne sprite sheet, especially its last cell (row 3 column 4) as the incoming pose. Keep the same anatomical HEAD SIZE and short-body proportions throughout, even when lying horizontally; do not shrink flat poses to fit. Keep enough transparent space in each cell. Fully transparent background; no visible floor lines, boxes, text, captions, numbers, stars, impact clouds or foreign props. Every hand, hair and tail fully inside its own cell with broad transparent gutters. Same simple thick-outline, low-detail chibi rendering and costume colors.\nThis must visibly progress through a real belly/side FLOP, a readable lying-down pause, and a proper hands-and-knees rise. NOT a graceful feet-first landing or immediate return to standing. Cute startled clumsiness, no injury.\n12 consecutive actual authored poses:\n1 coming down low from input 2 last pose: body tilted forward almost horizontal, BOTH hands extended toward the ground, tiny legs trail behind, eyes squeeze shut.\n2 BOTH palms first touch the floor, elbows buckle, chest and hips descend, hair and tail still fly upward.\n3 body has flopped onto belly and slightly to one side, legs sprawled behind, arms out in front, cheek close to floor, tail beginning to flop down; surprised squinty expression.\n4 fully collapsed, lying low and horizontal, both arms relaxed out on the floor, hair and tail settled, dizzy embarrassed eyes, cheeks softly squashed. No standing legs.\n5 still lying on the floor in this SAME position, opens eyes and lifts only head a little to recover. Both legs and belly remain grounded.\n6 brings BOTH palms underneath shoulders, elbows bent, starts to push up; chest begins lifting, knees remain on floor.\n7 arms extend and lift chest; now on BOTH hands and BOTH bent knees, back horizontal, head looks forward. Anatomically clear support.\n8 brings one short foot forward while the other knee remains on the floor; one palm still supporting the body.\n9 small low crouch with both feet on floor and hands still forward for balance.\n10 rises into an unsteady half-standing pose, knees bent, both arms extend sideways to balance.\n11 nearly upright, wobbles gently with one hand higher and one lower, regains balance.\n12 fully standing stable in the exact quiet identity pose from input 1, calm relieved face; hands and carried item return to original resting position.\nThe middle frames 3-5 must unmistakably lie flat on the ground. The rise in 6-11 must be distinct and progressive, not repeated standing drawings. Consistent head size, camera angle and palette; changes in silhouette height must come from posture only. Clothing stays fully covering the body.\nCharacter-specific identity: white-lavender-haired dragon girl, two cream horns, pointed ears, lavender eyes, white-lavender dress, small lilac dragon wings and tail. Her little wings cannot stabilize her: wings flap unevenly while BOTH actual human arms and hands visibly windmill.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/gpt-air-v1.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/gpt-landing-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-257c4f10-0e38-4c7c-9a8c-9ba6f5cdbcb3.png",
+      "sha256": "8c6700f9140fe3b2f050e5f95dbfc43a878df4601e5dad74a927b6e7d78d683b",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/gpt-air-v1.png": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/8c6700f9140f-gpt-landing-v1.png",
+        "sha256": "8c6700f9140fe3b2f050e5f95dbfc43a878df4601e5dad74a927b6e7d78d683b"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/gpt-identity.png",
+          "file": "provenance/images/b04c5cc28139-gpt-identity.png",
+          "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/gpt-air-v1.png",
+          "file": "provenance/images/b7a763b3ff39-gpt-air-v1.png",
+          "sha256": "b7a763b3ff39370cb1f8b43ad25d0af4d9e3a16ba01d57910342b92c670f85e2"
+        }
+      ]
+    },
+    {
+      "id": "gpt-physics-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nGPT ONLY, right white dragon girl in model lineup. WHITE LONG hair in broad locks with pale lavender single cel shadow, two small pale DRAGON HORNS with2-3divisions, pointed ears, purple eyes, two compact lilac membranous DRAGON WINGS, ONE pale lilac DRAGON TAIL with only3-4 LARGE plate divisions. Simplified white/lilac short dress, long broad sleeves, tiny round white/lilac shoes. Replace intricate knots by simple small six-loop rosette silhouette; NO fine knot linework or tassels, no shoe emblem. Gentle composed personality. NO BOOK or handheld props, hands EMPTY throughout.\nInput2 is ACTUAL new simplified daily sheet; exactly match this model.\nDraw SIXTEEN distinct chronological drawings FOUR columns by FOUR rows square2048x2048. Complete figures as SMALL separated stamps with large transparent margins, fixed head size all16, no invisible crop. Same simplified round character; no realistic/anime fine shading. No environment or ledge drawn, player handles translation.\nROW1 airborne partA:1 suspended surprised, both knees tucked, arms close (drag).2 suspended gentle sway, knees relax slightly, same face/headsize.3 starts balancing: free arm(s) open sideways and knees begin lowering.4 balance peak: free arm(s) farther out, startled eyes, feet dangling; no ground.\nROW2 airborne partB:5 balance recovers, free arm(s) lower slightly, legs extend.6 falling anticipation: hair tips lifted upward, feet together below pelvis, focused downward gaze.7 falling: knees soften, freehand(s) reach forward, hair raised.8 falling: feet brace for ground, body upright, alert expression. No hand-held added props.\nROW3 landing:9 first contact knees softly bend, torso dips.10 deeper squat absorbs impact, head moves lower but size stays FIXED, short skirt gathered simply.11 knees re-extend halfway, free arm(s) settle and hair follows.12 upright stable near idle, relieved tiny smile. Contact soles same baseline in all4.\nROW4 climbing, RIGHT-facing three-quarter:13 free hand(s) reach up/right while near knee lifts.14 knee higher and shoe forward ready to step, hand(s) brace above, far foot trails.15 weight shifts up onto near foot, torso raises and far knee follows.16 upright after step, hand(s) lower and both feet stable. No actual ledge or stairs in source image.\nKeep tail/wings attached, whole head/horns/ears inside each cell, no duplicate anatomy or new costume decoration.\nGPT's EMPTY hands both reach freely, small dragon wings briefly open during balance3-5 then fold gradually for fall6-8. Dragon tail counterbalances. No sustained flight, no book or props.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/gpt/physics-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-b04081aa-eee8-4858-911e-db62ccfb856f.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+      },
+      "outputSha256": "0ce4b9ed4e96dacecc0cfb91f5a4330a278f4e03862555e1c1d09ef278484298",
+      "archivedOutput": {
+        "file": "provenance/images/0ce4b9ed4e96-physics-v1.png",
+        "sha256": "0ce4b9ed4e96dacecc0cfb91f5a4330a278f4e03862555e1c1d09ef278484298"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/gpt/daily-v1.png",
+          "file": "provenance/images/08ac699385e1-daily-v1.png",
+          "sha256": "08ac699385e13e9eced8d5a1f811ff1aafebdf9c343cb61f2f891c3e97cf90a3"
+        }
+      ]
+    },
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: white/lavender long-haired small horned girl, purple eyes, cream horns, small lavender bat wings and scaled purple tail, white/lavender dress with purple rose at waist. Frame 10 both hands gently support near thighs/knees; frame 11 the long sleeves settle beside the body toward the final pose. Keep horns, wings, tail, rose and costume EXACT; no wing flapping.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gpt-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gpt-frames09-12.png",
+          "file": "provenance/images/aba9229054cf-gpt-rise-reference-1.png",
+          "sha256": "aba9229054cf22462f4bce059a33f3c9075fc5b076fbfbf7ca05242294f038c8"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/5596c6a05aa4-gpt-rise-edit-1.png",
+        "sha256": "5596c6a05aa45b2bd81911ce0822d30dab429e3e9bb4c7fc63476120b0a70186"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ],
+  "processing": "Adopted lossless preview atlases are the build inputs. PNG conversion preserves RGBA pixels; the build derives hit rows from those final pixels. Flutter plays three authored cycles then completes (840 ms). Dragging support is adjusted by at most 2 source pixels to avoid window clipping.",
+  "processingHistory": "provenance/processing-history.json",
+  "leftFacing": "The build mirrors each frame while counter-mirroring RGB in the recorded ZZZ regions. The alpha mask and hit geometry remain exact mirrors.",
+  "revisions": [
+    {
+      "date": "2026-11-06",
+      "action": "landing",
+      "frames": [10, 11],
+      "record": "provenance/landing-rise-2026-11-06.json",
+      "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    }
+  ]
+}

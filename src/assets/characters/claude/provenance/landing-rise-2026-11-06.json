@@ -1,0 +1,121 @@
+{
+  "date": "2026-11-06",
+  "frames": [10, 11],
+  "previousAtlasSha256": "15563048ae40d159f740a31ce12304a4c90cd7533deafab9b298671ec72a02f0",
+  "atlasSha256": "f86b446080f10c6c2bc7d4cf6e9d930136964025e47837785329bc5491187537",
+  "source": {
+    "file": "provenance/images/5bbdafc815c8-claude-rise-edit-2.png",
+    "sha256": "5bbdafc815c882d63af232e37697b497d9994171677ddaf34ca835c8cf44605b"
+  },
+  "normalization": [
+    {
+      "frame": 10,
+      "sourceCell": 2,
+      "sourceRegion": {
+        "x": 627,
+        "y": 0,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7671517671517671,
+      "resizedSide": 481,
+      "translation": {
+        "x": 7,
+        "y": 10
+      },
+      "targetHeight": 369,
+      "finalOpaqueBounds": {
+        "left": 60,
+        "top": 93,
+        "right": 396,
+        "bottom": 461,
+        "width": 337,
+        "height": 369
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    },
+    {
+      "frame": 11,
+      "sourceCell": 3,
+      "sourceRegion": {
+        "x": 0,
+        "y": 627,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7101449275362319,
+      "resizedSide": 445,
+      "translation": {
+        "x": 12,
+        "y": 43
+      },
+      "targetHeight": 392,
+      "finalOpaqueBounds": {
+        "left": 82,
+        "top": 70,
+        "right": 385,
+        "bottom": 461,
+        "width": 304,
+        "height": 392
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    }
+  ],
+  "verification": "Only landing frame 10 and frame 11 RGBA pixels and derived hit rows changed. All other frames, frame regions, foot anchors, durations and loop mode are byte-equivalent or structurally identical.",
+  "requests": [
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: orange-haired girl, orange flower and black ribbon, cream/black/orange outfit, small dark brown book. In frame 10 her right palm lightly assists at her right thigh while her left hand draws the SAME book from the hip toward her lower torso. In frame 11 the left arm is already gathering the book near her chest toward the final reference pose, right arm lowering close to body. Keep the flower, ribbon, book and costume EXACT. Do not duplicate the book.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+          "file": "provenance/images/73d82060ebf6-claude-rise-reference-1.png",
+          "sha256": "73d82060ebf6e886bd287a4b941db5c7cde6fd1dc7133dc75eade9da3587c06f"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/57c32df9cb21-claude-rise-edit-1.png",
+        "sha256": "57c32df9cb212ceb777cb514b4632116e0379b41acb30be4ed424926c623e644"
+      },
+      "adopted": false,
+      "rejectionReason": "Book moved to the opposite side during the rise; corrected in the next edit."
+    },
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nInput 2 is a previous attempted edit with a useful calm rising pose, BUT its book wrongly changes sides. Fix this. The book MUST remain on the VIEWER'S LEFT side of the girl's torso (the left side of the image), exactly as in the original lower-right cell of INPUT 1. Do not use anatomical left/right terminology to place it. Do not put the book on viewer-right at any point. Do not swap the arms or mirror the character.\nClaude identity: exact orange hair, flower and black ribbon on VIEWER-RIGHT, original cream/black/orange outfit. Upper-right new frame 10: palm on VIEWER-RIGHT gently presses her thigh, the hand on VIEWER-LEFT touches the SAME book at her VIEWER-LEFT hip and starts drawing it toward her lower chest. Lower-left new frame 11: book already close to its final VIEWER-LEFT chest position, hugged by the VIEWER-LEFT arm; VIEWER-RIGHT arm relaxes downward, matching the final standing pose. Keep only ONE book. Preserve the character's original head size, eyes, face and rendering; no added cheek marks. Output the corrected 2×2 transparent sheet.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+        "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a93784b9-d0b7-4ed2-8822-bcd09842c87d.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+          "file": "provenance/images/73d82060ebf6-claude-rise-reference-1.png",
+          "sha256": "73d82060ebf6e886bd287a4b941db5c7cde6fd1dc7133dc75eade9da3587c06f"
+        },
+        {
+          "originalPath": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a93784b9-d0b7-4ed2-8822-bcd09842c87d.png",
+          "file": "provenance/images/57c32df9cb21-claude-rise-reference-2.png",
+          "sha256": "57c32df9cb212ceb777cb514b4632116e0379b41acb30be4ed424926c623e644"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/5bbdafc815c8-claude-rise-edit-2.png",
+        "sha256": "5bbdafc815c882d63af232e37697b497d9994171677ddaf34ca835c8cf44605b"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ]
+}

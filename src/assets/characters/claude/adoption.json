@@ -1,0 +1,2249 @@
+{
+  "adoptedOn": "2026-11-04",
+  "previewRevision": "unified-v8-air",
+  "previewManifestSha256": "275b4a765f5781543869bdb3aa108a52090980d3b6e91b10fa642b93827b2ab2",
+  "character": "claude",
+  "displayName": "Claude",
+  "attribution": "Community personifications attributed to ZipZipPipe; not vendor official characters. Whale follows existing project provenance and local review scope.",
+  "identityOrigin": {
+    "date": "2026-10-27",
+    "status": "exploration-unselected",
+    "tool": "built-in image_gen",
+    "model": null,
+    "seed": null,
+    "sourceAttribution": "Existing Claude, Gemini and GPT personifications attributed to ZipZipPipe in shuaizenge/ai-girls; reference images are archived video demonstration frames, not original transparent chibi masters. No new rights assumed.",
+    "sources": [
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/claude",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gemini",
+      "https://github.com/shuaizenge/ai-girls/tree/main/characters/gpt"
+    ]
+  },
+  "actions": {
+    "resting": {
+      "image": "sprites/resting.webp",
+      "sha256": "f536ac08a1a44c410d7bf6ab8821ed0b377e2dc9797f00fdcbe73db1bf38bd6e",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 1550,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 1,
+          "durationMs": 400,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 2,
+          "durationMs": 120,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 3,
+          "durationMs": 700,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    },
+    "walking": {
+      "image": "sprites/walking.webp",
+      "sha256": "044b289272b850e9ec2167e55719ef8a5054b7f8ffdb1dffc6b5d6ef3235f487",
+      "previewFrames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 29,
+            "y": 12,
+            "width": 385,
+            "height": 425
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 437
+          },
+          "opaquePixels": 101747,
+          "sourceRegion": {
+            "x": 0,
+            "y": 0,
+            "width": 442,
+            "height": 446
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 28,
+            "y": 12,
+            "width": 388,
+            "height": 424
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 436
+          },
+          "opaquePixels": 100769,
+          "sourceRegion": {
+            "x": 441,
+            "y": 0,
+            "width": 444,
+            "height": 446
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 28,
+            "y": 12,
+            "width": 389,
+            "height": 424
+          },
+          "sourceAnchor": {
+            "x": 257,
+            "y": 436
+          },
+          "opaquePixels": 101975,
+          "sourceRegion": {
+            "x": 884,
+            "y": 0,
+            "width": 447,
+            "height": 446
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 29,
+            "y": 12,
+            "width": 388,
+            "height": 422
+          },
+          "sourceAnchor": {
+            "x": 255,
+            "y": 434
+          },
+          "opaquePixels": 102317,
+          "sourceRegion": {
+            "x": 1330,
+            "y": 0,
+            "width": 444,
+            "height": 446
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 26,
+            "y": 9,
+            "width": 388,
+            "height": 423
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 432
+          },
+          "opaquePixels": 101807,
+          "sourceRegion": {
+            "x": 0,
+            "y": 445,
+            "width": 442,
+            "height": 442
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 28,
+            "y": 9,
+            "width": 391,
+            "height": 423
+          },
+          "sourceAnchor": {
+            "x": 257,
+            "y": 432
+          },
+          "opaquePixels": 101121,
+          "sourceRegion": {
+            "x": 441,
+            "y": 445,
+            "width": 446,
+            "height": 442
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 26,
+            "y": 9,
+            "width": 391,
+            "height": 422
+          },
+          "sourceAnchor": {
+            "x": 255,
+            "y": 431
+          },
+          "opaquePixels": 101615,
+          "sourceRegion": {
+            "x": 886,
+            "y": 445,
+            "width": 445,
+            "height": 442
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "bounds": {
+            "x": 28,
+            "y": 9,
+            "width": 391,
+            "height": 421
+          },
+          "sourceAnchor": {
+            "x": 256,
+            "y": 430
+          },
+          "opaquePixels": 102215,
+          "sourceRegion": {
+            "x": 1330,
+            "y": 445,
+            "width": 444,
+            "height": 442
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/c6f2663c5108-final-gait-v3.png",
+          "sha256": "c6f2663c5108f35652fe6f3843376311f863cdc3215a31aed5f036445fbb977a"
+        }
+      ]
+    },
+    "settling": {
+      "image": "sprites/settling.webp",
+      "sha256": "78acb015308f91a685982d7fdcada94f9c9730e811ca71d10caf2239e72e99ee",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 0,
+          "durationMs": 350,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 1,
+          "durationMs": 350,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 2,
+          "durationMs": 400,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 3,
+          "durationMs": 450,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 4,
+          "durationMs": 450,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 5,
+          "durationMs": 550,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/1f9832945742-sleep-v1.png",
+          "sha256": "1f983294574259f5bbbf0aa2841379b6d8ecf143a2001389b124fc6a34563cad"
+        }
+      ]
+    },
+    "sleeping": {
+      "image": "sprites/sleeping.webp",
+      "sha256": "3eb2a94b4455a49465adb289e10120c5c6c69f662618eae3bf4c66eda791c161",
+      "previewFrames": [
+        {
+          "source": "claude-sleep-v1",
+          "index": 0,
+          "durationMs": 950,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-sleep-v1",
+          "index": 1,
+          "durationMs": 750,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-sleep-v1",
+          "index": 2,
+          "durationMs": 950,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-sleep-v1",
+          "index": 3,
+          "durationMs": 750,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/e99f643b6125-claude-sleep-v1.png",
+          "sha256": "e99f643b612542fad6728d43901d1cdb9855274288f88b5130769649bc72ab09"
+        }
+      ]
+    },
+    "ear": {
+      "image": "sprites/ear.webp",
+      "sha256": "941ac5a9520a8c2ba548048d48a0aeda611a9f5e6807f0297f0379970e21d26a",
+      "previewFrames": [
+        {
+          "source": "claude/sleep-v1",
+          "index": 8,
+          "durationMs": 100,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 9,
+          "durationMs": 160,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 10,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/1f9832945742-sleep-v1.png",
+          "sha256": "1f983294574259f5bbbf0aa2841379b6d8ecf143a2001389b124fc6a34563cad"
+        }
+      ]
+    },
+    "waking": {
+      "image": "sprites/waking.webp",
+      "sha256": "cb8fde2d8af8fddf9d9143391f53b57ed7cbc6d498e33f0f30ebc4f905d44490",
+      "previewFrames": [
+        {
+          "source": "claude/sleep-v1",
+          "index": 5,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 4,
+          "durationMs": 200,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 3,
+          "durationMs": 220,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 2,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 1,
+          "durationMs": 220,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/sleep-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/1f9832945742-sleep-v1.png",
+          "sha256": "1f983294574259f5bbbf0aa2841379b6d8ecf143a2001389b124fc6a34563cad"
+        },
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    },
+    "tilt": {
+      "image": "sprites/tilt.webp",
+      "sha256": "5c3fb843a5a0abecae7a5c4da9e6fd3f19a46f723be7fb39d5a46365595cb8bb",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 0,
+          "durationMs": 100,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 1,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 2,
+          "durationMs": 450,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 3,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+          "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+        }
+      ]
+    },
+    "paw": {
+      "image": "sprites/paw.webp",
+      "sha256": "e75b9d35728fb8bc86c76aadd62083e0e0bece6b8bbd76d4714573a76c999ea6",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 4,
+          "durationMs": 130,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 5,
+          "durationMs": 150,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 5,
+          "durationMs": 130,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 7,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+          "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+        }
+      ]
+    },
+    "belly": {
+      "image": "sprites/belly.webp",
+      "sha256": "9a9bd4754ef353a2eab4ac912334fdfb869a823d3e2de202afadf8152ba12624",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 8,
+          "durationMs": 140,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 9,
+          "durationMs": 200,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 10,
+          "durationMs": 400,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+          "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+        }
+      ]
+    },
+    "playing": {
+      "image": "sprites/playing.webp",
+      "sha256": "6b8e44477c77d9b3f1be7a3842e6673df0b8bdf1fbb41dae27736c2986714b6c",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 8,
+          "durationMs": 160,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 11,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+          "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+        }
+      ]
+    },
+    "stretching": {
+      "image": "sprites/stretching.webp",
+      "sha256": "3f288f74b65ed53a92152641edea97e5cc4b43f8172c898880409bdcb849d840",
+      "previewFrames": [
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 12,
+          "durationMs": 170,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 13,
+          "durationMs": 200,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 14,
+          "durationMs": 650,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 13,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/reactions-v1",
+          "index": 15,
+          "durationMs": 230,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        },
+        {
+          "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+          "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+        }
+      ]
+    },
+    "dragging": {
+      "image": "sprites/dragging.webp",
+      "sha256": "4800b78a968175d9aa06c3adc6b53cc59d1e2ceb1dd1c6e8055aaef2018a0a2c",
+      "previewFrames": [
+        {
+          "source": "claude-air-v1",
+          "index": 0,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 1,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 2,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 3,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/1a65154486f4-claude-air-v1.png",
+          "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+        }
+      ]
+    },
+    "flutter": {
+      "image": "sprites/flutter.webp",
+      "sha256": "6f715b3da665baed96ebe9a5abf5cd242cb23ad91ac58a0d1416ab9f8cc80744",
+      "previewFrames": [
+        {
+          "source": "claude-air-v1",
+          "index": 4,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 5,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 6,
+          "durationMs": 70,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 7,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/1a65154486f4-claude-air-v1.png",
+          "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+        }
+      ]
+    },
+    "falling": {
+      "image": "sprites/falling.webp",
+      "sha256": "0079c9234cfecc9059b0cf4f5ab85ca95482aed46b723394b5c6962fb2dacc87",
+      "previewFrames": [
+        {
+          "source": "claude-air-v1",
+          "index": 8,
+          "durationMs": 80,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 9,
+          "durationMs": 70,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 10,
+          "durationMs": 80,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-air-v1",
+          "index": 11,
+          "durationMs": 70,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "repeat",
+      "sources": [
+        {
+          "file": "provenance/images/1a65154486f4-claude-air-v1.png",
+          "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+        }
+      ]
+    },
+    "landing": {
+      "image": "sprites/landing.webp",
+      "sha256": "f86b446080f10c6c2bc7d4cf6e9d930136964025e47837785329bc5491187537",
+      "previewFrames": [
+        {
+          "source": "claude-landing-v1",
+          "index": 0,
+          "durationMs": 70,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 1,
+          "durationMs": 80,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 2,
+          "durationMs": 100,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 3,
+          "durationMs": 500,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 4,
+          "durationMs": 220,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 5,
+          "durationMs": 180,
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 6,
+          "durationMs": 180,
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 7,
+          "durationMs": 200,
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 8,
+          "durationMs": 180,
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 9,
+          "durationMs": 180,
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 10,
+          "durationMs": 220,
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude-landing-v1",
+          "index": 11,
+          "durationMs": 200,
+          "region": {
+            "x": 5280,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "baseline/claude/resting",
+          "index": 0,
+          "durationMs": 700,
+          "region": {
+            "x": 5760,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/0274e03ddeb5-claude-landing-v1.png",
+          "sha256": "0274e03ddeb5824e6e09729c0b4128d49b8e589f0ab57b19cc799c8a6d07070c"
+        }
+      ],
+      "frameOverrides": {
+        "10": {
+          "source": "provenance/images/5bbdafc815c8-claude-rise-edit-2.png",
+          "sourceCell": 2,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        },
+        "11": {
+          "source": "provenance/images/5bbdafc815c8-claude-rise-edit-2.png",
+          "sourceCell": 3,
+          "record": "provenance/landing-rise-2026-11-06.json"
+        }
+      }
+    },
+    "climbing": {
+      "image": "sprites/climbing.webp",
+      "sha256": "5976698bf3ced706e71f6d739f07db02f3e97956bc169be2980e31d77a9e3c4e",
+      "previewFrames": [
+        {
+          "source": "claude/physics-v1",
+          "index": 12,
+          "durationMs": 180,
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/physics-v1",
+          "index": 13,
+          "durationMs": 260,
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/physics-v1",
+          "index": 14,
+          "durationMs": 260,
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/physics-v1",
+          "index": 15,
+          "durationMs": 220,
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "source": "claude/daily-v1",
+          "index": 0,
+          "durationMs": 180,
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        }
+      ],
+      "previewLoop": "once",
+      "sources": [
+        {
+          "file": "provenance/images/c470d64fdba9-physics-v1.png",
+          "sha256": "c470d64fdba9d2e55b792eaf43ebd7416250135471b56a6380cffb0ba1b7d386"
+        },
+        {
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    }
+  },
+  "requests": [
+    {
+      "id": "model-lineup-v1",
+      "prompt": "Use case: style-transfer. Asset: a coherent three-character desktop pet model lineup with true transparent background.\nInput image1 is the WHALE GIRL, the STRICT STYLE AND PROPORTION AUTHORITY. The new three must look like companions drawn by this exact same artist for the exact same sprite game. Input image2 supplies IDENTITY ONLY, use bottom row B Claude(left), Gemini(center), GPT(right). Their existing ornate illustration rendering is deliberately being replaced.\nDraw ONLY the three redesigned girls, left Claude, center Gemini, right GPT, one full-body neutral standing pose each, evenly separated in THREE columns on a landscape canvas, aim1536x1024. All three at SAME face/head drawing scale and SAME crown-to-sole scale, ignoring ears/horns. Generous empty transparent margins. No whale in output. No background, floor, shadows, labels, text, grid or borders.\nCRITICAL match image1: huge rounded head about HALF the crown-to-sole height, wide low cheek line, very short squat torso and tiny sturdy legs. Head just over half body height is welcome. Big simple oval eyes with dark upper eyelash and one or two simple highlights, tiny dot/U mouth. Short rounded mitten hands, round simple shoes. Dark clean confident OUTER OUTLINE of visibly similar thickness to whale. Broad clear color shapes, restrained ONE CEL SHADOW per material, tiny flat highlight accents. Thick simplified hair locks like whale; mostly4-6 broad locks, no dozens of thin wisps. NOT polished anime illustration, NOT delicate portrait linework, NO painterly shading, NO elaborate fabric folds, tiny lace, embroidery, glossy rendering, realistic anatomy or thin long legs. Think game sprite at70px window: face, hair silhouette and one signature object must read immediately. SAME eye construction, outline weight, head/body ratio and shading system for all3.\nCLAUDE identity: warm copper-orange LONG hair simplified into broad smooth locks, amber eyes, orange daisy and black ribbon hair ornament (simple6petals), cream capelet, cream sleeves, small cream/orange/black flared dress with only broad geometric panels. Tiny cream boots without lacing. One closed dark brown BOOK hugged to chest in left arm, simple orange flower mark on cover. Right mitten hand relaxed. Preserve long hair and gentle bookish character, NOT short bob.\nGEMINI identity: blue-purple LONG hair with just a few broad lavender tip blocks, blue cat ears with pink inside, one pink and one golden eye, ONE fluffy curled blue-purple cat tail. Four-color four-point STAR hairclip. Simple indigo/purple short dress with broad white underskirt and a single star at chest, tiny purple round shoes. Human mitten hands relaxed at sides. Reduce side buns to small simple rounded masses, no hair jewelry clutter. Curious cheerful expression.\nGPT identity: WHITE long hair with flat pale lavender shadow blocks; two small pale ribbed dragon horns (just2-3 broad divisions), pointed ears, big purple eyes, two compact lilac dragon wings behind shoulders, single pale lilac dragon tail curled beside legs with just3-4 large plate marks, NOT dozens of scales. Simple white/lilac flared dress and long broad sleeves; round white/lilac shoes. Small simplified knot/rosette hair ornament and waist emblem, no tassels or intricate knot linework. Hands together at waist. Calm gentle expression. Keep enough dark purple outline to read on white desktop.\nThe purpose is visibly simplifying and unifying these three into the whale sprite's family. Do not merely shrink or slightly retouch image2. Completely redraw using image1 graphic grammar. Full horns, tails and all feet fully inside each column.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png"
+      ],
+      "transparent_background": true,
+      "status": "identity-prototype",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "reference/unified-lineup-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-35f1e055-cb53-4b09-953d-d1db79381f92.png",
+      "limitations": "三人轮廓局部相接，不按等列直接裁切；后续各角色独立动作稿作为实际主造型。",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png": "1e884c997b12554692e51eace2676f49dedd6539fd03b8ae5096ba6f2fc4e3a8"
+      },
+      "outputSha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790",
+      "archivedOutput": {
+        "file": "provenance/images/05c205f53f70-unified-lineup-v1.png",
+        "sha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/previous-selected-design.png",
+          "file": "provenance/images/1e884c997b12-previous-selected-design.png",
+          "sha256": "1e884c997b12554692e51eace2676f49dedd6539fd03b8ae5096ba6f2fc4e3a8"
+        }
+      ]
+    },
+    {
+      "id": "claude-daily-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nCLAUDE ONLY, left orange girl in model lineup. Copper-orange LONG hair in broad smooth locks, amber oval eyes, simple orange daisy and black ribbon. Cream capelet and sleeves, tiny cream/orange/black flared dress, broad geometric panels with almost NO folds. Simplify trim to broad cream band, omit tassels and intricate lacing. Tiny round cream boots. ONE CLOSED brown book with simple orange flower mark, always hugged firmly by left arm against torso. Right mitten hand free. Same book size allframes; never open or duplicate book. Gentle bookish personality.\nInput2 model lineup: draw ONLY the specified girl; no other girl or whale in output.\nDraw TWELVE distinct chronological frames FOUR columns by THREE rows landscape2048x1536. Row1 is4 IDLE drawings FRONT view. Rows2+3 are8 WALK drawings consistently RIGHT-facing three-quarter SIDE view, no camera turning, all frames at same head size.\nIdle1 neutral pleasant eyes open, arms relaxed (Claude book hugged). Idle2 small inhale shoulders lift2px and freehand(s) move a little. Idle3 fully closed blink, tiny smile, shoulders relax. Idle4 eyes reopen and return nearly1, no stepping.\nWalk8 is TWO alternating steps. SHORT squat legs, small comfortable steps, shoes/knees visible beneath SHORT skirt.\nWalk1 FOREGROUND NEAR heel forward/right planted, FAR toe back/left.\nWalk2 NEAR stance knee flexes, FAR shoe clearly lifts behind with bent knee.\nWalk3 NEAR leg under pelvis, FAR bent knee passes FORWARD with shoe clearly off floor.\nWalk4 NEAR toe pushes back/left, FAR heel reaches forward ready contact.\nWalk5 FAR heel forward/right planted, FOREGROUND NEAR shoe BEHIND/left, OPPOSITE leading leg to1. Do not repeat the same leg.\nWalk6 FAR knee flexes, NEAR shoe lifts BEHIND with bent knee.\nWalk7 FAR leg under pelvis, NEAR bent knee passes FORWARD shoe off floor.\nWalk8 FAR toe pushes back, NEAR heel reaches forward preparing1.\nFree arm(s) counter-swing with legs, hair and tail follow gently backwards inside cell. GPT wings remain folded compact, no flight. Gemini tail counterbalances. Head bob <=3px. No kick, hop, run or high-knee marching. Stable face, costume and silhouette. Distinct contact/lift/passing drawings rather than eight similar straddled standing poses. FIRST idle frame is neutral master pose and must fit same style as whale.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/claude/daily-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-eb5cf26c-fce4-49a9-bb1d-b2e8edec8b60.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+      },
+      "outputSha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe",
+      "archivedOutput": {
+        "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+        "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/unified-lineup-v1.png",
+          "file": "provenance/images/05c205f53f70-unified-lineup-v1.png",
+          "sha256": "05c205f53f70e014c0ebf5e03f7fdfdfd17186542d5ef0e41de15d486cfd3790"
+        }
+      ]
+    },
+    {
+      "id": "claude-final-gait-v3",
+      "prompt": "Use case: precise-object-edit. INPUT1 is the corrected8frame color-coded diagnostic gait. Preserve its EXACT8 poses, foot positions, which shoe is raised, near/far overlap, all head/hair/upperbody pixels, drawing scale, camera and4columns x2rows layout. Only replace PINK and CYAN diagnostic leg/shoe colors with proper target costume using INPUT2 as palette reference. This is a color edit, NOT a new gait generation.\nPINK/NEAR becomes brighter pale cream boot with brown sole and simple cream cuff; tiny exposed leg is normal peach skin. CYAN/FAR becomes consistently20% darker warm gray-cream boot with brown sole and shadowed skin. No shoe star or laces.\nPink always identifies NEAR leg, cyan always identifies FAR leg; preserve this identity in shading. The brighter NEAR shoe is FORWARD/right planted in1, BEHIND/left in5 and LIFTED forward in7. The darker FAR shoe is FORWARD/right planted in5 and LIFTED forward in3. Maintain all existing knee/ankle positions and shoe silhouettes exactly. Do not duplicate firstrow legs into secondrow. Do not swap which leg gets the lighter/darker palette. No diagnostic pink/cyan remains.\nDo not alter hairstyle/costume/face/held objects/scale or spacing. True transparent alpha, same full8character sheet, no floor/shadow/grid/captions/labels. Keep alpha silhouette almost identical to input1.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/claude/color-gait-v2.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/reference/claude-walk-model.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/claude/final-gait-v3.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-c3457e62-2215-4c83-a5d9-9c48de3d388b.png",
+      "outputSha256": "c6f2663c5108f35652fe6f3843376311f863cdc3215a31aed5f036445fbb977a",
+      "inputs": [
+        {
+          "file": "source/claude/color-gait-v2.png",
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/claude/color-gait-v2.png",
+          "sha256": "2bfc5a6fb3183acb5cce9f4976ced73f6293858c15078aa3b85f4c58c5f0eccc"
+        },
+        {
+          "file": "reference/claude-walk-model.png",
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/reference/claude-walk-model.png",
+          "sha256": "918ad9290844015d117435842d0114d03c404beb85e63308ee95f73f8c5e7c98"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/c6f2663c5108-final-gait-v3.png",
+        "sha256": "c6f2663c5108f35652fe6f3843376311f863cdc3215a31aed5f036445fbb977a"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/source/claude/color-gait-v2.png",
+          "file": "provenance/images/2bfc5a6fb318-color-gait-v2.png",
+          "sha256": "2bfc5a6fb3183acb5cce9f4976ced73f6293858c15078aa3b85f4c58c5f0eccc"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-walk-gait-2026-10-28/reference/claude-walk-model.png",
+          "file": "provenance/images/918ad9290844-claude-walk-model.png",
+          "sha256": "918ad9290844015d117435842d0114d03c404beb85e63308ee95f73f8c5e7c98"
+        }
+      ]
+    },
+    {
+      "id": "claude-sleep-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nCLAUDE ONLY, left orange girl in model lineup. Copper-orange LONG hair in broad smooth locks, amber oval eyes, simple orange daisy and black ribbon. Cream capelet and sleeves, tiny cream/orange/black flared dress, broad geometric panels with almost NO folds. Simplify trim to broad cream band, omit tassels and intricate lacing. Tiny round cream boots. ONE CLOSED brown book with simple orange flower mark, always hugged firmly by left arm against torso. Right mitten hand free. Same book size allframes; never open or duplicate book. Gentle bookish personality.\nInput2 is ACTUAL new simplified daily sheet; exactly match this model.\nDraw TWELVE chronological drawings THREE columns by FOUR rows PORTRAIT1536x2048. Same FRONT three-quarter camera, same head width and drawing scale in every pose, soles/supportline420 in nominal512squarecell. Seated head must NOT shrink. Compact hair and tail keep full silhouette inside each cell with generous70px transparent gutters.\n1 standing near idle, sleepy halfclosed eyes.\n2 knees bend a little and body lowers20px, hands guide outfit/held object.\n3 lowers into compact squat, body down50px, same headsize.\n4 seated on ground legs folded modestly below skirt, head at natural lower height, hands rest in lap.\n5 seated, eyelids nearlyclosed, head begins gentle tilt into its resting support.\n6 stable seated SLEEP pose, eyes fully closed, tiny relaxed smile.\n7 SAME sleep pose small inhale: shoulders lift2px, hair and support object subtly follow.\n8 SAME sleep pose exhale: shoulders settle toward6. Closed eyes throughout6-8; gentle sleep loop.\n9 SAME seated sleep pose, one eye cracks open sleepily, head lifts a few pixels and ear/wing/hairtip reacts to touch.\n10 both eyes sleepy halfopen, right hand rubs cheek/eye if free, mild quiet reaction, no standing.\n11 eyes close again, hand lowers and head settles.\n12 fully asleep seated pose again, matching6 closely, gentle exhale.\nNO Zzz, no text, bubbles, floating effects or additional props. No bed, cushion, blanket or furniture. Same large simple eyes and round face as whale; simple solid shapes, no fine new lines.\nClaude sits hugging her CLOSED brown book upright in lap; at5 cheek approaches upper corner, at6 cheek rests gently on the book. Hands retain grip. Book remains a single solid object throughout, no open pages or pillow.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/claude/sleep-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-44a88978-e27c-4c6d-b533-afd52a24ab2a.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+      },
+      "outputSha256": "1f983294574259f5bbbf0aa2841379b6d8ecf143a2001389b124fc6a34563cad",
+      "archivedOutput": {
+        "file": "provenance/images/1f9832945742-sleep-v1.png",
+        "sha256": "1f983294574259f5bbbf0aa2841379b6d8ecf143a2001389b124fc6a34563cad"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png",
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "claude",
+      "prompt": "Use case: precise-object-edit. Asset: transparent chibi desktop-pet sleep animation spritesheet, exactly 2 columns by 2 rows, 4 equally sized square cells, read left to right top to bottom. The supplied image is the edit target. Preserve the character identity, existing seated or curled sleeping poses, closed eyes, clothing, hair, body and head proportions, outlines, colors, and ground contact. Only add a characteristic dream bubble and preserve tiny breathing variation already in the four frames. Keep the character centered at the same scale and same floor level in every cell. Keep ample fully transparent gutters and outer margins; all art must be contained inside its cell, no overlap across cells. No frame border, grid line, numbers, captions, floor, or scene. Background must be genuinely transparent. Bubble is a small accent near the upper-right of the sleeping head, in the empty space, no covering face or hair. It floats subtly upward through the four authored frames, with a very slight inhale/exhale rhythm. Keep the bubble readable but subordinate to the character. Bubble text must be exactly \"ZZZ\", all three Latin capital Z letters, hand-drawn and dark enough to read, in every frame. Do not use DeepSeek-style blue circular soap bubbles. Claude-specific dream bubble: a warm cream and amber miniature open-book-shaped thought bubble, like two softly rounded pages joined at a shallow center crease; one tiny orange petal accent. The letters ZZZ sit within the cream pages. Warm ink lines, simple bold design, no extra lettering. Preserve the orange-haired girl asleep sitting with her black book hugged to her chest, head gently resting toward it.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/claude-sleep-grid.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/source/claude-sleep-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-47ad5269-5400-4058-b928-977c7a909aab.png",
+      "sha256": "e99f643b612542fad6728d43901d1cdb9855274288f88b5130769649bc72ab09",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/claude-sleep-grid.png": "5da2ea5631f42afc8ef51bd7398d2500277c21a4a2c8fc9300cf0f9f94f5e7ae"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/e99f643b6125-claude-sleep-v1.png",
+        "sha256": "e99f643b612542fad6728d43901d1cdb9855274288f88b5130769649bc72ab09"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/sleep-lab/reference/claude-sleep-grid.png",
+          "file": "provenance/images/5da2ea5631f4-claude-sleep-grid.png",
+          "sha256": "5da2ea5631f42afc8ef51bd7398d2500277c21a4a2c8fc9300cf0f9f94f5e7ae"
+        }
+      ]
+    },
+    {
+      "id": "claude-reactions-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nCLAUDE ONLY, left orange girl in model lineup. Copper-orange LONG hair in broad smooth locks, amber oval eyes, simple orange daisy and black ribbon. Cream capelet and sleeves, tiny cream/orange/black flared dress, broad geometric panels with almost NO folds. Simplify trim to broad cream band, omit tassels and intricate lacing. Tiny round cream boots. ONE CLOSED brown book with simple orange flower mark, always hugged firmly by left arm against torso. Right mitten hand free. Same book size allframes; never open or duplicate book. Gentle bookish personality.\nInput2 is the ACTUAL new simplified daily sheet; preserve this exact model, do not revert to ornate illustration.\nDraw SIXTEEN distinct chronological drawings FOUR columns by FOUR rows, square2048x2048. Each ROW is its own four-pose action, same FRONT view, feet grounded. Real pose changes but exact same face, headsize and outfit in all16. Keep figures small and fully separated, more empty transparency than character.\nROW1 curiosity:1 gaze shifts aside free hand(s) start near chest;2 headtilts6degrees right and one hand rises;3 headtilts12degrees with mitten near chin, curious eyes;4 head straightens nearlyneutral and hand lowers.\nROW2 greeting:1 right palm starts rising from chest;2 right mitten palm beside cheek;3 small outward wave with happy eyes;4 hand lowers nearneutral. Arm and face move, not only fingers. Left arm remains in its natural position.\nROW3 happy response:1 hands near chest;2 closed-eye warm smile with hands close to heart;3 cheerful smile and free hand(s) open toward viewer;4 eyes reopen and hands lower.\nROW4 stretch:1 free elbow(s) start lifting outward;2 free arm(s) reach overhead, eyes closed and tiny yawn;3 full gentle stretch held, body length stays squat, head SAME size, optional tail/wing soft extension;4 elbow(s) lower beside head and eyes reopen.\nShort round mitten hands; no individually detailed fingers. Strong clear outlines and broad simple cel shading like whale. Tail/wings/hair remain complete inside cells, no costume details reintroduced.\nClaude LEFT ARM ALWAYS HUGS the SAME CLOSED book to chest. ONLY RIGHT ARM gestures or stretches, book never disappears. Happy response hugs book with tiny smile.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/claude/reactions-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-7ae45a82-909f-43ca-95b2-b4f8bbe71014.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+      },
+      "outputSha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab",
+      "archivedOutput": {
+        "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
+        "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png",
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "claude",
+      "prompt": "Use case: identity-preserve. Asset: a production spritesheet of EXACTLY 12 actual authored poses, FOUR equal columns by THREE rows, reading left to right. One character per cell. Input is the character identity/style reference. Preserve the same large head, tiny torso, short legs, face, palette, costume and thick dark simple chibi outlines. Generate new frantic airborne poses. This is a cute exaggerated cartoon emergency with surprise, no injury or gore. She is lifted and dangling IN THE AIR, not standing on anything. In every pose two arms extend away from the torso with two visible hands. The arms must visibly change angular positions radically across frames; not just the whole character moving, hair changing, or wings flapping. Only TWO arms and hands in each frame, no ghost limbs. Keep consistent anatomical size across all 12 cells and ample space above hands. No ground/floor line, hook, human hand, cursor, text, letters, numbering, motion-blur duplicates, stars or effects. Fully transparent background, broad transparent gutters and outer margins. All hands, hair and tail must be inside their cell. Keep a consistent near-front 3/4 view.\nROW 1 = being lifted/dangling panic, four distinct alternating arm poses:\n1 left arm bent high above left ear, right arm reaches diagonally down and away; left knee up, right short leg dangles.\n2 both arms thrown OUT sideways with bent elbows and open hands, legs kick in opposite directions.\n3 right arm bent high above right ear, left arm reaches diagonally down; opposite knee raised. Clearly exchange the two sides from frame 1.\n4 both arms thrown above the head, elbows asymmetrical, legs curled and separated.\nROW 2 = frantic effort to balance, four distinct exaggerated windmill poses:\n5 tilt body slightly left, left hand sweeps forward high, right hand behind and low.\n6 torso rebounds through center, both hands spread very wide at shoulder level, fingers splayed.\n7 tilt slightly right, right hand high, left hand low, opposite of 5.\n8 both arms swing up unevenly, feet flail inward then outward, alarmed expression.\nROW 3 = falling downward, four frantic poses:\n9 hair and tail stream UP, both hands reach upward and sideways, knees tuck.\n10 left hand above head, right hand thrust forward to the side, body pitches forward, feet off balance.\n11 exchange arms: right hand high, left hand forward, body tumbles slightly sideways, short legs kick.\n12 both arms reach forward and down in a scramble to catch the fall, head and torso lean forward, legs tucked behind, face squints with anticipation. This leads into a belly/side flop, NOT a neat feet-first landing.\nAll three rows must look chaotic and flailing, with clearly alternate hand positions. Match the supplied simple character style, not extra detailed. \nCharacter-specific invariants: orange-haired girl, orange flower and black ribbon, cream/black dress with orange tie, short stockings and shoes. Keep her black book snugly tucked into a small waist sash at her hip during this emergency, not held in either hand. Both arms and open hands are entirely free.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/claude-air-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a0b24153-62e7-4ee0-b3e0-76c2e73a3ab2.png",
+      "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/1a65154486f4-claude-air-v1.png",
+        "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png",
+          "file": "provenance/images/609e08d6583b-claude-identity.png",
+          "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "tool": "built-in image_gen",
+      "status": "adopted-in-preview-user-review-pending",
+      "who": "claude",
+      "prompt": "Use case: identity-preserve. Asset: 12-frame cartoon fall, FLOP ONTO THE FLOOR, and GET-UP sequence for a chibi desktop pet. Exactly FOUR equal columns by THREE rows, 12 separate full characters, reading left to right. Input 1 is the exact standing identity and final pose reference. Input 2 is the adopted frantic airborne sprite sheet, especially its last cell (row 3 column 4) as the incoming pose. Keep the same anatomical HEAD SIZE and short-body proportions throughout, even when lying horizontally; do not shrink flat poses to fit. Keep enough transparent space in each cell. Fully transparent background; no visible floor lines, boxes, text, captions, numbers, stars, impact clouds or foreign props. Every hand, hair and tail fully inside its own cell with broad transparent gutters. Same simple thick-outline, low-detail chibi rendering and costume colors.\nThis must visibly progress through a real belly/side FLOP, a readable lying-down pause, and a proper hands-and-knees rise. NOT a graceful feet-first landing or immediate return to standing. Cute startled clumsiness, no injury.\n12 consecutive actual authored poses:\n1 coming down low from input 2 last pose: body tilted forward almost horizontal, BOTH hands extended toward the ground, tiny legs trail behind, eyes squeeze shut.\n2 BOTH palms first touch the floor, elbows buckle, chest and hips descend, hair and tail still fly upward.\n3 body has flopped onto belly and slightly to one side, legs sprawled behind, arms out in front, cheek close to floor, tail beginning to flop down; surprised squinty expression.\n4 fully collapsed, lying low and horizontal, both arms relaxed out on the floor, hair and tail settled, dizzy embarrassed eyes, cheeks softly squashed. No standing legs.\n5 still lying on the floor in this SAME position, opens eyes and lifts only head a little to recover. Both legs and belly remain grounded.\n6 brings BOTH palms underneath shoulders, elbows bent, starts to push up; chest begins lifting, knees remain on floor.\n7 arms extend and lift chest; now on BOTH hands and BOTH bent knees, back horizontal, head looks forward. Anatomically clear support.\n8 brings one short foot forward while the other knee remains on the floor; one palm still supporting the body.\n9 small low crouch with both feet on floor and hands still forward for balance.\n10 rises into an unsteady half-standing pose, knees bent, both arms extend sideways to balance.\n11 nearly upright, wobbles gently with one hand higher and one lower, regains balance.\n12 fully standing stable in the exact quiet identity pose from input 1, calm relieved face; hands and carried item return to original resting position.\nThe middle frames 3-5 must unmistakably lie flat on the ground. The rise in 6-11 must be distinct and progressive, not repeated standing drawings. Consistent head size, camera angle and palette; changes in silhouette height must come from posture only. Clothing stays fully covering the body.\nCharacter-specific identity: orange-haired girl, orange flower and black ribbon, cream/black dress with orange tie, short stockings and shoes. Keep her black book snugly tucked into a small waist sash at her hip during this emergency, not held in either hand. Both arms and open hands are entirely free. In frames 1-10 the book remains tucked safely at the hip to free both hands; frames 11-12 she gathers it back to her chest.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/claude-air-v1.png"
+      ],
+      "transparent_background": true,
+      "output": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/claude-landing-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-49c8db4d-18b2-4d15-994e-2819ebc46564.png",
+      "sha256": "0274e03ddeb5824e6e09729c0b4128d49b8e589f0ab57b19cc799c8a6d07070c",
+      "referenceHashes": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/claude-air-v1.png": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+      },
+      "archivedOutput": {
+        "file": "provenance/images/0274e03ddeb5-claude-landing-v1.png",
+        "sha256": "0274e03ddeb5824e6e09729c0b4128d49b8e589f0ab57b19cc799c8a6d07070c"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/reference/claude-identity.png",
+          "file": "provenance/images/609e08d6583b-claude-identity.png",
+          "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/air-lab/source/claude-air-v1.png",
+          "file": "provenance/images/1a65154486f4-claude-air-v1.png",
+          "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
+        }
+      ]
+    },
+    {
+      "id": "claude-physics-v1",
+      "prompt": "Use case: identity-preserve. Asset: true-alpha chronological game sprites for Mosey, designed for70px desktop window.\nINPUT1 WHALE is strict style authority. INPUT2 is the target identity. Draw SAME GAME SERIES as whale: oversized round head, head/crown-to-sole proportion about1:2, tiny squat torso, stubby legs, simple round shoes, small mitten hands. Same big oval eyes, tiny mouth, strong dark outer outline. SIMPLE broad color areas and ONE flat cel shadow per material. Hair in4-6 large smooth locks with minimal internal strokes. Same face and graphic simplicity as whale. No painterly rendering, thin ornate anime linework, gradients over every surface, glints, realistic cloth folds, tiny lace, elaborate embroidery, individual hair strands or individual scales.\nExact SAME head size and drawing scale throughout ALL poses. Never shrink a seated/squat figure or enlarge head in closeup. Every pose complete in its cell, ALL horns/ears/hair/tail/wings/feet inside. Figure deliberately SMALL: standing height about310px in nominal512square cell, bodyaxis256 soles420, reserve at least70px transparent border every side. Widen empty gutters rather than enlarging character. True transparent alpha. No background, floor, cast shadow, UI, text, numbers, symbols, labels, grid, panel borders or decorative effects. One full character per cell.\nCLAUDE ONLY, left orange girl in model lineup. Copper-orange LONG hair in broad smooth locks, amber oval eyes, simple orange daisy and black ribbon. Cream capelet and sleeves, tiny cream/orange/black flared dress, broad geometric panels with almost NO folds. Simplify trim to broad cream band, omit tassels and intricate lacing. Tiny round cream boots. ONE CLOSED brown book with simple orange flower mark, always hugged firmly by left arm against torso. Right mitten hand free. Same book size allframes; never open or duplicate book. Gentle bookish personality.\nInput2 is ACTUAL new simplified daily sheet; exactly match this model.\nDraw SIXTEEN distinct chronological drawings FOUR columns by FOUR rows square2048x2048. Complete figures as SMALL separated stamps with large transparent margins, fixed head size all16, no invisible crop. Same simplified round character; no realistic/anime fine shading. No environment or ledge drawn, player handles translation.\nROW1 airborne partA:1 suspended surprised, both knees tucked, arms close (drag).2 suspended gentle sway, knees relax slightly, same face/headsize.3 starts balancing: free arm(s) open sideways and knees begin lowering.4 balance peak: free arm(s) farther out, startled eyes, feet dangling; no ground.\nROW2 airborne partB:5 balance recovers, free arm(s) lower slightly, legs extend.6 falling anticipation: hair tips lifted upward, feet together below pelvis, focused downward gaze.7 falling: knees soften, freehand(s) reach forward, hair raised.8 falling: feet brace for ground, body upright, alert expression. No hand-held added props.\nROW3 landing:9 first contact knees softly bend, torso dips.10 deeper squat absorbs impact, head moves lower but size stays FIXED, short skirt gathered simply.11 knees re-extend halfway, free arm(s) settle and hair follows.12 upright stable near idle, relieved tiny smile. Contact soles same baseline in all4.\nROW4 climbing, RIGHT-facing three-quarter:13 free hand(s) reach up/right while near knee lifts.14 knee higher and shoe forward ready to step, hand(s) brace above, far foot trails.15 weight shifts up onto near foot, torso raises and far knee follows.16 upright after step, hand(s) lower and both feet stable. No actual ledge or stairs in source image.\nKeep tail/wings attached, whole head/horns/ears inside each cell, no duplicate anatomy or new costume decoration.\nClaude LEFT ARM firmly hugs CLOSED book throughout all16. ONLY RIGHT ARM reaches or balances. Both knees tuck when suspended. Book stays same size and attached to leftarm; no dropping, opening or duplication.",
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png"
+      ],
+      "transparent_background": true,
+      "status": "preview-adopted",
+      "tool": "built-in image_gen",
+      "model": null,
+      "seed": null,
+      "savedFile": "source/claude/physics-v1.png",
+      "originalOutput": "/Users/frost/.codex/generated_images/01a1807c-4d95-7971-814e-05328756582b/exec-db4f893a-7399-4cce-9188-e6c23727ab03.png",
+      "inputSha256": {
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06",
+        "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+      },
+      "outputSha256": "c470d64fdba9d2e55b792eaf43ebd7416250135471b56a6380cffb0ba1b7d386",
+      "archivedOutput": {
+        "file": "provenance/images/c470d64fdba9-physics-v1.png",
+        "sha256": "c470d64fdba9d2e55b792eaf43ebd7416250135471b56a6380cffb0ba1b7d386"
+      },
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/reference/whale-style.png",
+          "file": "provenance/images/fcea07276b47-whale-style.png",
+          "sha256": "fcea07276b47b9a7ea85685a4e8eb90d0d3fa6cf5175df9b3cba05eaf3904d06"
+        },
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/ai-characters-unified-2026-10-28/source/claude/daily-v1.png",
+          "file": "provenance/images/ad10cfd74f0a-daily-v1.png",
+          "sha256": "ad10cfd74f0ac5b8590f58fa5f67f4ff8ab9fe7c86939b1fd7129680e95f44fe"
+        }
+      ]
+    },
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: orange-haired girl, orange flower and black ribbon, cream/black/orange outfit, small dark brown book. In frame 10 her right palm lightly assists at her right thigh while her left hand draws the SAME book from the hip toward her lower torso. In frame 11 the left arm is already gathering the book near her chest toward the final reference pose, right arm lowering close to body. Keep the flower, ribbon, book and costume EXACT. Do not duplicate the book.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+          "file": "provenance/images/73d82060ebf6-claude-rise-reference-1.png",
+          "sha256": "73d82060ebf6e886bd287a4b941db5c7cde6fd1dc7133dc75eade9da3587c06f"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/57c32df9cb21-claude-rise-edit-1.png",
+        "sha256": "57c32df9cb212ceb777cb514b4632116e0379b41acb30be4ed424926c623e644"
+      },
+      "adopted": false,
+      "rejectionReason": "Book moved to the opposite side during the rise; corrected in the next edit."
+    },
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nInput 2 is a previous attempted edit with a useful calm rising pose, BUT its book wrongly changes sides. Fix this. The book MUST remain on the VIEWER'S LEFT side of the girl's torso (the left side of the image), exactly as in the original lower-right cell of INPUT 1. Do not use anatomical left/right terminology to place it. Do not put the book on viewer-right at any point. Do not swap the arms or mirror the character.\nClaude identity: exact orange hair, flower and black ribbon on VIEWER-RIGHT, original cream/black/orange outfit. Upper-right new frame 10: palm on VIEWER-RIGHT gently presses her thigh, the hand on VIEWER-LEFT touches the SAME book at her VIEWER-LEFT hip and starts drawing it toward her lower chest. Lower-left new frame 11: book already close to its final VIEWER-LEFT chest position, hugged by the VIEWER-LEFT arm; VIEWER-RIGHT arm relaxes downward, matching the final standing pose. Keep only ONE book. Preserve the character's original head size, eyes, face and rendering; no added cheek marks. Output the corrected 2×2 transparent sheet.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+        "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a93784b9-d0b7-4ed2-8822-bcd09842c87d.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/claude-frames09-12.png",
+          "file": "provenance/images/73d82060ebf6-claude-rise-reference-1.png",
+          "sha256": "73d82060ebf6e886bd287a4b941db5c7cde6fd1dc7133dc75eade9da3587c06f"
+        },
+        {
+          "originalPath": "/Users/frost/.codex/generated_images/01a1813a-3870-73d0-bfa0-2ace6a14db2c/exec-a93784b9-d0b7-4ed2-8822-bcd09842c87d.png",
+          "file": "provenance/images/57c32df9cb21-claude-rise-reference-2.png",
+          "sha256": "57c32df9cb212ceb777cb514b4632116e0379b41acb30be4ed424926c623e644"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/5bbdafc815c8-claude-rise-edit-2.png",
+        "sha256": "5bbdafc815c882d63af232e37697b497d9994171677ddaf34ca835c8cf44605b"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ],
+  "processing": "Adopted lossless preview atlases are the build inputs. PNG conversion preserves RGBA pixels; the build derives hit rows from those final pixels. Flutter plays three authored cycles then completes (840 ms). Dragging support is adjusted by at most 2 source pixels to avoid window clipping.",
+  "processingHistory": "provenance/processing-history.json",
+  "leftFacing": "The build mirrors each frame while counter-mirroring RGB in the recorded ZZZ regions. The alpha mask and hit geometry remain exact mirrors.",
+  "revisions": [
+    {
+      "date": "2026-11-06",
+      "action": "landing",
+      "frames": [10, 11],
+      "record": "provenance/landing-rise-2026-11-06.json",
+      "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    }
+  ]
+}

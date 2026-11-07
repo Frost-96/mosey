@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-06",
+  "frames": [10, 11],
+  "previousAtlasSha256": "ca801692898c5c66bd460e5f08f04c0116cadeb4531cca4cfe329ea88c851c7b",
+  "atlasSha256": "ce29c608db0dcc37457e2e5c4a49b9838122dfc0a8bcc87d54fc907be2ca13c8",
+  "source": {
+    "file": "provenance/images/7936ca0afcf5-whale-rise-edit-1.png",
+    "sha256": "7936ca0afcf54c7d9eb2a2f6a0520c6d2d2ddb3ed16ff75870e6f646500c1088"
+  },
+  "normalization": [
+    {
+      "frame": 10,
+      "sourceCell": 2,
+      "sourceRegion": {
+        "x": 627,
+        "y": 0,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7799564270152506,
+      "resizedSide": 489,
+      "translation": {
+        "x": 2,
+        "y": 4
+      },
+      "targetHeight": 358,
+      "finalOpaqueBounds": {
+        "left": 54,
+        "top": 104,
+        "right": 428,
+        "bottom": 461,
+        "width": 375,
+        "height": 358
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    },
+    {
+      "frame": 11,
+      "sourceCell": 3,
+      "sourceRegion": {
+        "x": 0,
+        "y": 627,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7405189620758483,
+      "resizedSide": 464,
+      "translation": {
+        "x": 12,
+        "y": 14
+      },
+      "targetHeight": 371,
+      "finalOpaqueBounds": {
+        "left": 93,
+        "top": 91,
+        "right": 405,
+        "bottom": 461,
+        "width": 313,
+        "height": 371
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    }
+  ],
+  "verification": "Only landing frame 10 and frame 11 RGBA pixels and derived hit rows changed. All other frames, frame regions, foot anchors, durations and loop mode are byte-equivalent or structurally identical.",
+  "requests": [
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: dark blue-haired whale-eared maid girl with blue eyes, white maid headband, navy dress with white apron and blue whale logo, dark blue whale tail, short white socks and dark shoes. Frame 10 both hands remain low near thighs/knees; frame 11 arms lower close beside the apron toward the final pose. Keep the simple chibi style, headband, whale ears, whale logo, tail and costume EXACT.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/whale-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/whale-frames09-12.png",
+          "file": "provenance/images/107f6622923b-whale-rise-reference-1.png",
+          "sha256": "107f6622923b8f21dcbc76fd0b5d352fecfdd972ee612d9b06943f44852c1b01"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/7936ca0afcf5-whale-rise-edit-1.png",
+        "sha256": "7936ca0afcf54c7d9eb2a2f6a0520c6d2d2ddb3ed16ff75870e6f646500c1088"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ]
+}

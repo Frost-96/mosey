@@ -1,0 +1,3755 @@
+{
+  "resting": {
+    "source": "source/idle-v1.png",
+    "scale": 0.95,
+    "loop": "repeat",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 1500
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 224,
+          "y": 425
+        },
+        "durationMs": 400
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 220,
+          "y": 425
+        },
+        "durationMs": 60
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 218,
+          "y": 425
+        },
+        "durationMs": 45
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 228,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 224,
+          "y": 426
+        },
+        "durationMs": 45
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 221,
+          "y": 425
+        },
+        "durationMs": 60
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 217,
+          "y": 425
+        },
+        "durationMs": 600
+      }
+    ]
+  },
+  "walking": {
+    "source": "source/walk-v2.png",
+    "scale": 0.95,
+    "loop": "repeat",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 308,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 282,
+          "y": 433
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 263,
+          "y": 433
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 0,
+          "width": 443,
+          "height": 444
+        },
+        "foot": {
+          "x": 261,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 310,
+          "y": 424
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 444,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 284,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 887,
+          "y": 444,
+          "width": 444,
+          "height": 443
+        },
+        "foot": {
+          "x": 273,
+          "y": 426
+        },
+        "durationMs": 90
+      },
+      {
+        "region": {
+          "x": 1331,
+          "y": 444,
+          "width": 443,
+          "height": 443
+        },
+        "foot": {
+          "x": 260,
+          "y": 421
+        },
+        "durationMs": 90
+      }
+    ]
+  },
+  "settling": {
+    "source": "source/sleep-dozing-v1.png",
+    "scale": 0.95,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 100,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 466,
+          "height": 442
+        },
+        "foot": {
+          "x": 231,
+          "y": 426
+        },
+        "durationMs": 400
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 466,
+          "y": 0,
+          "width": 440,
+          "height": 442
+        },
+        "foot": {
+          "x": 208,
+          "y": 426
+        },
+        "durationMs": 500
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 906,
+          "y": 0,
+          "width": 442,
+          "height": 442
+        },
+        "foot": {
+          "x": 208,
+          "y": 426
+        },
+        "durationMs": 600
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1348,
+          "y": 0,
+          "width": 426,
+          "height": 442
+        },
+        "foot": {
+          "x": 210,
+          "y": 426
+        },
+        "durationMs": 700
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 450,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ]
+      }
+    ]
+  },
+  "sleeping": {
+    "source": "source/sleep-dozing-v1.png",
+    "scale": 0.95,
+    "loop": "repeat",
+    "frames": [
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 0,
+          "opacity": 0.0
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 1,
+          "opacity": 0.1418
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 2,
+          "opacity": 0.2837
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 3,
+          "opacity": 0.4255
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 2,
+          "opacity": 0.5674
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 3,
+          "opacity": 0.7092
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 4,
+          "opacity": 0.8511
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 4,
+          "opacity": 0.9929
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 5,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 6,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 433
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 6,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 433
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 346,
+              "y": 27,
+              "width": 65,
+              "height": 65
+            },
+            {
+              "x": 359,
+              "y": 101,
+              "width": 43,
+              "height": 43
+            }
+          ],
+          "rise": 6,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 434
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 6,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 435
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 6,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 435
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 7,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 7,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 8,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 8,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 8,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 9,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 10,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 10,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 11,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 460,
+          "y": 442,
+          "width": 445,
+          "height": 445
+        },
+        "foot": {
+          "x": 214,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 368,
+            "y": 114,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 336,
+              "y": 23,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 360,
+              "y": 100,
+              "width": 49,
+              "height": 48
+            }
+          ],
+          "rise": 12,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 12,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 13,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 14,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 438
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 15,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 17,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 18,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 437
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 19,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 20,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 21,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 436
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 22,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 435
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 24,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 905,
+          "y": 442,
+          "width": 444,
+          "height": 445
+        },
+        "foot": {
+          "x": 210,
+          "y": 435
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 330,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 359,
+            "y": 105,
+            "width": 32,
+            "height": 20
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 318,
+              "y": 16,
+              "width": 73,
+              "height": 70
+            },
+            {
+              "x": 346,
+              "y": 92,
+              "width": 53,
+              "height": 52
+            }
+          ],
+          "rise": 25,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 434
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 27,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 433
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 28,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 433
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 29,
+          "opacity": 1
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 31,
+          "opacity": 0.9456
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 32,
+          "opacity": 0.8274
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 33,
+          "opacity": 0.7092
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 35,
+          "opacity": 0.591
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 36,
+          "opacity": 0.4728
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 431
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 36,
+          "opacity": 0.3546
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 38,
+          "opacity": 0.2364
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 39,
+          "opacity": 0.1182
+        }
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1349,
+          "y": 442,
+          "width": 425,
+          "height": 445
+        },
+        "foot": {
+          "x": 211,
+          "y": 430
+        },
+        "durationMs": 120,
+        "readableRegions": [
+          {
+            "x": 339,
+            "y": 33,
+            "width": 50,
+            "height": 32
+          },
+          {
+            "x": 353,
+            "y": 103,
+            "width": 32,
+            "height": 20
+          },
+          {
+            "x": 388,
+            "y": 154,
+            "width": 20,
+            "height": 13
+          }
+        ],
+        "bubbles": {
+          "regions": [
+            {
+              "x": 325,
+              "y": 16,
+              "width": 76,
+              "height": 70
+            },
+            {
+              "x": 342,
+              "y": 91,
+              "width": 55,
+              "height": 54
+            },
+            {
+              "x": 378,
+              "y": 143,
+              "width": 36,
+              "height": 36
+            }
+          ],
+          "rise": 40,
+          "opacity": 0.0
+        }
+      }
+    ]
+  },
+  "ear": {
+    "source": "source/sleep-dozing-v1.png",
+    "scale": 0.95,
+    "loop": "once",
+    "frames": [
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1348,
+          "y": 0,
+          "width": 426,
+          "height": 442
+        },
+        "foot": {
+          "x": 210,
+          "y": 426
+        },
+        "durationMs": 80
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 906,
+          "y": 0,
+          "width": 442,
+          "height": 442
+        },
+        "foot": {
+          "x": 208,
+          "y": 426
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1348,
+          "y": 0,
+          "width": 426,
+          "height": 442
+        },
+        "foot": {
+          "x": 210,
+          "y": 426
+        },
+        "durationMs": 140
+      }
+    ]
+  },
+  "waking": {
+    "source": "source/sleep-dozing-v1.png",
+    "scale": 0.95,
+    "loop": "once",
+    "frames": [
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 442,
+          "width": 460,
+          "height": 445
+        },
+        "foot": {
+          "x": 228,
+          "y": 430
+        },
+        "durationMs": 100,
+        "readableRegions": [
+          {
+            "x": 350,
+            "y": 44,
+            "width": 49,
+            "height": 32
+          },
+          {
+            "x": 364,
+            "y": 113,
+            "width": 31,
+            "height": 19
+          }
+        ]
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 1348,
+          "y": 0,
+          "width": 426,
+          "height": 442
+        },
+        "foot": {
+          "x": 210,
+          "y": 426
+        },
+        "durationMs": 200
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 906,
+          "y": 0,
+          "width": 442,
+          "height": 442
+        },
+        "foot": {
+          "x": 208,
+          "y": 426
+        },
+        "durationMs": 250
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 466,
+          "y": 0,
+          "width": 440,
+          "height": 442
+        },
+        "foot": {
+          "x": 208,
+          "y": 426
+        },
+        "durationMs": 250
+      },
+      {
+        "source": "source/sleep-dozing-v1.png",
+        "scale": 0.95,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 466,
+          "height": 442
+        },
+        "foot": {
+          "x": 231,
+          "y": 426
+        },
+        "durationMs": 250
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 150,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "tilt": {
+    "source": "source/reactions-v2.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 80,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 456,
+          "height": 440
+        },
+        "foot": {
+          "x": 229,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 456,
+          "y": 0,
+          "width": 442,
+          "height": 440
+        },
+        "foot": {
+          "x": 214,
+          "y": 432
+        },
+        "durationMs": 140
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 898,
+          "y": 0,
+          "width": 446,
+          "height": 440
+        },
+        "foot": {
+          "x": 214,
+          "y": 432
+        },
+        "durationMs": 90
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1344,
+          "y": 0,
+          "width": 430,
+          "height": 440
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 80
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 100,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "paw": {
+    "source": "source/reactions-v2.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 80,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 440,
+          "width": 460,
+          "height": 447
+        },
+        "foot": {
+          "x": 229,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 460,
+          "y": 440,
+          "width": 439,
+          "height": 447
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 899,
+          "y": 440,
+          "width": 446,
+          "height": 447
+        },
+        "foot": {
+          "x": 214,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 460,
+          "y": 440,
+          "width": 439,
+          "height": 447
+        },
+        "foot": {
+          "x": 211,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 899,
+          "y": 440,
+          "width": 446,
+          "height": 447
+        },
+        "foot": {
+          "x": 214,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/reactions-v2.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1345,
+          "y": 440,
+          "width": 429,
+          "height": 447
+        },
+        "foot": {
+          "x": 212,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 100,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "belly": {
+    "source": "source/leisure-v1.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 80,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 465,
+          "height": 440
+        },
+        "foot": {
+          "x": 232,
+          "y": 433
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 465,
+          "y": 0,
+          "width": 442,
+          "height": 440
+        },
+        "foot": {
+          "x": 207,
+          "y": 432
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 907,
+          "y": 0,
+          "width": 438,
+          "height": 440
+        },
+        "foot": {
+          "x": 203,
+          "y": 433
+        },
+        "durationMs": 240
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1345,
+          "y": 0,
+          "width": 429,
+          "height": 440
+        },
+        "foot": {
+          "x": 208,
+          "y": 433
+        },
+        "durationMs": 100
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 120,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "stretching": {
+    "source": "source/leisure-v1.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 120,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 440,
+          "width": 464,
+          "height": 447
+        },
+        "foot": {
+          "x": 231,
+          "y": 433
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 464,
+          "y": 440,
+          "width": 441,
+          "height": 447
+        },
+        "foot": {
+          "x": 209,
+          "y": 433
+        },
+        "durationMs": 140
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 905,
+          "y": 440,
+          "width": 441,
+          "height": 447
+        },
+        "foot": {
+          "x": 206,
+          "y": 433
+        },
+        "durationMs": 500
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 464,
+          "y": 440,
+          "width": 441,
+          "height": 447
+        },
+        "foot": {
+          "x": 209,
+          "y": 433
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1346,
+          "y": 440,
+          "width": 428,
+          "height": 447
+        },
+        "foot": {
+          "x": 206,
+          "y": 433
+        },
+        "durationMs": 140
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 140,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "playing": {
+    "source": "source/leisure-v1.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 120,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 465,
+          "height": 440
+        },
+        "foot": {
+          "x": 232,
+          "y": 433
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 465,
+          "y": 0,
+          "width": 442,
+          "height": 440
+        },
+        "foot": {
+          "x": 207,
+          "y": 432
+        },
+        "durationMs": 140
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 907,
+          "y": 0,
+          "width": 438,
+          "height": 440
+        },
+        "foot": {
+          "x": 203,
+          "y": 433
+        },
+        "durationMs": 200
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 465,
+          "y": 0,
+          "width": 442,
+          "height": 440
+        },
+        "foot": {
+          "x": 207,
+          "y": 432
+        },
+        "durationMs": 100
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 907,
+          "y": 0,
+          "width": 438,
+          "height": 440
+        },
+        "foot": {
+          "x": 203,
+          "y": 433
+        },
+        "durationMs": 180
+      },
+      {
+        "source": "source/leisure-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1345,
+          "y": 0,
+          "width": 429,
+          "height": 440
+        },
+        "foot": {
+          "x": 208,
+          "y": 433
+        },
+        "durationMs": 120
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 140,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "dragging": {
+    "source": "source/motion-v1.png",
+    "scale": 0.935,
+    "loop": "repeat",
+    "frames": [
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 454,
+          "height": 439
+        },
+        "foot": {
+          "x": 232,
+          "y": 414
+        },
+        "durationMs": 260
+      },
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 454,
+          "y": 0,
+          "width": 442,
+          "height": 439
+        },
+        "foot": {
+          "x": 217,
+          "y": 415
+        },
+        "durationMs": 260
+      }
+    ]
+  },
+  "flutter": {
+    "source": "source/motion-v1.png",
+    "scale": 0.935,
+    "loop": "once",
+    "frames": [
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 896,
+          "y": 0,
+          "width": 439,
+          "height": 439
+        },
+        "foot": {
+          "x": 211,
+          "y": 431
+        },
+        "durationMs": 110
+      },
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1335,
+          "y": 0,
+          "width": 439,
+          "height": 439
+        },
+        "foot": {
+          "x": 214,
+          "y": 429
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 0,
+          "y": 439,
+          "width": 459,
+          "height": 448
+        },
+        "foot": {
+          "x": 232,
+          "y": 431
+        },
+        "durationMs": 130
+      }
+    ]
+  },
+  "falling": {
+    "source": "source/motion-v1.png",
+    "scale": 0.935,
+    "loop": "repeat",
+    "frames": [
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 459,
+          "y": 439,
+          "width": 430,
+          "height": 448
+        },
+        "foot": {
+          "x": 212,
+          "y": 432
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 889,
+          "y": 439,
+          "width": 449,
+          "height": 448
+        },
+        "foot": {
+          "x": 220,
+          "y": 432
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/motion-v1.png",
+        "scale": 0.935,
+        "region": {
+          "x": 1338,
+          "y": 439,
+          "width": 436,
+          "height": 448
+        },
+        "foot": {
+          "x": 217,
+          "y": 432
+        },
+        "durationMs": 120
+      }
+    ]
+  },
+  "landing": {
+    "source": "source/ground-v1.png",
+    "scale": 0.93,
+    "loop": "once",
+    "frames": [
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 461,
+          "height": 451
+        },
+        "foot": {
+          "x": 236,
+          "y": 445
+        },
+        "durationMs": 80
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 461,
+          "y": 0,
+          "width": 442,
+          "height": 451
+        },
+        "foot": {
+          "x": 232,
+          "y": 445
+        },
+        "durationMs": 110
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 903,
+          "y": 0,
+          "width": 439,
+          "height": 451
+        },
+        "foot": {
+          "x": 213,
+          "y": 445
+        },
+        "durationMs": 120
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 1342,
+          "y": 0,
+          "width": 432,
+          "height": 451
+        },
+        "foot": {
+          "x": 235,
+          "y": 444
+        },
+        "durationMs": 110
+      },
+      {
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 444,
+          "height": 444
+        },
+        "foot": {
+          "x": 231,
+          "y": 425
+        },
+        "durationMs": 100,
+        "source": "source/idle-v1.png",
+        "scale": 0.95
+      }
+    ]
+  },
+  "climbing": {
+    "source": "source/ground-v1.png",
+    "scale": 0.93,
+    "loop": "once",
+    "frames": [
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 0,
+          "y": 451,
+          "width": 459,
+          "height": 436
+        },
+        "foot": {
+          "x": 226,
+          "y": 419
+        },
+        "durationMs": 160
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 459,
+          "y": 451,
+          "width": 449,
+          "height": 436
+        },
+        "foot": {
+          "x": 244,
+          "y": 421
+        },
+        "durationMs": 240
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 908,
+          "y": 451,
+          "width": 438,
+          "height": 436
+        },
+        "foot": {
+          "x": 204,
+          "y": 421
+        },
+        "durationMs": 260
+      },
+      {
+        "source": "source/ground-v1.png",
+        "scale": 0.93,
+        "region": {
+          "x": 1346,
+          "y": 451,
+          "width": 428,
+          "height": 436
+        },
+        "foot": {
+          "x": 237,
+          "y": 421
+        },
+        "durationMs": 160
+      }
+    ]
+  }
+}

@@ -1,6 +1,11 @@
 {
-  "cycleDistancePixels": 84,
+  "cycleDistancePixels": 186.97267259709787,
   "cyclesPerWalk": 3,
   "pixelRatio": 2,
-  "referenceWindowSize": 240
+  "referenceWindowSize": 240,
+  "bodyTravelSamples": [
+    0, -1.8718013922883756, 71.79638616732291, 88.72647597800972,
+    93.83960381402912, 97.1821964066217, 156.63797871954685, 182.10376503407267,
+    186.97267259709787
+  ]
 }

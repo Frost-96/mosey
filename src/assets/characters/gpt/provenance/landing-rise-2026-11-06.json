@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-06",
+  "frames": [10, 11],
+  "previousAtlasSha256": "920b4a826d262a3d3e8e4d894596617f1879d6618caf2f0adce1af642b31f6d4",
+  "atlasSha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+  "source": {
+    "file": "provenance/images/5596c6a05aa4-gpt-rise-edit-1.png",
+    "sha256": "5596c6a05aa45b2bd81911ce0822d30dab429e3e9bb4c7fc63476120b0a70186"
+  },
+  "normalization": [
+    {
+      "frame": 10,
+      "sourceCell": 2,
+      "sourceRegion": {
+        "x": 627,
+        "y": 0,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7547169811320755,
+      "resizedSide": 473,
+      "translation": {
+        "x": -3,
+        "y": 13
+      },
+      "targetHeight": 360,
+      "finalOpaqueBounds": {
+        "left": 53,
+        "top": 102,
+        "right": 380,
+        "bottom": 461,
+        "width": 328,
+        "height": 360
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    },
+    {
+      "frame": 11,
+      "sourceCell": 3,
+      "sourceRegion": {
+        "x": 0,
+        "y": 627,
+        "width": 627,
+        "height": 627
+      },
+      "scale": 0.7514563106796116,
+      "resizedSide": 471,
+      "translation": {
+        "x": -20,
+        "y": 39
+      },
+      "targetHeight": 387,
+      "finalOpaqueBounds": {
+        "left": 66,
+        "top": 75,
+        "right": 382,
+        "bottom": 461,
+        "width": 317,
+        "height": 387
+      },
+      "operation": "Uniform resize and translation only; no recoloring, alpha replacement, or pose fabrication."
+    }
+  ],
+  "verification": "Only landing frame 10 and frame 11 RGBA pixels and derived hit rows changed. All other frames, frame regions, foot anchors, durations and loop mode are byte-equivalent or structurally identical.",
+  "requests": [
+    {
+      "createdOn": "2026-11-06",
+      "tool": "image_gen.imagegen",
+      "mode": "built-in edit",
+      "purpose": "Replace landing frames 10 and 11 with calm continuous rising poses only",
+      "prompt": "Use case: identity-preserve. Asset: edit an existing 2×2 transparent game sprite reference sheet, preserving the EXACT same character and rendering.\nInput is a 960×960 transparent sheet with four 480×480 cells, read left to right, top to bottom: upper-left is existing frame 9 (low crouch); upper-right is frame 10 (currently waving in panic); lower-left is frame 11 (currently waving in panic); lower-right is existing frame 12 (quiet standing).\nPRIMARY REQUEST: change ONLY the poses in the UPPER-RIGHT and LOWER-LEFT cells into two natural consecutive get-up inbetween frames. Keep the upper-left and lower-right reference cells unchanged. Maintain the identical 2×2 grid, cell dimensions, transparent gutters, near-front camera, framing, original head size and proportions, thick line art, flat colors, costume, hair silhouette, attached accessories, and feet baseline. True transparent background; no drawn floor, shadows, labels, text, motion trails, effect marks, extra limbs or props.\n\nThe resulting chronological motion must be frame 9 crouch → frame 10 half rising → frame 11 almost standing → frame 12 quiet standing. Both feet support weight on the ground; knees progressively straighten; hips and head rise smoothly vertically. The head NEVER gets bigger or smaller. No sideways body sway, panic, arms flung outward, raised hands, waving, surprise mouth, hopping or standing on one leg.\nUPPER-RIGHT / frame 10: controlled half rise from the upper-left crouch. Knees still noticeably bent, pelvis between crouch and standing heights, torso mildly forward, head looking forward without tilting sideways. Hands remain below chest, close to the knees/thighs and torso, helping the rise. Hair falls downward naturally rather than whipping out. Face is focused and relaxed, mouth tiny and nearly closed.\nLOWER-LEFT / frame 11: roughly 85–90% upright, knees slightly soft, body centered above the two feet, head only a little below the lower-right standing reference. Arms smoothly draw toward the final relaxed pose, elbows near the body, hands below chest. Calm almost-closed or closed tiny mouth. Hair and tail settle toward the exact final silhouette. This is a gentle continuation, NOT a wobble or recovery gesture.\nBoth new poses should look like nearby consecutive frames of the existing sprite, not new character designs. Match the lower-right reference character for clothing/face rendering and body scale; do not beautify, add detail or change style. Preserve full unclipped hair, ears, horns, hands, feet and tail within each cell, with transparent bottom margin. Output the same transparent 2×2 sheet, preferably 960×960.\nIdentity: white/lavender long-haired small horned girl, purple eyes, cream horns, small lavender bat wings and scaled purple tail, white/lavender dress with purple rose at waist. Frame 10 both hands gently support near thighs/knees; frame 11 the long sleeves settle beside the body toward the final pose. Keep horns, wings, tail, rose and costume EXACT; no wing flapping.",
+      "transparent_background": true,
+      "referenced_image_paths": [
+        "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gpt-frames09-12.png"
+      ],
+      "archivedInputs": [
+        {
+          "originalPath": "/Users/frost/code/mosey/test-results/landing-refine-2026-11-06/reference/gpt-frames09-12.png",
+          "file": "provenance/images/aba9229054cf-gpt-rise-reference-1.png",
+          "sha256": "aba9229054cf22462f4bce059a33f3c9075fc5b076fbfbf7ca05242294f038c8"
+        }
+      ],
+      "archivedOutput": {
+        "file": "provenance/images/5596c6a05aa4-gpt-rise-edit-1.png",
+        "sha256": "5596c6a05aa45b2bd81911ce0822d30dab429e3e9bb4c7fc63476120b0a70186"
+      },
+      "adopted": true,
+      "adoptedFrames": [10, 11]
+    }
+  ]
+}

@@ -1,64 +1,35 @@
 import { atlasSchema, type Atlas } from "./assets";
 import { z } from "zod";
 import { petSizeSchema } from "./size";
-import idle from "../assets/generated/idle-atlas.json";
-import climbing from "../assets/generated/climbing-atlas.json";
-import sleeping from "../assets/generated/sleeping-atlas.json";
-import settling from "../assets/generated/settling-atlas.json";
-import waking from "../assets/generated/waking-atlas.json";
-import ear from "../assets/generated/ear-atlas.json";
-import walking from "../assets/generated/walking-atlas.json";
-import stretching from "../assets/generated/stretching-atlas.json";
-import playing from "../assets/generated/playing-atlas.json";
-import tilt from "../assets/generated/tilt-atlas.json";
-import paw from "../assets/generated/paw-atlas.json";
-import belly from "../assets/generated/belly-atlas.json";
-import dragging from "../assets/generated/dragging-atlas.json";
-import flutter from "../assets/generated/flutter-atlas.json";
-import falling from "../assets/generated/falling-atlas.json";
-import landing from "../assets/generated/landing-atlas.json";
-import whaleWalking from "../assets/generated/whale/walking-atlas.json";
-import whaleMotion from "../assets/characters/whale/motion.json";
+import type { CharacterId } from "./character-catalog";
+export type { CharacterId } from "./character-catalog";
 
+const metadata = import.meta.glob("../assets/generated/**/*-atlas.json", {
+  eager: true,
+  import: "default",
+});
+const motions = import.meta.glob("../assets/characters/*/motion.json", {
+  eager: true,
+  import: "default",
+});
 const walkingMotionSchema = z.strictObject({
   cycleDistancePixels: z.number().positive(),
   cyclesPerWalk: z.number().int().positive(),
   pixelRatio: z.number().positive(),
   referenceWindowSize: petSizeSchema,
+  bodyTravelSamples: z.array(z.number().finite()).min(2),
 });
 
-export type CharacterId = "corgi" | "whale";
+export function characterDirectory(character: CharacterId): string {
+  return character === "corgi" ? "" : `${character}/`;
+}
 
-// One internal entry point supplies both drawing and transparent hit geometry.
-// A complete action set is mandatory; no fallback silently supplies missing poses.
-const metadata = {
-  corgi: [
-    idle,
-    climbing,
-    sleeping,
-    settling,
-    waking,
-    ear,
-    walking,
-    stretching,
-    playing,
-    tilt,
-    paw,
-    belly,
-    dragging,
-    flutter,
-    falling,
-    landing,
-  ],
-  whale: Object.values(
-    import.meta.glob("../assets/generated/whale/*-atlas.json", {
-      eager: true,
-      import: "default",
-    }),
-  ),
-};
+// Rendering and native hit geometry load the same complete action set.
 export function characterAssets(character: CharacterId): Atlas[] {
-  const atlases = metadata[character].map((value) => atlasSchema.parse(value));
+  const directory = `../assets/generated/${characterDirectory(character)}`;
+  const atlases = Object.entries(metadata)
+    .filter(([file]) => file.slice(0, file.lastIndexOf("/") + 1) === directory)
+    .map(([, value]) => atlasSchema.parse(value));
   const actions = new Set(atlases.map((atlas) => atlas.action));
   if (
     actions.size !== atlases.length ||
@@ -67,20 +38,51 @@ export function characterAssets(character: CharacterId): Atlas[] {
     throw new Error(`Incomplete or duplicate actions for ${character}`);
   return atlases;
 }
-export function characterDirectory(character: CharacterId): string {
-  return character === "corgi" ? "" : "whale/";
-}
 
 export function characterWalk(character: CharacterId) {
   if (character === "corgi") return undefined;
-  const motion = walkingMotionSchema.parse(whaleMotion);
-  const atlas = atlasSchema.parse(whaleWalking);
+  const motion = walkingMotionSchema.parse(
+    motions[`../assets/characters/${character}/motion.json`],
+  );
+  const atlas = characterAssets(character).find((a) => a.action === "walking")!;
+  const samples = motion.bodyTravelSamples;
+  if (
+    samples.length !== atlas.frames.length + 1 ||
+    samples[0] !== 0 ||
+    samples.at(-1) !== motion.cycleDistancePixels
+  )
+    throw new Error(`Walking samples do not match ${character} frames`);
+  const cycleMs = atlas.frames.reduce(
+    (total, frame) => total + frame.durationMs,
+    0,
+  );
+  const durationMs = cycleMs * motion.cyclesPerWalk;
   return {
-    durationMs:
-      atlas.frames.reduce((total, frame) => total + frame.durationMs, 0) *
-      motion.cyclesPerWalk,
+    durationMs,
     distance:
       (motion.cycleDistancePixels / motion.pixelRatio) * motion.cyclesPerWalk,
     referenceWindowSize: motion.referenceWindowSize,
+    // Carry the preview's measured steps into desktop movement at every size.
+    progress(elapsedMs: number) {
+      if (elapsedMs >= durationMs) return 1;
+      const elapsed = Math.max(0, elapsedMs);
+      const cycle = Math.floor(elapsed / cycleMs);
+      let local = elapsed % cycleMs;
+      for (const [index, frame] of atlas.frames.entries()) {
+        if (local < frame.durationMs) {
+          const travel =
+            samples[index]! +
+            ((samples[index + 1]! - samples[index]!) * local) /
+              frame.durationMs;
+          return Math.max(
+            0,
+            (cycle + travel / motion.cycleDistancePixels) /
+              motion.cyclesPerWalk,
+          );
+        }
+        local -= frame.durationMs;
+      }
+      return 1;
+    },
   };
 }

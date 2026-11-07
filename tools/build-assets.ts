@@ -8,14 +8,16 @@ const build = await prepareBuild({
   name: "character-assets",
   inputs: [
     "tools/build-assets.ts",
-    "tools/build-whale-assets.ts",
+    "tools/build-character-assets.ts",
     "tools/asset-hit-rows.ts",
     "src/shared/assets.ts",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
-    "src/assets/characters/whale/processing.json",
-    "src/assets/characters/whale/source",
+    ...["claude", "gemini", "gpt", "whale"].flatMap((id) => [
+      `src/assets/characters/${id}/processing.json`,
+      `src/assets/characters/${id}/sprites`,
+    ]),
     ...(await readdir("src/assets"))
       .filter((name) => name.endsWith(".png"))
       .map((name) => `src/assets/${name}`),
@@ -449,5 +451,5 @@ for (const { action, source, sequence, loop } of actionConfigs) {
   );
 }
 
-await import("./build-whale-assets.ts");
+await import("./build-character-assets.ts");
 await build.complete();

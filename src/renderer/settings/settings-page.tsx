@@ -1,10 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import type { Settings } from "../../shared/contract";
+import {
+  characterNames,
+  characterSchema,
+} from "../../shared/character-catalog";
 import { LoginSettings } from "./settings-login";
 import { useSettings } from "./use-settings";
 
-const characterNames = { whale: "鲸鱼娘", corgi: "柯基" };
 function CharacterSettings({
   settings,
   error,
@@ -35,12 +38,17 @@ function CharacterSettings({
             id="character"
             value={character}
             onChange={(event) => {
-              const value = event.currentTarget.value;
-              if (value === "whale" || value === "corgi") setCharacter(value);
+              const value = characterSchema.safeParse(
+                event.currentTarget.value,
+              );
+              if (value.success) setCharacter(value.data);
             }}
           >
-            <option value="whale">鲸鱼娘</option>
-            <option value="corgi">柯基</option>
+            {characterSchema.options.map((id) => (
+              <option key={id} value={id}>
+                {characterNames[id]}
+              </option>
+            ))}
           </select>
         </label>
       </div>
