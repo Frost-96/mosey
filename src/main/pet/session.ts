@@ -96,7 +96,12 @@ export function createPetSession(
         footY: bounds.y + bounds.height,
         supports: [
           supportAt(bounds.x, bounds.y),
-          supportAt(bounds.x, bounds.y, candidate.geometry),
+          supportAt(
+            bounds.x,
+            bounds.y,
+            candidate.geometry,
+            candidate.capabilities,
+          ),
         ],
       };
     },
@@ -106,6 +111,7 @@ export function createPetSession(
       interaction.invalidate({ releaseInput: true });
       behavior.send({
         type: "CHARACTER",
+        capabilities: characters.current.capabilities,
         walkDurationMs: characters.current.walk?.durationMs ?? autonomy.walkMs,
         paused: visibility !== "visible",
       });
@@ -116,6 +122,7 @@ export function createPetSession(
     clock: timeline,
     input: {
       now: timeline.now,
+      capabilities: characters.current.capabilities,
       walkDurationMs: characters.current.walk?.durationMs,
     },
   }).start();
@@ -208,6 +215,7 @@ export function createPetSession(
     x: number,
     y: number,
     candidate = characters.current.geometry,
+    capabilities = characters.current.capabilities,
   ) => {
     const area = screen.getPrimaryDisplay().workArea;
     const floor = area.y + area.height;
@@ -232,7 +240,15 @@ export function createPetSession(
       body.left = contact.left;
       body.right = contact.right;
     }
-    return dockSupport(dockObservation, body, floor);
+    const support = dockSupport(dockObservation, body, floor);
+    // A character without climbing can land on a lower Dock edge, but must not
+    // be pulled up through it when the edge rises or appears above its feet.
+    if (
+      !capabilities.includes("climbing") &&
+      support.footY < pet.getBounds().y + liveSize - 1
+    )
+      return { footY: floor, shiftX: support.shiftX };
+    return support;
   };
   const reconcileDock = () => {
     if (
@@ -323,6 +339,7 @@ export function createPetSession(
   const presentation = () =>
     presentationSchema.parse({
       character: characters.current.id,
+      resourceVersion: characters.current.resourceVersion,
       posture:
         behavior.getSnapshot().value === "paused"
           ? "resting"
@@ -591,6 +608,7 @@ export function createPetSession(
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
+      url.protocol === "mosey-asset:" ||
       url.protocol === "file:" ||
       url.protocol === "data:" ||
       (!!devOrigin &&

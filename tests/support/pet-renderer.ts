@@ -101,8 +101,7 @@ export function observePetRenderer(app: ElectronApplication) {
     waitForDocument: () => waitFor(() => true, 1000),
     waitUntilReady({ timeout = 10000, paintedPixels = 0 } = {}) {
       return waitFor((observed) => {
-        if (!/^(DeepSeek|Claude|Gemini|GPT|柯基) · /.test(observed.label ?? ""))
-          return false;
+        if (!observed.label?.includes(" · ")) return false;
         if (observed.presentation.visibility === "hidden")
           return !observed.visible;
         return (

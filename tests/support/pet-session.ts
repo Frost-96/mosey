@@ -243,6 +243,9 @@ export async function createPetTestSession(options: SessionOptions) {
         await cp(".vite/build", path.join(directory, ".vite/build"), {
           recursive: true,
         });
+        await cp("build/characters", path.join(directory, "build/characters"), {
+          recursive: true,
+        });
         await cp("build/native", path.join(directory, "build/native"), {
           recursive: true,
         });
@@ -336,9 +339,10 @@ setInterval(() => {
         const args = [
           ...(packaged ? [] : [path.join(directory, "app")]),
           `--user-data-dir=${profile}`,
-          ...(options.isolateAppIdentity
-            ? ["-ApplePersistenceIgnoreState", "YES"]
-            : []),
+          // macOS window restoration is keyed by app identity, not userData.
+          // A temporary profile must not inherit another test's crash prompt.
+          "-ApplePersistenceIgnoreState",
+          "YES",
           `--force-device-scale-factor=${options.scaleFactor ?? process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
         ];
         // Playwright owns a launch that rejects before returning. Once it

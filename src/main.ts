@@ -1,4 +1,4 @@
-import { app } from "electron";
+import { app, protocol } from "electron";
 import log from "electron-log/main";
 import { SettingsWindow } from "./main/settings-window";
 import { LoginLaunch } from "./main/platform/login-launch";
@@ -6,6 +6,13 @@ import { PreferencesStore } from "./main/platform/preferences";
 import { DockCapture } from "./main/platform/dock/capture";
 import { ApplicationMenus } from "./main/menus";
 import { createPetSession, type PetSession } from "./main/pet/session";
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "mosey-asset",
+    privileges: { standard: true, secure: true, corsEnabled: true },
+  },
+]);
 
 // A second launch has no side effects: future hidden intent stays untouched.
 if (!app.requestSingleInstanceLock()) app.quit();

@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { petSizeSchema } from "./size";
-import { characterSchema } from "./character-catalog";
+import {
+  characterSchema,
+  characterIdentitySchema,
+  characterResourceSchema,
+} from "./character-catalog";
+import { preparedCharacterSchema, type PreparedCharacter } from "./characters";
 export { characterSchema } from "./character-catalog";
 export const presentationSchema = z.strictObject({
-  character: characterSchema,
+  ...characterResourceSchema.shape,
   size: petSizeSchema,
   geometryRevision: z.number().int().nonnegative(),
   posture: z.enum([
@@ -79,13 +84,23 @@ export type Presentation = z.infer<typeof presentationSchema>;
 export const characterPreparationSchema = z.strictObject({
   request: z.number().int().nonnegative(),
   generation: z.number().int().nonnegative(),
-  character: characterSchema,
+  ...characterResourceSchema.shape,
+  assets: preparedCharacterSchema,
 });
-export const characterPreparedSchema = characterPreparationSchema.extend({
-  success: z.boolean(),
+export const characterPreparedSchema = characterPreparationSchema
+  .omit({ assets: true })
+  .extend({
+    success: z.boolean(),
+  });
+export const retainedCharacterSchema = characterPreparedSchema.omit({
+  success: true,
 });
 export type CharacterPreparation = z.infer<typeof characterPreparationSchema>;
 export interface PetBridge {
+  getCharacter(): Promise<PreparedCharacter>;
+  onRetainCharacter(
+    listener: (value: z.infer<typeof retainedCharacterSchema>) => void,
+  ): () => void;
   onPrepareCharacter(
     listener: (request: CharacterPreparation) => void,
   ): () => void;
@@ -98,6 +113,8 @@ export interface PetBridge {
   input(event: PetInput): void;
 }
 export const channels = {
+  getCharacter: "pet:get-character",
+  retainCharacter: "pet:retain-character",
   prepareCharacter: "pet:prepare-character",
   characterPrepared: "pet:character-prepared",
   assetsReady: "pet:assets-ready",
@@ -130,6 +147,7 @@ export const loginLaunchRequestSchema = z.boolean();
 export const settingsSchema = z.strictObject({
   revision: z.number().int().nonnegative(),
   character: characterSchema,
+  characters: z.array(characterIdentitySchema),
   pendingCharacter: z
     .strictObject({
       target: characterSchema,
@@ -140,6 +158,7 @@ export const settingsSchema = z.strictObject({
     .strictObject({
       target: characterSchema,
       reason: z.enum(["load", "save", "recovery"]),
+      detail: z.string().max(500).optional(),
     })
     .optional(),
   size: petSizeSchema,

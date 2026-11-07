@@ -16,7 +16,10 @@ const config: ForgeConfig = {
       !file.startsWith("/node_modules/electron-log/"),
     appBundleId: "dev.frost.mosey",
     executableName: "Mosey",
-    extraResource: [path.resolve("build/native")],
+    extraResource: [
+      path.resolve("build/native"),
+      path.resolve("build/characters"),
+    ],
     extendInfo: {
       // Match the deployment target of both bundled Swift helpers.
       LSMinimumSystemVersion: "15.0",

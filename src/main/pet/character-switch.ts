@@ -8,12 +8,8 @@ import {
 import type { SnapshotFrom } from "xstate";
 import type { petBehavior } from "../../behavior/pet-machine";
 import type { PreferencesStore } from "../platform/preferences";
-import {
-  characterAssets,
-  characterWalk,
-  type CharacterId,
-} from "../../shared/characters";
-import { characterGeometry } from "../../shared/character-geometry";
+import type { CharacterId } from "../../shared/character-catalog";
+import { CharacterCatalog } from "../character-catalog";
 import {
   channels,
   characterPreparedSchema,
@@ -22,18 +18,8 @@ import {
   type Settings,
 } from "../../shared/contract";
 
-function loadCharacter(id: CharacterId) {
-  const atlases = characterAssets(id);
-  return {
-    id,
-    atlases,
-    walk: characterWalk(id),
-    geometry: characterGeometry(atlases),
-  };
-}
-
-type Character = ReturnType<typeof loadCharacter>;
-type Request = CharacterPreparation & {
+type Character = ReturnType<CharacterCatalog["load"]>;
+type Request = Omit<CharacterPreparation, "assets"> & {
   candidate: Character;
   phase: "loading" | "waiting";
 };
@@ -61,6 +47,7 @@ type Application = {
 // preparation handshake. The current bundle changes only after a durable save.
 export class CharacterSwitch {
   private readonly renderer: WebContents;
+  private readonly catalog = new CharacterCatalog();
   private selected: Character;
   private pending: Request | undefined;
   private failure: Settings["failedCharacter"];
@@ -77,7 +64,26 @@ export class CharacterSwitch {
     private readonly application: Application,
   ) {
     this.renderer = pet.webContents;
-    this.selected = loadCharacter(preferences.character);
+    try {
+      this.selected = this.catalog.load(preferences.character);
+    } catch (error) {
+      this.selected = this.catalog.load("whale");
+      this.failure = {
+        target: preferences.character,
+        reason: "load",
+        detail: String(error).slice(0, 500),
+      };
+    }
+    this.catalog.commit(this.selected);
+    ipcMain.handle(channels.getCharacter, (event, value: unknown) => {
+      if (
+        event.sender !== this.renderer ||
+        event.senderFrame !== this.renderer.mainFrame
+      )
+        throw new Error("Untrusted character request");
+      emptyRequestSchema.parse(value);
+      return this.selected.prepared;
+    });
     ipcMain.on(channels.assetsReady, this.onAssetsReady);
     ipcMain.on(channels.characterPrepared, this.onPrepared);
     pet.once("closed", this.dispose);
@@ -90,10 +96,11 @@ export class CharacterSwitch {
 
   get settings(): Pick<
     Settings,
-    "character" | "pendingCharacter" | "failedCharacter"
+    "character" | "characters" | "pendingCharacter" | "failedCharacter"
   > {
     return {
       character: this.selected.id,
+      characters: this.catalog.list,
       pendingCharacter: this.pending && {
         target: this.pending.character,
         phase: this.pending.phase,
@@ -107,13 +114,18 @@ export class CharacterSwitch {
     this.clearPending();
     this.failure = undefined;
     const request = ++this.sequence;
-    if (target !== this.selected.id) {
-      try {
+    try {
+      const candidate = this.catalog.load(target);
+      if (
+        target !== this.selected.id ||
+        candidate.resourceVersion !== this.selected.resourceVersion
+      ) {
         this.pending = {
           request,
           generation: this.generation,
           character: target,
-          candidate: loadCharacter(target),
+          resourceVersion: candidate.resourceVersion,
+          candidate,
           phase: "loading",
         };
         const pending = this.pending;
@@ -121,11 +133,19 @@ export class CharacterSwitch {
           if (this.pending === pending) this.fail("load");
         }, 15000);
         this.prepare();
-      } catch {
-        this.clearPending();
-        this.failure = { target, reason: "load" };
       }
+    } catch (error) {
+      this.clearPending();
+      this.failure = {
+        target,
+        reason: "load",
+        detail: String(error).slice(0, 500),
+      };
     }
+    this.catalog.retain(
+      this.selected,
+      ...(this.pending ? [this.pending.candidate] : []),
+    );
     this.application.changed();
   }
 
@@ -175,9 +195,10 @@ export class CharacterSwitch {
       this.fail("save");
       return;
     }
+    this.selected = request.candidate;
+    this.catalog.commit(this.selected);
     this.clearPending();
     this.failure = undefined;
-    this.selected = request.candidate;
     this.application.apply();
     this.application.changed();
   }
@@ -225,11 +246,13 @@ export class CharacterSwitch {
       return;
     // A development document reload can lose its outstanding decode. Each
     // ready handshake may resend; request/phase checks retire duplicate replies.
-    const { request, generation, character } = pending;
+    const { request, generation, character, resourceVersion } = pending;
     this.renderer.send(channels.prepareCharacter, {
       request,
       generation,
       character,
+      resourceVersion,
+      assets: pending.candidate.prepared,
     });
   }
 
@@ -244,7 +267,8 @@ export class CharacterSwitch {
       result.data.request !== pending.request ||
       result.data.generation !== this.generation ||
       result.data.generation !== pending.generation ||
-      result.data.character !== pending.character
+      result.data.character !== pending.character ||
+      result.data.resourceVersion !== pending.resourceVersion
     )
       return;
     this.clearTimer();
@@ -262,6 +286,14 @@ export class CharacterSwitch {
   private clearPending() {
     this.clearTimer();
     this.pending = undefined;
+    this.catalog.retain(this.selected);
+    if (!this.disposed && this.rendererReady && !this.renderer.isDestroyed())
+      this.renderer.send(channels.retainCharacter, {
+        request: this.sequence,
+        generation: this.generation,
+        character: this.selected.id,
+        resourceVersion: this.selected.resourceVersion,
+      });
   }
 
   private fail(reason: NonNullable<Settings["failedCharacter"]>["reason"]) {
@@ -275,6 +307,7 @@ export class CharacterSwitch {
     if (this.disposed) return;
     this.disposed = true;
     this.clearPending();
+    ipcMain.removeHandler(channels.getCharacter);
     ipcMain.off(channels.assetsReady, this.onAssetsReady);
     ipcMain.off(channels.characterPrepared, this.onPrepared);
     this.pet.off("closed", this.dispose);

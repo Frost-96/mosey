@@ -1,3 +1,4 @@
+import type { CharacterCapability } from "../shared/character-capabilities";
 import { assign, setup } from "xstate";
 
 // Tuning value, not a fixed product requirement. Active reactions absorb all clicks.
@@ -11,15 +12,26 @@ export const autonomy = {
   walkDistance: 150,
   awakeMs: 120000,
 };
+function reaction(context: {
+  choice: number;
+  capabilities: CharacterCapability[];
+}) {
+  const available = (["tilt", "paw", "belly"] as const).filter((action) =>
+    context.capabilities.includes(action),
+  );
+  return available[Math.floor(context.choice * available.length)];
+}
 export const petBehavior = setup({
   types: {
     input: {} as {
       now: () => number;
       walkDurationMs?: number;
+      capabilities: CharacterCapability[];
     },
     context: {} as {
       now: () => number;
       walkDurationMs: number;
+      capabilities: CharacterCapability[];
       actionId: number;
       startedAt: number;
       lastClickAt: number;
@@ -29,7 +41,12 @@ export const petBehavior = setup({
       direction: "left" | "right";
     },
     events: {} as
-      | { type: "CHARACTER"; walkDurationMs: number; paused: boolean }
+      | {
+          type: "CHARACTER";
+          walkDurationMs: number;
+          capabilities: CharacterCapability[];
+          paused: boolean;
+        }
       | { type: "CLICK" }
       | { type: "CLIMB" }
       | { type: "DROP" }
@@ -52,6 +69,7 @@ export const petBehavior = setup({
       context.sleepClickAt !== undefined &&
       context.now() - context.sleepClickAt <= wakeClickWindowMs,
     readyToSleep: ({ context }) =>
+      context.capabilities.includes("sleep") &&
       context.now() - context.awakeSince >= autonomy.awakeMs,
     freshClick: ({ context }) =>
       context.now() - context.lastClickAt >= clickMergeIntervalMs,
@@ -81,6 +99,7 @@ export const petBehavior = setup({
   context: ({ input }) => ({
     now: input.now,
     walkDurationMs: input.walkDurationMs ?? autonomy.walkMs,
+    capabilities: input.capabilities,
     actionId: 0,
     startedAt: input.now(),
     lastClickAt: 0,
@@ -98,7 +117,10 @@ export const petBehavior = setup({
         actions: [
           "rest",
           "wakeCycle",
-          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+          assign(({ event }) => ({
+            walkDurationMs: event.walkDurationMs,
+            capabilities: event.capabilities,
+          })),
         ],
       },
       {
@@ -106,7 +128,10 @@ export const petBehavior = setup({
         actions: [
           "rest",
           "wakeCycle",
-          assign(({ event }) => ({ walkDurationMs: event.walkDurationMs })),
+          assign(({ event }) => ({
+            walkDurationMs: event.walkDurationMs,
+            capabilities: event.capabilities,
+          })),
         ],
       },
     ],
@@ -115,7 +140,11 @@ export const petBehavior = setup({
     RESUME: { target: ".resting", actions: ["rest", "wakeCycle"] },
     CANCEL: { target: ".resting", actions: ["rest", "wakeCycle"] },
     DRAG_START: { target: ".dragging", actions: ["rest", "wakeCycle"] },
-    CLIMB: { target: ".climbing", actions: ["rest", "wakeCycle"] },
+    CLIMB: {
+      guard: ({ context }) => context.capabilities.includes("climbing"),
+      target: ".climbing",
+      actions: ["rest", "wakeCycle"],
+    },
     DROP: { target: ".falling", actions: "rest" },
   },
   states: {
@@ -132,11 +161,18 @@ export const petBehavior = setup({
           actions: "rest",
         },
         {
-          guard: ({ context }) => context.choice < 0.75,
+          guard: ({ context }) =>
+            context.choice < 0.75 &&
+            context.capabilities.includes("stretching"),
           target: "stretching",
           actions: "rest",
         },
-        { target: "playing", actions: "rest" },
+        {
+          guard: ({ context }) => context.capabilities.includes("playing"),
+          target: "playing",
+          actions: "rest",
+        },
+        { target: "walking", actions: "rest" },
       ],
     },
     walking: {
@@ -161,7 +197,18 @@ export const petBehavior = setup({
         CLICK: { target: "choosing", actions: "begin" },
       },
     },
-    dragging: { on: { RELEASE: { target: "flutter", actions: "rest" } } },
+    dragging: {
+      on: {
+        RELEASE: [
+          {
+            guard: ({ context }) => context.capabilities.includes("flutter"),
+            target: "flutter",
+            actions: "rest",
+          },
+          { target: "falling", actions: "rest" },
+        ],
+      },
+    },
     flutter: {
       on: {
         DONE: { guard: "currentAction", target: "falling", actions: "rest" },
@@ -231,9 +278,16 @@ export const petBehavior = setup({
     choosing: {
       entry: assign(() => ({ choice: Math.random() })),
       always: [
-        { guard: ({ context }) => context.choice < 1 / 3, target: "tilt" },
-        { guard: ({ context }) => context.choice < 2 / 3, target: "paw" },
-        { target: "belly" },
+        {
+          guard: ({ context }) => reaction(context) === "tilt",
+          target: "tilt",
+        },
+        { guard: ({ context }) => reaction(context) === "paw", target: "paw" },
+        {
+          guard: ({ context }) => reaction(context) === "belly",
+          target: "belly",
+        },
+        { target: "resting", actions: "rest" },
       ],
     },
     tilt: {

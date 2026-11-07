@@ -1,0 +1,22 @@
+[
+  {
+    "id": "whale",
+    "name": "DeepSeek",
+    "assets": "whale",
+    "walking": "whale/motion.json"
+  },
+  {
+    "id": "claude",
+    "name": "Claude",
+    "assets": "claude",
+    "walking": "claude/motion.json"
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini",
+    "assets": "gemini",
+    "walking": "gemini/motion.json"
+  },
+  { "id": "gpt", "name": "GPT", "assets": "gpt", "walking": "gpt/motion.json" },
+  { "id": "corgi", "name": "柯基", "assets": "." }
+]

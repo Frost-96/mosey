@@ -225,6 +225,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
       session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
         const url = new URL(details.url);
         const allowed =
+          url.protocol === "mosey-asset:" ||
           url.protocol === "file:" ||
           url.protocol === "data:" ||
           url.origin === origin ||
@@ -430,8 +431,15 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
       )
       .toBeGreaterThan(0);
     await pet.evaluate(() => {
+      const { request, generation, character, resourceVersion } = Reflect.get(
+        window,
+        "expiredPreparation",
+      );
       window.mosey.characterPrepared({
-        ...Reflect.get(window, "expiredPreparation"),
+        request,
+        generation,
+        character,
+        resourceVersion,
         success: true,
       });
     });
@@ -715,6 +723,7 @@ test("renderer recovery retires a pending preparation and permits an explicit re
       session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
         const url = new URL(details.url);
         const allowed =
+          url.protocol === "mosey-asset:" ||
           url.protocol === "file:" ||
           url.protocol === "data:" ||
           url.origin === origin ||

@@ -35,6 +35,10 @@ test("settings protects edits while independently merging IPC results and notifi
     const initial: Settings = {
       revision: 1000,
       character: "corgi",
+      characters: [
+        { id: "corgi", name: "柯基" },
+        { id: "whale", name: "DeepSeek" },
+      ],
       size: 160,
       visibility: "visible",
       login: { status: "disabled" },

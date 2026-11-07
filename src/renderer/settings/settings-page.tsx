@@ -1,10 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import type { Settings } from "../../shared/contract";
-import {
-  characterNames,
-  characterSchema,
-} from "../../shared/character-catalog";
+import { characterSchema } from "../../shared/character-catalog";
 import { LoginSettings } from "./settings-login";
 import { useSettings } from "./use-settings";
 
@@ -19,7 +16,9 @@ function CharacterSettings({
   setCharacter(character: Settings["character"]): void;
   retry(): void;
 }) {
-  const { character, pendingCharacter, failedCharacter } = settings;
+  const { character, characters, pendingCharacter, failedCharacter } = settings;
+  const name = (id: string) =>
+    characters.find((entry) => entry.id === id)?.name ?? id;
   const failure =
     error ??
     (failedCharacter &&
@@ -44,9 +43,9 @@ function CharacterSettings({
               if (value.success) setCharacter(value.data);
             }}
           >
-            {characterSchema.options.map((id) => (
+            {characters.map(({ id, name }) => (
               <option key={id} value={id}>
-                {characterNames[id]}
+                {name}
               </option>
             ))}
           </select>
@@ -55,12 +54,14 @@ function CharacterSettings({
       <p id="character-status" aria-live="polite">
         {pendingCharacter
           ? pendingCharacter.phase === "loading"
-            ? `正在准备${characterNames[pendingCharacter.target]}…`
-            : `等待宠物站稳后切换为${characterNames[pendingCharacter.target]}…`
-          : `当前角色：${characterNames[character]}`}
+            ? `正在准备${name(pendingCharacter.target)}…`
+            : `等待宠物站稳后切换为${name(pendingCharacter.target)}…`
+          : `当前角色：${name(character)}`}
       </p>
       <div id="character-error" hidden={!failure}>
-        <p role="alert">{failure}</p>
+        <p role="alert">
+          {failure} {failedCharacter?.detail}
+        </p>
         <button id="character-retry" onClick={retry}>
           重试角色
         </button>

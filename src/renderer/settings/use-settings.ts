@@ -4,6 +4,7 @@ import type { Settings, SettingsBridge } from "../../shared/contract";
 const initialSettings: Settings = {
   revision: 0,
   character: "whale",
+  characters: [],
   size: 160,
   visibility: "visible",
   login: { status: "unavailable", reason: "正在读取系统状态…" },
@@ -98,6 +99,7 @@ export function useSettings(bridge: SettingsBridge) {
         settings = {
           ...settings,
           character: next.character,
+          characters: next.characters,
           pendingCharacter: next.pendingCharacter,
           failedCharacter: next.failedCharacter,
         };

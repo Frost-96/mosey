@@ -1,17 +1,15 @@
-import { atlasSchema, type Atlas } from "./assets";
 import { z } from "zod";
-import { petSizeSchema } from "./size";
-import type { CharacterId } from "./character-catalog";
-export type { CharacterId } from "./character-catalog";
+import { atlasSchema } from "./assets.ts";
+import {
+  characterIdentitySchema,
+  characterVersionSchema,
+} from "./character-catalog.ts";
+import { petSizeSchema } from "./size.ts";
+import {
+  baseActions,
+  extensionRequirements,
+} from "./character-capabilities.ts";
 
-const metadata = import.meta.glob("../assets/generated/**/*-atlas.json", {
-  eager: true,
-  import: "default",
-});
-const motions = import.meta.glob("../assets/characters/*/motion.json", {
-  eager: true,
-  import: "default",
-});
 const walkingMotionSchema = z.strictObject({
   cycleDistancePixels: z.number().positive(),
   cyclesPerWalk: z.number().int().positive(),
@@ -20,38 +18,86 @@ const walkingMotionSchema = z.strictObject({
   bodyTravelSamples: z.array(z.number().finite()).min(2),
 });
 
-export function characterDirectory(character: CharacterId): string {
-  return character === "corgi" ? "" : `${character}/`;
-}
+// This is the prepared-resource contract, not the future public ZIP format.
+export const characterPackageSchema = characterIdentitySchema
+  .extend({
+    version: z.literal(1),
+    atlases: z.array(atlasSchema).min(1),
+    walking: walkingMotionSchema.optional(),
+  })
+  .superRefine((character, context) => {
+    const actions = character.atlases.map((atlas) => atlas.action);
+    if (new Set(actions).size !== actions.length)
+      context.addIssue({ code: "custom", message: "Duplicate actions" });
+    for (const action of baseActions)
+      if (!actions.includes(action))
+        context.addIssue({
+          code: "custom",
+          message: `Missing required action: ${action}`,
+        });
+    const required = new Set<string>(baseActions);
+    for (const [behavior, dependencies] of Object.entries(
+      extensionRequirements,
+    )) {
+      const present = dependencies.some(
+        (action) => !required.has(action) && actions.includes(action),
+      );
+      const missing = dependencies.filter(
+        (action) => !actions.includes(action),
+      );
+      if (present && missing.length)
+        context.addIssue({
+          code: "custom",
+          message: `Incomplete ${behavior}: missing ${missing.join(", ")}`,
+        });
+    }
+    for (const atlas of character.atlases) {
+      const loop = [
+        "resting",
+        "walking",
+        "dragging",
+        "falling",
+        "sleeping",
+      ].includes(atlas.action)
+        ? "repeat"
+        : "once";
+      if (atlas.loop !== loop)
+        context.addIssue({
+          code: "custom",
+          message: `${atlas.action} must use ${loop} playback`,
+        });
+    }
+    const motion = character.walking;
+    const walk = character.atlases.find((atlas) => atlas.action === "walking");
+    if (
+      motion &&
+      walk &&
+      (motion.bodyTravelSamples.length !== walk.frames.length + 1 ||
+        motion.bodyTravelSamples[0] !== 0 ||
+        motion.bodyTravelSamples.at(-1) !== motion.cycleDistancePixels)
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Walking samples do not match frames",
+      });
+  });
+export type CharacterPackage = z.infer<typeof characterPackageSchema>;
+export const preparedCharacterSchema = z.strictObject({
+  ...characterIdentitySchema.shape,
+  resourceVersion: characterVersionSchema,
+  atlases: z.array(atlasSchema).min(1),
+  images: z.record(
+    z.string(),
+    z.string().startsWith("mosey-asset://character/"),
+  ),
+});
+export type PreparedCharacter = z.infer<typeof preparedCharacterSchema>;
 
-// Rendering and native hit geometry load the same complete action set.
-export function characterAssets(character: CharacterId): Atlas[] {
-  const directory = `../assets/generated/${characterDirectory(character)}`;
-  const atlases = Object.entries(metadata)
-    .filter(([file]) => file.slice(0, file.lastIndexOf("/") + 1) === directory)
-    .map(([, value]) => atlasSchema.parse(value));
-  const actions = new Set(atlases.map((atlas) => atlas.action));
-  if (
-    actions.size !== atlases.length ||
-    atlasSchema.shape.action.options.some((action) => !actions.has(action))
-  )
-    throw new Error(`Incomplete or duplicate actions for ${character}`);
-  return atlases;
-}
-
-export function characterWalk(character: CharacterId) {
-  if (character === "corgi") return undefined;
-  const motion = walkingMotionSchema.parse(
-    motions[`../assets/characters/${character}/motion.json`],
-  );
-  const atlas = characterAssets(character).find((a) => a.action === "walking")!;
+export function characterWalk(character: CharacterPackage) {
+  const motion = character.walking;
+  if (!motion) return undefined;
+  const atlas = character.atlases.find((a) => a.action === "walking")!;
   const samples = motion.bodyTravelSamples;
-  if (
-    samples.length !== atlas.frames.length + 1 ||
-    samples[0] !== 0 ||
-    samples.at(-1) !== motion.cycleDistancePixels
-  )
-    throw new Error(`Walking samples do not match ${character} frames`);
   const cycleMs = atlas.frames.reduce(
     (total, frame) => total + frame.durationMs,
     0,

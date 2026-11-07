@@ -1,9 +1,11 @@
+import { preparedCharacterSchema } from "./shared/characters";
 import { contextBridge, ipcRenderer } from "electron";
 import {
   assetErrorSchema,
   characterSchema,
   characterPreparationSchema,
   characterPreparedSchema,
+  retainedCharacterSchema,
   inputSchema,
   gestureCancellationSchema,
   channels,
@@ -14,6 +16,19 @@ import {
   type SettingsBridge,
 } from "./shared/contract";
 const bridge: PetBridge = {
+  onRetainCharacter(listener) {
+    const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {
+      const parsed = retainedCharacterSchema.safeParse(value);
+      if (parsed.success) listener(parsed.data);
+    };
+    ipcRenderer.on(channels.retainCharacter, receive);
+    return () => ipcRenderer.removeListener(channels.retainCharacter, receive);
+  },
+  async getCharacter() {
+    return preparedCharacterSchema.parse(
+      await ipcRenderer.invoke(channels.getCharacter),
+    );
+  },
   onPrepareCharacter(listener) {
     const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {
       const parsed = characterPreparationSchema.safeParse(value);

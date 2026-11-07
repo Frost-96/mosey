@@ -1,34 +1,36 @@
-import {
-  characterAssets,
-  characterDirectory,
-  type CharacterId,
-} from "../../shared/characters";
+import { characterResourceKey } from "../../shared/character-catalog";
+import type { PreparedCharacter } from "../../shared/characters";
 import { characterGeometry } from "../../shared/character-geometry";
-import { characterNames } from "../../shared/character-catalog";
-import type { Presentation } from "../../shared/contract";
+import type { CharacterPreparation, Presentation } from "../../shared/contract";
 
 try {
   const initial = await window.mosey.getPresentation();
-  const urls = import.meta.glob("../../assets/generated/**/*.png", {
-    eager: true,
-    import: "default",
-    query: "?url",
-  });
-  const loadAssets = async (character: CharacterId) => {
-    const atlases = characterAssets(character);
+  const loadAssets = async (
+    character: PreparedCharacter,
+    signal?: AbortSignal,
+  ) => {
+    const { atlases } = character;
     const images = new Map<string, HTMLImageElement>();
     await Promise.all(
       atlases.map(async (atlas) => {
         const loadImage = async (filename: string) => {
+          signal?.throwIfAborted();
           const image = new Image();
-          const url =
-            urls[
-              `../../assets/generated/${characterDirectory(character)}${filename}`
-            ];
-          if (typeof url !== "string")
-            throw new Error(`Missing ${character} ${atlas.action} image`);
+          const url = character.images[filename];
+          if (!url)
+            throw new Error(`Missing ${character.id} ${atlas.action} image`);
+          image.crossOrigin = "anonymous";
           image.src = url;
-          await image.decode();
+          const abort = () => {
+            image.src = "";
+          };
+          signal?.addEventListener("abort", abort, { once: true });
+          try {
+            await image.decode();
+          } finally {
+            signal?.removeEventListener("abort", abort);
+          }
+          signal?.throwIfAborted();
           if (image.width !== atlas.width || image.height !== atlas.height)
             throw new Error("Atlas pixels do not match metadata");
           images.set(filename, image);
@@ -39,27 +41,55 @@ try {
         ]);
       }),
     );
-    return { atlases, images, geometry: characterGeometry(atlases) };
+    return {
+      ...character,
+      atlases,
+      images,
+      geometry: characterGeometry(atlases),
+    };
   };
-  const prepared = new Map<
-    CharacterId,
-    Awaited<ReturnType<typeof loadAssets>>
-  >();
-  let assets = await loadAssets(initial.character);
-  prepared.set(initial.character, assets);
+  const prepared = new Map<string, Awaited<ReturnType<typeof loadAssets>>>();
+  let assets = await loadAssets(await window.mosey.getCharacter());
+  prepared.set(characterResourceKey(initial), assets);
   let retired = false;
+  let latestPreparation: CharacterPreparation | undefined;
+  let preparation: AbortController | undefined;
+  const unsubscribeRetention = window.mosey.onRetainCharacter((retained) => {
+    if (
+      latestPreparation &&
+      (retained.generation < latestPreparation.generation ||
+        (retained.generation === latestPreparation.generation &&
+          retained.request < latestPreparation.request))
+    )
+      return;
+    latestPreparation = undefined;
+    preparation?.abort();
+    const key = characterResourceKey(retained);
+    for (const entry of prepared.keys())
+      if (entry !== key) prepared.delete(entry);
+  });
   const unsubscribePreparation = window.mosey.onPrepareCharacter(
     async (request) => {
+      preparation?.abort();
+      preparation = new AbortController();
+      const controller = preparation;
+      latestPreparation = request;
+      const { assets: descriptor, ...identity } = request;
       try {
+        const key = characterResourceKey(request);
         const candidate =
-          prepared.get(request.character) ??
-          (await loadAssets(request.character));
-        if (retired) return;
-        prepared.set(request.character, candidate);
-        window.mosey.characterPrepared({ ...request, success: true });
+          prepared.get(key) ??
+          (await loadAssets(descriptor, controller.signal));
+        if (retired || latestPreparation !== request) return;
+        prepared.set(key, candidate);
+        for (const entry of prepared.keys())
+          if (entry !== key && entry !== characterResourceKey(presentation))
+            prepared.delete(entry);
+        window.mosey.characterPrepared({ ...identity, success: true });
       } catch {
-        if (!retired)
-          window.mosey.characterPrepared({ ...request, success: false });
+        controller.abort();
+        if (!retired && latestPreparation === request)
+          window.mosey.characterPrepared({ ...identity, success: false });
       }
     },
   );
@@ -249,8 +279,8 @@ try {
     if (value.geometryRevision !== presentation.geometryRevision)
       finish("cancel");
     if (value.frozenAt !== undefined) completed = -1;
-    if (value.character !== presentation.character) {
-      const candidate = prepared.get(value.character);
+    if (characterResourceKey(value) !== characterResourceKey(presentation)) {
+      const candidate = prepared.get(characterResourceKey(value));
       if (!candidate)
         throw new Error("Character was not prepared before commit");
       assets = candidate;
@@ -277,7 +307,7 @@ try {
     };
     canvas!.setAttribute(
       "aria-label",
-      `${characterNames[value.character]} · ${actionNames[value.posture]}`,
+      `${assets.name} · ${actionNames[value.posture]}`,
     );
     cancelDrawing();
     requestDraw();
@@ -298,8 +328,10 @@ try {
     "pagehide",
     () => {
       retired = true;
+      preparation?.abort();
       finish("cancel");
       unsubscribePreparation();
+      unsubscribeRetention();
       unsubscribe();
       unsubscribeCancellation();
       cancelDrawing();
