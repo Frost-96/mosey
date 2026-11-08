@@ -1,0 +1,17 @@
+Use case: identity-preserve. Production sprite revision for Mosey Gemini. Input1 is the exact identity/style reference. Keep identical big round head, tiny squat body, thick dark outline, simple flat cel shading, blue-purple broad hair locks, pink-inner blue cat ears, top curl, star clip on VIEWER-RIGHT, VIEWER-LEFT magenta iris and VIEWER-RIGHT amber iris, white/navy-purple dress with gold chest star, boots and ONE attached blue-purple tail on VIEWER-RIGHT. No side swaps, no extra anatomy, no accessory redesign. True transparent alpha, no background, ground shadow, grids, text, numbers, effects or new props. Full body and all hair/ears/tail fit inside every cell with generous clear margins. Never scale the head between frames.
+Input2 is the approved awake-seated endpoint. Create ONE coherent TWELVE-frame sprite sheet, FOUR columns by THREE rows,2048x1536. Every cell512x512 with fixed centerx256 and foot/contact liney465. Input1 standing scale and Input2 seated head size are identical; preserve this exact head width and hair volume through all frames. This replaces flickering drawings from multiple generations, so consistent proportions and connected anatomy are more important than variety.
+Read left-to-right, row-major. Frames1–8 form a smooth monotonically lowering STAND→SIT transition. Feet remain planted; pelvis descends by joint bending only; crown continuously lowers, never bounces upward. Front-facing head, neck, collar, shoulders and chest-star all stay aligned; no independent sideways yaw. Arms and hands move continuously from side to knees. Same opaque shape scale, no shrinking silhouette to simulate sitting.
+1 exact neutral standing Input1.
+2 knees begin bending slightly; hands move a little forward.
+3 slightly deeper bend; shoulders/head lower a small step; hands approach thighs.
+4 half squat; elbows bend and hands settle above knees.
+5 deeper squat; same head size; pelvis lower.
+6 pelvis begins settling back down; short knees fold together; hands remain supported on knees.
+7 almost fully seated, torso upright and legs folded in front.
+8 exact awake seated endpoint of Input2, hands on knees, eyes open, original head size.
+Frames9–12 are a SEATED IDLE LOOP at EXACT SAME sitting height/head size/hair volume as frame8:
+9 same seated pose, hands on knees, calm open eyes.
+10 VIEWER-RIGHT hand rises only halfway to cheek, wrist at upper-chest level beside gold star, elbow bent.
+11 hand gently supports cheek; small natural elbow lift, HEAD REMAINS THE SAME HEIGHT and no sideways body shift. Eyes awake, small smile.
+12 hand lowers halfway back toward knee, wrist at mid-chest. The loop can continue12→9 without a body-height jump.
+Hair and tail volume MUST NOT inflate or shrink when hand rises. Preserve pink/magenta iris viewer-left and amber viewer-right in every frame. Mouth small and calm. Draw genuine intermediate knee/elbow configurations, not duplicates. No yawn, sleep, closed eyes, floating props or giant head change.

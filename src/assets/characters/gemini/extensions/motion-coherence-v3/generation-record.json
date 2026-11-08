@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "purpose": "Motion coherence review and targeted replacement candidates",
+  "pathResolution": "Relative to this record directory unless path is absolute; original mutable atlases archived before integration.",
+  "references": [
+    {
+      "file": "references/resting.png",
+      "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "../../sprites/resting.webp",
+        "sha256": "70058a534044b00d6f29b4f9589b7f8fd5bda00acc68388152a889abc7db8348",
+        "width": 1920,
+        "height": 480,
+        "frameIndex": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "processing": "Extract existing 480px frame, clear alpha below128 and RGB of cleared pixels; no new pose painted."
+    },
+    {
+      "file": "references/falling.png",
+      "sha256": "3ffd7026af2630335371d008a9846b80b63ba3829dc6648567f30a2302c3282f",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/runtime/falling.webp",
+        "sha256": "0ec0284b9785fd64fc163021374603bfb64eb43c690aef673dbc2468e7b71034",
+        "width": 1920,
+        "height": 480,
+        "frameIndex": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "processing": "Extract existing 480px frame, clear alpha below128 and RGB of cleared pixels; no new pose painted."
+    },
+    {
+      "file": "references/falling-end.png",
+      "sha256": "64767db6c0cd06cc7d006b71ed5a123da02bee7ad57e5bebacd128b3b02516de",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/runtime/falling.webp",
+        "sha256": "0ec0284b9785fd64fc163021374603bfb64eb43c690aef673dbc2468e7b71034",
+        "width": 1920,
+        "height": 480,
+        "frameIndex": 3,
+        "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+      },
+      "processing": "Extract existing 480px frame, clear alpha below128 and RGB of cleared pixels; no new pose painted."
+    },
+    {
+      "file": "references/landing-start.png",
+      "sha256": "c3e2fa0fa7ed39da63d7e73669fb700edffa34b1ebb5967df0f096d8083dfbb6",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/runtime/landing.webp",
+        "sha256": "6d622f6378a6b7f1e8deb106006c48597f25d9985a6b99fa2e81c4cc01d34f69",
+        "width": 6240,
+        "height": 480,
+        "frameIndex": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "processing": "Extract existing 480px frame, clear alpha below128 and RGB of cleared pixels; no new pose painted."
+    },
+    {
+      "file": "references/sitting.png",
+      "sha256": "48c5196de2a01f6292bca948f7a8edd19f01fa59cdda0afd3f930e7cdcec811b",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/gentle/sitting.webp",
+        "sha256": "dd5995246da79e813f705d5169848c7b38c9353d4c38b38ed6dbeb52fbccadb1",
+        "width": 3360,
+        "height": 480,
+        "frameIndex": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "processing": "Extract existing 480px frame, clear alpha below128 and RGB of cleared pixels; no new pose painted."
+    }
+  ],
+  "attempts": [
+    {
+      "id": "seated-initial",
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/resting.png",
+          "references/sitting.png"
+        ],
+        "promptFile": "prompt-seated.txt"
+      },
+      "promptSha256": "92e4b188293aabf0b0752f93a2c1249e7ac318a47ce6c0174bf67952636d5243",
+      "prompt": "Use case: identity-preserve. Production sprite revision for Mosey Gemini. Input1 is the exact identity/style reference. Keep identical big round head, tiny squat body, thick dark outline, simple flat cel shading, blue-purple broad hair locks, pink-inner blue cat ears, top curl, star clip on VIEWER-RIGHT, VIEWER-LEFT magenta iris and VIEWER-RIGHT amber iris, white/navy-purple dress with gold chest star, boots and ONE attached blue-purple tail on VIEWER-RIGHT. No side swaps, no extra anatomy, no accessory redesign. True transparent alpha, no background, ground shadow, grids, text, numbers, effects or new props. Full body and all hair/ears/tail fit inside every cell with generous clear margins. Never scale the head between frames.\nInput2 is the approved awake-seated endpoint. Create ONE coherent TWELVE-frame sprite sheet, FOUR columns by THREE rows,2048x1536. Every cell512x512 with fixed centerx256 and foot/contact liney465. Input1 standing scale and Input2 seated head size are identical; preserve this exact head width and hair volume through all frames. This replaces flickering drawings from multiple generations, so consistent proportions and connected anatomy are more important than variety.\nRead left-to-right, row-major. Frames1–8 form a smooth monotonically lowering STAND→SIT transition. Feet remain planted; pelvis descends by joint bending only; crown continuously lowers, never bounces upward. Front-facing head, neck, collar, shoulders and chest-star all stay aligned; no independent sideways yaw. Arms and hands move continuously from side to knees. Same opaque shape scale, no shrinking silhouette to simulate sitting.\n1 exact neutral standing Input1.\n2 knees begin bending slightly; hands move a little forward.\n3 slightly deeper bend; shoulders/head lower a small step; hands approach thighs.\n4 half squat; elbows bend and hands settle above knees.\n5 deeper squat; same head size; pelvis lower.\n6 pelvis begins settling back down; short knees fold together; hands remain supported on knees.\n7 almost fully seated, torso upright and legs folded in front.\n8 exact awake seated endpoint of Input2, hands on knees, eyes open, original head size.\nFrames9–12 are a SEATED IDLE LOOP at EXACT SAME sitting height/head size/hair volume as frame8:\n9 same seated pose, hands on knees, calm open eyes.\n10 VIEWER-RIGHT hand rises only halfway to cheek, wrist at upper-chest level beside gold star, elbow bent.\n11 hand gently supports cheek; small natural elbow lift, HEAD REMAINS THE SAME HEIGHT and no sideways body shift. Eyes awake, small smile.\n12 hand lowers halfway back toward knee, wrist at mid-chest. The loop can continue12→9 without a body-height jump.\nHair and tail volume MUST NOT inflate or shrink when hand rises. Preserve pink/magenta iris viewer-left and amber viewer-right in every frame. Mouth small and calm. Draw genuine intermediate knee/elbow configurations, not duplicates. No yawn, sleep, closed eyes, floating props or giant head change.\n",
+      "inputs": [
+        {
+          "file": "references/resting.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/sitting.png",
+          "sha256": "48c5196de2a01f6292bca948f7a8edd19f01fa59cdda0afd3f930e7cdcec811b",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "seated-source.png",
+        "sha256": "18b2cfaab0d7a012017681487579804216d0857ec95ff90e8101c988bd8337be",
+        "width": 1448,
+        "height": 1086
+      },
+      "toolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-7db36e6c-b398-4cc5-8346-87162015e7b4.png",
+      "status": "rejected",
+      "reason": "After normalizing overall height, head too small and torso/legs too long compared with production idle.",
+      "grid": { "columns": 4, "rows": 3 }
+    },
+    {
+      "id": "seated-proportion-correction",
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "seated-source.png",
+          "references/resting.png",
+          "references/sitting.png"
+        ],
+        "promptFile": "prompt-seated-proportion-fix.txt"
+      },
+      "promptSha256": "432f5e1a0b8d7790816e36a9e978b279e4af3881fc75dc614d8d6f8965c94f95",
+      "prompt": "Use case: identity-preserve. Targeted proportion correction only.\nInput1 is a twelve-pose4columns×3rows Gemini animation sheet. Keep its exact grid, all pose actions/order, body centers, foot/contact baselines, transparent margins and motion progression. Input2 is the EXISTING production standing identity, and Input3 the EXISTING awake seated identity.\nProblem in Input1: heads/faces are a little too small and torso/legs too long compared with Input2/3. Fix ALL TWELVE FIGURES consistently so the head/body ratio exactly matches Input2/3. Do NOT scale whole characters.\nIncrease head/face width roughly8% and head height about6–8%, anchoring the TOP CROWN of each head at the SAME vertical position. Expand the head mostly downward so chin/neck/collar become lower and the torso/legs shorten correspondingly, while feet stay in place. Preserve the original big cheek/eye shape and large face of Input2. Standing figure height must remain unchanged. Hair volume should also return to the broader production silhouette, not narrower/slimmer redesigned hair. Keep the same head dimensions in the seated frames as in standing.\nThe head, neck, shoulders, collar and chest star MUST remain anatomically connected. Do not cover the collar with a floating head; adjust the small torso naturally to meet the larger head. Hands should follow their existing pose location relative to knees/chest/cheek, preserving the smooth eight-step standing-to-sitting motion in rows1–2 and the four-frame awake hand-to-cheek seated loop in row3. Preserve monotonically lowering crown height for frames1–8 and equal seated crown height for frames8–12.\nKeep identity exactly: magenta iris VIEWER-LEFT, amber iris VIEWER-RIGHT, viewer-right star hair clip, cat ears, blue-purple long hair, white/navy-purple costume, chest star, short boots and attached tail. Match thick outline and flat cel shading. True transparent PNG with the SAME4×3 layout. No text, background, grid, props, effects, added details, extra hands, sleeping or changed facial expression.\nInput2/3 are strict anatomy/proportion authorities, not optional mood references. This is to prevent a head-size jump when original standing frames transition to this sheet.\n",
+      "inputs": [
+        {
+          "file": "seated-source.png",
+          "sha256": "18b2cfaab0d7a012017681487579804216d0857ec95ff90e8101c988bd8337be",
+          "width": 1448,
+          "height": 1086
+        },
+        {
+          "file": "references/resting.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/sitting.png",
+          "sha256": "48c5196de2a01f6292bca948f7a8edd19f01fa59cdda0afd3f930e7cdcec811b",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "seated-corrected-source.png",
+        "sha256": "cab64ccc0ac6d7c61b4066609e9f6144a5d8841f19578ffa8a9735103b575990",
+        "width": 1448,
+        "height": 1086
+      },
+      "toolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-398e21d7-44b6-4721-9190-54dc96770859.png",
+      "status": "accepted-with-selection",
+      "reason": "Broader chibi head and shorter body bring standing pose close to existing idle. Index7 excluded because it drops crown7px below the seated loop entry. Use0..6,8 for downward transition and8..11 for seated loop.",
+      "grid": { "columns": 4, "rows": 3 }
+    },
+    {
+      "id": "falling-upright",
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/resting.png",
+          "references/falling.png"
+        ],
+        "promptFile": "prompt-falling.txt"
+      },
+      "promptSha256": "d28f1f78d850bf2600e3287842917d339f0a211d642a5aefdf7f17613c57481a",
+      "prompt": "Use case: identity-preserve. Production sprite revision for Mosey Gemini. Input1 is the exact identity/style reference. Keep identical big round head, tiny squat body, thick dark outline, simple flat cel shading, blue-purple broad hair locks, pink-inner blue cat ears, top curl, star clip on VIEWER-RIGHT, VIEWER-LEFT magenta iris and VIEWER-RIGHT amber iris, white/navy-purple dress with gold chest star, boots and ONE attached blue-purple tail on VIEWER-RIGHT. No side swaps, no extra anatomy, no accessory redesign. True transparent alpha, no background, ground shadow, grids, text, numbers, effects or new props. Full body and all hair/ears/tail fit inside every cell with generous clear margins. Never scale the head between frames.\nInput2 is the old airborne pose for pose context, NOT a sequence to copy. Replace an unstable tumbling loop with FOUR coherent drawings in a2x2 grid, one full figure per equal square cell. Output square2048x2048.\nAll four frames portray the SAME gently falling posture: torso upright with a small consistent forward lean, head/neck/shoulders/chest star obey the same orientation; both knees softly bent and short boots below the hips ready to land, hands open out to the sides below shoulder height for balance. Keep the face visible, eyes alert and mouth a small worried oval. Hair tips and tail softly lifted by upward air flow. No huge raised wall of hair, no curled seated cannonball, no tumbling, face-down dive, upside-down frame or landing contact.\nThe loop is a very small breathing/sway cycle, NOT a progression from upright to faceplant:\n1 balanced falling reference pose, left hair tips slightly higher.\n2 same body/head orientation, hair tips drift toward center, wrists gently relax2degrees.\n3 same orientation and head size, right hair tips slightly higher, small trailing tail sway.\n4 returns halfway toward frame1 with hair tips centered, matching limbs/head/shoulders so frame4→1 is as small as1→2.\nBody center, crown height, boot low point and drawing scale are fixed across all four cells. Each figure standing-scale height about700px in1024px cell, centered x512, feet low pointy860; preserve empty margin around every limb. The BODY POSE MUST NOT CHANGE BETWEEN FRAME1 AND4 beyond tiny wrist/hair/cloth secondary motion. Correctly connect chin/neck to collar, and collar/star to shoulders and torso. Keep chest star centered on sternum, never floating or twisted against shoulders.\n",
+      "inputs": [
+        {
+          "file": "references/resting.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/falling.png",
+          "sha256": "3ffd7026af2630335371d008a9846b80b63ba3829dc6648567f30a2302c3282f",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "falling-upright-rejected.png",
+        "sha256": "6caf4e935315a64b393fae6ce89126ad7a43f43341f5edb0117f6f9db6ce786f",
+        "width": 1254,
+        "height": 1254
+      },
+      "toolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-d0db0c50-cba9-4f03-af2f-80808842ab1e.png",
+      "status": "rejected",
+      "reason": "Steady upright loop would break head/body direction continuity into the existing face-down landing first frame.",
+      "grid": { "columns": 2, "rows": 2 }
+    },
+    {
+      "id": "falling-forward-loop",
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/falling-end.png",
+          "references/landing-start.png"
+        ],
+        "promptFile": "prompt-falling-continuity.txt"
+      },
+      "promptSha256": "febc1310f086d36b8614cd01c3c1c40e7983d4163390d40c909db830833f96f1",
+      "prompt": "Use case: identity-preserve. Correct a looping animation while preserving landing continuity.\nINPUT1 is the EXISTING final falling pose of Gemini. INPUT2 is the EXISTING FIRST LANDING pose that follows. Both show the same character leaning/tilting strongly forward in the same direction with BOTH arms reaching down/forward, knees/boots behind, hair lifted upward.\nCreate FOUR new gently moving falling poses in a2x2 transparent sprite sheet, square2048x2048. These are a STEADY LOOP near INPUT1's exact forward-tilted orientation, not a transition sequence and not a spin. The character must NEVER return upright or sit in midair. Frame4→1 should be a tiny motion with no change of pitch/roll.\nUse INPUT1 as the exact body/head orientation and identity. Keep neck, head, shoulder line, collar, chest, skirt and rear legs connected with exactly the same perspective. Preserve giant chibi head size, camera, body scale, long blue-purple hair, cat ears, viewer-right star clip, dress, boots and attached tail. Both palms reach down/forward for landing with two arms and10fingers total. Face eyes remain squeezed shut and mouth small startled oval, matching the landing anticipation. Do not introduce awake frontal smile or new expressions.\nAll four drawings occupy identical fixed cell center/scale/anchor; reserve generous transparent margins. Hair may softly sway but overall silhouette size must remain stable. Head cannot inflate and torso cannot shrink.\nFrame1: nearly exact Input1 forward-tilted falling pose, hands open ready to land.\nFrame2: exactly same torso/head pitch, wrists relax a couple degrees and left hair tips drift very slightly inward.\nFrame3: same pose, right hair tips drift very slightly inward, fingers flex a tiny amount.\nFrame4: same pose halfway back to frame1's wrist/hair positions, finishing with no angle discontinuity.\nKeep the shoulder/head direction compatible with Input2's landing first frame so the loop can switch into landing at any time. No floor/contact plane is drawn; this is still airborne. True transparent alpha. NO text, numbers, grid lines, shadows, motion streaks, effects, external objects or extra limbs. Production game sprite quality matching the exact references, not redesigned character art.\n",
+      "inputs": [
+        {
+          "file": "references/falling-end.png",
+          "sha256": "64767db6c0cd06cc7d006b71ed5a123da02bee7ad57e5bebacd128b3b02516de",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/landing-start.png",
+          "sha256": "c3e2fa0fa7ed39da63d7e73669fb700edffa34b1ebb5967df0f096d8083dfbb6",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "falling-source.png",
+        "sha256": "23d10643be88758ad7be3992d31b7759dac08ea17130803d66c05cb1a802b087",
+        "width": 1254,
+        "height": 1254
+      },
+      "toolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-32ae88bf-5552-4956-ab18-e257e20a9a52.png",
+      "status": "accepted",
+      "reason": "Four forward-tilted poses with small hand/hair motion remove the old upright reset and retain falling-to-landing direction.",
+      "grid": { "columns": 2, "rows": 2 }
+    }
+  ],
+  "processing": {
+    "record": "processing-record.json",
+    "script": "prepare.mjs",
+    "scriptSha256": "f51c3e3f30a5503fc40b4a466a92cfa10112601f6c2ec39925205348f1621b57",
+    "manifest": "replacements.json",
+    "manifestSha256": "74f1332270c4f5ed8b79ac774767fbe4247b6f36626abbb2dd3e0d6f19be629a"
+  },
+  "outputs": [
+    {
+      "file": "sprites/sittingdown.webp",
+      "sha256": "6c40f9548afcc9c86b9166d78d761ac3d94812502be0ee7ed67a43beab3527c7",
+      "width": 4320,
+      "height": 480
+    },
+    {
+      "file": "sprites/sitting.webp",
+      "sha256": "b193927cf74bb6c92a2dd730c360e764fcfdf432064cc9f42550f6ee02f8be22",
+      "width": 2400,
+      "height": 480
+    },
+    {
+      "file": "sprites/standingup.webp",
+      "sha256": "5a2f3ed11e66f0306836d3410d39a977333b19cb3ca683bb3cdb7fee831088c6",
+      "width": 4320,
+      "height": 480
+    },
+    {
+      "file": "sprites/falling.webp",
+      "sha256": "6e5aaeec6f8669ee031d1efbfbd7d3f6f4ad7b1d6f911d6f8860facba6655ecb",
+      "width": 1920,
+      "height": 480
+    }
+  ],
+  "qa": {
+    "evidenceDirectory": "test-results/motion-coherence/gemini",
+    "scope": { "runtime": 16, "gentle": 5, "expressive": 4 },
+    "contactSheets": "All25 original actions, all4 revised actions inspected.",
+    "browser": "Headless Chromium loaded29 cards, no page errors; normal and half-speed playback sampled. Screenshots inspected; not a claim of exhaustive perceptual measurement.",
+    "screenshots": [
+      "browser-all-normal.png",
+      "browser-all-half.png",
+      "browser-revisions-mid.png",
+      "browser-revisions-end.png",
+      "falling-landing-compare.png",
+      "standing-corrected-compare.png"
+    ],
+    "limitations": "Visual judgment of chibi motion; revision0 differs slightly in hair and clothing contour from original resting. Existing original idle retained at transition endpoints."
+  }
+}

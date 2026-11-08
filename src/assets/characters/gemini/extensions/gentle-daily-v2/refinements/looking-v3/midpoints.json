@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "action": "looking",
+  "image": "midpoints.webp",
+  "sha256": "e7487d3960f4ed2f5cb9c4286f48b3b1bd80e193689e1527d586f2d662afb540",
+  "width": 2880,
+  "height": 480,
+  "frames": [
+    {
+      "file": "generated-front-left.png",
+      "cell": 0,
+      "from": 0,
+      "to": 1,
+      "t": 0.5,
+      "description": "视线先向左，头部小幅跟随，保持在原左转端点之前。",
+      "index": 0,
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    },
+    {
+      "file": "generated-left-front.png",
+      "cell": 0,
+      "from": 1,
+      "to": 0,
+      "t": 0.3333333333333333,
+      "description": "视线先回中央，头仍轻微朝左。",
+      "index": 1,
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    },
+    {
+      "file": "generated-left-front.png",
+      "cell": 1,
+      "from": 1,
+      "to": 0,
+      "t": 0.6666666666666666,
+      "description": "头进一步回正，仍保留极轻左向。",
+      "index": 2,
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 887,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    },
+    {
+      "file": "generated-front-right-corrected.png",
+      "cell": 0,
+      "from": 0,
+      "to": 2,
+      "t": 0.3333333333333333,
+      "description": "视线先右移，面部只微微向右。",
+      "index": 3,
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    },
+    {
+      "file": "generated-front-right-corrected.png",
+      "cell": 1,
+      "from": 0,
+      "to": 2,
+      "t": 0.6666666666666666,
+      "description": "头部继续向右跟随，幅度小于原右转端点。",
+      "index": 4,
+      "region": {
+        "x": 1920,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 887,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    },
+    {
+      "file": "generated-right-front.png",
+      "cell": 1,
+      "from": 2,
+      "to": 3,
+      "t": 0.5,
+      "description": "视线回中央，头从右向正面恢复。",
+      "index": 5,
+      "region": {
+        "x": 2400,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "sourceRegion": {
+        "x": 887,
+        "y": 0,
+        "width": 887,
+        "height": 887
+      }
+    }
+  ],
+  "processing": {
+    "script": "prepare.mjs",
+    "alphaThreshold": 128,
+    "uniformScale": 0.5355129650507328,
+    "allFramesSourceCellSize": 887,
+    "allFramesResizedCellSize": 475,
+    "allFramesPlacement": {
+      "x": 3,
+      "y": 3
+    },
+    "foot": {
+      "x": 240,
+      "y": 462
+    },
+    "basis": "One common scale for all six generated poses; first original frame visible height382 and first generated pose height713. Integer full-cell resize475/887, fixed translation(3,3), no per-frame correction.",
+    "atlasAssembly": "Direct RGBA row copy; lossless WebP."
+  }
+}

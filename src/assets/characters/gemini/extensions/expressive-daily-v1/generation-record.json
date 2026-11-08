@@ -1,0 +1,327 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "source": {
+    "file": "source-v1.png",
+    "originalPath": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-929db0b5-a70f-4021-8e50-a17963d0504b.png",
+    "sha256": "04b3dd5f5b7bd7cf4cf8688410b9dec9890d5802fa44de4067037131e1c0d2d8",
+    "width": 1254,
+    "height": 1254
+  },
+  "reference": {
+    "file": "reference-standing.png",
+    "sha256": "38eeaffa18fd216ce2fd733b89e35fc79ee2cb48ed7987b08b0667c1408c85b5",
+    "derivedFrom": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "promptFile": "prompt.txt",
+  "grid": {
+    "columns": 4,
+    "rows": 4,
+    "boundaries": "round(index * dimension / 4)"
+  },
+  "actions": {
+    "petted": {
+      "frames": [0, 1, 2, 3],
+      "semantics": [
+        "neutral",
+        "lean and soften eyes",
+        "contented closed eyes and nuzzle",
+        "return to neutral"
+      ]
+    },
+    "grooming": {
+      "frames": [4, 5, 6, 7],
+      "semantics": [
+        "raise hand",
+        "adjust viewer-right star clip",
+        "smooth fringe beside cheek",
+        "lower hand"
+      ]
+    },
+    "celebrating": {
+      "frames": [8, 9, 10, 11],
+      "semantics": [
+        "hands raised apart",
+        "palms together clap",
+        "hands separate for repeat clap",
+        "return to neutral"
+      ],
+      "suggestedRepeat": [8, 9, 10, 9, 10, 11]
+    },
+    "habit": {
+      "frames": [12, 13, 14, 15],
+      "semantics": [
+        "ears alert gaze right",
+        "turn head toward own tail",
+        "reach to connected tail tip",
+        "return to neutral"
+      ]
+    }
+  },
+  "frameBoundsAlpha128": [
+    {
+      "frame": 0,
+      "sourceCell": {
+        "x": 0,
+        "y": 0,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 42,
+        "y": 19,
+        "width": 250,
+        "height": 275
+      },
+      "pixelsAboveThreshold": 48415
+    },
+    {
+      "frame": 1,
+      "sourceCell": {
+        "x": 314,
+        "y": 0,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 349,
+        "y": 19,
+        "width": 246,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48079
+    },
+    {
+      "frame": 2,
+      "sourceCell": {
+        "x": 627,
+        "y": 0,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 658,
+        "y": 23,
+        "width": 246,
+        "height": 271
+      },
+      "pixelsAboveThreshold": 48646
+    },
+    {
+      "frame": 3,
+      "sourceCell": {
+        "x": 941,
+        "y": 0,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 966,
+        "y": 18,
+        "width": 247,
+        "height": 277
+      },
+      "pixelsAboveThreshold": 48292
+    },
+    {
+      "frame": 4,
+      "sourceCell": {
+        "x": 0,
+        "y": 314,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 41,
+        "y": 332,
+        "width": 249,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48278
+    },
+    {
+      "frame": 5,
+      "sourceCell": {
+        "x": 314,
+        "y": 314,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 353,
+        "y": 332,
+        "width": 244,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48161
+    },
+    {
+      "frame": 6,
+      "sourceCell": {
+        "x": 627,
+        "y": 314,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 661,
+        "y": 332,
+        "width": 245,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48056
+    },
+    {
+      "frame": 7,
+      "sourceCell": {
+        "x": 941,
+        "y": 314,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 967,
+        "y": 332,
+        "width": 248,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48271
+    },
+    {
+      "frame": 8,
+      "sourceCell": {
+        "x": 0,
+        "y": 627,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 42,
+        "y": 645,
+        "width": 249,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48151
+    },
+    {
+      "frame": 9,
+      "sourceCell": {
+        "x": 314,
+        "y": 627,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 350,
+        "y": 645,
+        "width": 246,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48077
+    },
+    {
+      "frame": 10,
+      "sourceCell": {
+        "x": 627,
+        "y": 627,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 660,
+        "y": 645,
+        "width": 246,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48103
+    },
+    {
+      "frame": 11,
+      "sourceCell": {
+        "x": 941,
+        "y": 627,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 968,
+        "y": 645,
+        "width": 247,
+        "height": 276
+      },
+      "pixelsAboveThreshold": 48274
+    },
+    {
+      "frame": 12,
+      "sourceCell": {
+        "x": 0,
+        "y": 941,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 40,
+        "y": 960,
+        "width": 252,
+        "height": 275
+      },
+      "pixelsAboveThreshold": 48385
+    },
+    {
+      "frame": 13,
+      "sourceCell": {
+        "x": 314,
+        "y": 941,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 347,
+        "y": 961,
+        "width": 250,
+        "height": 274
+      },
+      "pixelsAboveThreshold": 47381
+    },
+    {
+      "frame": 14,
+      "sourceCell": {
+        "x": 627,
+        "y": 941,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 654,
+        "y": 961,
+        "width": 250,
+        "height": 274
+      },
+      "pixelsAboveThreshold": 47655
+    },
+    {
+      "frame": 15,
+      "sourceCell": {
+        "x": 941,
+        "y": 941,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 967,
+        "y": 960,
+        "width": 249,
+        "height": 275
+      },
+      "pixelsAboveThreshold": 48452
+    }
+  ],
+  "review": {
+    "identity": "Preserves magenta viewer-left eye, amber viewer-right eye, star clip on viewer-right, blue-purple ears/hair/tail and clothing.",
+    "poses": "All four rows are visibly distinct. Petting reaction closes eyes; grooming hand reaches correct clip; clap palms meet clearly; habit reaches connected tail. Feet remain grounded.",
+    "limitations": "Raw image contains low-alpha colored fringes/patches in gutters. Use existing alpha<128 cleanup during preparation. Requested2048 output returned1254; recorded exact grid/bounds are authoritative."
+  }
+}

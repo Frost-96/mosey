@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "character": "whale",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "source": {
+    "file": "source-v1.png",
+    "sha256": "81f42c69c42e1b3f3f1bd3e394590b5b4f78aecbbd96f22213da95057a75736e",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "reference": {
+    "file": "reference-standing.png",
+    "sha256": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4",
+    "source": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "promptFile": "prompt.txt",
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major"
+  },
+  "rows": [
+    {
+      "action": "petted",
+      "description": "Enjoys an unseen head pat: leans, closes eyes, returns."
+    },
+    {
+      "action": "grooming",
+      "description": "Smooths hair, touches the headband, lowers hand."
+    },
+    {
+      "action": "celebrating",
+      "description": "Raises hands, claps, separates palms, lowers hands."
+    },
+    {
+      "action": "habit",
+      "description": "Smooths apron, looks at attached whale tail as it sways, returns."
+    }
+  ],
+  "review": {
+    "identity": "Original costume, ears, eyes, headband, whale emblem and attached tail preserved.",
+    "dimensions": "Use actual source dimensions and rounded quarter-cell boundaries.",
+    "constraints": "No external hand, text, background or added prop."
+  }
+}

@@ -1,0 +1,15 @@
+Use case: identity-preserve.
+Production replacement sprite drawings for Mosey. Match the exact Claude girl in the approved reference: huge orange-haired chibi head, amber eyes, flower and black bow on VIEWER-RIGHT, cream-black-orange costume, cream boots, one brown book with orange flower on VIEWER-LEFT. Exactly two arms and two hands total. Match head shape/size, thick dark lines, flat cel colors, proportions and camera. No redesign, no fine realistic rendering.
+True transparent alpha. No background, drawn floor/shadow, grid lines, numbers, words, extra props, effects or external hands. Canvas wide 2048×1024, FOUR columns by TWO rows of equal512-square cells, eight complete separate figures with generous transparent gutters. Same drawing scale in all8, local center x256 and foot/contact baseline y455. Head width and crown-to-chin dimensions identical all8. Full flower/hair/hand/boots inside cell. Camera near-front, shoulder line/chest flower and face share coherent orientation.
+CRITICAL ARM RULE: the hand on VIEWER-LEFT hugs the closed book to the left side of chest throughout ALL8. That entire book-holding arm stays down in the same reference pose. Only the arm on VIEWER-RIGHT moves. Never draw an extra arm behind the book or lift the viewer-left arm. Book cannot float or switch hands.
+ROW1 is gentle greeting/wave, four successive keyposes:
+1 exact neutral reference.
+2 viewer-right free arm bends slightly, hand midway from hip toward shoulder, elbow near torso, gentle smile.
+3 viewer-right hand raised beside viewer-right cheek at ear height, OPEN palm toward viewer, wrist upright, warm open-eyed smile. Book and its hugging hand stay left.
+4 viewer-right hand waves gently outward by rotating wrist, palm still near cheek, eyes softly closed in delight; same shoulder and elbow, slight wrist move only.
+ROW2 is one-arm shoulder stretch, four successive keyposes:
+5 exact neutral reference.
+6 viewer-right free forearm begins rising, hand halfway up at chest, elbow softly bent, relaxed face.
+7 viewer-right free hand reaches next to head, elbow lifted slightly away from body, palm relaxed, eyes starting to close.
+8 viewer-right free arm extends upward in a comfortable stretch, elbow nearly straight, hand above viewer-right side of head but fully in cell, eyes closed with tiny relaxed smile. The viewer-left book-holding shoulder stays natural; no second raised arm.
+All raised hands must be on the SAME VIEWER-RIGHT side. Natural shoulder elevation follows the raised arm slightly, with neck attached and chest flower centered. Arms must connect to their corresponding shoulders, no disconnected sleeve or third hand. Sequence will be played forward then in reverse, so keep all transitions progressive and modest.

@@ -1,0 +1,17 @@
+Use case: identity-preserve. Draw FOUR real intermediate animation poses for this ONE awake-seated action. Read the supplied endpoint pairs carefully; do not invent a left/right oscillation.
+INPUT1 contains FOUR pairs in a2×2 grid. Within each pair, A is on the left, B on the right. INPUT2 is the exact seated character model at480×480.
+Output ONE NEW solid halfway pose per pair, in the same2×2 arrangement. Only FOUR figures. Do not reproduce the endpoints or blend them.
+
+CRITICAL CORRECTION: in the original frames, key8 is front-facing, key9 begins looking a LITTLE toward VIEWER-RIGHT, key10 looks MORE toward VIEWER-RIGHT, and key11 returns front. Therefore the missing key9→key10 drawing must ALSO face slightly RIGHT, between their two right-looking angles. It must NOT pass through a front-facing or left-facing pose.
+The output's four poses should be: very slightly right / moderately right / halfway back from right / essentially front with tiny settling eye movement.
+
+Maintain the exact original seated body geometry in all4 cells: HUGE SAME-SIZE HEAD, same crown and horns height, shoulders, torso, folded legs, hands resting in exactly the same place on lap, shoes, wings and curled tail. No shrinking, lowering, squashing, leaning the torso, or changing costume. Both eyes stay open. Same white/lilac hair, cream curved horns, purple eyes, pointed ears, violet wings and tail, white/lilac dress with original spiral rosette, round boots. Same simple thick outline and flat cel color style. Only small head-turn and eye-focus changes, physically halfway between endpoints. Keep head size and eye size identical.
+
+GEOMETRY GUIDE IN480×480 CELL COORDINATES (scale uniformly if output larger):
+Original full seated silhouette is x≈80..410, y≈95..462; centeredx240, contact baseliney462. Keep those body/head dimensions and ground contact in ALL four cells. Do not draw a shorter seated figure. HANDS are fixed around y410, boots bottomy462. The following small facial coordinates describe the requested in-between turns, not a change of drawing scale:
+TOP LEFT (key8→9, t0.5): tiny rightward head turn, mouth center aboutx244,y290; open purple pupil centers roughlyx209 and278,y265. This is slightly more right-looking than key8, but less than key9.
+TOP RIGHT (key9→10, t0.5): rightward head turn midway between these two endpoints, mouth aboutx255,y285; pupils roughlyx219 and287,y258. Both eyes visible; do not turn through front.
+BOTTOM LEFT (key10→11, t0.5): halfway return from rightward look to front, mouth aboutx253,y287; pupils roughlyx217 and285,y261. Less turned than key10. No new head tilt.
+BOTTOM RIGHT (key11→8, t0.5): near-front bridge, mouth aboutx242,y291; eyes gently settling from a slightly raised gaze toward forward, pupil centers aboutx208 and276,y268. Same open eyes, no sleep or blink.
+
+Output square transparent PNG, exactly TWO columns and TWO rows, ideally960×960 with480×480 invisible cells. If another resolution is used, scale all geometry uniformly, not the character independently per cell. Transparent margins, complete unclipped horns/hair/wings/tail/feet. No labels, letters, grid, background, gray board, shadows, floor, symbols or props. FOUR NEW halfway drawings, not duplicates, no ghosting or translucent blending.

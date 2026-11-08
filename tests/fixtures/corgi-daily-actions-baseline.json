@@ -1,0 +1,93 @@
+{
+  "materialFiles": {
+    "src/assets/corgi-belly.png": "4e358b3e6db4001c2e6687c24252f0f4ce8a698252541dede293df575602f5f7",
+    "src/assets/corgi-climb.png": "59678abecf3a355c750f821a1dbf6a10843efcf2c20f2af79e391487950ed039",
+    "src/assets/corgi-idle.png": "d68ae62b89a52458f240c65e625031773be4338717de8c0a27562ea81fe03929",
+    "src/assets/corgi-paw.png": "bff6284431bb519e71e601c678c3cab93f94adfe95e8594f99aadfa9bc0b2d25",
+    "src/assets/corgi-play.png": "5603eecbdce400d08406e25e9408ae9a41b896a986fd6b846c557654e153c3c1",
+    "src/assets/corgi-return.png": "f95a05f1f8f5a3c147892a5d6b93708d7bd034f9af59775b2196aefd44b386b3",
+    "src/assets/corgi-sleep.png": "73a287404289b06cd4904da6cdd683526ca3d9f0f3bcc5ddd2d8e2456342391c",
+    "src/assets/corgi-stretch.png": "0072ca7a00a94756bc3ed6a9d0c2c278eeadf1f542b099759f812117c913851d",
+    "src/assets/corgi-tilt.png": "35a64dadef84c60ea03f4229355231702aa89c90dd7f482c56852ecd871a0c78",
+    "src/assets/corgi-wake.png": "51cb221fe427841a36ec72c2a30dcc9e6a7b9d4be1f60a9903dc9c1d2eb3d9bd",
+    "src/assets/corgi-walk.png": "b1949700885d1131555c1bc5d11f7b52855a0994323193e07d5ffe95912d7bc2",
+    "src/assets/generated/belly-atlas.json": "4986d95dfde74edc6709adebef503f21eec335eaf238e280a7bc371e5d6d642b",
+    "src/assets/generated/belly-atlas.png": "e414a906d6e06c036d4d8abc0a2daaaa369843a4acba948731b6a16f6a9b85f0",
+    "src/assets/generated/climbing-atlas.json": "135842bbe620099dfbe18e72654a825236ff291abe277639ad9282c4f649c9d2",
+    "src/assets/generated/climbing-atlas.png": "9c4f65ba7bc65b6171ff4e158522659d6f01729aeca55762606f17a7b63d5971",
+    "src/assets/generated/dragging-atlas.json": "0dcaaeed518db7dd9cbd7dd0d71989f4e56b32a749e013888deaa991f85d91a3",
+    "src/assets/generated/dragging-atlas.png": "42349cb4f7992edf59e045bea50e2da0cb5f6e8aed106a51d870b2bad9e6e561",
+    "src/assets/generated/ear-atlas.json": "8c2f1bf30b28ca214d7bd031a4a6c1b2ac69ab424261f1904c89ac27c5697f72",
+    "src/assets/generated/ear-atlas.png": "379c27796355b7064330dabbd201a47dd66bd0e3930db9a329f6a43ead46e96b",
+    "src/assets/generated/falling-atlas.json": "341038007c62dc016f88689cb1985f849f7e363660279577775b908cf4ce2ad4",
+    "src/assets/generated/falling-atlas.png": "93687364d410d7426cd2441f9b058c3262eff69e37a5077c8ef22d621de3cf4d",
+    "src/assets/generated/flutter-atlas.json": "ba4f1f7a7c3b80a18fceb893588a13887cf9071493dbe2cf1cfc91a4973e4254",
+    "src/assets/generated/flutter-atlas.png": "957fef4a048fa90af38d9b49c4ddbc389d65ae5135b3e44aae892500dbe12010",
+    "src/assets/generated/idle-atlas.json": "ae805a42d0d5195b9a8812dabf3b3a453c08dc9ca07492239ffd428a01b1e3be",
+    "src/assets/generated/idle-atlas.png": "145d3047b428696d55b0d584380418064f840d572eff14cde60b6a7eec9f896e",
+    "src/assets/generated/landing-atlas.json": "1f970745d04f9fe98e1a5f92de239bb5e32c266c9e99bbac8ad40df9707621d2",
+    "src/assets/generated/landing-atlas.png": "4e3fe1ceb80a621cf0119fdaf1f8bbcc24d147e4b5ed56309ca7a4539ca43040",
+    "src/assets/generated/paw-atlas.json": "483fefe92a72dbb5ad48afbb950eb04f4765e99fa3587db2c801609adc0bb322",
+    "src/assets/generated/paw-atlas.png": "c3edf23968cebbb5829a1c7684f332cc728d64bb0308186af1cbb786f24a0316",
+    "src/assets/generated/playing-atlas.json": "db8ae6c7c753388adaf1b68dc101dad27116580dde98f16fed251cf2c1dac844",
+    "src/assets/generated/playing-atlas.png": "faa2eb70dd013141c2d3c0b0bef6d1c9fef294810952ce2aea60a4c127fd9a3c",
+    "src/assets/generated/settling-atlas.json": "4480960098f7a4ce60dda0432b861b7a8c774bb07b2c4b936e3dca2baee8b946",
+    "src/assets/generated/settling-atlas.png": "f00cb74d44ab0e35b3cf226b0e967ac565cc6dea5499d1783810e4554e2dd093",
+    "src/assets/generated/sleeping-atlas.json": "3edc33de9d7a622f1209f707891d185cd885d8d2ebd8808bed5ab1376f864d58",
+    "src/assets/generated/sleeping-atlas.png": "b35c62ada3f4ed3e9f5f64f88be57aaefa128e1bbafc20a25b3b1d4504cde460",
+    "src/assets/generated/stretching-atlas.json": "2de8745b5dae0880a3acd61ad8eccd988905e78e03ec3842121205cbd305e2ba",
+    "src/assets/generated/stretching-atlas.png": "34418366e0c6a15b3b48cbaf92c65be92dcccbf7e28681d76ce6ac0ec4d34858",
+    "src/assets/generated/tilt-atlas.json": "2511f9af929381a35ecb041dbfd8c153bac2a8284d210cdf75868f1b179c0937",
+    "src/assets/generated/tilt-atlas.png": "b28cb63c6420a8b6e39b67f07b03e9898f976c1b4528c23f5171b49f67fe0f40",
+    "src/assets/generated/waking-atlas.json": "1395f8d748d403619f6eae2644ebc18beb8606137a5ca39b63955ab97fea36ab",
+    "src/assets/generated/waking-atlas.png": "9c02853b4c3853cd12daecf7b490d44aca2c1a8fc6663df51434d3f7dd3568dd",
+    "src/assets/generated/walking-atlas.json": "66e6e09d8eac5b550eecfde0fdc697cff200ef18ba8c622e5cce992ed30bb5d6",
+    "src/assets/generated/walking-atlas.png": "812b543c526b49a638c19da7c7712fc46000592f8a3f6c1374b1923660c679ef"
+  },
+  "runtimeActions": [
+    "belly",
+    "climbing",
+    "dragging",
+    "ear",
+    "falling",
+    "flutter",
+    "landing",
+    "paw",
+    "playing",
+    "resting",
+    "settling",
+    "sleeping",
+    "stretching",
+    "tilt",
+    "waking",
+    "walking"
+  ],
+  "capabilities": [
+    "sleep",
+    "stretching",
+    "playing",
+    "tilt",
+    "paw",
+    "belly",
+    "flutter",
+    "climbing"
+  ],
+  "autonomousDistribution": {
+    "samples": 1000,
+    "choice": "(index+0.5)/1000",
+    "counts": {
+      "walking": 450,
+      "stretching": 300,
+      "playing": 250
+    }
+  },
+  "clickDistribution": {
+    "samples": 300,
+    "choice": "(index+0.5)/300",
+    "counts": {
+      "tilt": 100,
+      "paw": 100,
+      "belly": 100
+    }
+  }
+}

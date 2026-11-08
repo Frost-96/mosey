@@ -1,0 +1,485 @@
+{
+  "format": "mosey-motion-coherence-provenance",
+  "version": 1,
+  "character": "gpt",
+  "action": "stretching",
+  "tool": "built-in image_gen.imagegen",
+  "attempts": [
+    {
+      "prompt": "prompt-v1.txt",
+      "promptSha256": "0d4156b9d0f4196b68a4206962ef56033539a516b1e70f85e9b25a641e7e62d7",
+      "inputs": [
+        {
+          "file": "reference-idle.png",
+          "sha256": "54acaad6d534f19123d016b110ec1d33bf8c22ebc9776815c25d0f5388b5c31b"
+        },
+        {
+          "file": "reference-old-motion.png",
+          "sha256": "29ce8f8937bcfcf3dc9beee132987c3411b30698a29bb719062c6ad6193fcafc"
+        }
+      ],
+      "output": {
+        "file": "source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "width": 1774,
+        "height": 887,
+        "toolSavedPath": "/Users/frost/.codex/generated_images/01a1b937-8c94-7810-9c49-0174ed78aa6c/exec-2f11322b-ae09-4605-ae88-35b3c86a5f36.png"
+      },
+      "adoptedIndices": [1, 2, 3, 4, 5, 6]
+    }
+  ],
+  "processing": {
+    "uniformScale": 1.015228426395939,
+    "scaleCalibration": "Reference original idle visible height400 / generated neutral0 visible height394",
+    "frameSize": 480,
+    "foot": {
+      "x": 240,
+      "y": 462
+    },
+    "background": "Transparent; preserve generated alpha",
+    "assembly": "Original RGBA crop and generated scaled crop copied row-by-row, no compositing originals, no pose warping, no crossfades",
+    "replacement": "stretching/replacement.webp",
+    "sha256": "391f91d3987b9bd7797976ce439b6bb771d4ef861d2dd97c1de721966ebe24de",
+    "finalBounds": [
+      {
+        "index": 0,
+        "kind": "original",
+        "visibleBounds": {
+          "left": 80,
+          "top": 62,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5798
+      },
+      {
+        "index": 1,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 77,
+          "top": 61,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5356
+      },
+      {
+        "index": 2,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 76,
+          "top": 62,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5316
+      },
+      {
+        "index": 3,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 72,
+          "top": 61,
+          "right": 412,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5258
+      },
+      {
+        "index": 4,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 75,
+          "top": 60,
+          "right": 409,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5395
+      },
+      {
+        "index": 5,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 77,
+          "top": 60,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5411
+      },
+      {
+        "index": 6,
+        "kind": "generated",
+        "visibleBounds": {
+          "left": 78,
+          "top": 60,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5417
+      },
+      {
+        "index": 7,
+        "kind": "original",
+        "visibleBounds": {
+          "left": 80,
+          "top": 62,
+          "right": 407,
+          "bottom": 462
+        },
+        "edge": 0,
+        "transparentFraction": 0.5798
+      }
+    ]
+  },
+  "frames": [
+    {
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 180,
+      "kind": "original",
+      "action": "resting",
+      "index": 0,
+      "source": {
+        "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/resting.webp",
+        "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 110,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 1,
+        "cell": {
+          "left": 444,
+          "top": 0,
+          "width": 443,
+          "height": 444
+        },
+        "bounds": {
+          "left": 61,
+          "top": 31,
+          "width": 325,
+          "height": 395
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 330,
+          "height": 401,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 77,
+          "top": 61
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 130,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 2,
+        "cell": {
+          "left": 887,
+          "top": 0,
+          "width": 444,
+          "height": 444
+        },
+        "bounds": {
+          "left": 60,
+          "top": 32,
+          "width": 326,
+          "height": 394
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 331,
+          "height": 400,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 76,
+          "top": 62
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 230,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 3,
+        "cell": {
+          "left": 1331,
+          "top": 0,
+          "width": 443,
+          "height": 444
+        },
+        "bounds": {
+          "left": 56,
+          "top": 31,
+          "width": 335,
+          "height": 395
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 340,
+          "height": 401,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 72,
+          "top": 61
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 1920,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 650,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 4,
+        "cell": {
+          "left": 0,
+          "top": 444,
+          "width": 444,
+          "height": 443
+        },
+        "bounds": {
+          "left": 59,
+          "top": 31,
+          "width": 329,
+          "height": 396
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 334,
+          "height": 402,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 75,
+          "top": 60
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 2400,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 200,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 5,
+        "cell": {
+          "left": 444,
+          "top": 444,
+          "width": 443,
+          "height": 443
+        },
+        "bounds": {
+          "left": 61,
+          "top": 31,
+          "width": 325,
+          "height": 396
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 330,
+          "height": 402,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 77,
+          "top": 60
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 2880,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 140,
+      "kind": "generated",
+      "source": {
+        "file": "stretching/source-v1.png",
+        "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+        "index": 6,
+        "cell": {
+          "left": 887,
+          "top": 444,
+          "width": 444,
+          "height": 443
+        },
+        "bounds": {
+          "left": 62,
+          "top": 31,
+          "width": 324,
+          "height": 396
+        }
+      },
+      "processing": {
+        "scale": 1.015228426395939,
+        "resize": {
+          "width": 329,
+          "height": 402,
+          "kernel": "lanczos3"
+        },
+        "placement": {
+          "left": 78,
+          "top": 60
+        },
+        "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+        "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+      }
+    },
+    {
+      "region": {
+        "x": 3360,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 180,
+      "kind": "original",
+      "action": "resting",
+      "index": 0,
+      "source": {
+        "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/resting.webp",
+        "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    }
+  ],
+  "notes": "Six newly drawn raise/hold/lower poses with a single group scale. Exact original idle frames at both ends. Stable head size and grounded legs; no whole-body shrinking during shoulder stretch.",
+  "archivedOriginals": [
+    {
+      "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+      "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+      "originalFile": "src/assets/characters/gpt/sprites/landing.webp"
+    },
+    {
+      "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/stretching.webp",
+      "sha256": "460a84bf54f8e1280c28f76e36887f1ca8c19a853b19af5894eadfa20d017c26",
+      "originalFile": "src/assets/characters/gpt/sprites/stretching.webp"
+    },
+    {
+      "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/resting.webp",
+      "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+      "originalFile": "src/assets/characters/gpt/sprites/resting.webp"
+    }
+  ],
+  "pathConvention": "Original source.file and archivedOriginals.file use repository-relative paths and point to immutable copied atlases. Local prompt/reference files are relative to this record directory; replacement image paths are relative to motion-coherence-v3."
+}

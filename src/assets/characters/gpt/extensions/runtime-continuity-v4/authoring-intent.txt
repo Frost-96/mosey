@@ -1,0 +1,2 @@
+Use only the stable existing seated key poses. Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family.
+Keep the first and last neutral seated anchors exact, preserve the full loop duration, and prefer a calm readable glance over extra frame count. No ImageGen was used; no prompt or generated new pose exists for this revision.

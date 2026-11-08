@@ -1,0 +1,7 @@
+{
+  "acceptedIndices": [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15],
+  "excluded": {
+    "3": "Both endpoints are nearly neutral; the redrawn pose contributes no meaningful intermediate movement.",
+    "12": "Thoughtful eyes/mouth remain too close to the upward-looking endpoint; avoid adding a redraw without meaningful positional interpolation."
+  }
+}

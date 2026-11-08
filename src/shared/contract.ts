@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { petSizeSchema } from "./size";
+import { atlasSchema } from "./assets";
 import {
   characterSchema,
   characterIdentitySchema,
@@ -11,24 +12,7 @@ export const presentationSchema = z.strictObject({
   ...characterResourceSchema.shape,
   size: petSizeSchema,
   geometryRevision: z.number().int().nonnegative(),
-  posture: z.enum([
-    "resting",
-    "sleeping",
-    "ear",
-    "waking",
-    "settling",
-    "walking",
-    "stretching",
-    "playing",
-    "tilt",
-    "paw",
-    "belly",
-    "dragging",
-    "flutter",
-    "falling",
-    "landing",
-    "climbing",
-  ]),
+  posture: atlasSchema.shape.action,
   direction: z.enum(["left", "right"]),
   actionId: z.number().int().nonnegative(),
   startedAt: z.number().nonnegative(),

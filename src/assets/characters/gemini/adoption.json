@@ -1478,63 +1478,71 @@
     },
     "falling": {
       "image": "sprites/falling.webp",
-      "sha256": "0ec0284b9785fd64fc163021374603bfb64eb43c690aef673dbc2468e7b71034",
+      "sha256": "6e5aaeec6f8669ee031d1efbfbd7d3f6f4ad7b1d6f911d6f8860facba6655ecb",
       "previewFrames": [
         {
-          "source": "gemini-air-v1",
-          "index": 8,
-          "durationMs": 80,
           "region": {
             "x": 0,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gemini-air-v1",
-          "index": 9,
-          "durationMs": 70,
           "region": {
             "x": 480,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gemini-air-v1",
-          "index": 10,
-          "durationMs": 80,
           "region": {
             "x": 960,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gemini-air-v1",
-          "index": 11,
-          "durationMs": 70,
           "region": {
             "x": 1440,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
           "anchor": {
             "x": 240,
             "y": 462
@@ -1547,7 +1555,14 @@
           "file": "provenance/images/6c1a13f3879c-gemini-air-v1.png",
           "sha256": "6c1a13f3879c020d55ef778f74a2c730b3c3e89f7bb45d4a310d43f1ea77172c"
         }
-      ]
+      ],
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "74f1332270c4f5ed8b79ac774767fbe4247b6f36626abbb2dd3e0d6f19be629a",
+        "image": "sprites/falling.webp",
+        "notes": "Small hair/hand loop in the same forward-tilted orientation as former final falling pose, compatible with existing landing entry; removes upright-to-face-down cycle reset."
+      }
     },
     "landing": {
       "image": "sprites/landing.webp",
@@ -2214,6 +2229,12 @@
       "frames": [10, 11],
       "record": "provenance/landing-rise-2026-11-06.json",
       "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    },
+    {
+      "id": "motion-coherence-v3",
+      "actions": ["falling"],
+      "file": "extensions/motion-coherence-v3/replacements.json",
+      "sha256": "74f1332270c4f5ed8b79ac774767fbe4247b6f36626abbb2dd3e0d6f19be629a"
     }
   ]
 }

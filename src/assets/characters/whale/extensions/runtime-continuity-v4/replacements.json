@@ -1,0 +1,148 @@
+{
+  "character": "whale",
+  "version": 4,
+  "actions": [
+    {
+      "family": "gentle",
+      "action": "sitting",
+      "image": "sitting.webp",
+      "sha256": "18e5800391da50d63fd4b81fc6b3eddbde721b73b4f99bf4b2297d003ab190b5",
+      "width": 2400,
+      "height": 480,
+      "loop": "repeat",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 900,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+            "frameIndex": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 800
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 220,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+            "frameIndex": 1,
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 180
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 500,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+            "frameIndex": 3,
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 500
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 220,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+            "frameIndex": 5,
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 200
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 480,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+            "frameIndex": 6,
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 400
+          }
+        }
+      ],
+      "notes": "Original keys only, no newly synthesized pose. Excluded short intermediate poses that raise hat/face/collar by10–14px above adjacent seated keys. Entry/exit neutral pixels retained; loop duration preserved; longer neutral holds and brief intermediate-key holds replace the distracting inserted-frame beats."
+    }
+  ]
+}

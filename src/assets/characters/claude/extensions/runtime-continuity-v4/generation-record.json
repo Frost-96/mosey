@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "character": "claude",
+  "purpose": "Minimal runtime continuity repair, preserving original neutral endpoints",
+  "pathResolution": "All relative paths are relative to this record. Original runtime atlases are archived in originals so adoption cannot invalidate hashes.",
+  "references": [
+    {
+      "file": "references/standing.png",
+      "sha256": "05829f92d02b2ddc52c96728be5c2ccd63366d7c79c63dc44cbc0ddddcc5cfb1",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/sittingdown.png",
+        "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+        "width": 3360,
+        "height": 480,
+        "frame": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    },
+    {
+      "file": "references/half-crouch.png",
+      "sha256": "d642eb3cc4092fc1eafe2c3c7c4c6e9ac80718fb247a174bb4e95ce8a00f0455",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/sittingdown.png",
+        "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+        "width": 3360,
+        "height": 480,
+        "frame": 1,
+        "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    },
+    {
+      "file": "references/falling-end.png",
+      "sha256": "e8aac3e2be9500f40b7652deea072405c30706ac743a2b3c0c19a9ced3b936e5",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/falling.png",
+        "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+        "width": 1920,
+        "height": 480,
+        "frame": 3,
+        "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    },
+    {
+      "file": "references/landing-first.png",
+      "sha256": "1f74c4fce8c9249f5bf2008535385c36a3f9ac891e39afc9a27cfd9561737b43",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/landing.png",
+        "sha256": "78f746ad80819879549f38035495243de7f3536d68f6bc98f806de65fba47b17",
+        "width": 6240,
+        "height": 480,
+        "frame": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    }
+  ],
+  "attempts": [
+    {
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/standing.png",
+          "references/half-crouch.png"
+        ]
+      },
+      "prompt": {
+        "file": "prompt-seated.txt",
+        "sha256": "8b53aead2bed5846c3acbf2b1dbaf92233b8c32dd73f6cf5408f3ac035007667",
+        "text": "Use case: identity-preserve. Production animation inbetween; transparent game sprite.\nReference1 is exact standing endpoint A. Reference2 is exact shallow crouch endpoint B. Draw ONE new full-body pose strictly HALFWAY between A and B, not a copy of either. This will be inserted in the timeline A→new→B and reused reversed for rising.\nPreserve EXACT character identity and rendering from A: huge orange-haired chibi head, orange flower and black/white bow on viewer-right, brown eyes, black dress with white blouse, orange neck ribbon, white boots; book stays held at viewer-left chest by the same hand. Head width and hair volume must match A, not shrink. Body, head and shoulders all frontal and connected.\nThe issue to fix is that A jumps straight to B's fully visible knees and low hand. The new pose needs only MILD knee bending: knees begin to come forward, not yet B's deeply exposed rounded knees. Hips and crown descend about4px in a480px canvas (A crown62, B crown70). Keep the same head size and shoe soles at y462. The free viewer-right hand moves from A's side position about halfway toward B's thigh/knee position; elbow starts bending, hand still above and outside the knee. Skirt hem follows this small crouch naturally, not shortening the dress. Book, neck flower and shoulders descend together with torso. Feet stay planted, same distance and center.\nOutput a single full character on genuinely transparent background in480×480 if possible. The visible character should approximately occupy x87..395,y66..462. If larger output is needed scale the entire canvas uniformly including margins. Keep original camera, flat cel colors, dark clean outlines, exact head/body proportions, calm eyes and tiny mouth. Complete hair/ribbons/hands/boots; transparent padding. No labels, numbers, grid, background, floor, shadow or extra props. One crisp solid new drawing, no overlay/ghosting/blur.\n"
+      },
+      "inputs": [
+        {
+          "file": "references/standing.png",
+          "sha256": "05829f92d02b2ddc52c96728be5c2ccd63366d7c79c63dc44cbc0ddddcc5cfb1",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/half-crouch.png",
+          "sha256": "d642eb3cc4092fc1eafe2c3c7c4c6e9ac80718fb247a174bb4e95ce8a00f0455",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "generated/seated-attempt1.png",
+        "sha256": "df7f98fbe28ea49f055b1048a73b8a09161b43348faf3ee08b331f1c8c6a0ffc",
+        "width": 1254,
+        "height": 1254
+      },
+      "status": "accepted",
+      "notes": "One new midpoint has crown66 between62/70, partial knee exposure and free hand between old side and knee poses. Reused unchanged for reversed rise.",
+      "originalToolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-cc755157-8f33-435d-ba3b-d5a0ab8a2c84.png"
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/falling-end.png",
+          "references/landing-first.png"
+        ]
+      },
+      "prompt": {
+        "file": "prompt-falling.txt",
+        "sha256": "9d3a38e5845c8e0756d88e57f7513e96c990e1e8770225b391393ebe1d29aae5",
+        "text": "Use case: identity-preserve. Fix a repeat-loop animation, retaining landing continuity.\nInput1 is the existing final falling pose. Input2 is the existing first landing pose. Both are the SAME orange-haired chibi girl pitched FORWARD, face down, both arms extended ready to land, legs and shoes behind. Generate FOUR near-identical-pitch falling poses in a2×2 true-transparent sprite sheet.\nThis is a steady airborne loop, not a progression from upright to dive. EVERY pose keeps exactly input1's forward head/neck/shoulder/torso orientation; all4 must connect smoothly at4→1. Never return to upright, seated knees or front-facing standing. Hands are out forward/downward. Keep the small black flower book at the same attached position behind her side, not in a new hand. Hair is lifted by falling motion but must only move a little.\nIdentity exactly as reference: huge orange-haired head, orange flower with black/white bow on viewer-right, black-and-white dress with orange neck ribbon, white boots, long orange hair; squeezed-shut eyes and small startled mouth. Preserve original thick outlines/flat cel style. Match head size to input2's landing pose, not miniaturized to fit. No new props, no loss of book, no extra limbs or hands. Both ears/head ornaments/hair/boots/hands must be fully visible.\nPose1: same forward-tilted descent as input1, wrists extended ready for landing.\nPose2: same head/torso pitch and center, fingers soften just a little, one hair tip sways inward.\nPose3: same orientation and size, wrists recover slightly, opposite hair tip sways a little.\nPose4: almost pose1, finishing the tiny hair/wrist loop. Mouth and expression stay consistent.\nOnly small genuine hair/wrist differences. Keep body center, head size and silhouette dimensions stable across all4. In each cell full character with transparent padding, identical fixed scale/center. Landing may follow ANY loop frame, so input2's direction/size must be compatible. This is airborne; do not draw floor/shadow or an impact.\nOutput one square2columns×2rows sheet, ideally1920×1920 with960px cells. Invisible grid, NO labels/numbers/text/frame borders/background/motion streaks. True transparent alpha. Do not copy the old upright falling pose; it is not provided or wanted.\n"
+      },
+      "inputs": [
+        {
+          "file": "references/falling-end.png",
+          "sha256": "e8aac3e2be9500f40b7652deea072405c30706ac743a2b3c0c19a9ced3b936e5",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/landing-first.png",
+          "sha256": "1f74c4fce8c9249f5bf2008535385c36a3f9ac891e39afc9a27cfd9561737b43",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "generated/falling-attempt1.png",
+        "sha256": "33b133f49f04ab2956424b2dc54f625771af2cc167ce3819ae3398071552cd8f",
+        "width": 1254,
+        "height": 1254
+      },
+      "status": "accepted",
+      "notes": "Four same-pitch forward-tilted poses; no upright reset. Last/first/old landing0 compared at480px. Entry also checked; old falling0..3 play once after the preserved flutter sequence to avoid an upright-to-prone entry jump.",
+      "originalToolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-a80482dd-62bc-4211-bb8e-00060511786b.png"
+    }
+  ],
+  "processing": {
+    "file": "processing-record.json",
+    "sha256": "100553bb2cf0fd7b12a11f1d2e7053d6619df5445ec0b4977437918b546ad1dd",
+    "script": "prepare.mjs",
+    "scriptSha256": "02b054116a784154f47f12d447cca1ea764070948002106a162748f254846938"
+  },
+  "replacementManifest": {
+    "file": "replacements.json",
+    "sha256": "3dcef32223f5ee94c10edbf5776ed7bc2e6171c82c00db146462e3930ddf98a3"
+  },
+  "outputs": [
+    {
+      "file": "sprites/sittingdown.webp",
+      "sha256": "1d438350e0d1a4db7da567a3e13ebd902f54666bf6681277388828ae3b716cff",
+      "width": 3840,
+      "height": 480
+    },
+    {
+      "file": "sprites/standingup.webp",
+      "sha256": "3d7dd2559dcbae8dde7cc4ecba0248d63b4c43bdf4455652cfcc7317bac7b638",
+      "width": 3840,
+      "height": 480
+    },
+    {
+      "file": "sprites/falling.webp",
+      "sha256": "2d6b2aaa467155891daf9310edbc2eb6aaf474bf7a004088bca552dd42ea54c5",
+      "width": 1920,
+      "height": 480
+    },
+    {
+      "file": "sprites/flutter.webp",
+      "sha256": "4202dc1bb31e9c0adc9da888005c7ed36e3a9cd2eebd1b8eee70e1b3fd691dbb",
+      "width": 7680,
+      "height": 480
+    }
+  ],
+  "airborneEntryRepair": {
+    "originalFlutter": {
+      "file": "originals/flutter.png",
+      "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+      "width": 1920,
+      "height": 480
+    },
+    "originalFalling": {
+      "file": "originals/falling.png",
+      "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+      "width": 1920,
+      "height": 480
+    },
+    "method": "Original flutter0..11 copied pixel-identically. Original falling0..3 appended once as flutter12..15, with scale1 and whole-pose vertical translations41,35,39,41px. Alpha<128 cleared only on appended transition frames. Their visible bottom progresses430,438,446,454, then the new falling loop starts at462. No synthetic drawing, local compositing, or optical flow used for this transition.",
+    "appendedDurationsMs": [80, 70, 80, 90],
+    "reason": "Original flutter11 remains upright; direct transition to the new steady forward-tilted falling0 would relocate the former loop snap to the entry. Reusing the old four-pose turn as a once-only lead-in preserves the motion while removing its repeated reset."
+  },
+  "qa": {
+    "evidenceDirectory": "test-results/runtime-continuity-before/claude",
+    "inspected": [
+      "v4-final-sittingdown.png",
+      "v4-final-standingup.png",
+      "v4-final-join.png",
+      "v4-final-falling.png",
+      "v4-final-flutter.png",
+      "v4-fall-entry-options.png",
+      "v4-fall-entry-final.png"
+    ],
+    "method": "Viewed generated sources, normalized endpoint strips and all final replacement frames. No desktop application started. No optical flow or head/body compositing.",
+    "originalPixelsPreserved": "All retained original seated and flutter0..11 frames are raw-copied; lossless WebP decoding equals RGBA at all alpha>0 pixels and exact alpha everywhere. Appended flutter12..15 preserve RGB/alpha>=128 pixels from the archived falling frames with only the explicitly recorded translation. Neutral anchors unmodified.",
+    "limits": "New generated drawings retain small line/rendering differences from old source frames; final desktop-speed review remains with root. No claim of pixel identity for new poses."
+  }
+}

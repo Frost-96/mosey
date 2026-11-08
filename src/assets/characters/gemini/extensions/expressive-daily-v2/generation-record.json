@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "batch": "expressive-daily-v2",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "purpose": "Hand-drawn midpoint candidates to insert between preserved v1 keyframes; only acceptedIndices selected.",
+  "inputs": [
+    {
+      "file": "../expressive-daily-v1/source-v1.png",
+      "sha256": "04b3dd5f5b7bd7cf4cf8688410b9dec9890d5802fa44de4067037131e1c0d2d8"
+    },
+    {
+      "file": "../gentle-daily-v1/identity-reference.png",
+      "sha256": "38eeaffa18fd216ce2fd733b89e35fc79ee2cb48ed7987b08b0667c1408c85b5"
+    },
+    {
+      "file": "paired-endpoints.png",
+      "sha256": "c1c4d9b07d8bf75bd47b0dcba4bd1f3f10c6db25f9970a502e7f6937368a2330"
+    }
+  ],
+  "output": {
+    "file": "inbetweens.png",
+    "originalPath": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-28d64016-fcfb-420c-b27f-8a930e80efd8.png",
+    "sha256": "92f10ea37d8c5cd46dfd0185ccd85f5cb9700c7a098d111a42ac91c9dacd7caf",
+    "width": 1254,
+    "height": 1254
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 4,
+    "boundaries": "round(index * dimension / 4)"
+  },
+  "mapping": [
+    {
+      "outputIndex": 0,
+      "fromIndex": 0,
+      "toIndex": 1,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "眼神变化贴近端点，未稳定形成半倾斜的过渡。"
+    },
+    {
+      "outputIndex": 1,
+      "fromIndex": 1,
+      "toIndex": 2,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "定向修正后仍闭眼过满，接近原舒服峰值，不作为半眨眼过渡。"
+    },
+    {
+      "outputIndex": 2,
+      "fromIndex": 2,
+      "toIndex": 3,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 3,
+      "fromIndex": 3,
+      "toIndex": 0,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "两个中性端点基本相同，无有意义的新过渡。"
+    },
+    {
+      "outputIndex": 4,
+      "fromIndex": 4,
+      "toIndex": 5,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 5,
+      "fromIndex": 5,
+      "toIndex": 6,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 6,
+      "fromIndex": 6,
+      "toIndex": 7,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "整理动作放手过早接近放下终点，未采用。"
+    },
+    {
+      "outputIndex": 7,
+      "fromIndex": 7,
+      "toIndex": 4,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 8,
+      "fromIndex": 8,
+      "toIndex": 9,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 9,
+      "fromIndex": 9,
+      "toIndex": 10,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 10,
+      "fromIndex": 10,
+      "toIndex": 11,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 11,
+      "fromIndex": 11,
+      "toIndex": 8,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 12,
+      "fromIndex": 12,
+      "toIndex": 13,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "耳朵与视线变化贴近原端点，未确认有效中间姿势。"
+    },
+    {
+      "outputIndex": 13,
+      "fromIndex": 13,
+      "toIndex": 14,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 14,
+      "fromIndex": 14,
+      "toIndex": 15,
+      "position": 0.5,
+      "accepted": true
+    },
+    {
+      "outputIndex": 15,
+      "fromIndex": 15,
+      "toIndex": 12,
+      "position": 0.5,
+      "accepted": false,
+      "exclusionReason": "中性到警觉变化过小，未采用。"
+    }
+  ],
+  "acceptedIndices": [2, 4, 5, 7, 8, 9, 10, 11, 13, 14],
+  "excluded": {
+    "0": "眼神变化贴近端点，未稳定形成半倾斜的过渡。",
+    "1": "定向修正后仍闭眼过满，接近原舒服峰值，不作为半眨眼过渡。",
+    "3": "两个中性端点基本相同，无有意义的新过渡。",
+    "6": "整理动作放手过早接近放下终点，未采用。",
+    "12": "耳朵与视线变化贴近原端点，未确认有效中间姿势。",
+    "15": "中性到警觉变化过小，未采用。"
+  },
+  "attempts": [
+    {
+      "file": "rejected-inbetweens-v1.png",
+      "sha256": "a4d1acf1ecc381cc54dd5938a5568e281ba3e4864834aeca83d5eca52ce8b1cf",
+      "promptFile": "prompt-initial.txt",
+      "prompt": "Use case: identity-preserve.\nAsset: TRUE HAND-DRAWN IN-BETWEEN animation sprites for Mosey Gemini.\nInput1 is the existing sixteen KEYFRAMES, four columns by four rows. Input2 is the original character identity reference. This task outputs ONLY sixteen NEW MIDPOINT drawings that will be inserted BETWEEN the original keyframes. DO NOT output the keyframes again. DO NOT blend, ghost, fade, duplicate contours, stretch/warp a whole image or merely change opacity. Draw anatomically coherent genuinely intermediate elbow/hand/head/eye/mouth positions, with one solid outlined character per cell.\nOutput ONE FOUR-column FOUR-row square PNG sheet, matching Input1's exact cell layout, framing and pixel drawing scale as closely as possible. Input1 is1254x1254. Every pose occupies the same cell center and ground line as the corresponding row of Input1. Preserve the exact SAME head width and short-limbed squat proportions; sitting only lowers joints, never rescales the whole figure. Transparent background with full true alpha. Keep complete hair/ears/tail/hands within the cell; wide clear transparent gutters. NO background, ground shadow, labels, grid lines, letters, props, effects or external hands.\nStrict identity: blue-purple long hair broad locks, dark thick outline, simple cel shading, big head and tiny body, blue cat ears pink centers, small curl, VIEWER-RIGHT star hair clip, VIEWER-LEFT magenta eye, VIEWER-RIGHT amber eye, navy-purple/white dress and chest star, boots, ONE attached fluffy blue-purple tail on VIEWER-RIGHT. Never swap eyes or sides. No new rendering style or extra detail.\nGrid mapping, zero-based: output row R col0 = midpoint between old row R col0 and col1; output col1 = midpoint between old col1 and col2; output col2 = midpoint between old col2 and col3; output col3 = midpoint on return from old col3 to old col0 (except the explicitly stated sitting-down exception).\nYou are an animator creating missing drawings, NOT a contact-sheet copier. Follow the actual neighboring key poses in Input1. Smooth half-lidded transitions, half-raised hands and partial head rotation must be visibly between the endpoint positions. Body grounding, hair volume and attached accessories stay stable.\nROW1 PETTED: col0 head leans half as far as old neutral-to-first-lean, eyelids halfway lowered; col1 head/cheek halfway further into contented nuzzle, eyes mostly but not fully closed; col2 halfway back upright with half-reopening eyes and settling shoulders; col3 tiny transition between old two neutral endpoints, retain stable pose. No imaginary hand drawn.\nROW2 GROOMING: col0 hand halfway rising from the old near-cheek preparation to the star clip (keep it below clip); col1 hand halfway sliding from old star-adjust position down to old cheek/fringe position; col2 hand halfway down from old cheek to side, elbow partially extended; col3 hand halfway rising from side to old preparation pose. Star clip stays attached on VIEWER-RIGHT.\nROW3 CLAP: col0 hands midway approaching one another with a narrow visible gap, smile opening and eyes partly closing; col1 hands midway separating after contact, small gap, happy nearly-closed eyes; col2 hands halfway lowering from old separated chest-height pose toward sides, elbows halfway straight, eyes partly reopening; col3 hands halfway raising from neutral toward old clap preparation. NEVER put closed touching palms in these midpoint drawings; actual clap contact lives in the original keyframe. Exactly two hands, no extra fingers/ghosts.\nROW4 OWN-TAIL HABIT: col0 head/eyes halfway turning toward VIEWER-RIGHT and ears halfway perked; col1 arm/hand halfway reaching from its side toward the attached tail tip, head halfway further down; col2 hand halfway withdrawing from tail toward side, head halfway returning forward; col3 subtle eye/ear transition toward old attentive pose. Tail stays attached and stays the same volume, never duplicated or floating.\nOutput sixteen clear, solid NEW middle poses.\n",
+      "status": "rejected-whole-keyframe-reference-produced-endpoint-like-poses"
+    },
+    {
+      "file": "paired-draft.png",
+      "sha256": "9e29598ba60fb9ea08f800fc4daf0d60bc4c1225c376fc61bd973712bbe9573c",
+      "promptFile": "prompt.txt",
+      "prompt": "Use case: identity-preserve. Create precise new hand-drawn animation IN-BETWEENS.\nInput1 is a paired-endpoint storyboard: FOUR PAIR-SLOTS across and FOUR ROWS down. There are32 figures total: within each slot, the LEFT figure is endpoint A and the RIGHT figure is endpoint B. Input2 is the unchanged identity reference.\nYour OUTPUT must be a SQUARE FOUR-by-FOUR sheet of ONLY SIXTEEN figures, ONE newly drawn halfway pose per input pair-slot. Do NOT copy the32-figure input layout. Each output slot corresponds to the same input pair-slot. Synthesize the halfway pose from the TWO endpoints in that slot. Do NOT choose or reproduce either endpoint. Preserve style, scale, head size, foot contact, and camera.\nThis is physical keyframe inbetweening: place wrists, elbows, head rotation, knees, pelvis and eyelids at approximately50% of the distance between A and B. Draw one clean solid silhouette without blending or double contours. Halfway mouth shape, half-lidded eyes, hand/elbow midway, knees half-bent. If A and B are essentially the same neutral pose, retain that neutral pose without inventing a new movement. The purpose is to remove the visible jump when playing A -> NEW -> B.\nParticularly inspect each pair's wrist position: the new wrist must not remain at either A or B. In a knee-to-cheek movement the new hand is at CHEST height, not still at the cheek. In a clap approach the hands are close with aboutHALF the original gap, not still widely separated and not touching. In a clip adjustment the hand is halfway between shoulder and temple. When lowering chest-height hand to side, the new hand is at WAIST height. For sitting, pelvis height should be exactly halfway between the two supplied postures while head size remains constant.\nOutput2048x2048,4columns4rows, complete full characters with transparent margins. True transparent alpha background. No text/numbers/grid/shadow/effects. Match input rendering: big round head, tiny body, thick dark outlines, blue-purple hair, VIEWER-LEFT magenta eye, VIEWER-RIGHT amber eye, VIEWER-RIGHT star clip, white-purple/navy dress with chest star, cat ears, attached blue-purple tail on VIEWER-RIGHT. Do not change costume, head proportions, side placement or identity. Feet anchored consistently. No extra anatomy or props.\nThe input pair-slots ALREADY encode the return transitions; treat each slot independently. The original keyframe mapping behind these pairs is:\n\nROW1 PETTED: col0 head leans half as far as old neutral-to-first-lean, eyelids halfway lowered; col1 head/cheek halfway further into contented nuzzle, eyes mostly but not fully closed; col2 halfway back upright with half-reopening eyes and settling shoulders; col3 tiny transition between old two neutral endpoints, retain stable pose. No imaginary hand drawn.\nROW2 GROOMING: col0 hand halfway rising from the old near-cheek preparation to the star clip (keep it below clip); col1 hand halfway sliding from old star-adjust position down to old cheek/fringe position; col2 hand halfway down from old cheek to side, elbow partially extended; col3 hand halfway rising from side to old preparation pose. Star clip stays attached on VIEWER-RIGHT.\nROW3 CLAP: col0 hands midway approaching one another with a narrow visible gap, smile opening and eyes partly closing; col1 hands midway separating after contact, small gap, happy nearly-closed eyes; col2 hands halfway lowering from old separated chest-height pose toward sides, elbows halfway straight, eyes partly reopening; col3 hands halfway raising from neutral toward old clap preparation. NEVER put closed touching palms in these midpoint drawings; actual clap contact lives in the original keyframe. Exactly two hands, no extra fingers/ghosts.\nROW4 OWN-TAIL HABIT: col0 head/eyes halfway turning toward VIEWER-RIGHT and ears halfway perked; col1 arm/hand halfway reaching from its side toward the attached tail tip, head halfway further down; col2 hand halfway withdrawing from tail toward side, head halfway returning forward; col3 subtle eye/ear transition toward old attentive pose. Tail stays attached and stays the same volume, never duplicated or floating.\nOutput sixteen clear, solid NEW middle poses.\n",
+      "status": "paired-endpoint-reference-improved-but-targeted-corrections-required"
+    },
+    {
+      "file": "inbetweens.png",
+      "sha256": "92f10ea37d8c5cd46dfd0185ccd85f5cb9700c7a098d111a42ac91c9dacd7caf",
+      "promptFile": "prompt-correction.txt",
+      "prompt": "Use case: identity-preserve. Make a targeted correction to Input1, an existing4x4 transparent animation inbetween sheet. Preserve the EXACT grid, all character scale, head size, drawing style, hair, outfit, eye colors (viewer-left magenta, viewer-right amber), star clip viewer-right, tail and cell placements. Keep all other cells unchanged. Output same4x4 transparent sheet. One solid full-body character per cell, no ghosts, no alpha crossfade. Input2 is the A/B paired-endpoint reference. The corrected poses must be truly HALFWAY between their supplied endpoints, not keyframe copies. Cell positions below are ONE-BASED row and column.\nChange ONLY FOUR CELLS:\nROW1 COLUMN2: eyes must be almost closed but NOT fully closed: tiny visible slivers of magenta/amber irises, expression between old sleepy half-open eyes and fully closed happy nuzzle. Keep head tilt fixed.\nROW3 COLUMN2: hands are currently too widely separated. Move BOTH palms inward horizontally until only ONE PALM-WIDTH of empty gap remains between them at chest height. Palms face each other. They must NOT touch: this is halfway opening after clap. Preserve both forearms attached, elbow bend adjusted naturally. Same happy expression.\nROW3 COLUMN4: hands currently too high like clap preparation endpoint. Lower BOTH wrists to LOWER-RIB / upper-WAIST height, halfway between resting beside hips and the chest-height starting pose. Keep them separated, elbows gently bent. Eyes open.\nROW4 COLUMN2: reaching hand currently extends nearly to tail endpoint. Retract that wrist HALFWAY toward its resting hip, placing it just outside the waist, with elbow more bent. Hand must not touch tail yet. Keep head halfway toward tail and retain the attached tail unchanged.\nNo other changes.\n",
+      "status": "selected-indices-only"
+    }
+  ],
+  "review": {
+    "identity": "Eye colors, viewer-right star clip, ears, hair, dress and attached tail retained. True transparent alpha. No alpha blending or ghost silhouettes used.",
+    "selection": "Only visibly intermediate joint/hand/eye/mouth poses selected. Neutral or endpoint-like poses explicitly excluded; not all16 cells count as new inbetweens.",
+    "notes": "Selected petting recovery, hair-hand approach/return, clap approach/opening/arm-lowering and tail-hand reach/withdrawal. Closed-eye nuzzle midpoint rejected despite correction.",
+    "scope": "v1 files, tools and runtime code unchanged."
+  }
+}

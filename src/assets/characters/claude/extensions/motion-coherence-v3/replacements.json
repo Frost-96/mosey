@@ -1,0 +1,1411 @@
+{
+  "version": 1,
+  "character": "claude",
+  "tool": "built-in image_gen",
+  "record": "generation-record.json",
+  "actions": [
+    {
+      "family": "runtime",
+      "action": "paw",
+      "image": "sprites/runtime-paw.webp",
+      "sha256": "d17812c29ed07d8ddfa7f87050234c54caa788c0ff2e96f34b621f771c47e97c",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "notes": "Keep book held on viewer-left; only viewer-right hand rises/waves. Removes alternating hands and extra-arm/floating-book poses.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 160,
+          "source": {
+            "file": "references/standing.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "arms-source.png",
+            "index": 1,
+            "sourceRegion": {
+              "x": 519,
+              "y": 7,
+              "width": 303,
+              "height": 397
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 0,
+              "width": 443,
+              "height": 444
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 62,
+              "width": 305,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 160,
+          "source": {
+            "file": "arms-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 963,
+              "y": 7,
+              "width": 302,
+              "height": 397
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 0,
+              "width": 444,
+              "height": 444
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 93,
+              "y": 62,
+              "width": 304,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 220,
+          "source": {
+            "file": "arms-source.png",
+            "index": 3,
+            "sourceRegion": {
+              "x": 1406,
+              "y": 7,
+              "width": 303,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 0,
+              "width": 443,
+              "height": 444
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 61,
+              "width": 305,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "arms-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 963,
+              "y": 7,
+              "width": 302,
+              "height": 397
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 0,
+              "width": 444,
+              "height": 444
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 93,
+              "y": 62,
+              "width": 304,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "arms-source.png",
+            "index": 1,
+            "sourceRegion": {
+              "x": 519,
+              "y": 7,
+              "width": 303,
+              "height": 397
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 0,
+              "width": 443,
+              "height": 444
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 62,
+              "width": 305,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "references/standing.png"
+          }
+        }
+      ]
+    },
+    {
+      "family": "runtime",
+      "action": "stretching",
+      "image": "sprites/runtime-stretching.webp",
+      "sha256": "13bd98c89e6ab0d04b182286799e4b649c0bd1bc4f42c0f6d8e26ac4158801f0",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "notes": "One free viewer-right arm stretches; viewer-left book-holding arm stays fixed, with a connected shoulder and neck.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "references/standing.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "arms-source.png",
+            "index": 5,
+            "sourceRegion": {
+              "x": 519,
+              "y": 452,
+              "width": 302,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "arms-source.png",
+            "index": 6,
+            "sourceRegion": {
+              "x": 963,
+              "y": 452,
+              "width": 302,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 93,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 550,
+          "source": {
+            "file": "arms-source.png",
+            "index": 7,
+            "sourceRegion": {
+              "x": 1406,
+              "y": 452,
+              "width": 303,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 61,
+              "width": 305,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "arms-source.png",
+            "index": 6,
+            "sourceRegion": {
+              "x": 963,
+              "y": 452,
+              "width": 302,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 93,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "arms-source.png",
+            "index": 5,
+            "sourceRegion": {
+              "x": 519,
+              "y": 452,
+              "width": 302,
+              "height": 398
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0075566750629723,
+            "placement": {
+              "x": 92,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "references/standing.png"
+          }
+        }
+      ]
+    },
+    {
+      "family": "gentle",
+      "action": "sittingdown",
+      "image": "sprites/gentle-sittingdown.webp",
+      "sha256": "9f1e6a7f3ead16ea6ef2f2e8a092e48b42330e93c0084193088e7ebbc28b6938",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "notes": "Monotonic lowering, one uniform scale. Generated poses0–2 had elongated standing legs and are excluded; use coherent poses3–7 between exact existing standing/seated endpoints.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "references/standing.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 3,
+            "sourceRegion": {
+              "x": 1408,
+              "y": 43,
+              "width": 293,
+              "height": 374
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 0,
+              "width": 443,
+              "height": 444
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 70,
+              "width": 307,
+              "height": 392
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 4,
+            "sourceRegion": {
+              "x": 78,
+              "y": 491,
+              "width": 294,
+              "height": 371
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 73,
+              "width": 308,
+              "height": 389
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 5,
+            "sourceRegion": {
+              "x": 521,
+              "y": 503,
+              "width": 296,
+              "height": 359
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 86,
+              "width": 310,
+              "height": 376
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 6,
+            "sourceRegion": {
+              "x": 965,
+              "y": 512,
+              "width": 297,
+              "height": 352
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 93,
+              "width": 311,
+              "height": 369
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 7,
+            "sourceRegion": {
+              "x": 1408,
+              "y": 516,
+              "width": 299,
+              "height": 348
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 97,
+              "width": 313,
+              "height": 365
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "source": {
+            "file": "references/seated.png"
+          }
+        }
+      ]
+    },
+    {
+      "family": "gentle",
+      "action": "standingup",
+      "image": "sprites/gentle-standingup.webp",
+      "sha256": "4cd5c11ecf952765fcf2ed9dca4892f556c81d96923d51611887100510cadfe9",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "notes": "Reverse the same coherent sit-down poses, preserving head size and increasing height monotonically.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "references/seated.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 7,
+            "sourceRegion": {
+              "x": 1408,
+              "y": 516,
+              "width": 299,
+              "height": 348
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 97,
+              "width": 313,
+              "height": 365
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 6,
+            "sourceRegion": {
+              "x": 965,
+              "y": 512,
+              "width": 297,
+              "height": 352
+            },
+            "sourceCell": {
+              "x": 887,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 93,
+              "width": 311,
+              "height": 369
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 5,
+            "sourceRegion": {
+              "x": 521,
+              "y": 503,
+              "width": 296,
+              "height": 359
+            },
+            "sourceCell": {
+              "x": 444,
+              "y": 444,
+              "width": 443,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 86,
+              "width": 310,
+              "height": 376
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 4,
+            "sourceRegion": {
+              "x": 78,
+              "y": 491,
+              "width": 294,
+              "height": 371
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 444,
+              "width": 444,
+              "height": 443
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 73,
+              "width": 308,
+              "height": 389
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "sitting-source.png",
+            "index": 3,
+            "sourceRegion": {
+              "x": 1408,
+              "y": 43,
+              "width": 293,
+              "height": 374
+            },
+            "sourceCell": {
+              "x": 1331,
+              "y": 0,
+              "width": 443,
+              "height": 444
+            },
+            "uniformScale": 1.0477815699658704,
+            "placement": {
+              "x": 89,
+              "y": 70,
+              "width": 307,
+              "height": 392
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "source": {
+            "file": "references/standing.png"
+          }
+        }
+      ]
+    },
+    {
+      "family": "gentle",
+      "action": "sitting",
+      "image": "sprites/gentle-sitting.webp",
+      "sha256": "cdf53f9263e08e1c86a1f77b8114d05101d70e73265297617b42e1a9dd23ca38",
+      "width": 3360,
+      "height": 480,
+      "loop": "repeat",
+      "notes": "Stable seated body and ground contact; eye/head glance and free hand move without whole-body scale pulsing.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 850,
+          "source": {
+            "file": "references/seated.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 380,
+          "source": {
+            "file": "sitting-loop-source.png",
+            "index": 1,
+            "sourceRegion": {
+              "x": 718,
+              "y": 20,
+              "width": 440,
+              "height": 535
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 0,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.6747663551401869,
+            "placement": {
+              "x": 90,
+              "y": 101,
+              "width": 297,
+              "height": 361
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 250,
+          "source": {
+            "file": "references/seated.png"
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "sitting-loop-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 96,
+              "y": 648,
+              "width": 440,
+              "height": 534
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 627,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.6747663551401869,
+            "placement": {
+              "x": 93,
+              "y": 102,
+              "width": 297,
+              "height": 360
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 450,
+          "source": {
+            "file": "sitting-loop-source.png",
+            "index": 3,
+            "sourceRegion": {
+              "x": 715,
+              "y": 651,
+              "width": 445,
+              "height": 531
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 627,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.6747663551401869,
+            "placement": {
+              "x": 88,
+              "y": 104,
+              "width": 300,
+              "height": 358
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "sitting-loop-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 96,
+              "y": 648,
+              "width": 440,
+              "height": 534
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 627,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.6747663551401869,
+            "placement": {
+              "x": 93,
+              "y": 102,
+              "width": 297,
+              "height": 360
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 500,
+          "source": {
+            "file": "references/seated.png"
+          }
+        }
+      ]
+    },
+    {
+      "family": "expressive",
+      "action": "habit",
+      "image": "sprites/expressive-habit.webp",
+      "sha256": "ea2da84c6e667a560b53b3093c7e49f8dea07a90a431202447a72eb9cc1c30d4",
+      "width": 5280,
+      "height": 480,
+      "loop": "once",
+      "notes": "Add genuine partially opened covers around the original reading/page-turn poses; retain one book, progressively separate wrists, reverse for closing.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "references/standing.png"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 160,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceFrameIndex": 12
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "book-source.png",
+            "index": 1,
+            "sourceRegion": {
+              "x": 729,
+              "y": 16,
+              "width": 418,
+              "height": 549
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 0,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.7285974499089253,
+            "placement": {
+              "x": 86,
+              "y": 62,
+              "width": 305,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "book-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 113,
+              "y": 649,
+              "width": 417,
+              "height": 551
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 627,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.7285974499089253,
+            "placement": {
+              "x": 94,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 1600,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceFrameIndex": 13
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 400,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceFrameIndex": 14
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceFrameIndex": 13
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "book-source.png",
+            "index": 2,
+            "sourceRegion": {
+              "x": 113,
+              "y": 649,
+              "width": 417,
+              "height": 551
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 627,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.7285974499089253,
+            "placement": {
+              "x": 94,
+              "y": 61,
+              "width": 304,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "book-source.png",
+            "index": 1,
+            "sourceRegion": {
+              "x": 729,
+              "y": 16,
+              "width": 418,
+              "height": 549
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 0,
+              "width": 627,
+              "height": 627
+            },
+            "uniformScale": 0.7285974499089253,
+            "placement": {
+              "x": 86,
+              "y": 62,
+              "width": 305,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceFrameIndex": 12
+          }
+        },
+        {
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 220,
+          "source": {
+            "file": "references/standing.png"
+          }
+        }
+      ]
+    }
+  ]
+}

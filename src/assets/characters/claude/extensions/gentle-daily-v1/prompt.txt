@@ -1,0 +1,32 @@
+Use case: identity-preserve.
+Asset type: production animation sprite sheet for the Mosey desktop pet.
+Primary request: Draw 16 distinct chronological full-body poses of the EXACT Claude girl in the reference, for quiet daily actions. Preserve her exact chibi proportions, oversized head, tiny torso/legs, face, copper-orange long hair, warm amber eyes, hair tuft, flower and black bow on VIEWER-RIGHT, cream/black/orange dress, small cream boots, thick dark contours, simple flat cel shading and current color palette. Do not redesign or beautify. Reference is the approved current standing sprite and strict identity/style authority.
+Transparent background: true alpha, no backdrop, no floor, no shadow, no grid lines, labels, text, sleep symbols, extra decorations or added props.
+Layout: square 2048×2048 PNG, FOUR columns by FOUR rows, 16 equal 512×512 cells. One complete character centered in each cell, row-major. Same head size and drawing scale in ALL 16 cells. Standing crown about y=75, soles y=455 in each cell, center x=256, generous transparent margins. Keep complete hair, arms, boots, flower and bow inside each cell. Camera near-front as reference. Sitting figures become shorter by bent joints and lower pelvis, NEVER by shrinking head/body. Feet/contact point baseline y=455 even for seated cells.
+Important prop invariant: EXACTLY ONE closed brown book with orange flower emblem stays on VIEWER-LEFT side, held by the arm on VIEWER-LEFT, across all 16 frames. It can settle onto viewer-left side of lap when sitting. Never change sides, open, duplicate, lose, or recolor the book. Free hand is on VIEWER-RIGHT.
+
+ROW 1 = look around, all standing with feet planted and book held still:
+1 eyes glance to viewer-left, head turns gently left about 15 degrees, curious relaxed expression.
+2 head and eyes return toward front, slight attentive pause, neutral mouth.
+3 eyes and head turn gently to viewer-right about 15 degrees, curious relaxed expression.
+4 return to exact reference frontal neutral standing with calm open eyes. Actual gentle head turn, not head tilt, no body spinning.
+
+ROW 2 = sit down transition, calm fully awake eyes OPEN:
+5 exact reference standing frontal neutral.
+6 both knees bend modestly, pelvis lowers, free hand reaches toward skirt/thigh for balance, book stays viewer-left.
+7 deep low crouch, head physically lower but same head size, knees fold, skirt modestly covering legs.
+8 fully seated on floor, tiny legs folded neatly in front under the skirt, feet visible, upright torso, OPEN attentive eyes, relaxed smile. Book supported at viewer-left lap, free hand on viewer-right knee. Sitting height around 70 percent of standing. No furniture.
+
+ROW 3 = quiet awake sitting loop, matching pose 8 and same sitting contact line:
+9 seated upright, eyes open looking forward, slight inhale.
+10 same seated posture, small head/eye glance to viewer-left, book steady.
+11 same seated posture, eyes look front again, gentle exhale, tiny smile.
+12 same seated posture, free hand gently supports cheek briefly, eyes OPEN curious; book stays viewer-left lap. This is resting while awake, not sleeping or bowing.
+
+ROW 4 = standing yawn complete reaction, same planted feet and standing scale:
+13 exact reference standing, half-lidded sleepy eyes; free hand begins lifting toward mouth.
+14 free hand lightly covers opening mouth, eyes close naturally; shoulders lift slightly, book steady viewer-left.
+15 yawn peak with rounded open mouth mostly behind free hand, closed eyes, tiny backward head angle; no huge stretch.
+16 hand lowers to side, mouth closes, eyes reopen, near exact reference neutral standing.
+
+Clear progressive poses and anatomically valid two arms, two legs. Do not merge adjacent cells, crop limbs, switch book sides, add hats or change costume. Do not copy-paste identical images for the changing poses. Preserve the reference's simplified round chibi drawing style, no realistic shading or detailed anime proportions.

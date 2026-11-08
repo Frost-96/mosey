@@ -1216,7 +1216,7 @@
   },
   "falling": {
     "image": "sprites/falling.webp",
-    "sha256": "0ec0284b9785fd64fc163021374603bfb64eb43c690aef673dbc2468e7b71034",
+    "sha256": "6e5aaeec6f8669ee031d1efbfbd7d3f6f4ad7b1d6f911d6f8860facba6655ecb",
     "loop": "repeat",
     "frames": [
       {
@@ -1226,11 +1226,11 @@
           "width": 480,
           "height": 480
         },
-        "durationMs": 80,
         "foot": {
           "x": 240,
           "y": 462
-        }
+        },
+        "durationMs": 100
       },
       {
         "region": {
@@ -1239,11 +1239,11 @@
           "width": 480,
           "height": 480
         },
-        "durationMs": 70,
         "foot": {
           "x": 240,
           "y": 462
-        }
+        },
+        "durationMs": 100
       },
       {
         "region": {
@@ -1252,11 +1252,11 @@
           "width": 480,
           "height": 480
         },
-        "durationMs": 80,
         "foot": {
           "x": 240,
           "y": 462
-        }
+        },
+        "durationMs": 100
       },
       {
         "region": {
@@ -1265,11 +1265,11 @@
           "width": 480,
           "height": 480
         },
-        "durationMs": 70,
         "foot": {
           "x": 240,
           "y": 462
-        }
+        },
+        "durationMs": 100
       }
     ]
   },

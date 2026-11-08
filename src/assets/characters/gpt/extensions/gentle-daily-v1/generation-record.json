@@ -1,0 +1,323 @@
+{
+  "version": 1,
+  "character": "gpt",
+  "createdOn": "2026-11-08",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "transparentBackground": true
+  },
+  "request": {
+    "prompt": "Use case: identity-preserve.\nAsset type: transparent 2D game animation sprite sheet for the existing Mosey GPT dragon-girl desktop pet.\nInput image 1 is the STRICT identity and rendering reference. Create new poses of this exact character, NOT a redesign: white long hair with pale lilac shadows, curved cream dragon horns, purple eyes, pointed ears, small purple batlike wings, lavender scaled tail curling toward viewer-right, white/lilac short dress with the same spiral rosette on viewer-right waist, white boots. Keep exactly the same thick dark outline, broad flat color areas, simple cel shading, oversized rounded head, tiny body and limbs. Preserve horn shape, tail volume, costume, ornament placement and face. No extra objects.\n\nOutput a single square 2048 x 2048 PNG with a genuinely transparent alpha background, precisely FOUR columns by FOUR rows of equal 512 x 512 invisible cells, 16 complete figures. No grid lines, cell borders, labels, text, numbers, shadows, ground, scenery, ZZZ, bubbles, symbols, effects or watermark. Every figure stays wholly within its cell, with at least 45px clear transparent margin, including horns, tail and wings. Frontal camera. Same drawing scale and head size in all sixteen frames; standing figure about 385px tall from horn tip to sole, center axis x=256, contact baseline y=455. All positions below are LOCAL to each cell. Sitting must get shorter through bent knees and hips, never through shrinking the entire character or head.\n\nROW 1, looking around, left-to-right chronological:\n1 calm neutral upright as reference, both feet planted, eyes glance to viewer-left.\n2 head turns gently about 15 degrees toward viewer-left, curious open eyes, torso still.\n3 head turns gently about 15 degrees toward viewer-right, eyes follow, hands remain low.\n4 returns to exact calm front-facing neutral, gaze forward. This is looking, not head tilting.\n\nROW 2, sitting down, four consecutive poses:\n5 exact calm upright reference stance, both feet planted.\n6 knees soften and bend, hips lower a little, hands begin moving toward thighs.\n7 deep controlled crouch, knees bent, head lower with unchanged size, hands beside knees.\n8 sits comfortably on the ground with folded legs under the modest dress, torso upright, eyes OPEN and alert, hands resting on lap. Tail rests to her side; wings relaxed behind her. No chair, cushion, sleep or sleeping expression.\n\nROW 3, awake seated idle loop, four closely related poses matching row2 frame8:\n9 seated, hands on lap, bright OPEN eyes looking gently forward.\n10 same seated posture, tiny shoulder inhale and subtle hair tip sway; eyes OPEN.\n11 same seated posture, gaze shifts mildly aside with attentive OPEN eyes.\n12 same seated pose returning toward frame9, gentle smile and OPEN eyes. Do not change body scale, leg arrangement or hand placement between these four frames.\n\nROW 4, standing yawn, four consecutive poses:\n13 standing as reference, eyelids grow heavy, free hand begins rising toward mouth.\n14 same standing body, palm lightly covers a small opening mouth, eyelids closing.\n15 peak gentle yawn, eyes closed, mouth open partly behind covering hand, shoulders slightly lift. No huge stretch, no tear symbols.\n16 hand lowers, eyes reopen, returns to quiet reference standing posture.\n\nMaintain anatomical consistency: exactly two arms and two legs, both attached correctly. Horns, wings and tail are never clipped, duplicated or switched sides. Use visibly different but restrained in-between poses. Preserve genuine transparency.\n",
+    "requestedSize": {
+      "width": 2048,
+      "height": 2048
+    },
+    "reference": {
+      "file": "reference-standing.png",
+      "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb",
+      "derivedFrom": "../../sprites/resting.webp",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      }
+    }
+  },
+  "output": {
+    "file": "source-v1.png",
+    "sha256": "9d4b0e292f579156ebc9885cffd24b2d79af36bf0bc8d0ed459e61848330f995",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true,
+    "columns": 4,
+    "rows": 4,
+    "tiles": [
+      {
+        "frame": 1,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 14,
+          "width": 223,
+          "height": 280
+        },
+        "opaquePixels": 45354
+      },
+      {
+        "frame": 2,
+        "region": {
+          "x": 313,
+          "y": 0,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 15,
+          "width": 224,
+          "height": 279
+        },
+        "opaquePixels": 45387
+      },
+      {
+        "frame": 3,
+        "region": {
+          "x": 627,
+          "y": 0,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 15,
+          "width": 223,
+          "height": 279
+        },
+        "opaquePixels": 45136
+      },
+      {
+        "frame": 4,
+        "region": {
+          "x": 940,
+          "y": 0,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 14,
+          "width": 224,
+          "height": 280
+        },
+        "opaquePixels": 45334
+      },
+      {
+        "frame": 5,
+        "region": {
+          "x": 0,
+          "y": 313,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 15,
+          "width": 224,
+          "height": 280
+        },
+        "opaquePixels": 45262
+      },
+      {
+        "frame": 6,
+        "region": {
+          "x": 313,
+          "y": 313,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 23,
+          "width": 224,
+          "height": 270
+        },
+        "opaquePixels": 44084
+      },
+      {
+        "frame": 7,
+        "region": {
+          "x": 627,
+          "y": 313,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 34,
+          "width": 225,
+          "height": 259
+        },
+        "opaquePixels": 42943
+      },
+      {
+        "frame": 8,
+        "region": {
+          "x": 940,
+          "y": 313,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 34,
+          "width": 227,
+          "height": 259
+        },
+        "opaquePixels": 43260
+      },
+      {
+        "frame": 9,
+        "region": {
+          "x": 0,
+          "y": 627,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 34,
+          "width": 229,
+          "height": 257
+        },
+        "opaquePixels": 43171
+      },
+      {
+        "frame": 10,
+        "region": {
+          "x": 313,
+          "y": 627,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 45,
+          "y": 33,
+          "width": 231,
+          "height": 258
+        },
+        "opaquePixels": 43284
+      },
+      {
+        "frame": 11,
+        "region": {
+          "x": 627,
+          "y": 627,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 33,
+          "width": 228,
+          "height": 258
+        },
+        "opaquePixels": 43314
+      },
+      {
+        "frame": 12,
+        "region": {
+          "x": 940,
+          "y": 627,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 33,
+          "width": 229,
+          "height": 258
+        },
+        "opaquePixels": 43163
+      },
+      {
+        "frame": 13,
+        "region": {
+          "x": 0,
+          "y": 940,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 15,
+          "width": 224,
+          "height": 281
+        },
+        "opaquePixels": 45289
+      },
+      {
+        "frame": 14,
+        "region": {
+          "x": 313,
+          "y": 940,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 15,
+          "width": 224,
+          "height": 281
+        },
+        "opaquePixels": 45354
+      },
+      {
+        "frame": 15,
+        "region": {
+          "x": 627,
+          "y": 940,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 16,
+          "width": 223,
+          "height": 280
+        },
+        "opaquePixels": 45228
+      },
+      {
+        "frame": 16,
+        "region": {
+          "x": 940,
+          "y": 940,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 15,
+          "width": 224,
+          "height": 281
+        },
+        "opaquePixels": 45225
+      }
+    ]
+  },
+  "actionRows": [
+    {
+      "row": 1,
+      "action": "looking",
+      "frames": [1, 2, 3, 4]
+    },
+    {
+      "row": 2,
+      "action": "sitting-down",
+      "frames": [5, 6, 7, 8],
+      "reverseFor": "standing-up"
+    },
+    {
+      "row": 3,
+      "action": "sitting-awake",
+      "frames": [9, 10, 11, 12]
+    },
+    {
+      "row": 4,
+      "action": "yawning",
+      "frames": [13, 14, 15, 16]
+    }
+  ],
+  "notes": [
+    "Actual tool output is 1254 × 1254; use recorded nonuniform integer cell bounds instead of assuming the requested 2048 size.",
+    "Row 1 frame 1 is near-neutral; left and right gaze are clearest in frames 2 and 3.",
+    "Source inspected on gray background: all 16 complete poses, true alpha, no text or sleep symbols."
+  ]
+}

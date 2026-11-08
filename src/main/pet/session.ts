@@ -20,6 +20,10 @@ import type { PreferencesStore } from "../platform/preferences";
 import type { DockCapture } from "../platform/dock/capture";
 import type { DockObservation } from "../platform/dock/runtime";
 import { CharacterSwitch } from "./character-switch";
+import {
+  dailyActionDefinitions,
+  type DailyAction,
+} from "../../shared/character-capabilities";
 
 type Environment = {
   dock: Pick<DockCapture, "start" | "stop">;
@@ -113,6 +117,8 @@ export function createPetSession(
         type: "CHARACTER",
         capabilities: characters.current.capabilities,
         walkDurationMs: characters.current.walk?.durationMs ?? autonomy.walkMs,
+        loopTimings: characters.current.loopTimings,
+        paintedHandoffs: Boolean(characters.current.loopTimings),
         paused: visibility !== "visible",
       });
     },
@@ -124,8 +130,34 @@ export function createPetSession(
       now: timeline.now,
       capabilities: characters.current.capabilities,
       walkDurationMs: characters.current.walk?.durationMs,
+      loopTimings: characters.current.loopTimings,
+      paintedHandoffs: Boolean(characters.current.loopTimings),
     },
   }).start();
+  const actionAvailable = (action: DailyAction) => {
+    const definition = dailyActionDefinitions.find(
+      (item) => item.action === action,
+    )!;
+    const snapshot = behavior.getSnapshot();
+    const posture = String(snapshot.value);
+    return (
+      rendererState === "ready" &&
+      visibility === "visible" &&
+      !suspended &&
+      !interaction.gestureActive &&
+      snapshot.context.pendingActivity !== "climbing" &&
+      characters.current.capabilities.includes(definition.capability) &&
+      ![
+        "paused",
+        "dragging",
+        "flutter",
+        "falling",
+        "landing",
+        "climbing",
+      ].includes(posture) &&
+      (action !== "standingup" || ["sittingdown", "sitting"].includes(posture))
+    );
+  };
   const interaction = createPetInteraction(pet, behavior, timeline, {
     get ready() {
       return rendererState === "ready";
@@ -150,7 +182,41 @@ export function createPetSession(
     alignGround: () => alignGround(),
     reconcileDock: () => reconcileDock(),
     publish: () => publish(),
-    bodyMenu: environment.bodyMenu,
+    bodyMenu: () => {
+      const character = characters.current;
+      const ordinary = environment.bodyMenu();
+      if (
+        !dailyActionDefinitions.some((item) =>
+          character.capabilities.includes(item.capability),
+        )
+      )
+        return ordinary;
+      return [
+        {
+          id: "daily-actions",
+          label: "动作",
+          submenu: dailyActionDefinitions.map(({ action, label }) => ({
+            id: `daily-action-${action}`,
+            label,
+            enabled: actionAvailable(action),
+            click: () => {
+              // A stale native menu must never command a newly selected resource.
+              if (
+                characters.current.id !== character.id ||
+                characters.current.resourceVersion !==
+                  character.resourceVersion ||
+                !actionAvailable(action)
+              )
+                return;
+              motion.stop();
+              behavior.send({ type: "PLAY", action });
+            },
+          })),
+        },
+        { type: "separator" },
+        ...ordinary,
+      ];
+    },
   });
   const motion = new PetMotion(pet, behavior, {
     get now() {
@@ -334,6 +400,17 @@ export function createPetSession(
       return;
     const bounds = pet.getBounds();
     const support = supportAt(bounds.x, bounds.y);
+    if (
+      ["sittingdown", "sitting", "standingup"].includes(String(posture)) &&
+      characters.current.capabilities.includes("climbing") &&
+      support.footY < bounds.y + bounds.height - 1
+    ) {
+      // Rising support must wait for the authored stand-up transition. A
+      // floor correction here would teleport the seated pet before it climbs.
+      if (behavior.getSnapshot().context.pendingActivity !== "climbing")
+        behavior.send({ type: "CLIMB" });
+      return;
+    }
     if (bounds.y + bounds.height !== support.footY) alignGround();
   };
   const presentation = () =>
@@ -415,7 +492,11 @@ export function createPetSession(
   };
   app.on("before-quit", commitPreview);
   behavior.subscribe((snapshot) => {
-    if (snapshot.value === "resting" && interaction.gestureActive) {
+    if (
+      snapshot.value === "resting" &&
+      interaction.gestureActive &&
+      !interaction.holdingIdle
+    ) {
       behavior.send({ type: "PAUSE" });
       return;
     }

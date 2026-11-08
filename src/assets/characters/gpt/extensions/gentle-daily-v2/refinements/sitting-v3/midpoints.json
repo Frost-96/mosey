@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "character": "gpt",
+  "action": "sitting",
+  "image": "midpoints.webp",
+  "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+  "width": 1920,
+  "height": 480,
+  "frameSize": 480,
+  "foot": {
+    "x": 240,
+    "y": 462
+  },
+  "frames": [
+    {
+      "index": 0,
+      "from": 8,
+      "to": 9,
+      "t": 0.5,
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 110,
+      "processing": {
+        "sourceFile": "source.png",
+        "sourceCell": {
+          "x": 0,
+          "y": 0,
+          "width": 627,
+          "height": 627
+        },
+        "sourceRegion": {
+          "x": 93,
+          "y": 22,
+          "width": 467,
+          "height": 516
+        },
+        "scale": 0.7112403100775194,
+        "rasterPlacement": {
+          "x": 77,
+          "y": 95,
+          "width": 332,
+          "height": 367
+        },
+        "anchor": {
+          "sourceX": 323.75,
+          "targetX": 240.75,
+          "sourceBottomExclusive": 538,
+          "targetBottomExclusive": 462
+        }
+      },
+      "visibleBounds": {
+        "x": 77,
+        "y": 95,
+        "width": 332,
+        "height": 367
+      }
+    },
+    {
+      "index": 1,
+      "from": 9,
+      "to": 10,
+      "t": 0.5,
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 110,
+      "processing": {
+        "sourceFile": "source.png",
+        "sourceCell": {
+          "x": 627,
+          "y": 0,
+          "width": 627,
+          "height": 627
+        },
+        "sourceRegion": {
+          "x": 721,
+          "y": 23,
+          "width": 467,
+          "height": 515
+        },
+        "scale": 0.7112403100775194,
+        "rasterPlacement": {
+          "x": 77,
+          "y": 96,
+          "width": 332,
+          "height": 366
+        },
+        "anchor": {
+          "sourceX": 323.75,
+          "targetX": 240.75,
+          "sourceBottomExclusive": 538,
+          "targetBottomExclusive": 462
+        }
+      },
+      "visibleBounds": {
+        "x": 77,
+        "y": 96,
+        "width": 332,
+        "height": 366
+      }
+    },
+    {
+      "index": 2,
+      "from": 10,
+      "to": 11,
+      "t": 0.5,
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 110,
+      "processing": {
+        "sourceFile": "source.png",
+        "sourceCell": {
+          "x": 0,
+          "y": 627,
+          "width": 627,
+          "height": 627
+        },
+        "sourceRegion": {
+          "x": 93,
+          "y": 650,
+          "width": 468,
+          "height": 515
+        },
+        "scale": 0.7112403100775194,
+        "rasterPlacement": {
+          "x": 77,
+          "y": 96,
+          "width": 333,
+          "height": 366
+        },
+        "anchor": {
+          "sourceX": 323.75,
+          "targetX": 240.75,
+          "sourceBottomExclusive": 1165,
+          "targetBottomExclusive": 462
+        }
+      },
+      "visibleBounds": {
+        "x": 77,
+        "y": 96,
+        "width": 333,
+        "height": 366
+      }
+    },
+    {
+      "index": 3,
+      "from": 11,
+      "to": 8,
+      "t": 0.5,
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 110,
+      "processing": {
+        "sourceFile": "source.png",
+        "sourceCell": {
+          "x": 627,
+          "y": 627,
+          "width": 627,
+          "height": 627
+        },
+        "sourceRegion": {
+          "x": 721,
+          "y": 650,
+          "width": 467,
+          "height": 515
+        },
+        "scale": 0.7112403100775194,
+        "rasterPlacement": {
+          "x": 77,
+          "y": 96,
+          "width": 332,
+          "height": 366
+        },
+        "anchor": {
+          "sourceX": 323.75,
+          "targetX": 240.75,
+          "sourceBottomExclusive": 1165,
+          "targetBottomExclusive": 462
+        }
+      },
+      "visibleBounds": {
+        "x": 77,
+        "y": 96,
+        "width": 332,
+        "height": 366
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "actions": {
+    "looking": {
+      "image": "refinements/looking-v3/midpoints.webp",
+      "sha256": "e7487d3960f4ed2f5cb9c4286f48b3b1bd80e193689e1527d586f2d662afb540",
+      "record": "refinements/looking-v3/generation-record.json",
+      "recordSha256": "da14f0064551d530bda2c66f79ef98b2edd08746422f83d693f6492f2544ff9a",
+      "frames": [
+        { "x": 0, "y": 0, "width": 480, "height": 480 },
+        { "x": 480, "y": 0, "width": 480, "height": 480 },
+        { "x": 960, "y": 0, "width": 480, "height": 480 },
+        { "x": 1440, "y": 0, "width": 480, "height": 480 },
+        { "x": 1920, "y": 0, "width": 480, "height": 480 },
+        { "x": 2400, "y": 0, "width": 480, "height": 480 }
+      ],
+      "sequence": [
+        { "kind": "original", "index": -1, "durationMs": 100 },
+        { "kind": "original", "index": 0, "durationMs": 100 },
+        { "kind": "refinement", "index": 0, "durationMs": 90 },
+        { "kind": "original", "index": 1, "durationMs": 320 },
+        { "kind": "refinement", "index": 1, "durationMs": 75 },
+        { "kind": "refinement", "index": 2, "durationMs": 75 },
+        { "kind": "original", "index": 0, "durationMs": 90 },
+        { "kind": "refinement", "index": 3, "durationMs": 75 },
+        { "kind": "refinement", "index": 4, "durationMs": 75 },
+        { "kind": "original", "index": 2, "durationMs": 320 },
+        { "kind": "refinement", "index": 5, "durationMs": 90 },
+        { "kind": "original", "index": 3, "durationMs": 100 },
+        { "kind": "original", "index": -1, "durationMs": 150 }
+      ],
+      "notes": "Six dedicated gaze/head intermediate poses. Restore the central key0 between left and right glances; eyes lead the head. Original keyframe RGBA remains unchanged. Hold endpoints and use short transits."
+    }
+  }
+}

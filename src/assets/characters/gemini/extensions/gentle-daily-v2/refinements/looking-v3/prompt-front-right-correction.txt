@@ -1,0 +1,8 @@
+Use case: precise-object-edit.
+EDIT INPUT1 with minimal surgical changes. It contains TWO identical front-facing Gemini sprites. Preserve all existing pixels and rendering as closely as possible, especially everything below the chin. Input2 shows the front (left) and small right-turn endpoint (right); it defines the maximum turn. Do NOT copy its endpoint poses.
+Output the SAME TWO-cell transparent sheet, same full figures, same scale, same proportions, same cell centers, no additional cells.
+Change ONLY the eye gaze and a TINY head turn toward VIEWER-RIGHT:
+LEFT CELL: both irises shift a small distance right inside the eyes (about 3px in480px cell units); head/face yaw barely begins, facial center only about6px toward viewer-right compared to input1, chin and nose almost frontal. This is1/3 of the subtle right turn, eyes lead.
+RIGHT CELL: eyes shift about5px right, head/face center about13px right, a little more right yaw than left cell but DEFINITELY LESS than rightmost endpoint in Input2. This is2/3 of the small turn.
+The cheek shape and eye sizes should remain close to FRONTAL. BOTH EYES clearly visible with roughly equal widths. No three-quarter profile and no dramatic turn, no giant eyes. Do not turn the body or shift feet. Head same size and vertical level; preserve top curl, ears, viewer-right star clip, hair locks, outfit, hands, boots, tail. Magenta iris always viewer-left, amber viewer-right. Do not add artifacts, new props, text, shadows, outlines or blur.
+This is an extremely restrained two-frame adjustment for smooth interpolation. Larger head rotations have already been rejected. No movement beyond Input2's endpoint.

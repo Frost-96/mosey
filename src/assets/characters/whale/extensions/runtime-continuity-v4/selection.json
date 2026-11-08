@@ -1,0 +1,9 @@
+{
+  "source": "originals/sitting-atlas.png",
+  "acceptedIndices": [0, 1, 3, 5, 6],
+  "excluded": {
+    "2": "Excluded short intermediate poses that raise hat/face/collar by10–14px above adjacent seated keys.",
+    "4": "Excluded short intermediate poses that raise hat/face/collar by10–14px above adjacent seated keys."
+  },
+  "durationsMs": [900, 220, 500, 220, 480]
+}

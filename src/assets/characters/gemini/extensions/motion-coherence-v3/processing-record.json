@@ -1,0 +1,14 @@
+{
+  "seated": {
+    "scale": 1.1646341463414633,
+    "sourceWidth": 1448,
+    "sourceHeight": 1086
+  },
+  "falling": {
+    "scale": 0.7291280148423006,
+    "sourceWidth": 1254,
+    "sourceHeight": 1254
+  },
+  "method": "Alpha below128 cleared; uniform scale per source sheet; fixed column center→240; per-frame bottom contact→462; raw RGBA row copy, lossless WebP.",
+  "script": "prepare.mjs"
+}

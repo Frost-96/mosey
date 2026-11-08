@@ -1,0 +1,465 @@
+{
+  "version": 1,
+  "character": "whale",
+  "record": "generation-record.json",
+  "actions": [
+    {
+      "family": "gentle",
+      "action": "sittingdown",
+      "image": "sittingdown.webp",
+      "sha256": "d326baef1cd36171b564ccc5eb651ac7edbabae0ea3c716c46c542b058343774",
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "key--1.png",
+            "kind": "unchanged-original"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 2,
+            "region": {
+              "x": 1113,
+              "y": 50,
+              "width": 355,
+              "height": 432
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 88,
+              "y": 87,
+              "width": 323,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 3,
+            "region": {
+              "x": 87,
+              "y": 566,
+              "width": 357,
+              "height": 428
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 86,
+              "y": 91,
+              "width": 325,
+              "height": 389
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 130,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 4,
+            "region": {
+              "x": 600,
+              "y": 585,
+              "width": 353,
+              "height": 410
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 87,
+              "y": 107,
+              "width": 321,
+              "height": 373
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 5,
+            "region": {
+              "x": 1112,
+              "y": 603,
+              "width": 356,
+              "height": 391
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 87,
+              "y": 124,
+              "width": 324,
+              "height": 356
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 200,
+          "source": {
+            "file": "key-8.png",
+            "kind": "unchanged-original"
+          }
+        }
+      ],
+      "notes": "Replace height-reversing inbetweens with a single-scale monotonic lowering sequence; head and shoulders remain frontal and connected. Original standing and seated endpoints preserved."
+    },
+    {
+      "family": "gentle",
+      "action": "standingup",
+      "image": "standingup.webp",
+      "sha256": "deeb1dbd2ed3c4c5ce46af557a497dcbc6f58f77da15de7e9d2c4bc2d0ca1e68",
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "key-8.png",
+            "kind": "unchanged-original"
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 130,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 5,
+            "region": {
+              "x": 1112,
+              "y": 603,
+              "width": 356,
+              "height": 391
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 87,
+              "y": 124,
+              "width": 324,
+              "height": 356
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 4,
+            "region": {
+              "x": 600,
+              "y": 585,
+              "width": 353,
+              "height": 410
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 87,
+              "y": 107,
+              "width": 321,
+              "height": 373
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 3,
+            "region": {
+              "x": 87,
+              "y": 566,
+              "width": 357,
+              "height": 428
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 86,
+              "y": 91,
+              "width": 325,
+              "height": 389
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "sitting-attempt1.png",
+            "cell": 2,
+            "region": {
+              "x": 1113,
+              "y": 50,
+              "width": 355,
+              "height": 432
+            },
+            "scale": 0.91,
+            "placement": {
+              "x": 88,
+              "y": 87,
+              "width": 323,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 180,
+          "source": {
+            "file": "key--1.png",
+            "kind": "unchanged-original"
+          }
+        }
+      ],
+      "notes": "Reverse the corrected coherent seated-to-standing pose chain without introducing a downward bounce."
+    },
+    {
+      "family": "runtime",
+      "action": "falling",
+      "image": "falling.webp",
+      "sha256": "f310f25db474cb07576030d604ffa09db064d2f985308d262d40947c184a8a72",
+      "loop": "repeat",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "falling-source.png",
+            "cell": 0,
+            "region": {
+              "x": 276,
+              "y": 11,
+              "width": 368,
+              "height": 389
+            },
+            "scale": 0.97,
+            "placement": {
+              "x": 39,
+              "y": 59,
+              "width": 357,
+              "height": 377
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "falling-source.png",
+            "cell": 1,
+            "region": {
+              "x": 1166,
+              "y": 31,
+              "width": 374,
+              "height": 369
+            },
+            "scale": 0.97,
+            "placement": {
+              "x": 42,
+              "y": 78,
+              "width": 363,
+              "height": 358
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "falling-source.png",
+            "cell": 2,
+            "region": {
+              "x": 279,
+              "y": 495,
+              "width": 373,
+              "height": 347
+            },
+            "scale": 0.97,
+            "placement": {
+              "x": 42,
+              "y": 97,
+              "width": 362,
+              "height": 337
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "falling-source.png",
+            "cell": 3,
+            "region": {
+              "x": 1163,
+              "y": 462,
+              "width": 369,
+              "height": 377
+            },
+            "scale": 0.97,
+            "placement": {
+              "x": 39,
+              "y": 65,
+              "width": 358,
+              "height": 366
+            }
+          }
+        }
+      ],
+      "notes": "Maintain the whole-body forward falling orientation throughout the loop; only hands/hair have restrained overlap. End no longer snaps to an upright first pose, and pitch matches the landing entry."
+    }
+  ]
+}

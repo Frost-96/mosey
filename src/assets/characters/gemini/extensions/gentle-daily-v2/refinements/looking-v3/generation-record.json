@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "action": "looking",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "scope": "Single-action refinement; original v1/v2 source, selections, manifests and runtime unchanged.",
+  "referenceDerivation": {
+    "manifest": "../../../gentle-daily-v1/manifest.json",
+    "manifestSha256": "99888595ea134203b068ff4bfb9dda5595de92524c62431dcb3658d0efc6f3f0",
+    "atlas": "../../../gentle-daily-v1/sprites/looking.webp",
+    "atlasSha256": "fa223349f2f215f5037d3700be472297b8fe5749f98fae669bf2a5c86b84fa85",
+    "keys": [0, 1, 2, 3],
+    "method": "Crop original authored keyframe pixels from the480px prepared v1 looking atlas; no pose synthesized by code. Four start/end pair references are simple side-by-side composites."
+  },
+  "requests": [
+    {
+      "tool": "built-in image_gen",
+      "promptFile": "prompt-front-left.txt",
+      "prompt": "Use case: identity-preserve. This is a precise production animation INBETWEEN task for ONE small head-turn action, not a new character illustration.\nInput is TWO existing keyframes, LEFT=A start, RIGHT=B end. Output TWO NEW MIDDLE poses only, in ONE horizontal row, two square cells side by side (1024x512, transparent PNG). Neither output may duplicate A or B. These will be played A -> output1 -> output2 -> B.\nLock everything below the neck: torso, hands, dress, knees, boots, tail must remain in the same pose, shape, size, position and colors as Input A. Feet planted on the exact same ground line, same center. Lock head size and face proportions. Only neck/head YAW and eye gaze change by small smooth increments; long hair follows minimally. No sideways body translation, no jumping, no resizing, no tilt/roll/nod. Preserve the existing hair volume, cat ears and star attachment while turning the head.\nVERY IMPORTANT: animate actual head yaw and eye gaze, NOT just turning the whole sprite, duplicating a keyframe, changing opacity, or alpha blending. One crisp solid outline per figure, no ghost limbs. Output1 is approximately1/3 through A→B, output2 is2/3 through it. Eyes lead head: in output1 gaze has moved about2/3 of total while head only1/3; in output2 eyes reach destination while head is2/3. Keep both eyes fully visible and open.\nMatch exact artwork: giant round head, stubby childlike chibi body, thick dark outline, flat blue-purple long hair, cat ears pink inside, one curl, VIEWER-RIGHT star hair clip, VIEWER-LEFT MAGENTA iris and VIEWER-RIGHT AMBER iris (never swap). Same navy/white dress with chest star, matching boots, attached purple-blue tail viewer-right. No new detail, props, text, labels, frame borders or shadow. TRUE transparent background.\nEach cell full figure at same drawing scale as source, with at least30px transparent margin, crown aroundy85 and foot bottomy490 in512cell. Head/body must preserve the source proportions.\nDirection: start A nearly FRONT-facing, end B looks toward VIEWER-LEFT. Make the gaze/pupils shift left first, then rotate nose/cheeks/head slightly left. Output1 head only a little left of front, output2 halfway closer to the left endpoint but still less left than B. Do not turn further left than B.\n",
+      "inputs": [
+        {
+          "file": "pair-front-left.png",
+          "sha256": "9a2b64bfa780c08a98b91db6528187dc54f9b2964e650e136aedfb1fa44cfd3c"
+        }
+      ],
+      "output": {
+        "file": "generated-front-left.png",
+        "sha256": "41d697e895df4222a1347a86044b808371fb61aea962732f0c53233e67364e0c",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "selected-cells-recorded-in-midpoints-json"
+    },
+    {
+      "tool": "built-in image_gen",
+      "promptFile": "prompt-left-front.txt",
+      "prompt": "Use case: identity-preserve. This is a precise production animation INBETWEEN task for ONE small head-turn action, not a new character illustration.\nInput is TWO existing keyframes, LEFT=A start, RIGHT=B end. Output TWO NEW MIDDLE poses only, in ONE horizontal row, two square cells side by side (1024x512, transparent PNG). Neither output may duplicate A or B. These will be played A -> output1 -> output2 -> B.\nLock everything below the neck: torso, hands, dress, knees, boots, tail must remain in the same pose, shape, size, position and colors as Input A. Feet planted on the exact same ground line, same center. Lock head size and face proportions. Only neck/head YAW and eye gaze change by small smooth increments; long hair follows minimally. No sideways body translation, no jumping, no resizing, no tilt/roll/nod. Preserve the existing hair volume, cat ears and star attachment while turning the head.\nVERY IMPORTANT: animate actual head yaw and eye gaze, NOT just turning the whole sprite, duplicating a keyframe, changing opacity, or alpha blending. One crisp solid outline per figure, no ghost limbs. Output1 is approximately1/3 through A→B, output2 is2/3 through it. Eyes lead head: in output1 gaze has moved about2/3 of total while head only1/3; in output2 eyes reach destination while head is2/3. Keep both eyes fully visible and open.\nMatch exact artwork: giant round head, stubby childlike chibi body, thick dark outline, flat blue-purple long hair, cat ears pink inside, one curl, VIEWER-RIGHT star hair clip, VIEWER-LEFT MAGENTA iris and VIEWER-RIGHT AMBER iris (never swap). Same navy/white dress with chest star, matching boots, attached purple-blue tail viewer-right. No new detail, props, text, labels, frame borders or shadow. TRUE transparent background.\nEach cell full figure at same drawing scale as source, with at least30px transparent margin, crown aroundy85 and foot bottomy490 in512cell. Head/body must preserve the source proportions.\nDirection: A looks toward VIEWER-LEFT, B returns to nearly FRONT-facing. Output1 pupils move back toward center while head is still slightly left. Output2 head is almost front but retains a small left yaw. Neither output should remain at full-left endpoint A or finish fully neutral B.\n",
+      "inputs": [
+        {
+          "file": "pair-left-front.png",
+          "sha256": "4e9861b59a516ba775ac231dc1486f395522e72b9cdeda0803941c5abc76ccb8"
+        }
+      ],
+      "output": {
+        "file": "generated-left-front.png",
+        "sha256": "0db1eb68a9f351496269408016d93d1a332d7aa8c8bfa20e56141ceb149efaaf",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "selected-cells-recorded-in-midpoints-json"
+    },
+    {
+      "tool": "built-in image_gen",
+      "promptFile": "prompt-front-right.txt",
+      "prompt": "Use case: identity-preserve. This is a precise production animation INBETWEEN task for ONE small head-turn action, not a new character illustration.\nInput is TWO existing keyframes, LEFT=A start, RIGHT=B end. Output TWO NEW MIDDLE poses only, in ONE horizontal row, two square cells side by side (1024x512, transparent PNG). Neither output may duplicate A or B. These will be played A -> output1 -> output2 -> B.\nLock everything below the neck: torso, hands, dress, knees, boots, tail must remain in the same pose, shape, size, position and colors as Input A. Feet planted on the exact same ground line, same center. Lock head size and face proportions. Only neck/head YAW and eye gaze change by small smooth increments; long hair follows minimally. No sideways body translation, no jumping, no resizing, no tilt/roll/nod. Preserve the existing hair volume, cat ears and star attachment while turning the head.\nVERY IMPORTANT: animate actual head yaw and eye gaze, NOT just turning the whole sprite, duplicating a keyframe, changing opacity, or alpha blending. One crisp solid outline per figure, no ghost limbs. Output1 is approximately1/3 through A→B, output2 is2/3 through it. Eyes lead head: in output1 gaze has moved about2/3 of total while head only1/3; in output2 eyes reach destination while head is2/3. Keep both eyes fully visible and open.\nMatch exact artwork: giant round head, stubby childlike chibi body, thick dark outline, flat blue-purple long hair, cat ears pink inside, one curl, VIEWER-RIGHT star hair clip, VIEWER-LEFT MAGENTA iris and VIEWER-RIGHT AMBER iris (never swap). Same navy/white dress with chest star, matching boots, attached purple-blue tail viewer-right. No new detail, props, text, labels, frame borders or shadow. TRUE transparent background.\nEach cell full figure at same drawing scale as source, with at least30px transparent margin, crown aroundy85 and foot bottomy490 in512cell. Head/body must preserve the source proportions.\nDirection: A nearly FRONT-facing, B looks toward VIEWER-RIGHT. Output1 irises look right while head begins small right yaw, output2 head is farther right but still between A and B. Ensure the face position/nose/cheeks genuinely progress right. Do not overshoot B.\n",
+      "inputs": [
+        {
+          "file": "pair-front-right.png",
+          "sha256": "9aa9f81f4fd48cfc7061158d3d4436f5260823f56ff744f797557c7cd17bdfb5"
+        }
+      ],
+      "output": {
+        "file": "generated-front-right.png",
+        "sha256": "1d921767ed8c0d64674485eb557711a9052fbb33af6929289cf20b2a573c67e6",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "rejected-turn-overshoots-original-right-keyframe"
+    },
+    {
+      "tool": "built-in image_gen",
+      "promptFile": "prompt-right-front.txt",
+      "prompt": "Use case: identity-preserve. This is a precise production animation INBETWEEN task for ONE small head-turn action, not a new character illustration.\nInput is TWO existing keyframes, LEFT=A start, RIGHT=B end. Output TWO NEW MIDDLE poses only, in ONE horizontal row, two square cells side by side (1024x512, transparent PNG). Neither output may duplicate A or B. These will be played A -> output1 -> output2 -> B.\nLock everything below the neck: torso, hands, dress, knees, boots, tail must remain in the same pose, shape, size, position and colors as Input A. Feet planted on the exact same ground line, same center. Lock head size and face proportions. Only neck/head YAW and eye gaze change by small smooth increments; long hair follows minimally. No sideways body translation, no jumping, no resizing, no tilt/roll/nod. Preserve the existing hair volume, cat ears and star attachment while turning the head.\nVERY IMPORTANT: animate actual head yaw and eye gaze, NOT just turning the whole sprite, duplicating a keyframe, changing opacity, or alpha blending. One crisp solid outline per figure, no ghost limbs. Output1 is approximately1/3 through A→B, output2 is2/3 through it. Eyes lead head: in output1 gaze has moved about2/3 of total while head only1/3; in output2 eyes reach destination while head is2/3. Keep both eyes fully visible and open.\nMatch exact artwork: giant round head, stubby childlike chibi body, thick dark outline, flat blue-purple long hair, cat ears pink inside, one curl, VIEWER-RIGHT star hair clip, VIEWER-LEFT MAGENTA iris and VIEWER-RIGHT AMBER iris (never swap). Same navy/white dress with chest star, matching boots, attached purple-blue tail viewer-right. No new detail, props, text, labels, frame borders or shadow. TRUE transparent background.\nEach cell full figure at same drawing scale as source, with at least30px transparent margin, crown aroundy85 and foot bottomy490 in512cell. Head/body must preserve the source proportions.\nDirection: A looks toward VIEWER-RIGHT, B faces straight FRONT. Output1 irises return toward center while head retains slight right yaw, output2 head almost front with a trace of right yaw. Do not keep full-right endpoint or jump directly to front.\n",
+      "inputs": [
+        {
+          "file": "pair-right-front.png",
+          "sha256": "b8d28af96c3f558d4b955f06a775988bb45aba391ead80f20747297df1a529b7"
+        }
+      ],
+      "output": {
+        "file": "generated-right-front.png",
+        "sha256": "8a2edee397672a12a8b496cb969d2e2adabf6cebf8ace5440b150a20f1393dc3",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "selected-cells-recorded-in-midpoints-json"
+    },
+    {
+      "tool": "built-in image_gen",
+      "promptFile": "prompt-front-right-correction.txt",
+      "prompt": "Use case: precise-object-edit.\nEDIT INPUT1 with minimal surgical changes. It contains TWO identical front-facing Gemini sprites. Preserve all existing pixels and rendering as closely as possible, especially everything below the chin. Input2 shows the front (left) and small right-turn endpoint (right); it defines the maximum turn. Do NOT copy its endpoint poses.\nOutput the SAME TWO-cell transparent sheet, same full figures, same scale, same proportions, same cell centers, no additional cells.\nChange ONLY the eye gaze and a TINY head turn toward VIEWER-RIGHT:\nLEFT CELL: both irises shift a small distance right inside the eyes (about 3px in480px cell units); head/face yaw barely begins, facial center only about6px toward viewer-right compared to input1, chin and nose almost frontal. This is1/3 of the subtle right turn, eyes lead.\nRIGHT CELL: eyes shift about5px right, head/face center about13px right, a little more right yaw than left cell but DEFINITELY LESS than rightmost endpoint in Input2. This is2/3 of the small turn.\nThe cheek shape and eye sizes should remain close to FRONTAL. BOTH EYES clearly visible with roughly equal widths. No three-quarter profile and no dramatic turn, no giant eyes. Do not turn the body or shift feet. Head same size and vertical level; preserve top curl, ears, viewer-right star clip, hair locks, outfit, hands, boots, tail. Magenta iris always viewer-left, amber viewer-right. Do not add artifacts, new props, text, shadows, outlines or blur.\nThis is an extremely restrained two-frame adjustment for smooth interpolation. Larger head rotations have already been rejected. No movement beyond Input2's endpoint.\n",
+      "inputs": [
+        {
+          "file": "front-locked-edit-reference.png",
+          "sha256": "37b5e52ce43a3a0ffa30c87511bf86fda4f4a9c0f9c3f14bb6002e6d781c3f49"
+        },
+        {
+          "file": "pair-front-right.png",
+          "sha256": "9aa9f81f4fd48cfc7061158d3d4436f5260823f56ff744f797557c7cd17bdfb5"
+        }
+      ],
+      "output": {
+        "file": "generated-front-right-corrected.png",
+        "sha256": "a454a3ee0684f9260e3316ca43d87fa9724c1b191ba359c9f2b21c0210b2cd58",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "selected-cells-recorded-in-midpoints-json"
+    }
+  ],
+  "accepted": [
+    {
+      "index": 0,
+      "file": "generated-front-left.png",
+      "cell": 0,
+      "from": 0,
+      "to": 1,
+      "t": 0.5,
+      "description": "视线先向左，头部小幅跟随，保持在原左转端点之前。"
+    },
+    {
+      "index": 1,
+      "file": "generated-left-front.png",
+      "cell": 0,
+      "from": 1,
+      "to": 0,
+      "t": 0.3333333333333333,
+      "description": "视线先回中央，头仍轻微朝左。"
+    },
+    {
+      "index": 2,
+      "file": "generated-left-front.png",
+      "cell": 1,
+      "from": 1,
+      "to": 0,
+      "t": 0.6666666666666666,
+      "description": "头进一步回正，仍保留极轻左向。"
+    },
+    {
+      "index": 3,
+      "file": "generated-front-right-corrected.png",
+      "cell": 0,
+      "from": 0,
+      "to": 2,
+      "t": 0.3333333333333333,
+      "description": "视线先右移，面部只微微向右。"
+    },
+    {
+      "index": 4,
+      "file": "generated-front-right-corrected.png",
+      "cell": 1,
+      "from": 0,
+      "to": 2,
+      "t": 0.6666666666666666,
+      "description": "头部继续向右跟随，幅度小于原右转端点。"
+    },
+    {
+      "index": 5,
+      "file": "generated-right-front.png",
+      "cell": 1,
+      "from": 2,
+      "to": 3,
+      "t": 0.5,
+      "description": "视线回中央，头从右向正面恢复。"
+    }
+  ],
+  "rejected": [
+    {
+      "file": "generated-front-left.png",
+      "cell": 1,
+      "reason": "Head turn overshoots original key1; not inserted."
+    },
+    {
+      "file": "generated-front-right.png",
+      "cells": [0, 1],
+      "reason": "Both poses exaggerate right yaw; replaced with locked-frontal surgical edit."
+    },
+    {
+      "file": "generated-right-front.png",
+      "cell": 0,
+      "reason": "Too close to original right-facing endpoint; only second return pose retained."
+    }
+  ],
+  "output": {
+    "file": "midpoints.webp",
+    "sha256": "e7487d3960f4ed2f5cb9c4286f48b3b1bd80e193689e1527d586f2d662afb540",
+    "width": 2880,
+    "height": 480,
+    "frameMetadata": "midpoints.json"
+  },
+  "processing": {
+    "script": "prepare.mjs",
+    "alphaThreshold": 128,
+    "uniformScale": 0.5355129650507328,
+    "allFramesSourceCellSize": 887,
+    "allFramesResizedCellSize": 475,
+    "allFramesPlacement": {
+      "x": 3,
+      "y": 3
+    },
+    "foot": {
+      "x": 240,
+      "y": 462
+    },
+    "basis": "One common scale for all six generated poses; first original frame visible height382 and first generated pose height713. Integer full-cell resize475/887, fixed translation(3,3), no per-frame correction.",
+    "atlasAssembly": "Direct RGBA row copy; lossless WebP."
+  },
+  "review": {
+    "comparison": "comparison.png",
+    "geometry": "geometry-check.json",
+    "visual": "Reviewed all four original-to-new-to-original segments. Selected head/gaze path remains inside the original turn endpoints. Left-turn first pose leads with gaze; return poses bring gaze back before the head. Rightward correction restrains the previous excessive yaw. Colors/ears/star placement remain unchanged.",
+    "geometrySummary": "All original feet bottom-exclusive462. New frames bottom-exclusive461 or462; top80–82 versus original80. Single common scale475/887 and placement3,3; no per-frame scaling or movement correction.",
+    "timing": "t values are intended insertion fractions, not an exact measured yaw angle. Preserve original endpoints and use short new-frame durations for the eye-leading sequence."
+  }
+}

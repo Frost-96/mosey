@@ -11,6 +11,7 @@ import { appendFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { PNG } from "pngjs";
+import whaleWalking from "../src/assets/characters/whale/motion.json" with { type: "json" };
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
@@ -359,8 +360,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(await bounds()).toEqual(paused);
     for (const [choice, action] of [
-      [0.6, "stretching"],
-      [0.9, "playing"],
+      [whale ? 0.36 : 0.6, "stretching"],
+      [whale ? 0.46 : 0.9, "playing"],
     ] as const) {
       checkpoint(`${action}-start`);
       await app.evaluate((_electron, choice) => {
@@ -393,9 +394,12 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         })
         .toBe(true);
     }
-    await app.evaluate(() => {
-      Math.random = () => 0.6;
-    });
+    await app.evaluate(
+      (_electron, choice) => {
+        Math.random = () => choice;
+      },
+      whale ? 0.36 : 0.6,
+    );
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     // Directed Playwright input does not move the physical OS cursor. Keep
@@ -458,7 +462,17 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     const destination = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 300));
     expect(await bounds()).toEqual(destination);
-    expect(destination.x).toBeLessThanOrEqual(edge.x + (whale ? 126 : 150));
+    if (whale) {
+      // Follow the authored gait calibration; the former 126-point limit
+      // predates its three-cycle walk and no longer describes this character.
+      const distance =
+        (whaleWalking.cycleDistancePixels / whaleWalking.pixelRatio) *
+        whaleWalking.cyclesPerWalk *
+        (edge.width / whaleWalking.referenceWindowSize);
+      expect(Math.abs(destination.x - edge.x - distance)).toBeLessThanOrEqual(
+        1,
+      );
+    } else expect(destination.x).toBeLessThanOrEqual(edge.x + 150);
     expect(destination.y).toBe(edge.y);
     await invoke("Hide Mosey");
     const hidden = await bounds();

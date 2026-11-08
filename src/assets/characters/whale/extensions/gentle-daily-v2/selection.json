@@ -1,0 +1,10 @@
+{
+  "acceptedIndices": [0, 1, 4, 5, 6, 7, 9, 10, 12, 13, 14],
+  "excluded": {
+    "2": "Gaze stays too far right for return midpoint.",
+    "3": "Return gaze moves away from neutral.",
+    "8": "Seated neutral too close to existing endpoint.",
+    "11": "Seated neutral too close to existing endpoint.",
+    "15": "Do not insert drowsy pose after the recovered neutral."
+  }
+}

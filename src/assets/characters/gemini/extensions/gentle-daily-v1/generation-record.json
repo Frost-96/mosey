@@ -1,0 +1,311 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "source": {
+    "file": "source-v1.png",
+    "originalPath": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-9bb63642-798c-4152-ad14-9dcb8c183879.png",
+    "sha256": "49f839ef06bd4c670c8304a925c30cb229cf4348de2e9aa21e5871f330f30cf0",
+    "width": 1254,
+    "height": 1254
+  },
+  "reference": {
+    "file": "identity-reference.png",
+    "sha256": "38eeaffa18fd216ce2fd733b89e35fc79ee2cb48ed7987b08b0667c1408c85b5",
+    "derivedFrom": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "promptFile": "prompt.txt",
+  "requestedGrid": {
+    "columns": 4,
+    "rows": 4
+  },
+  "actions": {
+    "looking": {
+      "frames": [0, 1, 2, 3]
+    },
+    "sittingDown": {
+      "frames": [4, 5, 6, 7]
+    },
+    "sitting": {
+      "frames": [8, 9, 10, 11]
+    },
+    "standingUp": {
+      "frames": [7, 6, 5, 4],
+      "note": "Reverse the authored sitting transition."
+    },
+    "yawning": {
+      "frames": [12, 13, 14, 15]
+    }
+  },
+  "alpha": {
+    "transparent": 714416,
+    "partial": 855786,
+    "opaque": 2314
+  },
+  "frameBoundsAlpha128": [
+    {
+      "frame": 0,
+      "cell": {
+        "x": 0,
+        "y": 0,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 33,
+        "y": 21,
+        "width": 250,
+        "height": 278
+      },
+      "opaquePixels": 49544
+    },
+    {
+      "frame": 1,
+      "cell": {
+        "x": 314,
+        "y": 0,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 349,
+        "y": 21,
+        "width": 248,
+        "height": 278
+      },
+      "opaquePixels": 48913
+    },
+    {
+      "frame": 2,
+      "cell": {
+        "x": 627,
+        "y": 0,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 663,
+        "y": 21,
+        "width": 247,
+        "height": 278
+      },
+      "opaquePixels": 48711
+    },
+    {
+      "frame": 3,
+      "cell": {
+        "x": 941,
+        "y": 0,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 975,
+        "y": 21,
+        "width": 249,
+        "height": 278
+      },
+      "opaquePixels": 49563
+    },
+    {
+      "frame": 4,
+      "cell": {
+        "x": 0,
+        "y": 314,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 34,
+        "y": 335,
+        "width": 249,
+        "height": 278
+      },
+      "opaquePixels": 49405
+    },
+    {
+      "frame": 5,
+      "cell": {
+        "x": 314,
+        "y": 314,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 349,
+        "y": 342,
+        "width": 246,
+        "height": 270
+      },
+      "opaquePixels": 47963
+    },
+    {
+      "frame": 6,
+      "cell": {
+        "x": 627,
+        "y": 314,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 661,
+        "y": 353,
+        "width": 249,
+        "height": 260
+      },
+      "opaquePixels": 46591
+    },
+    {
+      "frame": 7,
+      "cell": {
+        "x": 941,
+        "y": 314,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 975,
+        "y": 363,
+        "width": 249,
+        "height": 250
+      },
+      "opaquePixels": 45357
+    },
+    {
+      "frame": 8,
+      "cell": {
+        "x": 0,
+        "y": 627,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 34,
+        "y": 678,
+        "width": 249,
+        "height": 249
+      },
+      "opaquePixels": 44902
+    },
+    {
+      "frame": 9,
+      "cell": {
+        "x": 314,
+        "y": 627,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 349,
+        "y": 678,
+        "width": 248,
+        "height": 249
+      },
+      "opaquePixels": 44739
+    },
+    {
+      "frame": 10,
+      "cell": {
+        "x": 627,
+        "y": 627,
+        "width": 314,
+        "height": 314
+      },
+      "region": {
+        "x": 662,
+        "y": 678,
+        "width": 248,
+        "height": 249
+      },
+      "opaquePixels": 44861
+    },
+    {
+      "frame": 11,
+      "cell": {
+        "x": 941,
+        "y": 627,
+        "width": 313,
+        "height": 314
+      },
+      "region": {
+        "x": 976,
+        "y": 678,
+        "width": 248,
+        "height": 249
+      },
+      "opaquePixels": 44936
+    },
+    {
+      "frame": 12,
+      "cell": {
+        "x": 0,
+        "y": 941,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 34,
+        "y": 961,
+        "width": 249,
+        "height": 278
+      },
+      "opaquePixels": 49565
+    },
+    {
+      "frame": 13,
+      "cell": {
+        "x": 314,
+        "y": 941,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 349,
+        "y": 961,
+        "width": 248,
+        "height": 278
+      },
+      "opaquePixels": 49537
+    },
+    {
+      "frame": 14,
+      "cell": {
+        "x": 627,
+        "y": 941,
+        "width": 314,
+        "height": 313
+      },
+      "region": {
+        "x": 662,
+        "y": 961,
+        "width": 248,
+        "height": 278
+      },
+      "opaquePixels": 49546
+    },
+    {
+      "frame": 15,
+      "cell": {
+        "x": 941,
+        "y": 941,
+        "width": 313,
+        "height": 313
+      },
+      "region": {
+        "x": 975,
+        "y": 961,
+        "width": 249,
+        "height": 278
+      },
+      "opaquePixels": 49583
+    }
+  ],
+  "review": {
+    "identity": "Matches current blue-purple hair, heterochromia, cat ears, viewer-right star, dress and tail.",
+    "poses": "All 16 requested poses visible. Seated row stays awake; yawning is clear. Looking motion is restrained, especially frame1.",
+    "limitations": "Raw generated sheet; source positions and ground lines require per-frame alignment before runtime use. No changes to active character processing or behavior.",
+    "dimensions": "Tool returned 1254×1254 instead of requested 2048×2048. Grid boundaries use rounded quarter divisions (0,314,627,941,1254)."
+  }
+}

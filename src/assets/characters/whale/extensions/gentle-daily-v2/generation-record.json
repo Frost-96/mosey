@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "character": "whale",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "input": {
+    "file": "../gentle-daily-v1/source.png",
+    "sha256": "d048172c9507a5a124de0b8138506bd1d2936090e70f1f47eea2ea6d5f8ac896"
+  },
+  "output": {
+    "file": "inbetweens.png",
+    "sha256": "77f2eab3af9cbc278e119fdc19ca527726663f97e1c2dc7e1ff9b77755f59bc2",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "reference": {
+    "file": "endpoint-pairs.png",
+    "sha256": "d6fa3d852e414601598762f67ec5f8b5bb8ae3aaaa4d4b7f49fe328634d4fe13"
+  },
+  "promptFile": "pair-prompt.txt",
+  "pairs": [
+    {
+      "outputIndex": 0,
+      "from": 0,
+      "to": 1
+    },
+    {
+      "outputIndex": 1,
+      "from": 1,
+      "to": 2
+    },
+    {
+      "outputIndex": 2,
+      "from": 2,
+      "to": 3
+    },
+    {
+      "outputIndex": 3,
+      "from": 3,
+      "to": 0
+    },
+    {
+      "outputIndex": 4,
+      "from": 4,
+      "to": 5
+    },
+    {
+      "outputIndex": 5,
+      "from": 5,
+      "to": 6
+    },
+    {
+      "outputIndex": 6,
+      "from": 6,
+      "to": 7
+    },
+    {
+      "outputIndex": 7,
+      "from": 7,
+      "to": 8
+    },
+    {
+      "outputIndex": 8,
+      "from": 8,
+      "to": 9
+    },
+    {
+      "outputIndex": 9,
+      "from": 9,
+      "to": 10
+    },
+    {
+      "outputIndex": 10,
+      "from": 10,
+      "to": 11
+    },
+    {
+      "outputIndex": 11,
+      "from": 11,
+      "to": 8
+    },
+    {
+      "outputIndex": 12,
+      "from": 12,
+      "to": 13
+    },
+    {
+      "outputIndex": 13,
+      "from": 13,
+      "to": 14
+    },
+    {
+      "outputIndex": 14,
+      "from": 14,
+      "to": 15
+    },
+    {
+      "outputIndex": 15,
+      "from": 15,
+      "to": 12
+    }
+  ],
+  "selectionFile": "selection.json",
+  "attempts": [
+    {
+      "file": "rejected-keyframe-copy.png",
+      "promptFile": "prompt.txt",
+      "sha256": "12caa8eb2f27c488cd60bd2fc3dc387f03a029b2109e5f3b01285846990ad092",
+      "adopted": false,
+      "reason": "Whole-sheet input mostly repeated the original key poses rather than drawing motion intermediates."
+    },
+    {
+      "file": "inbetweens.png",
+      "promptFile": "pair-prompt.txt",
+      "adopted": "selected frames only"
+    }
+  ]
+}

@@ -19,8 +19,31 @@ export const extensionRequirements = {
   belly: ["belly"],
   flutter: ["flutter", "falling", "landing"],
   climbing: ["climbing", "landing"],
+  looking: ["looking"],
+  sitting: ["sittingdown", "sitting", "standingup"],
+  yawning: ["yawning"],
+  petted: ["petted"],
+  grooming: ["grooming"],
+  celebrating: ["celebrating"],
+  habit: ["habit"],
 } as const satisfies Record<string, readonly Atlas["action"][]>;
 export type CharacterCapability = keyof typeof extensionRequirements;
+
+export const dailyActionDefinitions = [
+  { action: "looking", label: "张望", capability: "looking" },
+  { action: "sitting", label: "坐下休息", capability: "sitting" },
+  { action: "standingup", label: "站起来", capability: "sitting" },
+  { action: "yawning", label: "打哈欠", capability: "yawning" },
+  { action: "petted", label: "摸摸头", capability: "petted" },
+  { action: "grooming", label: "整理仪容", capability: "grooming" },
+  { action: "celebrating", label: "庆祝", capability: "celebrating" },
+  { action: "habit", label: "小习惯", capability: "habit" },
+] as const satisfies readonly {
+  action: Atlas["action"];
+  label: string;
+  capability: CharacterCapability;
+}[];
+export type DailyAction = (typeof dailyActionDefinitions)[number]["action"];
 
 export function characterCapabilities(
   actions: readonly Atlas["action"][],

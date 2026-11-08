@@ -1,0 +1,430 @@
+{
+  "method": "Alpha<128 cleared on generated inputs and four translated airborne transition poses; single uniform scale per generated sheet; cell center fixed to240 and generated alpha support bottom aligned462. Original retained frames raw-copied unchanged. Four old falling poses appended to flutter only translate vertically with scale1, explicitly recorded per frame. No local warping/compositing. Final atlases raw RGBA row copy then lossless WebP; visible RGBA equality verified.",
+  "script": "prepare.mjs",
+  "scriptSha256": "02b054116a784154f47f12d447cca1ea764070948002106a162748f254846938",
+  "anchorsUnchanged": true,
+  "actions": [
+    {
+      "action": "sittingdown",
+      "frames": [
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 87, "y": 62, "width": 307, "height": 400 },
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "generated/seated-attempt1.png",
+            "sha256": "df7f98fbe28ea49f055b1048a73b8a09161b43348faf3ee08b331f1c8c6a0ffc",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 1254, "height": 1254 },
+            "bounds": { "x": 237, "y": 175, "width": 786, "height": 1005 },
+            "scale": 0.3940298507462687,
+            "placement": { "x": 86, "y": 66, "width": 310, "height": 396 }
+          },
+          "bounds": { "x": 86, "y": 66, "width": 310, "height": 396 },
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 1,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 70, "width": 307, "height": 392 },
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 2,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 73, "width": 308, "height": 389 },
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 3,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 86, "width": 310, "height": 376 },
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 4,
+            "region": { "x": 1920, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 93, "width": 311, "height": 369 },
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 5,
+            "region": { "x": 2400, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 97, "width": 313, "height": 365 },
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "d8594d1b94d7885c8af1195cb9d3c2f19948caec36f8fb86ea493d5626fd45f4",
+            "index": 6,
+            "region": { "x": 2880, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 87, "y": 101, "width": 305, "height": 361 },
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 }
+        }
+      ]
+    },
+    {
+      "action": "standingup",
+      "frames": [
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 87, "y": 101, "width": 305, "height": 361 },
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 1,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 97, "width": 313, "height": 365 },
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 2,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 93, "width": 311, "height": 369 },
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 3,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 86, "width": 310, "height": 376 },
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 4,
+            "region": { "x": 1920, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 73, "width": 308, "height": 389 },
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 5,
+            "region": { "x": 2400, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 89, "y": 70, "width": 307, "height": 392 },
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "generated/seated-attempt1.png",
+            "sha256": "df7f98fbe28ea49f055b1048a73b8a09161b43348faf3ee08b331f1c8c6a0ffc",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 1254, "height": 1254 },
+            "bounds": { "x": 237, "y": 175, "width": 786, "height": 1005 },
+            "scale": 0.3940298507462687,
+            "placement": { "x": 86, "y": 66, "width": 310, "height": 396 }
+          },
+          "bounds": { "x": 86, "y": 66, "width": 310, "height": 396 },
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "4840729c398db5e86057bf51d6ae153d25548a8839590387d94ac657f8153382",
+            "index": 6,
+            "region": { "x": 2880, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 87, "y": 62, "width": 307, "height": 400 },
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 }
+        }
+      ]
+    },
+    {
+      "action": "falling",
+      "frames": [
+        {
+          "source": {
+            "file": "generated/falling-attempt1.png",
+            "sha256": "33b133f49f04ab2956424b2dc54f625771af2cc167ce3819ae3398071552cd8f",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 627, "height": 627 },
+            "bounds": { "x": 36, "y": 29, "width": 581, "height": 573 },
+            "scale": 0.6928446771378709,
+            "placement": { "x": 48, "y": 65, "width": 403, "height": 397 }
+          },
+          "bounds": { "x": 48, "y": 65, "width": 403, "height": 397 },
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "generated/falling-attempt1.png",
+            "sha256": "33b133f49f04ab2956424b2dc54f625771af2cc167ce3819ae3398071552cd8f",
+            "index": 1,
+            "region": { "x": 627, "y": 0, "width": 627, "height": 627 },
+            "bounds": { "x": 663, "y": 29, "width": 578, "height": 573 },
+            "scale": 0.6928446771378709,
+            "placement": { "x": 48, "y": 65, "width": 400, "height": 397 }
+          },
+          "bounds": { "x": 48, "y": 65, "width": 400, "height": 397 },
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "generated/falling-attempt1.png",
+            "sha256": "33b133f49f04ab2956424b2dc54f625771af2cc167ce3819ae3398071552cd8f",
+            "index": 2,
+            "region": { "x": 0, "y": 627, "width": 627, "height": 627 },
+            "bounds": { "x": 36, "y": 652, "width": 582, "height": 577 },
+            "scale": 0.6928446771378709,
+            "placement": { "x": 48, "y": 62, "width": 403, "height": 400 }
+          },
+          "bounds": { "x": 48, "y": 62, "width": 403, "height": 400 },
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "generated/falling-attempt1.png",
+            "sha256": "33b133f49f04ab2956424b2dc54f625771af2cc167ce3819ae3398071552cd8f",
+            "index": 3,
+            "region": { "x": 627, "y": 627, "width": 627, "height": 627 },
+            "bounds": { "x": 664, "y": 656, "width": 579, "height": 577 },
+            "scale": 0.6928446771378709,
+            "placement": { "x": 48, "y": 62, "width": 401, "height": 400 }
+          },
+          "bounds": { "x": 48, "y": 62, "width": 401, "height": 400 },
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+        }
+      ]
+    },
+    {
+      "action": "flutter",
+      "frames": [
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 49, "y": 74, "width": 375, "height": 333 },
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 1,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 46, "y": 60, "width": 385, "height": 352 },
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 2,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 57, "y": 82, "width": 367, "height": 343 },
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 3,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 47, "y": 64, "width": 372, "height": 361 },
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 4,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 49, "y": 74, "width": 375, "height": 333 },
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 5,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 46, "y": 60, "width": 385, "height": 352 },
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 6,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 57, "y": 82, "width": 367, "height": 343 },
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 7,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 47, "y": 64, "width": 372, "height": 361 },
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 8,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 49, "y": 74, "width": 375, "height": 333 },
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 9,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 46, "y": 60, "width": 385, "height": 352 },
+          "region": { "x": 4320, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 10,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 57, "y": 82, "width": 367, "height": 343 },
+          "region": { "x": 4800, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/flutter.png",
+            "sha256": "93e4517dbe02bf1ae8c37bf930bd7b3ae3d2a700809f9bb10f90879ff589ef87",
+            "index": 11,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+          },
+          "bounds": { "x": 47, "y": 64, "width": 372, "height": 361 },
+          "region": { "x": 5280, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/falling.png",
+            "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+            "index": 0,
+            "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+            "processing": {
+              "alphaThreshold": 128,
+              "scale": 1,
+              "translate": { "x": 0, "y": 41 },
+              "targetBottom": 430
+            }
+          },
+          "bounds": { "x": 86, "y": 57, "width": 305, "height": 373 },
+          "region": { "x": 5760, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/falling.png",
+            "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+            "index": 1,
+            "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+            "processing": {
+              "alphaThreshold": 128,
+              "scale": 1,
+              "translate": { "x": 0, "y": 35 },
+              "targetBottom": 438
+            }
+          },
+          "bounds": { "x": 65, "y": 65, "width": 346, "height": 373 },
+          "region": { "x": 6240, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/falling.png",
+            "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+            "index": 2,
+            "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+            "processing": {
+              "alphaThreshold": 128,
+              "scale": 1,
+              "translate": { "x": 0, "y": 39 },
+              "targetBottom": 446
+            }
+          },
+          "bounds": { "x": 64, "y": 88, "width": 365, "height": 358 },
+          "region": { "x": 6720, "y": 0, "width": 480, "height": 480 }
+        },
+        {
+          "source": {
+            "file": "originals/falling.png",
+            "sha256": "434e3994a09c14658279de9af327920ac0222439bc4ec9e4676d2dcaee9b5748",
+            "index": 3,
+            "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+            "processing": {
+              "alphaThreshold": 128,
+              "scale": 1,
+              "translate": { "x": 0, "y": 41 },
+              "targetBottom": 454
+            }
+          },
+          "bounds": { "x": 84, "y": 92, "width": 327, "height": 362 },
+          "region": { "x": 7200, "y": 0, "width": 480, "height": 480 }
+        }
+      ]
+    }
+  ]
+}

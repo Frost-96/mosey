@@ -1,0 +1,15 @@
+Use case: identity-preserve. Targeted correction of ONLY the mild head directions in the existing2×2 transparent sprite sheet.
+INPUT1 is the edit target. Its seated body height, proportions, head size, hands, clothing, feet, wings, tail, canvas framing and transparency must remain EXACTLY unchanged.
+INPUT2 is a guide with4 endpoint pairs: the required edited head pose in each target cell must be HALFWAY between the two corresponding original endpoint heads. INPUT3 is the original near-front seated identity.
+
+The current target sheet turns the head too far right in the first3 cells. REDUCE those head turns so they lie between the provided endpoints. This is not a request for more expressive turning. Use very small angles, with both eyes equally readable.
+
+TOP LEFT: make the head ALMOST FRONT-FACING with only a tiny2–3degree rightward look. The nose/mouth should be almost centered over the body. Do not leave the present moderate right turn.
+TOP RIGHT: REDUCE THE RIGHT TURN BY ABOUT HALF. It must be a gentle6–7degree right-facing look, not three-quarter/profile. Both cheeks and both eyes have nearly equal visible widths. This is halfway between guide pair2's mild and stronger right-facing endpoints.
+BOTTOM LEFT: mild4–5degree right-facing angle, halfway recovering toward front. Less turned than it is currently.
+BOTTOM RIGHT: retain near-front head, with only a tiny downward-to-forward eye settling. Eyes remain OPEN.
+
+Precise guide for target sheet's existing627px cells: fixed body/feet center is aboutx332. Desired mouth centers in local cell coordinates are approximately TOP LEFT x337, TOP RIGHT x351, BOTTOM LEFT x349, BOTTOM RIGHT x334. Current first3 mouths are too far right. These are small rotations through the neck; DO NOT translate the whole head or body, shrink the head, change crown height, alter the sitting pose or move hands/feet.
+Keep the same huge head size, horn shapes, hair volume, thick outlines, face, costume and rendering. In every pose the seated head top and boots bottom stay at the exact same heights as input1. All four mouths tiny and calm. No blink, no sleep.
+
+Output same2×2 square transparent image composition, preferably exact1254×1254. Do not draw labels, grid, borders, gray reference background, arrows, numbers, floor, shadows or extra props. Preserve full unclipped figures and true alpha. Change ONLY head directions/eye focus as specified; body geometry is locked.

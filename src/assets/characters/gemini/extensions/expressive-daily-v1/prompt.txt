@@ -1,0 +1,27 @@
+Use case: identity-preserve.
+Asset type: a transparent game animation sprite sheet for the existing Mosey Gemini desktop pet.
+Input image 1 is the exact current production character and linework reference. Create new poses of the SAME character, not a redesign.
+ONE square 2048x2048 PNG, precisely FOUR columns by FOUR rows, 16 complete separate figures in equal 512x512 cells. True alpha transparency everywhere outside the character. NO grid, text, numbers, labels, scenery, floor, shadow, icons, sparkles, hearts, ZZZ, speech bubbles, cursor or outside hand. No extra props or extra characters.
+Keep IDENTICAL large round head, tiny squat torso, short legs, small hands, thick dark outlines, broad smooth blue-to-purple hair locks and flat cel shading. Blue cat ears with pink interiors, little curl above head, star clip on VIEWER-RIGHT. VIEWER-LEFT eye magenta and VIEWER-RIGHT eye amber. Navy-purple and white dress with golden star at chest, tiny matching boots. Thick fluffy blue-purple tail rooted at her hip and visible on VIEWER-RIGHT. Same accessory placement and outfit, two arms and two legs, exactly one tail and two cat ears. Never swap eyes, clip, ears or tail side.
+All sixteen figures use the exact SAME drawing scale, head width, camera and body proportions. Front camera with only small head turns. Body axis x=256 in each cell. Soles at y=450 in every cell; standing crown around y=90; character about360px tall. Complete hair, ears, hands and tail remain inside each cell with at least45px transparent margin. Feet stay planted in every pose; no jumping, floating, crouching or scaling the body. Fixed head size even while tilting. Gestures must be visibly distinct but restrained.
+ROW 1: PETTED, a clear gentle reaction to an invisible affectionate head stroke, NO external hand shown:
+1 neutral exact standing pose with open eyes, arms relaxed.
+2 slight head lean toward VIEWER-LEFT, neck extends a little into imagined gentle touch, eyes half closed, shoulders soften.
+3 contented eyes fully closed, tiny smile, cheek/head gently nuzzles a little further in the same direction, arms relaxed, subtle comfortable body sway only.
+4 head returns upright and open attentive eyes return, same neutral pose.
+ROW 2: GROOMING, tidying the star hair clip and fringe, distinct from petting:
+5 standing, hand on VIEWER-RIGHT begins raising beside her face toward the star clip, eyes look at the approaching hand.
+6 that hand gently adjusts the SAME star clip on VIEWER-RIGHT, star remains attached in its correct spot. Other hand stays at side.
+7 same hand brushes/smooths the adjacent front hair lock down toward cheek, calm concentrated expression.
+8 hand lowered and neutral standing pose restored. No new objects or detached accessories.
+ROW 3: CELEBRATING with a small happy CLAP, feet remain firmly planted:
+9 both small hands rise in front of chest, palms facing each other but clearly separated, bright anticipatory smile.
+10 palms meet at chest height for a clap, happy crescent eyes and open small cheerful smile. Exactly two hands, not a merged extra limb.
+11 hands separate a short distance after the clap, still smiling, ready for one repeat clap using frame10. No confetti or effect marks.
+12 both hands lower to original idle position, eyes open, calm small smile.
+ROW 4: SIGNATURE CAT HABIT, ears detect a sound then she checks HER OWN TAIL:
+13 standing, both cat ears perk slightly more upright, alert open eyes glance toward VIEWER-RIGHT, hands at sides.
+14 head turns gently about20 degrees to VIEWER-RIGHT and glances downward at her attached tail. Do not rotate the body or swap eye colors.
+15 hand on VIEWER-RIGHT reaches down and gently touches her own fluffy tail tip, tail curves slightly forward but remains continuously attached at the hip; amused curious expression, not grabbing or detaching tail.
+16 releases tail and returns to neutral front-facing standing pose, original tail placement restored.
+The result should match the provided reference closely enough to be consecutive frames from the same game. Keep all shapes simple and readable at70px. No ornate rendering, additional hair strands, change of costume, added symbols or cast shadows.

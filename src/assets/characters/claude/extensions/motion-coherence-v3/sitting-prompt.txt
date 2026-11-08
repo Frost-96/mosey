@@ -1,0 +1,15 @@
+Use case: identity-preserve.
+Production replacement sprite drawings for Mosey. Match the exact Claude girl in the approved reference: huge orange-haired chibi head, amber eyes, flower and black bow on VIEWER-RIGHT, cream-black-orange costume, cream boots, one brown book with orange flower on VIEWER-LEFT. Exactly two arms and two hands total. Match head shape/size, thick dark lines, flat cel colors, proportions and camera. No redesign, no fine realistic rendering.
+True transparent alpha. No background, drawn floor/shadow, grid lines, numbers, words, extra props, effects or external hands. Canvas wide 2048×1024, FOUR columns by TWO rows of equal512-square cells, eight complete separate figures with generous transparent gutters. Same drawing scale in all8, local center x256 and foot/contact baseline y455. Head width and crown-to-chin dimensions identical all8. Full flower/hair/hand/boots inside cell. Camera near-front, shoulder line/chest flower and face share coherent orientation.
+Image1 is the exact standing endpoint. Image2 is the exact seated endpoint. Draw a coherent EIGHT-frame standing-to-sitting transition in row-major order. This is one continuous action across both rows.
+Do not scale down the character. Keep HEAD WIDTH and head proportions constant. Torso, chest flower and pelvis all stay near-front, never turn opposite the face. Eyes open calmly. Book remains hugged on VIEWER-LEFT through all frames, settles by that same side of lap. Free viewer-right hand moves gradually from side to thigh then knee. Knees bend and feet rotate forward gradually. All contact points at the SAME ground baseline.
+The head must become progressively lower in EVERY successive frame without any bounce or upward reversal. Approximate visible total heights out of512cell: 400,394,386,377,368,359,352,350 pixels. Head width remains identical; shorter height ONLY from knee/hip bending and pelvis lowering.
+1 matches standing reference.
+2 slight knee flex, head lowered about6px, free hand begins toward thigh.
+3 knees bend more, head another8px lower, hips descend, free hand touches thigh.
+4 low squat with knees bent, head another9px lower, weight balanced above feet.
+5 pelvis starts settling back/down, knees folding forward, toes begin pointing toward viewer, free palm slides to knee.
+6 nearly seated, bottom just reaches ground, torso upright, legs nearly folded, free hand settles atop knee.
+7 fully seated with knees/feet together in front, relaxes gently downward last fewpixels.
+8 exactly the seated pose in reference2, open eyes, upright relaxed torso, book on viewer-left lap and free hand on viewer-right knee.
+No head ballooning/shrinking, no hair resizing, no chest turning away while face stays front, no stool, no bouncing. The reverse sequence must also look like a natural rise.

@@ -1,0 +1,1269 @@
+{
+  "format": "mosey-action-material-candidate",
+  "version": 2,
+  "character": "gpt",
+  "package": "gentle-daily-v2",
+  "status": "candidate-materials-not-runtime-format",
+  "integration": "Standalone material preview; not registered in the desktop application's behavior.",
+  "generator": "tools/prepare-inbetween-extensions.ts",
+  "frameSize": 480,
+  "pixelRatio": 2,
+  "hitAlphaThreshold": 128,
+  "previous": {
+    "file": "../gentle-daily-v1/manifest.json",
+    "sha256": "cda837ae44575e8ce1dc8c74212f64b3b2b8d612e10332c3929d011610fdeca4"
+  },
+  "source": {
+    "file": "inbetweens.png",
+    "sha256": "e8f52e888c6d4eac79bbfeea9770dd9b1f018e021f99087d60d60fbf29b73b9e",
+    "width": 1254,
+    "height": 1254,
+    "record": "generation-record.json",
+    "recordSha256": "ef18145f357fd792db256630b30c1b52ffacab689ff7d5f95ff1806ace5ff581"
+  },
+  "selection": {
+    "file": "selection.json",
+    "sha256": "89d92d6afd556ca78f5b2ae48d73601b5e2670b49892d4a6ac5239156e297907",
+    "acceptedIndices": [1, 4, 5, 13, 14, 15],
+    "usedIndices": [1, 4, 5, 13, 14, 15]
+  },
+  "refinements": {
+    "file": "refinements.json",
+    "sha256": "356800965402b5f7fc7c0d5f805074c30b5e3175c429c1e5a1267931fa20db00"
+  },
+  "processing": {
+    "uniformScale": 1.4545454545454546,
+    "alphaCleanup": "Set alpha<128 to zero; no crossfade or generated pose warping.",
+    "alignment": "Fixed cell horizontal center and existing contact baseline; fixed scale across the sheet.",
+    "originalPixels": "Copied from v1 atlases as raw RGBA without compositing."
+  },
+  "actions": {
+    "looking": {
+      "image": "sprites/looking.webp",
+      "sha256": "2d46b48dcf56af9fd59fc15a8e362f97310ff386ddb6f811c6e7f03362f039d8",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "sourceFrameIndex": 0,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 320,
+          "kind": "original",
+          "sourceFrameIndex": 1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 1,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 1,
+            "pair": {
+              "index": 1,
+              "from": 1,
+              "to": 2
+            },
+            "region": {
+              "x": 366,
+              "y": 22,
+              "width": 215,
+              "height": 277
+            },
+            "cell": {
+              "x": 314,
+              "y": 0,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 88,
+              "y": 59,
+              "width": 313,
+              "height": 403
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 320,
+          "kind": "original",
+          "sourceFrameIndex": 2,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 3,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "sittingdown": {
+      "image": "sprites/sittingdown.webp",
+      "sha256": "021e22e0baa065f3427b9f148816f2e8b92307f40e72caae5e3c032dd9f9c322",
+      "width": 3840,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 70,
+          "kind": "original",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 4,
+            "pair": {
+              "index": 4,
+              "from": 4,
+              "to": 5
+            },
+            "region": {
+              "x": 52,
+              "y": 340,
+              "width": 215,
+              "height": 270
+            },
+            "cell": {
+              "x": 0,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 87,
+              "y": 69,
+              "width": 313,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 5,
+            "pair": {
+              "index": 5,
+              "from": 5,
+              "to": 6
+            },
+            "region": {
+              "x": 366,
+              "y": 348,
+              "width": 216,
+              "height": 260
+            },
+            "cell": {
+              "x": 314,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 88,
+              "y": 84,
+              "width": 314,
+              "height": 378
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "kind": "original",
+          "sourceFrameIndex": 6,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 160,
+          "kind": "original",
+          "sourceFrameIndex": 7,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "kind": "original",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "sitting": {
+      "image": "sprites/sitting.webp",
+      "sha256": "be5ee2bcc04e57acf6e5f87536b8a7a7ead7ca93e6a5d9b7d283cf083c282494",
+      "width": 4320,
+      "height": 480,
+      "loop": "repeat",
+      "refinement": "Four dedicated awake seated intermediates following the actual key8→9→10→11→8 direction. Keep seated support height and fixed scale; preserve quiet endpoint holds and original keyframe RGBA.",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 800,
+          "kind": "original",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "kind": "inbetween",
+          "sourceFrameIndex": 100,
+          "source": {
+            "file": "refinements/sitting-v3/midpoints.webp",
+            "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "index": 100,
+            "record": "refinements/sitting-v3/generation-record.json",
+            "recordSha256": "79c17f8a8bb489ffc65eceb35c81371669ce6207a8635173a43b9f2880c0cb8f"
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sitting.webp",
+            "sha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "kind": "inbetween",
+          "sourceFrameIndex": 101,
+          "source": {
+            "file": "refinements/sitting-v3/midpoints.webp",
+            "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "index": 101,
+            "record": "refinements/sitting-v3/generation-record.json",
+            "recordSha256": "79c17f8a8bb489ffc65eceb35c81371669ce6207a8635173a43b9f2880c0cb8f"
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 500,
+          "kind": "original",
+          "sourceFrameIndex": 10,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sitting.webp",
+            "sha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "kind": "inbetween",
+          "sourceFrameIndex": 102,
+          "source": {
+            "file": "refinements/sitting-v3/midpoints.webp",
+            "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "index": 102,
+            "record": "refinements/sitting-v3/generation-record.json",
+            "recordSha256": "79c17f8a8bb489ffc65eceb35c81371669ce6207a8635173a43b9f2880c0cb8f"
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "kind": "original",
+          "sourceFrameIndex": 11,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sitting.webp",
+            "sha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "kind": "inbetween",
+          "sourceFrameIndex": 103,
+          "source": {
+            "file": "refinements/sitting-v3/midpoints.webp",
+            "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "index": 103,
+            "record": "refinements/sitting-v3/generation-record.json",
+            "recordSha256": "79c17f8a8bb489ffc65eceb35c81371669ce6207a8635173a43b9f2880c0cb8f"
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 400,
+          "kind": "original",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "standingup": {
+      "image": "sprites/standingup.webp",
+      "sha256": "578719b5a054b6ac77c2ed3d172e8a8e82f0787d7340d7648329a6d775798637",
+      "width": 3840,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "kind": "original",
+          "sourceFrameIndex": 7,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "kind": "original",
+          "sourceFrameIndex": 6,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 5,
+            "pair": {
+              "index": 5,
+              "from": 5,
+              "to": 6
+            },
+            "region": {
+              "x": 366,
+              "y": 348,
+              "width": 216,
+              "height": 260
+            },
+            "cell": {
+              "x": 314,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 88,
+              "y": 84,
+              "width": 314,
+              "height": 378
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 4,
+            "pair": {
+              "index": 4,
+              "from": 4,
+              "to": 5
+            },
+            "region": {
+              "x": 52,
+              "y": 340,
+              "width": 215,
+              "height": 270
+            },
+            "cell": {
+              "x": 0,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 87,
+              "y": 69,
+              "width": 313,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+            "sha256": "54d05de924ba18e66859ffe030ed319008d97664be109a9b2e319f7881b861a2",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "yawning": {
+      "image": "sprites/yawning.webp",
+      "sha256": "c4f146e2b90a0ee7f3392ec91cd02e3b6f92aca51e6a7a785b92da49fd0f0004",
+      "width": 4320,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 15,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 15,
+            "pair": {
+              "index": 15,
+              "from": 15,
+              "to": 12
+            },
+            "region": {
+              "x": 991,
+              "y": 964,
+              "width": 217,
+              "height": 275
+            },
+            "cell": {
+              "x": 941,
+              "y": 941,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 85,
+              "y": 62,
+              "width": 316,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": 12,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/yawning.webp",
+            "sha256": "043fc0989ee3acf95fc85e5fe38ce31a53887a1b48843a18e0c6fd746f32755f",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "sourceFrameIndex": 13,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/yawning.webp",
+            "sha256": "043fc0989ee3acf95fc85e5fe38ce31a53887a1b48843a18e0c6fd746f32755f",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 13,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 13,
+            "pair": {
+              "index": 13,
+              "from": 13,
+              "to": 14
+            },
+            "region": {
+              "x": 365,
+              "y": 965,
+              "width": 216,
+              "height": 274
+            },
+            "cell": {
+              "x": 314,
+              "y": 941,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 87,
+              "y": 63,
+              "width": 314,
+              "height": 399
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 550,
+          "kind": "original",
+          "sourceFrameIndex": 14,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/yawning.webp",
+            "sha256": "043fc0989ee3acf95fc85e5fe38ce31a53887a1b48843a18e0c6fd746f32755f",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 14,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 14,
+            "pair": {
+              "index": 14,
+              "from": 14,
+              "to": 15
+            },
+            "region": {
+              "x": 678,
+              "y": 964,
+              "width": 217,
+              "height": 275
+            },
+            "cell": {
+              "x": 627,
+              "y": 941,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.4545454545454546,
+            "placement": {
+              "x": 86,
+              "y": 62,
+              "width": 316,
+              "height": 400
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 130,
+          "kind": "original",
+          "sourceFrameIndex": 15,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/yawning.webp",
+            "sha256": "043fc0989ee3acf95fc85e5fe38ce31a53887a1b48843a18e0c6fd746f32755f",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../gentle-daily-v1/sprites/looking.webp",
+            "sha256": "ab3f40941fc18c329dfd59c7c98add3ee9c27d00992fa720260349070c0ce1bb",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    }
+  }
+}

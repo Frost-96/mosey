@@ -1,0 +1,28 @@
+Use case: identity-preserve. Asset: NEW genuine animation IN-BETWEEN drawings for an existing transparent sprite sheet.
+Input image 1 is the original key-pose sprite sheet; input image 2 is the strict standing identity reference. DO NOT reproduce the original sheet or simply repeat endpoints. Draw one genuinely new halfway pose between each specified pair of key poses. Intermediate joints, fingers, eyelids, eyes and mouth are actual solid drawings, NOT blended images, crossfades, ghosting, transparent overlaps or duplicated figures.
+Preserve the exact white-haired chibi dragon girl's identity, cream horns, white/lilac dress with spiral rosette at viewer-right waist, white boots, purple eyes, lavender wings and tail. Preserve the original simple thick dark outlines, flat cel colors, head size, squat torso and tiny legs, camera angle and rendering. Do not make her taller, older, more detailed or more realistic. Hair and tail remain full and attached, with only very small secondary movement.
+OUTPUT one square sheet with FOUR columns by FOUR rows, 16 equal invisible cells, true transparent alpha. Prefer exactly 1254×1254 pixels to match input1. Same four-row grouping as input1. Keep each figure at the exact source drawing scale (standing visible figure about280px tall in a313/314px cell), same center and foot baseline as corresponding source cells; sitting gets shorter by bending joints, never by scaling the head or character. Keep entire horns/wings/hair/tail/feet inside each cell with clear transparent margins. No text, numbers, labels, grid lines, scenery, floor, shadows, effects, symbols, or added objects.
+Frame numbering in the instructions below is ZERO-BASED within each original row: original A=column0, B=column1, C=column2, D=column3. New row columns ordinarily are A→B halfway, B→C halfway, C→D halfway, D→A halfway. Only NEW intermediates appear in output; never include the four original key poses again.
+
+ROW 1 LOOKING AROUND:
+new col0 halfway A→B: eyes have shifted partway left and head turns only about half of original B's small left turn; arms and feet stay fixed.
+new col1 halfway B→C: the head is smoothly passing through center between left-looking and right-looking poses; eyes are transitioning across the face, tiny attentive expression.
+new col2 halfway C→D: head partly returns from right-looking to front, half of C's small right turn.
+new col3 halfway D→A: quiet near-front bridge with a subtle intermediate eye focus and tiny shoulder-breath change, retaining head scale. No exaggerated tilt.
+
+ROW 2 SITTING DOWN (special last transition):
+col0 original standing A→slightly bent B halfway: knees just begin bending, hips descend halfway, hands begin moving inward toward thighs.
+col1 B→lower crouch C halfway: knees bend further, hips/head descend to intermediate height, hands move closer to knees.
+col2 C→fully seated D halfway: hips almost on floor, legs fold toward seated arrangement, palms halfway toward lap.
+col3 original ROW2 D→original ROW3 A halfway: remain FULLY SEATED and AWAKE, hands/legs settle into the seated-loop start. Never rise to standing in this cell. All eyes remain open.
+
+ROW 3 AWAKE SEATED LOOP:
+Each new col is a true halfway between its corresponding pair A→B, B→C, C→D, D→A. Preserve exactly the folded-leg arrangement and hands on lap. Use intermediate tiny head/eye gaze directions and shoulder breath levels from the corresponding endpoints. Eyes stay OPEN, alert and peaceful; no sleep symbols or closed sleeping face. Do not add torso sway.
+
+ROW 4 STANDING YAWN:
+col0 A→B halfway: hand halfway on its rise from upper waist/chest toward mouth, eyelids roughly three-quarters lowered, small beginning oval mouth.
+col1 B→C halfway: hand closer to covering mouth than B but not as high as C, eyes closed, mouth opens partway toward yawn peak.
+col2 C→D halfway: yawn subsides, hand is halfway lowered from mouth toward side, eyes half reopening, mouth shrinking.
+col3 D→A halfway: neutral standing develops mild drowsiness, eyelids partially lower and hand begins a small preparatory lift. Feet unchanged.
+
+This sheet supplies missing poses for smoothly interleaving with the existing original keyframes. Make changes physically halfway, not newly invented extremes, stretched joints, duplicate endpoints or a different action.

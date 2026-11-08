@@ -1,0 +1,220 @@
+{
+  "character": "claude",
+  "package": "gentle-daily-v2",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "promptFile": "prompt.txt",
+  "purpose": "New authored midpoint poses between v1 keyframes; standalone material, not runtime integration.",
+  "inputs": [
+    {
+      "file": "../gentle-daily-v1/source-v1.png",
+      "sha256": "a8c3adb3f80e592ab4d26c4cf55b34b3f544f2f5ea839fcc1f7a34517f894836",
+      "role": "Original keyframe poses used to build endpoint pairs"
+    },
+    {
+      "file": "paired-reference.png",
+      "sha256": "87969f7ea00be0f16dfc485086838670d081294db72a49d917e6143cf1126f89",
+      "role": "Actual imagegen input: 4x4 endpoint pairs, left A/right B"
+    },
+    {
+      "file": "../gentle-daily-v1/reference-standing.png",
+      "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779",
+      "role": "Actual imagegen input: identity/style reference"
+    }
+  ],
+  "output": {
+    "file": "inbetweens.png",
+    "sha256": "0e502d31f58f2a1fa600f57abd054c3b05ee1b2059bde6db4172a980eda1b56a",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major",
+    "boundaries": "round(index*dimension/4)"
+  },
+  "mapping": [
+    {
+      "outputFrameIndex": 0,
+      "fromSourceFrameIndex": 0,
+      "toSourceFrameIndex": 1
+    },
+    {
+      "outputFrameIndex": 1,
+      "fromSourceFrameIndex": 1,
+      "toSourceFrameIndex": 2
+    },
+    {
+      "outputFrameIndex": 2,
+      "fromSourceFrameIndex": 2,
+      "toSourceFrameIndex": 3
+    },
+    {
+      "outputFrameIndex": 3,
+      "fromSourceFrameIndex": 3,
+      "toSourceFrameIndex": 0
+    },
+    {
+      "outputFrameIndex": 4,
+      "fromSourceFrameIndex": 4,
+      "toSourceFrameIndex": 5
+    },
+    {
+      "outputFrameIndex": 5,
+      "fromSourceFrameIndex": 5,
+      "toSourceFrameIndex": 6
+    },
+    {
+      "outputFrameIndex": 6,
+      "fromSourceFrameIndex": 6,
+      "toSourceFrameIndex": 7
+    },
+    {
+      "outputFrameIndex": 7,
+      "fromSourceFrameIndex": 7,
+      "toSourceFrameIndex": 8
+    },
+    {
+      "outputFrameIndex": 8,
+      "fromSourceFrameIndex": 8,
+      "toSourceFrameIndex": 9
+    },
+    {
+      "outputFrameIndex": 9,
+      "fromSourceFrameIndex": 9,
+      "toSourceFrameIndex": 10
+    },
+    {
+      "outputFrameIndex": 10,
+      "fromSourceFrameIndex": 10,
+      "toSourceFrameIndex": 11
+    },
+    {
+      "outputFrameIndex": 11,
+      "fromSourceFrameIndex": 11,
+      "toSourceFrameIndex": 8
+    },
+    {
+      "outputFrameIndex": 12,
+      "fromSourceFrameIndex": 12,
+      "toSourceFrameIndex": 13
+    },
+    {
+      "outputFrameIndex": 13,
+      "fromSourceFrameIndex": 13,
+      "toSourceFrameIndex": 14
+    },
+    {
+      "outputFrameIndex": 14,
+      "fromSourceFrameIndex": 14,
+      "toSourceFrameIndex": 15
+    },
+    {
+      "outputFrameIndex": 15,
+      "fromSourceFrameIndex": 15,
+      "toSourceFrameIndex": 12
+    }
+  ],
+  "attempts": [
+    {
+      "file": "inbetweens-first-attempt.png",
+      "promptFile": "prompt-first-attempt.txt",
+      "adopted": false,
+      "reason": "Whole original sheet reference mostly repeated key poses instead of anatomically intermediate poses."
+    },
+    {
+      "file": "inbetweens.png",
+      "promptFile": "prompt.txt",
+      "adopted": true,
+      "input": "paired-reference.png"
+    }
+  ],
+  "acceptedIndices": [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15],
+  "excluded": [
+    {
+      "index": 0,
+      "reason": "Head turn remains too close to the left endpoint; not confidently halfway along the original eye/head path."
+    },
+    {
+      "index": 2,
+      "reason": "Right-turn return remains close to its right-facing endpoint; omit instead of treating a redraw as interpolation."
+    },
+    {
+      "index": 3,
+      "reason": "Leftward return resembles the target endpoint, with insufficient new intermediate head pose."
+    },
+    {
+      "index": 13,
+      "reason": "Yawn mouth/eyes are already near the peak endpoint rather than a distinct intermediate jaw opening."
+    }
+  ],
+  "notes": [
+    "Accepted hand-lift/lower, knee/crouch and seated-settle poses show actual anatomical changes.",
+    "Index7 remains seated and bridges original7 to original8.",
+    "The apparent rest height differs slightly from v1; apply one shared source scale before aligning contact, then verify assembled motion."
+  ],
+  "acceptedMapping": [
+    {
+      "outputFrameIndex": 1,
+      "fromSourceFrameIndex": 1,
+      "toSourceFrameIndex": 2
+    },
+    {
+      "outputFrameIndex": 4,
+      "fromSourceFrameIndex": 4,
+      "toSourceFrameIndex": 5
+    },
+    {
+      "outputFrameIndex": 5,
+      "fromSourceFrameIndex": 5,
+      "toSourceFrameIndex": 6
+    },
+    {
+      "outputFrameIndex": 6,
+      "fromSourceFrameIndex": 6,
+      "toSourceFrameIndex": 7
+    },
+    {
+      "outputFrameIndex": 7,
+      "fromSourceFrameIndex": 7,
+      "toSourceFrameIndex": 8
+    },
+    {
+      "outputFrameIndex": 8,
+      "fromSourceFrameIndex": 8,
+      "toSourceFrameIndex": 9
+    },
+    {
+      "outputFrameIndex": 9,
+      "fromSourceFrameIndex": 9,
+      "toSourceFrameIndex": 10
+    },
+    {
+      "outputFrameIndex": 10,
+      "fromSourceFrameIndex": 10,
+      "toSourceFrameIndex": 11
+    },
+    {
+      "outputFrameIndex": 11,
+      "fromSourceFrameIndex": 11,
+      "toSourceFrameIndex": 8
+    },
+    {
+      "outputFrameIndex": 12,
+      "fromSourceFrameIndex": 12,
+      "toSourceFrameIndex": 13
+    },
+    {
+      "outputFrameIndex": 14,
+      "fromSourceFrameIndex": 14,
+      "toSourceFrameIndex": 15
+    },
+    {
+      "outputFrameIndex": 15,
+      "fromSourceFrameIndex": 15,
+      "toSourceFrameIndex": 12
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "character": "claude",
+  "package": "expressive-daily-v2",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "promptFile": "prompt.txt",
+  "purpose": "New authored midpoint poses between v1 keyframes; standalone material, not runtime integration.",
+  "inputs": [
+    {
+      "file": "../expressive-daily-v1/source-v1.png",
+      "sha256": "29838ad1b76c3c98cbc82355d2d03a1fff50a85ba2dcc3dbf83ff2f77dcd2945",
+      "role": "Original keyframe poses used to build endpoint pairs"
+    },
+    {
+      "file": "paired-reference.png",
+      "sha256": "a723ab9535477b7cda7cfa5e8753b09005c224e0043f4cc76e3c89bd9cdb3eb7",
+      "role": "Actual imagegen input: 4x4 endpoint pairs, left A/right B"
+    },
+    {
+      "file": "../gentle-daily-v1/reference-standing.png",
+      "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779",
+      "role": "Actual imagegen input: identity/style reference"
+    }
+  ],
+  "output": {
+    "file": "inbetweens.png",
+    "sha256": "6e761ca3fbb6cc0d4c1d98984d753732fa403e45c896212f8af81754715b6e18",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major",
+    "boundaries": "round(index*dimension/4)"
+  },
+  "mapping": [
+    {
+      "outputFrameIndex": 0,
+      "fromSourceFrameIndex": 0,
+      "toSourceFrameIndex": 1
+    },
+    {
+      "outputFrameIndex": 1,
+      "fromSourceFrameIndex": 1,
+      "toSourceFrameIndex": 2
+    },
+    {
+      "outputFrameIndex": 2,
+      "fromSourceFrameIndex": 2,
+      "toSourceFrameIndex": 3
+    },
+    {
+      "outputFrameIndex": 3,
+      "fromSourceFrameIndex": 3,
+      "toSourceFrameIndex": 0
+    },
+    {
+      "outputFrameIndex": 4,
+      "fromSourceFrameIndex": 4,
+      "toSourceFrameIndex": 5
+    },
+    {
+      "outputFrameIndex": 5,
+      "fromSourceFrameIndex": 5,
+      "toSourceFrameIndex": 6
+    },
+    {
+      "outputFrameIndex": 6,
+      "fromSourceFrameIndex": 6,
+      "toSourceFrameIndex": 7
+    },
+    {
+      "outputFrameIndex": 7,
+      "fromSourceFrameIndex": 7,
+      "toSourceFrameIndex": 4
+    },
+    {
+      "outputFrameIndex": 8,
+      "fromSourceFrameIndex": 8,
+      "toSourceFrameIndex": 9
+    },
+    {
+      "outputFrameIndex": 9,
+      "fromSourceFrameIndex": 9,
+      "toSourceFrameIndex": 10
+    },
+    {
+      "outputFrameIndex": 10,
+      "fromSourceFrameIndex": 10,
+      "toSourceFrameIndex": 11
+    },
+    {
+      "outputFrameIndex": 11,
+      "fromSourceFrameIndex": 11,
+      "toSourceFrameIndex": 8
+    },
+    {
+      "outputFrameIndex": 12,
+      "fromSourceFrameIndex": 12,
+      "toSourceFrameIndex": 13
+    },
+    {
+      "outputFrameIndex": 13,
+      "fromSourceFrameIndex": 13,
+      "toSourceFrameIndex": 14
+    },
+    {
+      "outputFrameIndex": 14,
+      "fromSourceFrameIndex": 14,
+      "toSourceFrameIndex": 15
+    },
+    {
+      "outputFrameIndex": 15,
+      "fromSourceFrameIndex": 15,
+      "toSourceFrameIndex": 12
+    }
+  ],
+  "attempts": [
+    {
+      "file": "inbetweens-first-attempt.png",
+      "promptFile": "prompt-first-attempt.txt",
+      "adopted": false,
+      "reason": "Whole original sheet reference mostly repeated key poses instead of anatomically intermediate poses."
+    },
+    {
+      "file": "inbetweens.png",
+      "promptFile": "prompt.txt",
+      "adopted": true,
+      "input": "paired-reference.png"
+    }
+  ],
+  "acceptedIndices": [0, 1, 2, 4, 5, 6, 7, 8, 10, 13, 14, 15],
+  "excluded": [
+    {
+      "index": 3,
+      "reason": "The paired neutral endpoints are essentially the same posture; no useful new motion between them."
+    },
+    {
+      "index": 9,
+      "reason": "Closed-eye cheer is already too close to the cheering peak endpoint."
+    },
+    {
+      "index": 11,
+      "reason": "Added open smile does not follow the two near-neutral endpoint expressions; omit this return."
+    },
+    {
+      "index": 12,
+      "reason": "Book is already broadly open instead of sufficiently halfway between closed and open."
+    }
+  ],
+  "notes": [
+    "Accepted petted recovery has half-open eyes, and grooming/cheer returns have visible intermediate free-hand heights.",
+    "Book index13 has an intermediate lifted page; index14 narrows the book toward closure; index15 moves closed book and reaching hand toward center.",
+    "Only selected new poses are adopted; unselected output cells remain archived in the generated source."
+  ],
+  "acceptedMapping": [
+    {
+      "outputFrameIndex": 0,
+      "fromSourceFrameIndex": 0,
+      "toSourceFrameIndex": 1
+    },
+    {
+      "outputFrameIndex": 1,
+      "fromSourceFrameIndex": 1,
+      "toSourceFrameIndex": 2
+    },
+    {
+      "outputFrameIndex": 2,
+      "fromSourceFrameIndex": 2,
+      "toSourceFrameIndex": 3
+    },
+    {
+      "outputFrameIndex": 4,
+      "fromSourceFrameIndex": 4,
+      "toSourceFrameIndex": 5
+    },
+    {
+      "outputFrameIndex": 5,
+      "fromSourceFrameIndex": 5,
+      "toSourceFrameIndex": 6
+    },
+    {
+      "outputFrameIndex": 6,
+      "fromSourceFrameIndex": 6,
+      "toSourceFrameIndex": 7
+    },
+    {
+      "outputFrameIndex": 7,
+      "fromSourceFrameIndex": 7,
+      "toSourceFrameIndex": 4
+    },
+    {
+      "outputFrameIndex": 8,
+      "fromSourceFrameIndex": 8,
+      "toSourceFrameIndex": 9
+    },
+    {
+      "outputFrameIndex": 10,
+      "fromSourceFrameIndex": 10,
+      "toSourceFrameIndex": 11
+    },
+    {
+      "outputFrameIndex": 13,
+      "fromSourceFrameIndex": 13,
+      "toSourceFrameIndex": 14
+    },
+    {
+      "outputFrameIndex": 14,
+      "fromSourceFrameIndex": 14,
+      "toSourceFrameIndex": 15
+    },
+    {
+      "outputFrameIndex": 15,
+      "fromSourceFrameIndex": 15,
+      "toSourceFrameIndex": 12
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "image": "sprites/sitting.webp",
+  "sha256": "dd5995246da79e813f705d5169848c7b38c9353d4c38b38ed6dbeb52fbccadb1",
+  "width": 3360,
+  "height": 480,
+  "loop": "repeat",
+  "frames": [
+    {
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 800,
+      "kind": "original",
+      "sourceFrameIndex": 8,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 2400,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 180,
+      "kind": "original",
+      "sourceFrameIndex": 9,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sitting.webp",
+        "sha256": "e3a8936c769492cc0ec45cc4b375df79dfdde736f9db80fab26dce0c6016ef40",
+        "region": {
+          "x": 480,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 120,
+      "kind": "inbetween",
+      "sourceFrameIndex": 9,
+      "source": {
+        "file": "inbetweens.png",
+        "index": 9,
+        "pair": {
+          "index": 9,
+          "from": 9,
+          "to": 10
+        },
+        "region": {
+          "x": 360,
+          "y": 663,
+          "width": 243,
+          "height": 250
+        },
+        "cell": {
+          "x": 314,
+          "y": 627,
+          "width": 313,
+          "height": 314
+        },
+        "scale": 1.3642857142857143,
+        "placement": {
+          "x": 89,
+          "y": 121,
+          "width": 332,
+          "height": 341
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 500,
+      "kind": "original",
+      "sourceFrameIndex": 10,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sitting.webp",
+        "sha256": "e3a8936c769492cc0ec45cc4b375df79dfdde736f9db80fab26dce0c6016ef40",
+        "region": {
+          "x": 960,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 1920,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 120,
+      "kind": "inbetween",
+      "sourceFrameIndex": 10,
+      "source": {
+        "file": "inbetweens.png",
+        "index": 10,
+        "pair": {
+          "index": 10,
+          "from": 10,
+          "to": 11
+        },
+        "region": {
+          "x": 674,
+          "y": 662,
+          "width": 242,
+          "height": 251
+        },
+        "cell": {
+          "x": 627,
+          "y": 627,
+          "width": 314,
+          "height": 314
+        },
+        "scale": 1.3642857142857143,
+        "placement": {
+          "x": 90,
+          "y": 120,
+          "width": 330,
+          "height": 342
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 2400,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 200,
+      "kind": "original",
+      "sourceFrameIndex": 11,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sitting.webp",
+        "sha256": "e3a8936c769492cc0ec45cc4b375df79dfdde736f9db80fab26dce0c6016ef40",
+        "region": {
+          "x": 1440,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 2880,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 400,
+      "kind": "original",
+      "sourceFrameIndex": 8,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 2400,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    }
+  ]
+}

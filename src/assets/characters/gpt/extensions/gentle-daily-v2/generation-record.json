@@ -1,0 +1,208 @@
+{
+  "version": 2,
+  "character": "gpt",
+  "batch": "gentle",
+  "createdOn": "2026-11-08",
+  "kind": "authored-inbetween-source",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "transparentBackground": true
+  },
+  "inputs": [
+    {
+      "file": "../gentle-daily-v1/source-v1.png",
+      "sha256": "9d4b0e292f579156ebc9885cffd24b2d79af36bf0bc8d0ed459e61848330f995",
+      "role": "Existing key poses; expressive source includes the adopted open-clap correction."
+    },
+    {
+      "file": "../gentle-daily-v1/reference-standing.png",
+      "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb",
+      "role": "Standing identity reference"
+    },
+    {
+      "file": "endpoint-pairs.png",
+      "sha256": "b7d5be42571b99f600e757244e599ca1ad42fcb1256156cda0b98993ab0ab7c9",
+      "role": "Four by four boxes, each containing source A/B endpoints for the corresponding new midpoint; reference-only gray background and labels."
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "rejected",
+      "prompt": "Use case: identity-preserve. Asset: NEW genuine animation IN-BETWEEN drawings for an existing transparent sprite sheet.\nInput image 1 is the original key-pose sprite sheet; input image 2 is the strict standing identity reference. DO NOT reproduce the original sheet or simply repeat endpoints. Draw one genuinely new halfway pose between each specified pair of key poses. Intermediate joints, fingers, eyelids, eyes and mouth are actual solid drawings, NOT blended images, crossfades, ghosting, transparent overlaps or duplicated figures.\nPreserve the exact white-haired chibi dragon girl's identity, cream horns, white/lilac dress with spiral rosette at viewer-right waist, white boots, purple eyes, lavender wings and tail. Preserve the original simple thick dark outlines, flat cel colors, head size, squat torso and tiny legs, camera angle and rendering. Do not make her taller, older, more detailed or more realistic. Hair and tail remain full and attached, with only very small secondary movement.\nOUTPUT one square sheet with FOUR columns by FOUR rows, 16 equal invisible cells, true transparent alpha. Prefer exactly 1254×1254 pixels to match input1. Same four-row grouping as input1. Keep each figure at the exact source drawing scale (standing visible figure about280px tall in a313/314px cell), same center and foot baseline as corresponding source cells; sitting gets shorter by bending joints, never by scaling the head or character. Keep entire horns/wings/hair/tail/feet inside each cell with clear transparent margins. No text, numbers, labels, grid lines, scenery, floor, shadows, effects, symbols, or added objects.\nFrame numbering in the instructions below is ZERO-BASED within each original row: original A=column0, B=column1, C=column2, D=column3. New row columns ordinarily are A→B halfway, B→C halfway, C→D halfway, D→A halfway. Only NEW intermediates appear in output; never include the four original key poses again.\n\nROW 1 LOOKING AROUND:\nnew col0 halfway A→B: eyes have shifted partway left and head turns only about half of original B's small left turn; arms and feet stay fixed.\nnew col1 halfway B→C: the head is smoothly passing through center between left-looking and right-looking poses; eyes are transitioning across the face, tiny attentive expression.\nnew col2 halfway C→D: head partly returns from right-looking to front, half of C's small right turn.\nnew col3 halfway D→A: quiet near-front bridge with a subtle intermediate eye focus and tiny shoulder-breath change, retaining head scale. No exaggerated tilt.\n\nROW 2 SITTING DOWN (special last transition):\ncol0 original standing A→slightly bent B halfway: knees just begin bending, hips descend halfway, hands begin moving inward toward thighs.\ncol1 B→lower crouch C halfway: knees bend further, hips/head descend to intermediate height, hands move closer to knees.\ncol2 C→fully seated D halfway: hips almost on floor, legs fold toward seated arrangement, palms halfway toward lap.\ncol3 original ROW2 D→original ROW3 A halfway: remain FULLY SEATED and AWAKE, hands/legs settle into the seated-loop start. Never rise to standing in this cell. All eyes remain open.\n\nROW 3 AWAKE SEATED LOOP:\nEach new col is a true halfway between its corresponding pair A→B, B→C, C→D, D→A. Preserve exactly the folded-leg arrangement and hands on lap. Use intermediate tiny head/eye gaze directions and shoulder breath levels from the corresponding endpoints. Eyes stay OPEN, alert and peaceful; no sleep symbols or closed sleeping face. Do not add torso sway.\n\nROW 4 STANDING YAWN:\ncol0 A→B halfway: hand halfway on its rise from upper waist/chest toward mouth, eyelids roughly three-quarters lowered, small beginning oval mouth.\ncol1 B→C halfway: hand closer to covering mouth than B but not as high as C, eyes closed, mouth opens partway toward yawn peak.\ncol2 C→D halfway: yawn subsides, hand is halfway lowered from mouth toward side, eyes half reopening, mouth shrinking.\ncol3 D→A halfway: neutral standing develops mild drowsiness, eyelids partially lower and hand begins a small preparatory lift. Feet unchanged.\n\nThis sheet supplies missing poses for smoothly interleaving with the existing original keyframes. Make changes physically halfway, not newly invented extremes, stretched joints, duplicate endpoints or a different action.\n",
+      "inputFiles": [
+        "../gentle-daily-v1/source-v1.png",
+        "../gentle-daily-v1/reference-standing.png"
+      ],
+      "output": {
+        "file": "inbetweens-attempt1.png",
+        "sha256": "70771f16bc95b79eb7efc0977c67c34942fa096af4ad56f8c58570645c16c3d0"
+      },
+      "reason": "Whole-sheet reference encouraged near-duplicate key poses; unsuitable for claiming sixteen real intermediate poses."
+    },
+    {
+      "attempt": 2,
+      "status": "partially-adopted",
+      "prompt": "Use case: identity-preserve. Draw actual animation in-betweens from PAIRS OF ENDPOINTS.\nINPUT1 is a reference board with 16 large boxes in FOUR columns by FOUR rows. Each box contains TWO figures: A on the left and B on the right. They are the TWO EXISTING ENDPOINTS for one transition. The reference board has 32 figures but your OUTPUT MUST HAVE ONLY 16 FIGURES.\nFor EACH reference box, draw ONE NEW full-body pose that is physically HALFWAY between that box's A and B. Put it in the SAME row and column in the output. Do not copy A or B. Do not show A and B again. Do not output32 figures. Do not alpha-blend/crossfade the two images: draw one solid anatomical character with intermediate joint positions, eyelids and mouth. Think of a traditional animator drawing the missing frame at time 0.5. Motion should become smoother when played A → your drawing → B.\nINPUT2 locks the exact character identity: same white/lavender-haired chibi dragon girl, cream curved horns, violet eyes, same white/lilac dress and spiral waist rosette, round boots, small lavender wings and curved purple tail. Preserve exact huge head/tiny body proportions, bold dark outlines, broad flat color fills and simple cel shading. All limbs complete, two arms/two legs, no extra hands or facial features.\nOUTPUT: square transparent PNG, precisely FOUR columns by FOUR rows, one new midpoint per invisible equal cell. Prefer1254×1254 to match the original1254 sheet scale. In each314px cell keep drawing scale equal to the endpoint figures in input1: standing visible height280px, same head size, centerx157, ground baseliney294. Sitting shortens only through joint bending. Keep the full character within the cell with transparent padding. Do not draw the gray reference background, labels, borders, letters, grid, floor, shadows, props or effects. True transparent alpha.\n\nSPECIFIC MIDPOINT CHECKS (box numbers left to right, top to bottom):\n1 neutral→left look: half-sized head turn and gaze shift, NOT the full left pose.\n2 left look→right look: head should be FRONT-FACING between the two turns, intermediate gaze. Do NOT copy the left-looking endpoint.\n3 right look→neutral: half-sized right head turn, not the full right endpoint.\n4 near-neutral→near-neutral: bridge the tiny eye/breath difference without inventing a large motion.\n5 standing→slightly bent knees: head about5px lower than standing, knees just flexing, BOTH HANDS HALFWAY moving from sides toward knees. Do not copy standing OR the completed hands-on-knees pose.\n6 slightly bent→deeper crouch: head another halfway level between endpoints, elbows and knees halfway more bent; character height about265px.\n7 crouch→seated: boot/leg arrangement halfway folding down, hips descend toward seated, fingers reach lap partway, same head size.\n8 seated→awake seated: stay SEATED with open eyes, slightly settle hands and posture. Never stand up.\n9-12 awake seated subtle loop: interpolate the slight gaze/head angles between each pair while keeping eyes OPEN. Box10 is midway between looking left and right, so head/gaze should pass FRONT, not copy left.\n13 drowsy hand below mouth→hand at mouth: hand truly halfway upward, half-closed eyelids, mouth slightly opening.\n14 small yawn→peak yawn: mouth and hand position halfway between endpoints, eyes closed.\n15 peak yawn→neutral: hand clearly halfway lowered at upper chest, eyes HALF OPEN and small fading yawn mouth. Not a closed-eye peak.\n16 neutral→drowsy: eyelids halfway toward half-lidded, hand halfway starting to lift near waist/chest.\n\nAll16 are new in-between drawings, even when the motion is restrained. Do not make an endpoint storyboard.\n",
+      "inputFiles": [
+        "endpoint-pairs.png",
+        "../gentle-daily-v1/reference-standing.png"
+      ],
+      "output": {
+        "file": "inbetweens.png",
+        "sha256": "e8f52e888c6d4eac79bbfeea9770dd9b1f018e021f99087d60d60fbf29b73b9e",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true
+      }
+    }
+  ],
+  "output": {
+    "file": "inbetweens.png",
+    "sha256": "e8f52e888c6d4eac79bbfeea9770dd9b1f018e021f99087d60d60fbf29b73b9e",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true,
+    "grid": {
+      "columns": 4,
+      "rows": 4,
+      "boundaries": "round(index * dimension / 4)"
+    },
+    "mapping": [
+      {
+        "outputIndex": 0,
+        "fromSourceIndex": 0,
+        "toSourceIndex": 1,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 1,
+        "fromSourceIndex": 1,
+        "toSourceIndex": 2,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 2,
+        "fromSourceIndex": 2,
+        "toSourceIndex": 3,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 3,
+        "fromSourceIndex": 3,
+        "toSourceIndex": 0,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 4,
+        "fromSourceIndex": 4,
+        "toSourceIndex": 5,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 5,
+        "fromSourceIndex": 5,
+        "toSourceIndex": 6,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 6,
+        "fromSourceIndex": 6,
+        "toSourceIndex": 7,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 7,
+        "fromSourceIndex": 7,
+        "toSourceIndex": 8,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 8,
+        "fromSourceIndex": 8,
+        "toSourceIndex": 9,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 9,
+        "fromSourceIndex": 9,
+        "toSourceIndex": 10,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 10,
+        "fromSourceIndex": 10,
+        "toSourceIndex": 11,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 11,
+        "fromSourceIndex": 11,
+        "toSourceIndex": 8,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 12,
+        "fromSourceIndex": 12,
+        "toSourceIndex": 13,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 13,
+        "fromSourceIndex": 13,
+        "toSourceIndex": 14,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 14,
+        "fromSourceIndex": 14,
+        "toSourceIndex": 15,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 15,
+        "fromSourceIndex": 15,
+        "toSourceIndex": 12,
+        "phase": 0.5,
+        "accepted": true
+      }
+    ]
+  },
+  "selection": {
+    "acceptedIndices": [1, 4, 5, 13, 14, 15],
+    "excluded": {
+      "0": "Head turn and gaze remain too close to an original endpoint to count as a reliable in-between.",
+      "2": "Right-looking pose remains too close to the original right-looking endpoint.",
+      "3": "Endpoints are nearly identical; redrawn neutral pose adds no useful motion.",
+      "6": "Crouch-to-seat midpoint is lower than the interpolated endpoint path after matching standing scale.",
+      "7": "Seated bridge is lower than both seated endpoints; would introduce a dip.",
+      "8": "Seated redraw shifts body height below both original endpoints.",
+      "9": "Head/gaze interpolation is plausible, but the seated body-height drift would produce a visible dip.",
+      "10": "Seated redraw shifts body height below both original endpoints.",
+      "11": "Seated redraw shifts body height below both original endpoints.",
+      "12": "Yawn-start hand remains too close to the lower endpoint; mouth change alone does not resolve the arm step."
+    }
+  },
+  "notes": [
+    "Selection follows A/midpoint/B visual comparison, not the number of generated cells. Only acceptedIndices are intended for insertion.",
+    "No keyframe source, application code or preparation tools were modified.",
+    "Generated sheet has a small uniform scale difference versus original key sheet; preparation must normalize drawing scale before interleaving.",
+    "Discarded cells remain archived as generated; they are not approved for playback."
+  ]
+}

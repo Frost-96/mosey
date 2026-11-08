@@ -1,0 +1,33 @@
+Use case: identity-preserve.
+Asset type: actual newly DRAWN animation INBETWEEN sprite sheet for Mosey.
+Input image 1 is an existing 4×4 key-pose sheet. Its FOUR ROWS are FOUR DIFFERENT action tracks, NOT one 16-frame action. Input image 2 is the approved standing identity. Create one 4×4 sheet of 16 NEW interpolating drawings that can be inserted between the original key poses. Do not reproduce the original keyframe sheet.
+Keep EXACT Claude identity and original artistic rendering: copper-orange long hair, amber eyes, large round chibi head and tiny body, cream/black/orange dress and boots, thick dark contours, flat cel colors, orange flower and black bow on VIEWER-RIGHT. Preserve original head width and crown-to-chin height in every pose, camera/framing and body size. One brown book with orange flower, never duplicate. Preserve original book side: viewer-left; only reading track may bring it centrally between both hands.
+Every new pose is a real anatomical intermediate: elbows, wrists, head angle, eyelids and mouth sit BETWEEN endpoints. Draw sharp opaque shapes, not blended/ghosted overlays, not optical-flow warps, not repeated endpoints. No added style, motion blur, light effects, text, labels, numbers, grid, external hands, shadows or background. True transparent alpha.
+Layout: FOUR columns × FOUR rows on square 2048×2048. Each equal cell 512×512, complete full-body character, center x256, soles/contact y455. Keep same head/drawing size, all contours comfortably inside cell with empty margins. Body center and planted foot contacts remain fixed. Do not normalize seated height; bend joints to become shorter without resizing head.
+Mapping: in each row, output column 1 is precisely halfway from input same-row column1 to column2; output column2 halfway column2→3; output column3 halfway column3→4; output column4 halfway column4→1, except for the explicitly stated sit-down bridge. Thus every output cell differs from BOTH of its surrounding original key drawings.
+
+Four rows correspond to the GENTLE DAILY input:
+ROW1 LOOKING (standing all four):
+1 midpoint of looking viewer-left→front: head yaw only about half previous angle, gaze partly returned front.
+2 front→viewer-right: eyes have moved slightly right and head just follows, half turn.
+3 viewer-right→front: head half-turned back, gaze returning.
+4 front→viewer-left: subtle left eye movement and half left head turn. Keep rest of body and book still. Actual subtle differences, not four identical frontal faces.
+
+ROW2 SITTING DOWN:
+5 input row2 c1 standing→c2 partly bent: knees slightly flexed, pelvis halfway lowered, free viewer-right hand halfway toward thigh.
+6 input row2 c2 partially bent→c3 deep crouch: lower pelvis and deeper knees exactly midway between those two heights, same head size and feet.
+7 input row2 c3 crouch→c4 seated: bottom almost reaches ground, legs halfway folding forwards, free hand settling on knee, book moves with torso on viewer-left.
+8 SPECIAL: input row2 c4 fully seated→input row3 c1 awake seated. Remain FULLY SEATED, gently settle spine/hands/feet into first sitting-loop pose. DO NOT STAND UP here. Head remains original size. Eyes fully open.
+
+ROW3 AWAKE SITTING:
+9 input seated forward gaze→seated glance left: only subtle half head/eye movement, torso steady, both legs stay folded.
+10 seated glance left→seated front: midway returning eyes and head.
+11 seated front with free hand on lap→hand supporting cheek: free VIEWER-RIGHT elbow bends and hand is visibly halfway between knee and cheek, not already touching face.
+12 hand supporting cheek→first seated neutral: free hand halfway LOWERED below cheek toward chest/knee, head half recovered from tilt, eyes open. Book remains viewer-left and body seated throughout.
+
+ROW4 YAWNING standing:
+13 sleepy eyes with free hand at chest→hand covering mouth/closed eyes: hand halfway rising, eyelids partly lowered, lips just opening.
+14 small covered-mouth yawn→full open-mouth yawn: mouth halfway wider, eyes almost closed, hand slightly lower than peak reference, subtle head lift.
+15 big yawn→neutral: mouth partly closing (small oval), eyelids partly reopening, free hand halfway LOWERED from mouth toward chest, head halfway upright. Do NOT jump directly to neutral.
+16 neutral→sleepy start: eyelids mildly drooped, free hand only beginning to lift from side toward chest, mouth closed. Same planted boots and book at viewer-left.
+No sleeping symbols. No new props. All four rows should visibly provide the missing in-between joint poses.

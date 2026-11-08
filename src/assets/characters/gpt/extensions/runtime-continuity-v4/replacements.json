@@ -1,0 +1,148 @@
+{
+  "character": "gpt",
+  "version": 4,
+  "actions": [
+    {
+      "family": "gentle",
+      "action": "sitting",
+      "image": "sitting.webp",
+      "sha256": "26bf74954c75d1efadc62c09d4b3157c203dcdfd661a3b7dc044f5afa5fed1d7",
+      "width": 2400,
+      "height": 480,
+      "loop": "repeat",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 900,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "5e5c14b1763abeafc2a027b325967a89c2a27fac46091ae71b9ae8a001269332",
+            "frameIndex": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 800
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "5e5c14b1763abeafc2a027b325967a89c2a27fac46091ae71b9ae8a001269332",
+            "frameIndex": 2,
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 180
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 600,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "5e5c14b1763abeafc2a027b325967a89c2a27fac46091ae71b9ae8a001269332",
+            "frameIndex": 4,
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 500
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 260,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "5e5c14b1763abeafc2a027b325967a89c2a27fac46091ae71b9ae8a001269332",
+            "frameIndex": 6,
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 200
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 520,
+          "kind": "selected-original-key",
+          "source": {
+            "file": "originals/sitting-atlas.png",
+            "sha256": "5e5c14b1763abeafc2a027b325967a89c2a27fac46091ae71b9ae8a001269332",
+            "frameIndex": 8,
+            "region": {
+              "x": 3840,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "originalDurationMs": 400
+          }
+        }
+      ],
+      "notes": "Original keys only, no newly synthesized pose. Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family. Entry/exit neutral pixels retained; loop duration preserved; longer neutral holds and brief intermediate-key holds replace the distracting inserted-frame beats."
+    }
+  ]
+}

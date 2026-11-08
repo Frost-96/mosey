@@ -1,0 +1,15 @@
+Use case: identity-preserve. Precise animation in-between drawing, ONE action only: awake seated idle.
+INPUT 1 is a board with FOUR endpoint pairs in a2×2 layout. Each pair shows original frame A on the left and B on the right.
+INPUT 2 is the exact approved seated model and MUST control body height, head size, sitting pose, clothes and rendering.
+Create ONE new halfway pose for EACH pair. Output only FOUR full-body seated figures in a2×2 grid, one per equal cell. Do NOT output the8 endpoint figures. These are four actual newly drawn solid midposes, not faded blends or duplicates.
+
+HIGHEST PRIORITY: MATCH SEATED BODY GEOMETRY. The little dragon girl stays seated, upright and awake in every cell. The folded legs, shoe positions, hands resting on lap, body center, shoulder height and seat height stay exactly as input2. Her horns, head, wings, hair volume and curled tail keep exactly the same dimensions. Do not squat her lower, widen her skirt, shrink her head, stretch her body or change the angle of her legs. There is no sitting down or standing up in this sheet. Only restrained head/eye tracking and tiny facial changes happen.
+
+Style and identity: exact same huge rounded head, white/lavender hair, cream curved dragon horns, purple eyes, pointed ears, lavender wings and tail, white/lilac dress with original rosette on viewer-right waist, white boots. Exact original outline thickness and simple flat cel colors. No new detail, clothing, accessories or redesign. Both eyes remain OPEN and alert in all four cells. No blink or sleep.
+
+Cell TOP LEFT corresponds to pair1 (key8→key9): draw a gentle halfway eye/head shift from neutral toward the small left-facing attentive angle. The turn is HALF as far as endpoint B. Hair and ear contour should be midway, not a full endpoint copy.
+Cell TOP RIGHT corresponds to pair2 (key9→key10): head/gaze passes smoothly THROUGH FRONT between the two directions. Keep eyes open; a slight upward eye focus at the middle makes the movement readable. Do not stay on the left-looking endpoint.
+Cell BOTTOM LEFT corresponds to pair3 (key10→key11): head/gaze halfway returning from the right-facing look toward front. HALF as turned as key10, not the full right-looking pose.
+Cell BOTTOM RIGHT corresponds to pair4 (key11→key8): keep the same upright seated geometry, eyes make a small downward-to-forward settling gaze (about2px at480px frame scale) while returning to the neutral focus. This is a very small living idle bridge, not a new extreme.
+
+Output a true-transparent PNG, square960×960 if possible, TWO columns and TWO rows of equal480×480 invisible cells. In EACH480px cell match input2 positioning: full visible silhouette from y95 to y462, foot/seat support y462, centerx240; the head crown/horns, hands and feet are the same size and position as reference except the small specified head angles. For another resolution, scale ALL these coordinates uniformly. Keep transparent padding. No text, numbers, pair labels, grid, border, gray background, floor, shadow, symbols, props, chairs or extra hands. Exactly one complete full character per cell. Preserve genuine alpha.

@@ -7,6 +7,8 @@ import {
 import { petSizeSchema } from "./size.ts";
 import {
   baseActions,
+  characterCapabilities,
+  dailyActionDefinitions,
   extensionRequirements,
 } from "./character-capabilities.ts";
 
@@ -58,6 +60,7 @@ export const characterPackageSchema = characterIdentitySchema
         "dragging",
         "falling",
         "sleeping",
+        "sitting",
       ].includes(atlas.action)
         ? "repeat"
         : "once";
@@ -92,6 +95,35 @@ export const preparedCharacterSchema = z.strictObject({
   ),
 });
 export type PreparedCharacter = z.infer<typeof preparedCharacterSchema>;
+
+// Daily loops start on their shared neutral pose. Preserve that hold or finish
+// the current cycle before moving into another authored action.
+export function characterLoopTimings(
+  character: Pick<CharacterPackage, "atlases">,
+) {
+  const capabilities = characterCapabilities(
+    character.atlases.map((a) => a.action),
+  );
+  if (
+    !dailyActionDefinitions.some(({ capability }) =>
+      capabilities.includes(capability),
+    )
+  )
+    return undefined;
+  const timing = (action: "resting" | "sitting") => {
+    const atlas = character.atlases.find((a) => a.action === action);
+    return atlas
+      ? {
+          durationMs: atlas.frames.reduce(
+            (sum, frame) => sum + frame.durationMs,
+            0,
+          ),
+          neutralMs: atlas.frames[0]!.durationMs,
+        }
+      : undefined;
+  };
+  return { resting: timing("resting"), sitting: timing("sitting") };
+}
 
 export function characterWalk(character: CharacterPackage) {
   const motion = character.walking;

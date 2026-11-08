@@ -1,0 +1,82 @@
+[
+  {
+    "outputFrameIndex": 0,
+    "fromSourceFrameIndex": 0,
+    "toSourceFrameIndex": 1
+  },
+  {
+    "outputFrameIndex": 1,
+    "fromSourceFrameIndex": 1,
+    "toSourceFrameIndex": 2
+  },
+  {
+    "outputFrameIndex": 2,
+    "fromSourceFrameIndex": 2,
+    "toSourceFrameIndex": 3
+  },
+  {
+    "outputFrameIndex": 3,
+    "fromSourceFrameIndex": 3,
+    "toSourceFrameIndex": 0
+  },
+  {
+    "outputFrameIndex": 4,
+    "fromSourceFrameIndex": 4,
+    "toSourceFrameIndex": 5
+  },
+  {
+    "outputFrameIndex": 5,
+    "fromSourceFrameIndex": 5,
+    "toSourceFrameIndex": 6
+  },
+  {
+    "outputFrameIndex": 6,
+    "fromSourceFrameIndex": 6,
+    "toSourceFrameIndex": 7
+  },
+  {
+    "outputFrameIndex": 7,
+    "fromSourceFrameIndex": 7,
+    "toSourceFrameIndex": 4
+  },
+  {
+    "outputFrameIndex": 8,
+    "fromSourceFrameIndex": 8,
+    "toSourceFrameIndex": 9
+  },
+  {
+    "outputFrameIndex": 9,
+    "fromSourceFrameIndex": 9,
+    "toSourceFrameIndex": 10
+  },
+  {
+    "outputFrameIndex": 10,
+    "fromSourceFrameIndex": 10,
+    "toSourceFrameIndex": 11
+  },
+  {
+    "outputFrameIndex": 11,
+    "fromSourceFrameIndex": 11,
+    "toSourceFrameIndex": 8
+  },
+  {
+    "outputFrameIndex": 12,
+    "fromSourceFrameIndex": 12,
+    "toSourceFrameIndex": 13
+  },
+  {
+    "outputFrameIndex": 13,
+    "fromSourceFrameIndex": 13,
+    "toSourceFrameIndex": 14
+  },
+  {
+    "outputFrameIndex": 14,
+    "fromSourceFrameIndex": 14,
+    "toSourceFrameIndex": 15
+  },
+  {
+    "outputFrameIndex": 15,
+    "fromSourceFrameIndex": 15,
+    "toSourceFrameIndex": 12
+  }
+]

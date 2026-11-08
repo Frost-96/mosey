@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "character": "whale",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "source": {
+    "file": "source.png",
+    "originalPath": "/Users/frost/.codex/generated_images/01a1b92c-640e-70d3-b09b-e14d5456f33d/exec-b2eb01c7-9791-444a-8b22-f0e345fe2414.png",
+    "sha256": "d048172c9507a5a124de0b8138506bd1d2936090e70f1f47eea2ea6d5f8ac896",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "reference": {
+    "file": "reference-idle.png",
+    "sha256": "0d7b14bb0bdee7000a8bda42cb55e58a7adfccb2b4f88eb780b082912f15f5a4",
+    "source": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "promptFile": "prompt.txt",
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major"
+  },
+  "rows": ["looking", "sittingdown", "sitting", "yawning"],
+  "review": {
+    "identity": "Existing whale fin ears, blue eyes, navy-to-blue hair, headband, apron emblem and tail preserved.",
+    "actions": "Left and right glances, progressive sit, open-eye seated loop and hand-to-mouth yawn.",
+    "dimensions": "Tool returned 1254x1254 rather than requested 2048x2048. Integer quarter boundaries needed.",
+    "standingup": "Reuses authored sitting-down frames in reverse."
+  }
+}

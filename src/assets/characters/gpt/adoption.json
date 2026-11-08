@@ -1210,108 +1210,139 @@
     },
     "stretching": {
       "image": "sprites/stretching.webp",
-      "sha256": "460a84bf54f8e1280c28f76e36887f1ca8c19a853b19af5894eadfa20d017c26",
+      "sha256": "391f91d3987b9bd7797976ce439b6bb771d4ef861d2dd97c1de721966ebe24de",
       "previewFrames": [
         {
-          "source": "gpt/daily-v1",
-          "index": 0,
-          "durationMs": 180,
           "region": {
             "x": 0,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/reactions-v1",
-          "index": 12,
-          "durationMs": 170,
           "region": {
             "x": 480,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/reactions-v1",
-          "index": 13,
-          "durationMs": 200,
           "region": {
             "x": 960,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 130,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/reactions-v1",
-          "index": 14,
-          "durationMs": 650,
           "region": {
             "x": 1440,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 230,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/reactions-v1",
-          "index": 13,
-          "durationMs": 180,
           "region": {
             "x": 1920,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 650,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/reactions-v1",
-          "index": 15,
-          "durationMs": 230,
           "region": {
             "x": 2400,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt/daily-v1",
-          "index": 0,
-          "durationMs": 180,
           "region": {
             "x": 2880,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "anchor": {
+            "x": 240,
+            "y": 462
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
           "anchor": {
             "x": 240,
             "y": 462
@@ -1328,7 +1359,14 @@
           "file": "provenance/images/ea86240f187b-reactions-v1.png",
           "sha256": "ea86240f187b8c518c118135263ac5fb27053aaf2062571a3bc2179b05de28a7"
         }
-      ]
+      ],
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "f94aa7e11ec347243cff7666487587a88fc748d5c866b58b8bb26b0abb076a5d",
+        "image": "stretching/replacement.webp",
+        "notes": "Six newly drawn raise/hold/lower poses with a single group scale. Exact original idle frames at both ends. Stable head size and grounded legs; no whole-body shrinking during shoulder stretch."
+      }
     },
     "dragging": {
       "image": "sprites/dragging.webp",
@@ -1551,198 +1589,207 @@
     },
     "landing": {
       "image": "sprites/landing.webp",
-      "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+      "sha256": "ce5ad56fea7714d14b69970c902f6c9b1174665cd8b65fca1eaa86f331544a29",
       "previewFrames": [
         {
-          "source": "gpt-landing-v1",
-          "index": 0,
-          "durationMs": 70,
           "region": {
             "x": 0,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 70,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 1,
-          "durationMs": 80,
           "region": {
             "x": 480,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 80,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 2,
-          "durationMs": 100,
           "region": {
             "x": 960,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 3,
-          "durationMs": 500,
           "region": {
             "x": 1440,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 500,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 4,
-          "durationMs": 220,
           "region": {
             "x": 1920,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 220,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 5,
-          "durationMs": 180,
           "region": {
             "x": 2400,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 6,
-          "durationMs": 180,
           "region": {
             "x": 2880,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 7,
-          "durationMs": 200,
           "region": {
             "x": 3360,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 8,
-          "durationMs": 180,
           "region": {
             "x": 3840,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 9,
-          "durationMs": 180,
           "region": {
             "x": 4320,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 260,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 10,
-          "durationMs": 220,
           "region": {
             "x": 4800,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "gpt-landing-v1",
-          "index": 11,
-          "durationMs": 200,
           "region": {
             "x": 5280,
             "y": 0,
             "width": 480,
             "height": 480
           },
-          "anchor": {
+          "foot": {
             "x": 240,
             "y": 462
-          }
-        },
-        {
-          "source": "baseline/gpt/resting",
-          "index": 0,
-          "durationMs": 700,
-          "region": {
-            "x": 5760,
-            "y": 0,
-            "width": 480,
-            "height": 480
           },
+          "durationMs": 800,
           "anchor": {
             "x": 240,
             "y": 462
@@ -1767,6 +1814,13 @@
           "sourceCell": 3,
           "record": "provenance/landing-rise-2026-11-06.json"
         }
+      },
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "f94aa7e11ec347243cff7666487587a88fc748d5c866b58b8bb26b0abb076a5d",
+        "image": "landing/replacement.webp",
+        "notes": "Original frames 7/8 replaced by coherent front-facing one-foot support then two-foot crouch; original 9 skipped because its shorter head/body reintroduced a down-bob after the new crouch. Original frames 0–6,10–12 preserved. Tail stays viewer-right through recovery. Preserve the original 3010ms action duration by holding the final stable standing pose for 800ms."
       }
     },
     "climbing": {
@@ -2203,6 +2257,12 @@
       "frames": [10, 11],
       "record": "provenance/landing-rise-2026-11-06.json",
       "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    },
+    {
+      "id": "motion-coherence-v3",
+      "actions": ["landing", "stretching"],
+      "file": "extensions/motion-coherence-v3/replacements.json",
+      "sha256": "f94aa7e11ec347243cff7666487587a88fc748d5c866b58b8bb26b0abb076a5d"
     }
   ]
 }

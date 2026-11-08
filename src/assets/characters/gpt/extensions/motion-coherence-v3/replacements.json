@@ -1,0 +1,702 @@
+{
+  "character": "gpt",
+  "version": 3,
+  "actions": [
+    {
+      "family": "runtime",
+      "action": "landing",
+      "image": "landing/replacement.webp",
+      "sha256": "ce5ad56fea7714d14b69970c902f6c9b1174665cd8b65fca1eaa86f331544a29",
+      "width": 5760,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 70,
+          "kind": "original",
+          "action": "landing",
+          "index": 0,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "action": "landing",
+          "index": 1,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "action": "landing",
+          "index": 2,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 500,
+          "kind": "original",
+          "action": "landing",
+          "index": 3,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 220,
+          "kind": "original",
+          "action": "landing",
+          "index": 4,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "action": "landing",
+          "index": 5,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "action": "landing",
+          "index": 6,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "kind": "generated",
+          "source": {
+            "file": "landing/source-v1.png",
+            "sha256": "b251323ede45a866e46c0938add51857cbe8194604d75f15b4c66e4049960513",
+            "index": 1,
+            "cell": {
+              "left": 627,
+              "top": 0,
+              "width": 627,
+              "height": 627
+            },
+            "bounds": {
+              "left": 91,
+              "top": 135,
+              "width": 477,
+              "height": 467
+            }
+          },
+          "processing": {
+            "scale": 0.7521551724137931,
+            "resize": {
+              "width": 359,
+              "height": 351,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 73,
+              "top": 111
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "kind": "generated",
+          "source": {
+            "file": "landing/source-v1.png",
+            "sha256": "b251323ede45a866e46c0938add51857cbe8194604d75f15b4c66e4049960513",
+            "index": 2,
+            "cell": {
+              "left": 0,
+              "top": 627,
+              "width": 627,
+              "height": 627
+            },
+            "bounds": {
+              "left": 86,
+              "top": 75,
+              "width": 479,
+              "height": 508
+            }
+          },
+          "processing": {
+            "scale": 0.7521551724137931,
+            "resize": {
+              "width": 360,
+              "height": 382,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 69,
+              "top": 80
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 260,
+          "kind": "original",
+          "action": "landing",
+          "index": 10,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 4800,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "action": "landing",
+          "index": 11,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 5280,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 5280,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 800,
+          "kind": "original",
+          "action": "landing",
+          "index": 12,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/landing.webp",
+            "sha256": "d0b5cc73c91f768728e1301305c562abba4b305874907cc27ce6fc0b9e18c253",
+            "region": {
+              "x": 5760,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ],
+      "notes": "Original frames 7/8 replaced by coherent front-facing one-foot support then two-foot crouch; original 9 skipped because its shorter head/body reintroduced a down-bob after the new crouch. Original frames 0–6,10–12 preserved. Tail stays viewer-right through recovery. Preserve the original 3010ms action duration by holding the final stable standing pose for 800ms."
+    },
+    {
+      "family": "runtime",
+      "action": "stretching",
+      "image": "stretching/replacement.webp",
+      "sha256": "391f91d3987b9bd7797976ce439b6bb771d4ef861d2dd97c1de721966ebe24de",
+      "width": 3840,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "action": "resting",
+          "index": 0,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/resting.webp",
+            "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 1,
+            "cell": {
+              "left": 444,
+              "top": 0,
+              "width": 443,
+              "height": 444
+            },
+            "bounds": {
+              "left": 61,
+              "top": 31,
+              "width": 325,
+              "height": 395
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 330,
+              "height": 401,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 77,
+              "top": 61
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 130,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 2,
+            "cell": {
+              "left": 887,
+              "top": 0,
+              "width": 444,
+              "height": 444
+            },
+            "bounds": {
+              "left": 60,
+              "top": 32,
+              "width": 326,
+              "height": 394
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 331,
+              "height": 400,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 76,
+              "top": 62
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 230,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 3,
+            "cell": {
+              "left": 1331,
+              "top": 0,
+              "width": 443,
+              "height": 444
+            },
+            "bounds": {
+              "left": 56,
+              "top": 31,
+              "width": 335,
+              "height": 395
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 340,
+              "height": 401,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 72,
+              "top": 61
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 650,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 4,
+            "cell": {
+              "left": 0,
+              "top": 444,
+              "width": 444,
+              "height": 443
+            },
+            "bounds": {
+              "left": 59,
+              "top": 31,
+              "width": 329,
+              "height": 396
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 334,
+              "height": 402,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 75,
+              "top": 60
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 5,
+            "cell": {
+              "left": 444,
+              "top": 444,
+              "width": 443,
+              "height": 443
+            },
+            "bounds": {
+              "left": 61,
+              "top": 31,
+              "width": 325,
+              "height": 396
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 330,
+              "height": 402,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 77,
+              "top": 60
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "kind": "generated",
+          "source": {
+            "file": "stretching/source-v1.png",
+            "sha256": "c40fccc38b104f909fd8fd01dc5acbd1f69dfab6bf138889ff32d1375598b521",
+            "index": 6,
+            "cell": {
+              "left": 887,
+              "top": 444,
+              "width": 444,
+              "height": 443
+            },
+            "bounds": {
+              "left": 62,
+              "top": 31,
+              "width": 324,
+              "height": 396
+            }
+          },
+          "processing": {
+            "scale": 1.015228426395939,
+            "resize": {
+              "width": 329,
+              "height": 402,
+              "kernel": "lanczos3"
+            },
+            "placement": {
+              "left": 78,
+              "top": 60
+            },
+            "alphaCleanup": "Zero RGB only where alpha=0; preserve all generated nonzero alpha",
+            "anchor": "Fixed source cell center to x=240; alpha>=128 bottom-exclusive to y=462"
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "action": "resting",
+          "index": 0,
+          "source": {
+            "file": "src/assets/characters/gpt/extensions/motion-coherence-v3/originals/runtime/resting.webp",
+            "sha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ],
+      "notes": "Six newly drawn raise/hold/lower poses with a single group scale. Exact original idle frames at both ends. Stable head size and grounded legs; no whole-body shrinking during shoulder stretch."
+    }
+  ]
+}

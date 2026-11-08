@@ -27,61 +27,29 @@
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 1550,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 1,
           "durationMs": 400,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 2,
           "durationMs": 120,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 3,
           "durationMs": 700,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "repeat",
@@ -97,243 +65,75 @@
       "sha256": "044b289272b850e9ec2167e55719ef8a5054b7f8ffdb1dffc6b5d6ef3235f487",
       "previewFrames": [
         {
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 29,
-            "y": 12,
-            "width": 385,
-            "height": 425
-          },
-          "sourceAnchor": {
-            "x": 256,
-            "y": 437
-          },
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 29, "y": 12, "width": 385, "height": 425 },
+          "sourceAnchor": { "x": 256, "y": 437 },
           "opaquePixels": 101747,
-          "sourceRegion": {
-            "x": 0,
-            "y": 0,
-            "width": 442,
-            "height": 446
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 0, "y": 0, "width": 442, "height": 446 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 28,
-            "y": 12,
-            "width": 388,
-            "height": 424
-          },
-          "sourceAnchor": {
-            "x": 256,
-            "y": 436
-          },
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 28, "y": 12, "width": 388, "height": 424 },
+          "sourceAnchor": { "x": 256, "y": 436 },
           "opaquePixels": 100769,
-          "sourceRegion": {
-            "x": 441,
-            "y": 0,
-            "width": 444,
-            "height": 446
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 441, "y": 0, "width": 444, "height": 446 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 28,
-            "y": 12,
-            "width": 389,
-            "height": 424
-          },
-          "sourceAnchor": {
-            "x": 257,
-            "y": 436
-          },
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 28, "y": 12, "width": 389, "height": 424 },
+          "sourceAnchor": { "x": 257, "y": 436 },
           "opaquePixels": 101975,
-          "sourceRegion": {
-            "x": 884,
-            "y": 0,
-            "width": 447,
-            "height": 446
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 884, "y": 0, "width": 447, "height": 446 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 29,
-            "y": 12,
-            "width": 388,
-            "height": 422
-          },
-          "sourceAnchor": {
-            "x": 255,
-            "y": 434
-          },
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 29, "y": 12, "width": 388, "height": 422 },
+          "sourceAnchor": { "x": 255, "y": 434 },
           "opaquePixels": 102317,
-          "sourceRegion": {
-            "x": 1330,
-            "y": 0,
-            "width": 444,
-            "height": 446
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 1330, "y": 0, "width": 444, "height": 446 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 26,
-            "y": 9,
-            "width": 388,
-            "height": 423
-          },
-          "sourceAnchor": {
-            "x": 256,
-            "y": 432
-          },
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 26, "y": 9, "width": 388, "height": 423 },
+          "sourceAnchor": { "x": 256, "y": 432 },
           "opaquePixels": 101807,
-          "sourceRegion": {
-            "x": 0,
-            "y": 445,
-            "width": 442,
-            "height": 442
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 0, "y": 445, "width": 442, "height": 442 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 28,
-            "y": 9,
-            "width": 391,
-            "height": 423
-          },
-          "sourceAnchor": {
-            "x": 257,
-            "y": 432
-          },
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 28, "y": 9, "width": 391, "height": 423 },
+          "sourceAnchor": { "x": 257, "y": 432 },
           "opaquePixels": 101121,
-          "sourceRegion": {
-            "x": 441,
-            "y": 445,
-            "width": 446,
-            "height": 442
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 441, "y": 445, "width": 446, "height": 442 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 26,
-            "y": 9,
-            "width": 391,
-            "height": 422
-          },
-          "sourceAnchor": {
-            "x": 255,
-            "y": 431
-          },
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 26, "y": 9, "width": 391, "height": 422 },
+          "sourceAnchor": { "x": 255, "y": 431 },
           "opaquePixels": 101615,
-          "sourceRegion": {
-            "x": 886,
-            "y": 445,
-            "width": 445,
-            "height": 442
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 886, "y": 445, "width": 445, "height": 442 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         },
         {
-          "region": {
-            "x": 3360,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "bounds": {
-            "x": 28,
-            "y": 9,
-            "width": 391,
-            "height": 421
-          },
-          "sourceAnchor": {
-            "x": 256,
-            "y": 430
-          },
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "bounds": { "x": 28, "y": 9, "width": 391, "height": 421 },
+          "sourceAnchor": { "x": 256, "y": 430 },
           "opaquePixels": 102215,
-          "sourceRegion": {
-            "x": 1330,
-            "y": 445,
-            "width": 444,
-            "height": 442
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          },
+          "sourceRegion": { "x": 1330, "y": 445, "width": 444, "height": 442 },
+          "anchor": { "x": 240, "y": 462 },
           "durationMs": 100
         }
       ],
@@ -353,106 +153,50 @@
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 0,
           "durationMs": 350,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 1,
           "durationMs": 350,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 2,
           "durationMs": 400,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 3,
           "durationMs": 450,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 4,
           "durationMs": 450,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 5,
           "durationMs": 550,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -475,61 +219,29 @@
           "source": "claude-sleep-v1",
           "index": 0,
           "durationMs": 950,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-sleep-v1",
           "index": 1,
           "durationMs": 750,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-sleep-v1",
           "index": 2,
           "durationMs": 950,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-sleep-v1",
           "index": 3,
           "durationMs": 750,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "repeat",
@@ -548,61 +260,29 @@
           "source": "claude/sleep-v1",
           "index": 8,
           "durationMs": 100,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 9,
           "durationMs": 160,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 10,
           "durationMs": 180,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 11,
           "durationMs": 180,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -621,106 +301,50 @@
           "source": "claude/sleep-v1",
           "index": 5,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 4,
           "durationMs": 200,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 3,
           "durationMs": 220,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 2,
           "durationMs": 220,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 1,
           "durationMs": 220,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/sleep-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -743,91 +367,43 @@
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 0,
           "durationMs": 100,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 1,
           "durationMs": 180,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 2,
           "durationMs": 450,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 3,
           "durationMs": 180,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -844,112 +420,49 @@
     },
     "paw": {
       "image": "sprites/paw.webp",
-      "sha256": "e75b9d35728fb8bc86c76aadd62083e0e0bece6b8bbd76d4714573a76c999ea6",
+      "sha256": "d17812c29ed07d8ddfa7f87050234c54caa788c0ff2e96f34b621f771c47e97c",
       "previewFrames": [
         {
-          "source": "claude/daily-v1",
-          "index": 0,
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 160,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 120,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 160,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 220,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 140,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 120,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 4,
-          "durationMs": 130,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 5,
-          "durationMs": 150,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 6,
-          "durationMs": 180,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 5,
-          "durationMs": 130,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 7,
-          "durationMs": 180,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/daily-v1",
-          "index": 0,
-          "durationMs": 180,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -962,7 +475,14 @@
           "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
           "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
         }
-      ]
+      ],
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "a968f27ede29246637193f18bb64d16e53b7335ff005c12a90da40b35df8d47f",
+        "image": "sprites/runtime-paw.webp",
+        "notes": "Keep book held on viewer-left; only viewer-right hand rises/waves. Removes alternating hands and extra-arm/floating-book poses."
+      }
     },
     "belly": {
       "image": "sprites/belly.webp",
@@ -972,91 +492,43 @@
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 8,
           "durationMs": 140,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 9,
           "durationMs": 200,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 10,
           "durationMs": 400,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 11,
           "durationMs": 180,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -1079,121 +551,57 @@
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 8,
           "durationMs": 160,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 9,
           "durationMs": 180,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 10,
           "durationMs": 220,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 9,
           "durationMs": 180,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 10,
           "durationMs": 220,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/reactions-v1",
           "index": 11,
           "durationMs": 180,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 3360,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -1210,112 +618,49 @@
     },
     "stretching": {
       "image": "sprites/stretching.webp",
-      "sha256": "3f288f74b65ed53a92152641edea97e5cc4b43f8172c898880409bdcb849d840",
+      "sha256": "13bd98c89e6ab0d04b182286799e4b649c0bd1bc4f42c0f6d8e26ac4158801f0",
       "previewFrames": [
         {
-          "source": "claude/daily-v1",
-          "index": 0,
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude/reactions-v1",
-          "index": 12,
-          "durationMs": 170,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 150,
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude/reactions-v1",
-          "index": 13,
-          "durationMs": 200,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 14,
-          "durationMs": 650,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
-        },
-        {
-          "source": "claude/reactions-v1",
-          "index": 13,
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 180,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude/reactions-v1",
-          "index": 15,
-          "durationMs": 230,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 550,
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude/daily-v1",
-          "index": 0,
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 180,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 150,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 180,
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -1328,7 +673,14 @@
           "file": "provenance/images/b5c98f5e236e-reactions-v1.png",
           "sha256": "b5c98f5e236e429d3512da187d56f24be750bb68083d32af760ada5e96d966ab"
         }
-      ]
+      ],
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "a968f27ede29246637193f18bb64d16e53b7335ff005c12a90da40b35df8d47f",
+        "image": "sprites/runtime-stretching.webp",
+        "notes": "One free viewer-right arm stretches; viewer-left book-holding arm stays fixed, with a connected shoulder and neck."
+      }
     },
     "dragging": {
       "image": "sprites/dragging.webp",
@@ -1338,61 +690,29 @@
           "source": "claude-air-v1",
           "index": 0,
           "durationMs": 80,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-air-v1",
           "index": 1,
           "durationMs": 70,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-air-v1",
           "index": 2,
           "durationMs": 80,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-air-v1",
           "index": 3,
           "durationMs": 70,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "repeat",
@@ -1405,140 +725,146 @@
     },
     "flutter": {
       "image": "sprites/flutter.webp",
-      "sha256": "6f715b3da665baed96ebe9a5abf5cd242cb23ad91ac58a0d1416ab9f8cc80744",
+      "sha256": "4202dc1bb31e9c0adc9da888005c7ed36e3a9cd2eebd1b8eee70e1b3fd691dbb",
       "previewFrames": [
         {
-          "source": "claude-air-v1",
-          "index": 4,
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 70,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 5,
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 70,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 6,
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 70,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 7,
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
           "durationMs": 70,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 4320, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 4800, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 5280, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 5760, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 80,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 6240, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 70,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 6720, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 80,
+          "anchor": { "x": 240, "y": 462 }
+        },
+        {
+          "region": { "x": 7200, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 90,
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
-      "previewLoop": "repeat",
+      "previewLoop": "once",
       "sources": [
         {
           "file": "provenance/images/1a65154486f4-claude-air-v1.png",
           "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
         }
-      ]
+      ],
+      "revision": {
+        "id": "runtime-continuity-v4",
+        "file": "extensions/runtime-continuity-v4/replacements.json",
+        "sha256": "3dcef32223f5ee94c10edbf5776ed7bc2e6171c82c00db146462e3930ddf98a3",
+        "image": "sprites/flutter.webp"
+      }
     },
     "falling": {
       "image": "sprites/falling.webp",
-      "sha256": "0079c9234cfecc9059b0cf4f5ab85ca95482aed46b723394b5c6962fb2dacc87",
+      "sha256": "2d6b2aaa467155891daf9310edbc2eb6aaf474bf7a004088bca552dd42ea54c5",
       "previewFrames": [
         {
-          "source": "claude-air-v1",
-          "index": 8,
-          "durationMs": 80,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 100,
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 9,
-          "durationMs": 70,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 100,
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 10,
-          "durationMs": 80,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 100,
+          "anchor": { "x": 240, "y": 462 }
         },
         {
-          "source": "claude-air-v1",
-          "index": 11,
-          "durationMs": 70,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 462 },
+          "durationMs": 100,
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "repeat",
@@ -1547,7 +873,13 @@
           "file": "provenance/images/1a65154486f4-claude-air-v1.png",
           "sha256": "1a65154486f4401392a63d26713ac97e57366c6ec7f7445cad00a5f56ed7e64c"
         }
-      ]
+      ],
+      "revision": {
+        "id": "runtime-continuity-v4",
+        "file": "extensions/runtime-continuity-v4/replacements.json",
+        "sha256": "3dcef32223f5ee94c10edbf5776ed7bc2e6171c82c00db146462e3930ddf98a3",
+        "image": "sprites/falling.webp"
+      }
     },
     "landing": {
       "image": "sprites/landing.webp",
@@ -1557,196 +889,92 @@
           "source": "claude-landing-v1",
           "index": 0,
           "durationMs": 70,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 1,
           "durationMs": 80,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 2,
           "durationMs": 100,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 3,
           "durationMs": 500,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 4,
           "durationMs": 220,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 5,
           "durationMs": 180,
-          "region": {
-            "x": 2400,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 6,
           "durationMs": 180,
-          "region": {
-            "x": 2880,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 7,
           "durationMs": 200,
-          "region": {
-            "x": 3360,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 8,
           "durationMs": 180,
-          "region": {
-            "x": 3840,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 9,
           "durationMs": 180,
-          "region": {
-            "x": 4320,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 4320, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 10,
           "durationMs": 220,
-          "region": {
-            "x": 4800,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 4800, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude-landing-v1",
           "index": 11,
           "durationMs": 200,
-          "region": {
-            "x": 5280,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 5280, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "baseline/claude/resting",
           "index": 0,
           "durationMs": 700,
-          "region": {
-            "x": 5760,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 5760, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -1777,76 +1005,36 @@
           "source": "claude/physics-v1",
           "index": 12,
           "durationMs": 180,
-          "region": {
-            "x": 0,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/physics-v1",
           "index": 13,
           "durationMs": 260,
-          "region": {
-            "x": 480,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/physics-v1",
           "index": 14,
           "durationMs": 260,
-          "region": {
-            "x": 960,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/physics-v1",
           "index": 15,
           "durationMs": 220,
-          "region": {
-            "x": 1440,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         },
         {
           "source": "claude/daily-v1",
           "index": 0,
           "durationMs": 180,
-          "region": {
-            "x": 1920,
-            "y": 0,
-            "width": 480,
-            "height": 480
-          },
-          "anchor": {
-            "x": 240,
-            "y": 462
-          }
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "anchor": { "x": 240, "y": 462 }
         }
       ],
       "previewLoop": "once",
@@ -2244,6 +1432,18 @@
       "frames": [10, 11],
       "record": "provenance/landing-rise-2026-11-06.json",
       "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    },
+    {
+      "id": "motion-coherence-v3",
+      "actions": ["paw", "stretching"],
+      "file": "extensions/motion-coherence-v3/replacements.json",
+      "sha256": "a968f27ede29246637193f18bb64d16e53b7335ff005c12a90da40b35df8d47f"
+    },
+    {
+      "id": "runtime-continuity-v4",
+      "file": "extensions/runtime-continuity-v4/replacements.json",
+      "sha256": "3dcef32223f5ee94c10edbf5776ed7bc2e6171c82c00db146462e3930ddf98a3",
+      "actions": ["falling", "flutter"]
     }
   ]
 }

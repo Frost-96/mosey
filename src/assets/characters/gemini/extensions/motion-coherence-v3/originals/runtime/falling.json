@@ -1,0 +1,59 @@
+{
+  "image": "sprites/falling.webp",
+  "sha256": "0ec0284b9785fd64fc163021374603bfb64eb43c690aef673dbc2468e7b71034",
+  "loop": "repeat",
+  "frames": [
+    {
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "durationMs": 80,
+      "foot": {
+        "x": 240,
+        "y": 462
+      }
+    },
+    {
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "durationMs": 70,
+      "foot": {
+        "x": 240,
+        "y": 462
+      }
+    },
+    {
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "durationMs": 80,
+      "foot": {
+        "x": 240,
+        "y": 462
+      }
+    },
+    {
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "durationMs": 70,
+      "foot": {
+        "x": 240,
+        "y": 462
+      }
+    }
+  ]
+}

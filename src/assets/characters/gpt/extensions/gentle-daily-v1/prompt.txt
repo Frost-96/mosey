@@ -1,0 +1,31 @@
+Use case: identity-preserve.
+Asset type: transparent 2D game animation sprite sheet for the existing Mosey GPT dragon-girl desktop pet.
+Input image 1 is the STRICT identity and rendering reference. Create new poses of this exact character, NOT a redesign: white long hair with pale lilac shadows, curved cream dragon horns, purple eyes, pointed ears, small purple batlike wings, lavender scaled tail curling toward viewer-right, white/lilac short dress with the same spiral rosette on viewer-right waist, white boots. Keep exactly the same thick dark outline, broad flat color areas, simple cel shading, oversized rounded head, tiny body and limbs. Preserve horn shape, tail volume, costume, ornament placement and face. No extra objects.
+
+Output a single square 2048 x 2048 PNG with a genuinely transparent alpha background, precisely FOUR columns by FOUR rows of equal 512 x 512 invisible cells, 16 complete figures. No grid lines, cell borders, labels, text, numbers, shadows, ground, scenery, ZZZ, bubbles, symbols, effects or watermark. Every figure stays wholly within its cell, with at least 45px clear transparent margin, including horns, tail and wings. Frontal camera. Same drawing scale and head size in all sixteen frames; standing figure about 385px tall from horn tip to sole, center axis x=256, contact baseline y=455. All positions below are LOCAL to each cell. Sitting must get shorter through bent knees and hips, never through shrinking the entire character or head.
+
+ROW 1, looking around, left-to-right chronological:
+1 calm neutral upright as reference, both feet planted, eyes glance to viewer-left.
+2 head turns gently about 15 degrees toward viewer-left, curious open eyes, torso still.
+3 head turns gently about 15 degrees toward viewer-right, eyes follow, hands remain low.
+4 returns to exact calm front-facing neutral, gaze forward. This is looking, not head tilting.
+
+ROW 2, sitting down, four consecutive poses:
+5 exact calm upright reference stance, both feet planted.
+6 knees soften and bend, hips lower a little, hands begin moving toward thighs.
+7 deep controlled crouch, knees bent, head lower with unchanged size, hands beside knees.
+8 sits comfortably on the ground with folded legs under the modest dress, torso upright, eyes OPEN and alert, hands resting on lap. Tail rests to her side; wings relaxed behind her. No chair, cushion, sleep or sleeping expression.
+
+ROW 3, awake seated idle loop, four closely related poses matching row2 frame8:
+9 seated, hands on lap, bright OPEN eyes looking gently forward.
+10 same seated posture, tiny shoulder inhale and subtle hair tip sway; eyes OPEN.
+11 same seated posture, gaze shifts mildly aside with attentive OPEN eyes.
+12 same seated pose returning toward frame9, gentle smile and OPEN eyes. Do not change body scale, leg arrangement or hand placement between these four frames.
+
+ROW 4, standing yawn, four consecutive poses:
+13 standing as reference, eyelids grow heavy, free hand begins rising toward mouth.
+14 same standing body, palm lightly covers a small opening mouth, eyelids closing.
+15 peak gentle yawn, eyes closed, mouth open partly behind covering hand, shoulders slightly lift. No huge stretch, no tear symbols.
+16 hand lowers, eyes reopen, returns to quiet reference standing posture.
+
+Maintain anatomical consistency: exactly two arms and two legs, both attached correctly. Horns, wings and tail are never clipped, duplicated or switched sides. Use visibly different but restrained in-between poses. Preserve genuine transparency.

@@ -1,0 +1,28 @@
+{
+  "actions": {
+    "sitting": {
+      "image": "refinements/sitting-v3/midpoints.webp",
+      "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+      "record": "refinements/sitting-v3/generation-record.json",
+      "recordSha256": "79c17f8a8bb489ffc65eceb35c81371669ce6207a8635173a43b9f2880c0cb8f",
+      "frames": [
+        { "x": 0, "y": 0, "width": 480, "height": 480 },
+        { "x": 480, "y": 0, "width": 480, "height": 480 },
+        { "x": 960, "y": 0, "width": 480, "height": 480 },
+        { "x": 1440, "y": 0, "width": 480, "height": 480 }
+      ],
+      "sequence": [
+        { "kind": "original", "index": 8, "durationMs": 800 },
+        { "kind": "refinement", "index": 0, "durationMs": 110 },
+        { "kind": "original", "index": 9, "durationMs": 180 },
+        { "kind": "refinement", "index": 1, "durationMs": 110 },
+        { "kind": "original", "index": 10, "durationMs": 500 },
+        { "kind": "refinement", "index": 2, "durationMs": 110 },
+        { "kind": "original", "index": 11, "durationMs": 200 },
+        { "kind": "refinement", "index": 3, "durationMs": 110 },
+        { "kind": "original", "index": 8, "durationMs": 400 }
+      ],
+      "notes": "Four dedicated awake seated intermediates following the actual key8→9→10→11→8 direction. Keep seated support height and fixed scale; preserve quiet endpoint holds and original keyframe RGBA."
+    }
+  }
+}

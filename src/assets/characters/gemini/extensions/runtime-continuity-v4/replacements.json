@@ -1,0 +1,540 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "actions": [
+    {
+      "family": "gentle",
+      "action": "sittingdown",
+      "image": "sprites/sittingdown.webp",
+      "sha256": "e280b29fa95162690e91c794c6f0c57fe8e6cf02ac393514df5eccbeed386be2",
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 80,
+            "width": 347,
+            "height": 382
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "generated/seated-attempt3.png",
+            "sha256": "19f06947f49109070741c9b588eacf1b134d0c8774814c31435f4254914408f7",
+            "index": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 1254,
+              "height": 1254
+            },
+            "bounds": {
+              "x": 170,
+              "y": 218,
+              "width": 910,
+              "height": 970
+            },
+            "scale": 0.3865979381443299,
+            "placement": {
+              "x": 63,
+              "y": 87,
+              "width": 352,
+              "height": 375
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 87,
+            "width": 352,
+            "height": 375
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 3,
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 64,
+            "y": 95,
+            "width": 356,
+            "height": 367
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 4,
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 107,
+            "width": 359,
+            "height": 355
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 5,
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 61,
+            "y": 111,
+            "width": 362,
+            "height": 351
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 6,
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 59,
+            "y": 120,
+            "width": 363,
+            "height": 342
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 7,
+            "region": {
+              "x": 3360,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 57,
+            "y": 128,
+            "width": 367,
+            "height": 334
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "originals/sittingdown.png",
+            "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+            "index": 8,
+            "region": {
+              "x": 3840,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 57,
+            "y": 128,
+            "width": 368,
+            "height": 334
+          }
+        }
+      ],
+      "notes": "Replace old1/2 with one shallow-crouch pose that retains idle skirt length, short legs and tail volume. Original0 and3..8 unchanged.",
+      "previous": {
+        "file": "originals/sittingdown.png",
+        "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1"
+      }
+    },
+    {
+      "family": "gentle",
+      "action": "standingup",
+      "image": "sprites/standingup.webp",
+      "sha256": "9ab92fd6289eae39d479fb251afcd1d7560e54572c63ecfcc5a4fa70bc00672e",
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 120,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 57,
+            "y": 128,
+            "width": 368,
+            "height": 334
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 1,
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 57,
+            "y": 128,
+            "width": 367,
+            "height": 334
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 110,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 2,
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 59,
+            "y": 120,
+            "width": 363,
+            "height": 342
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 3,
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 61,
+            "y": 111,
+            "width": 362,
+            "height": 351
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 100,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 4,
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 107,
+            "width": 359,
+            "height": 355
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 5,
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 64,
+            "y": 95,
+            "width": 356,
+            "height": 367
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 140,
+          "source": {
+            "file": "generated/seated-attempt3.png",
+            "sha256": "19f06947f49109070741c9b588eacf1b134d0c8774814c31435f4254914408f7",
+            "index": 0,
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 1254,
+              "height": 1254
+            },
+            "bounds": {
+              "x": 170,
+              "y": 218,
+              "width": 910,
+              "height": 970
+            },
+            "scale": 0.3865979381443299,
+            "placement": {
+              "x": 63,
+              "y": 87,
+              "width": 352,
+              "height": 375
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 87,
+            "width": 352,
+            "height": 375
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 150,
+          "source": {
+            "file": "originals/standingup.png",
+            "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a",
+            "index": 8,
+            "region": {
+              "x": 3840,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          },
+          "visibleBounds": {
+            "x": 63,
+            "y": 80,
+            "width": 347,
+            "height": 382
+          }
+        }
+      ],
+      "notes": "Use exactly the new shallow-crouch pose in reverse; old6/7 replaced, old0..5 and8 unchanged.",
+      "previous": {
+        "file": "originals/standingup.png",
+        "sha256": "35e7278183d7e1f4cbec7fb00304bae428a4c9c1ca5a66ec69bfcb547c8c601a"
+      }
+    }
+  ]
+}

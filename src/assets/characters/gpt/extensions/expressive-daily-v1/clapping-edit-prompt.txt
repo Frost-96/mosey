@@ -1,0 +1,12 @@
+Use case: identity-preserve. Precise pose correction to the attached existing transparent 4-column by 4-row sprite sheet.
+Input 1 is the edit target. Preserve its exact character, drawing style, grid, figure scales, head sizes, feet baselines, framing and transparent background. Keep every row and cell unchanged EXCEPT the TWO cells identified below: ROW 3 COLUMN 1 and ROW 3 COLUMN 3 (third row counting from the top, first and third columns counting from the left). Do NOT change row 1, row 2 or row 4. Do NOT change row 3 column 2 or column 4.
+
+Only those two edited poses need wider OPEN-HANDED clapping preparation. Currently both hands almost touch and the clap is unreadable. In BOTH target cells, raise the TWO OPEN PALMS to chest height, facing each other, but separate them horizontally so that the gap BETWEEN THE PALMS is at least HALF THE WIDTH OF HER FACE. Put each palm just inside its corresponding shoulder. The whole front of the chest and its central lavender clothing panel should be clearly visible between the hands. Elbows bend gently outward, forearms reach inward. Show broad readable little open palms, not fists. This must be an unmistakable OPEN position, preparing to clap.
+Row 3 column 2 stays as the existing CLOSED clap, palms touching in front of chest, happy closed-eye smile.
+Row 3 column 4 stays as existing neutral hands-down return.
+Thus the third row reads OPEN HANDS WIDE → CLOSED CLAP → OPEN HANDS WIDE → HANDS DOWN.
+In target column 1 keep the original attentive open eyes and pleased small smile.
+In target column 3 keep the original open eyes and pleased small smile.
+Both feet stay planted. No hopping, no translated torso, no growing head, no extra fingers or limbs.
+
+The character remains EXACTLY the same little white/lavender-haired dragon girl, cream horns, purple wings and tail, original white/lilac dress, same rosette on viewer-right waist and round boots. Do not redesign sleeves, add symbols, text, grid lines, backgrounds, shadows, props, outside hands or effects. True transparent alpha. Output the same square 4×4 image composition, preferably the exact 1254×1254 size.

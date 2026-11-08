@@ -1,0 +1,33 @@
+Use case: identity-preserve.
+Asset type: actual newly DRAWN animation INBETWEEN sprite sheet for Mosey.
+Input image 1 is an existing 4×4 key-pose sheet. Its FOUR ROWS are FOUR DIFFERENT action tracks, NOT one 16-frame action. Input image 2 is the approved standing identity. Create one 4×4 sheet of 16 NEW interpolating drawings that can be inserted between the original key poses. Do not reproduce the original keyframe sheet.
+Keep EXACT Claude identity and original artistic rendering: copper-orange long hair, amber eyes, large round chibi head and tiny body, cream/black/orange dress and boots, thick dark contours, flat cel colors, orange flower and black bow on VIEWER-RIGHT. Preserve original head width and crown-to-chin height in every pose, camera/framing and body size. One brown book with orange flower, never duplicate. Preserve original book side: viewer-left; only reading track may bring it centrally between both hands.
+Every new pose is a real anatomical intermediate: elbows, wrists, head angle, eyelids and mouth sit BETWEEN endpoints. Draw sharp opaque shapes, not blended/ghosted overlays, not optical-flow warps, not repeated endpoints. No added style, motion blur, light effects, text, labels, numbers, grid, external hands, shadows or background. True transparent alpha.
+Layout: FOUR columns × FOUR rows on square 2048×2048. Each equal cell 512×512, complete full-body character, center x256, soles/contact y455. Keep same head/drawing size, all contours comfortably inside cell with empty margins. Body center and planted foot contacts remain fixed. Do not normalize seated height; bend joints to become shorter without resizing head.
+Mapping: in each row, output column 1 is precisely halfway from input same-row column1 to column2; output column2 halfway column2→3; output column3 halfway column3→4; output column4 halfway column4→1, except for the explicitly stated sit-down bridge. Thus every output cell differs from BOTH of its surrounding original key drawings.
+
+Four rows correspond to the EXPRESSIVE DAILY input:
+ROW1 PETTED:
+1 neutral upright→soft head lean: head tilts toward viewer-right HALF as far as input column2, eyes slightly softened, book steady viewer-left.
+2 soft lean→closed-eye happy deeper lean: head angle halfway more, eyelids half-closed, smile beginning, hair follows gently.
+3 closed-eye deep lean→upright neutral: head halfway RECOVERING upright, eyes partly reopening, smile relaxing, free hand still at side.
+4 last neutral→first neutral: a tiny breath settling pose, very slight relaxed shoulder/eye transition; do not invent a new gesture, keep neutral stance.
+
+ROW2 GROOMING:
+5 input free hand at chest→beside cheek/hair: free VIEWER-RIGHT hand halfway between chest and hair, elbow midway bent, fingers softly open.
+6 beside hair→touch flower/bow: free hand halfway upward along viewer-right hair toward the ornament, wrist below original flower-contact pose, head slight midway tilt.
+7 touching bow→neutral hand down: free hand visibly halfway LOWERED to shoulder/cheek level, elbow half extended, eyes returning front. Do not keep the hand on bow or already at side.
+8 neutral→first chest raised hand: free hand halfway lifted from hip to lower chest. Book ALWAYS closed at viewer-left for all these.
+
+ROW3 CELEBRATION:
+9 hand at waist/chest→fist at shoulder: fist at mid-chest half height, elbow half bent, mouth starting happy smile.
+10 shoulder fist/open eyes→higher fist/closed-eye smile on tiptoes: hand halfway upward, eyes partly closed, heels halfway raised; tiny vertical extension by ankle joint while toe tips stay on baseline.
+11 closed-eye cheering→neutral: fist halfway LOWERED to mid-chest, elbow relaxing, heels halfway lowered, eyes reopening, smile softer. Not an endpoint repeat.
+12 neutral→initial celebratory fist at waist: hand begins curling near hip/lower chest, slight anticipatory smile.
+
+ROW4 BOOK HABIT:
+13 closed book held near center by both hands→fully open book reading: the SAME single book is half-open about 60 degrees with a clear V-shape, both hands support lower corners, eyes begin looking down. Its spine and cream pages are visible; not two books.
+14 fully open book→page turned: one cream page is lifted HALFWAY through turn (diagonal curved page between covers, NOT upright endpoint), viewer-right fingers guide the edge while viewer-left supports the book; eyes follow.
+15 open book with lifted page→closed book hugged viewer-left: page has settled and covers are visibly halfway CLOSING at center, book only partly closed, hands drawing it gently toward viewer-left chest, eyes beginning to look up. One book.
+16 closed book hugged viewer-left→closed book brought to center: viewer-right hand halfway reaching to closed book while viewer-left arm begins shifting it toward center; the book lies halfway between side and center, closed, eyes forward.
+Do not confuse grooming with celebration: raised hands must be at their specified intermediate heights and appropriate finger shapes. Preserve two hands/two legs and all ornaments.

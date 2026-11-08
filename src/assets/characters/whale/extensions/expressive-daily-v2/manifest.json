@@ -1,0 +1,1369 @@
+{
+  "format": "mosey-action-material-candidate",
+  "version": 2,
+  "character": "whale",
+  "package": "expressive-daily-v2",
+  "status": "candidate-materials-not-runtime-format",
+  "integration": "Standalone material preview; not registered in the desktop application's behavior.",
+  "generator": "tools/prepare-inbetween-extensions.ts",
+  "frameSize": 480,
+  "pixelRatio": 2,
+  "hitAlphaThreshold": 128,
+  "previous": {
+    "file": "../expressive-daily-v1/manifest.json",
+    "sha256": "358e2ae5f5f7cc68d4dbe807000e52faf1d0fdccad5e6b132e14c29276cf5735"
+  },
+  "source": {
+    "file": "inbetweens.png",
+    "sha256": "ed50e82cb04126a2a08f28a096416312bdd0265c923e050cfcc4cd084e430973",
+    "width": 1254,
+    "height": 1254,
+    "record": "generation-record.json",
+    "recordSha256": "35a4c889ebb54ff0f2f4c6c4a54328e63f712aeaf8ac2c99c1e1afe1f5f695e5"
+  },
+  "selection": {
+    "file": "selection.json",
+    "sha256": "a0263ada52994bab3fd7a43576a97706f4273aa755e0e2e06347ea46568a6c7f",
+    "acceptedIndices": [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    "usedIndices": [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  },
+  "processing": {
+    "uniformScale": 1.5411764705882354,
+    "alphaCleanup": "Set alpha<128 to zero; no crossfade or generated pose warping.",
+    "alignment": "Fixed cell horizontal center and existing contact baseline; fixed scale across the sheet.",
+    "originalPixels": "Copied from v1 atlases as raw RGBA without compositing."
+  },
+  "actions": {
+    "petted": {
+      "image": "sprites/petted.webp",
+      "sha256": "b336c0d441dd65781b547969babf581afc3c9a0b17fdba8ad73ad008101e6156",
+      "width": 3840,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "sourceFrameIndex": 0,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 0,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 0,
+            "pair": {
+              "index": 0,
+              "from": 0,
+              "to": 1
+            },
+            "region": {
+              "x": 68,
+              "y": 21,
+              "width": 200,
+              "height": 255
+            },
+            "cell": {
+              "x": 0,
+              "y": 0,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 103,
+              "y": 87,
+              "width": 308,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 180,
+          "kind": "original",
+          "sourceFrameIndex": 1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 1,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 1,
+            "pair": {
+              "index": 1,
+              "from": 1,
+              "to": 2
+            },
+            "region": {
+              "x": 383,
+              "y": 21,
+              "width": 199,
+              "height": 255
+            },
+            "cell": {
+              "x": 314,
+              "y": 0,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 105,
+              "y": 87,
+              "width": 307,
+              "height": 393
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 500,
+          "kind": "original",
+          "sourceFrameIndex": 2,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 120,
+          "kind": "original",
+          "sourceFrameIndex": 3,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 2400,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "grooming": {
+      "image": "sprites/grooming.webp",
+      "sha256": "0531221a2e080a7e38b24a862da9f4d431650a3ba7cfcea48afa2cb7d3b6b6c5",
+      "width": 4800,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 7,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 7,
+            "pair": {
+              "index": 7,
+              "from": 7,
+              "to": 4
+            },
+            "region": {
+              "x": 1006,
+              "y": 332,
+              "width": 202,
+              "height": 259
+            },
+            "cell": {
+              "x": 941,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 99,
+              "y": 81,
+              "width": 311,
+              "height": 399
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "original",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/grooming.webp",
+            "sha256": "b3381e4be56a83d21589149fe05209406432af2dad07a9c9d93bf7d24c1a103f",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 4,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 4,
+            "pair": {
+              "index": 4,
+              "from": 4,
+              "to": 5
+            },
+            "region": {
+              "x": 66,
+              "y": 332,
+              "width": 202,
+              "height": 259
+            },
+            "cell": {
+              "x": 0,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 100,
+              "y": 81,
+              "width": 311,
+              "height": 399
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 200,
+          "kind": "original",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/grooming.webp",
+            "sha256": "b3381e4be56a83d21589149fe05209406432af2dad07a9c9d93bf7d24c1a103f",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 5,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 5,
+            "pair": {
+              "index": 5,
+              "from": 5,
+              "to": 6
+            },
+            "region": {
+              "x": 377,
+              "y": 331,
+              "width": 205,
+              "height": 260
+            },
+            "cell": {
+              "x": 314,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 96,
+              "y": 79,
+              "width": 316,
+              "height": 401
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 200,
+          "kind": "original",
+          "sourceFrameIndex": 6,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/grooming.webp",
+            "sha256": "b3381e4be56a83d21589149fe05209406432af2dad07a9c9d93bf7d24c1a103f",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 6,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 6,
+            "pair": {
+              "index": 6,
+              "from": 6,
+              "to": 7
+            },
+            "region": {
+              "x": 692,
+              "y": 331,
+              "width": 203,
+              "height": 259
+            },
+            "cell": {
+              "x": 627,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 98,
+              "y": 81,
+              "width": 313,
+              "height": 399
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 110,
+          "kind": "original",
+          "sourceFrameIndex": 7,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/grooming.webp",
+            "sha256": "b3381e4be56a83d21589149fe05209406432af2dad07a9c9d93bf7d24c1a103f",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "celebrating": {
+      "image": "sprites/celebrating.webp",
+      "sha256": "4846f47c997d7b429bbd16bfef4116b6a5afc04667c601b9f4d9759d7df9276e",
+      "width": 6720,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 11,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 11,
+            "pair": {
+              "index": 11,
+              "from": 11,
+              "to": 8
+            },
+            "region": {
+              "x": 1006,
+              "y": 647,
+              "width": 202,
+              "height": 256
+            },
+            "cell": {
+              "x": 941,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 99,
+              "y": 85,
+              "width": 311,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 8,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 8,
+            "pair": {
+              "index": 8,
+              "from": 8,
+              "to": 9
+            },
+            "region": {
+              "x": 64,
+              "y": 646,
+              "width": 204,
+              "height": 257
+            },
+            "cell": {
+              "x": 0,
+              "y": 627,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 97,
+              "y": 84,
+              "width": 314,
+              "height": 396
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "original",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 9,
+            "pair": {
+              "index": 9,
+              "from": 9,
+              "to": 10
+            },
+            "region": {
+              "x": 380,
+              "y": 647,
+              "width": 201,
+              "height": 256
+            },
+            "cell": {
+              "x": 314,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 101,
+              "y": 85,
+              "width": 310,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "sourceFrameIndex": 10,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 9,
+            "pair": {
+              "index": 9,
+              "from": 9,
+              "to": 10
+            },
+            "region": {
+              "x": 380,
+              "y": 647,
+              "width": 201,
+              "height": 256
+            },
+            "cell": {
+              "x": 314,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 101,
+              "y": 85,
+              "width": 310,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "original",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 4320,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 9,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 9,
+            "pair": {
+              "index": 9,
+              "from": 9,
+              "to": 10
+            },
+            "region": {
+              "x": 380,
+              "y": 647,
+              "width": 201,
+              "height": 256
+            },
+            "cell": {
+              "x": 314,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 101,
+              "y": 85,
+              "width": 310,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 4800,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 80,
+          "kind": "original",
+          "sourceFrameIndex": 10,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 5280,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 65,
+          "kind": "inbetween",
+          "sourceFrameIndex": 10,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 10,
+            "pair": {
+              "index": 10,
+              "from": 10,
+              "to": 11
+            },
+            "region": {
+              "x": 692,
+              "y": 647,
+              "width": 203,
+              "height": 256
+            },
+            "cell": {
+              "x": 627,
+              "y": 627,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 98,
+              "y": 85,
+              "width": 313,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 5760,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": 11,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/celebrating.webp",
+            "sha256": "0acab4c7a04cc8f648dd111825451747351542c2ce0f845d5c3cb1f0d8459515",
+            "region": {
+              "x": 2880,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 6240,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "habit": {
+      "image": "sprites/habit.webp",
+      "sha256": "4aba2dd83e9afbe7b96eb9dd7f9efe1292e8a0a7d061796f69a3658047edfee1",
+      "width": 4320,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 100,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": 12,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "sha256": "be2ad946dec7b7e148090045e8065e3c70a14f4796be57423b27ee9b11fab175",
+            "region": {
+              "x": 480,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 12,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 12,
+            "pair": {
+              "index": 12,
+              "from": 12,
+              "to": 13
+            },
+            "region": {
+              "x": 66,
+              "y": 960,
+              "width": 199,
+              "height": 257
+            },
+            "cell": {
+              "x": 0,
+              "y": 941,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 100,
+              "y": 84,
+              "width": 307,
+              "height": 396
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 800,
+          "kind": "original",
+          "sourceFrameIndex": 13,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "sha256": "be2ad946dec7b7e148090045e8065e3c70a14f4796be57423b27ee9b11fab175",
+            "region": {
+              "x": 960,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 13,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 13,
+            "pair": {
+              "index": 13,
+              "from": 13,
+              "to": 14
+            },
+            "region": {
+              "x": 378,
+              "y": 960,
+              "width": 205,
+              "height": 258
+            },
+            "cell": {
+              "x": 314,
+              "y": 941,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 97,
+              "y": 82,
+              "width": 316,
+              "height": 398
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 350,
+          "kind": "original",
+          "sourceFrameIndex": 14,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "sha256": "be2ad946dec7b7e148090045e8065e3c70a14f4796be57423b27ee9b11fab175",
+            "region": {
+              "x": 1440,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 90,
+          "kind": "inbetween",
+          "sourceFrameIndex": 14,
+          "source": {
+            "file": "inbetweens.png",
+            "index": 14,
+            "pair": {
+              "index": 14,
+              "from": 14,
+              "to": 15
+            },
+            "region": {
+              "x": 690,
+              "y": 961,
+              "width": 207,
+              "height": 256
+            },
+            "cell": {
+              "x": 627,
+              "y": 941,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.5411764705882354,
+            "placement": {
+              "x": 95,
+              "y": 85,
+              "width": 319,
+              "height": 395
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": 15,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/habit.webp",
+            "sha256": "be2ad946dec7b7e148090045e8065e3c70a14f4796be57423b27ee9b11fab175",
+            "region": {
+              "x": 1920,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3840,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 480
+          },
+          "durationMs": 150,
+          "kind": "original",
+          "sourceFrameIndex": -1,
+          "source": {
+            "file": "../expressive-daily-v1/sprites/petted.webp",
+            "sha256": "0af9bcf57db2c109f6502a158ab709f5d29438146e184926adc9971c1ede34fe",
+            "region": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    }
+  }
+}

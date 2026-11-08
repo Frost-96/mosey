@@ -1,0 +1,1156 @@
+{
+  "format": "mosey-action-material-candidate",
+  "version": 1,
+  "character": "gemini",
+  "package": "expressive-daily-v1",
+  "status": "candidate-materials-not-runtime-format",
+  "integration": "Standalone authored materials. Not registered in the running app's actions or character processing configuration.",
+  "generator": "tools/prepare-daily-extensions.ts",
+  "rebuild": "node tools/prepare-daily-extensions.ts expressive-daily-v1",
+  "frameSize": 480,
+  "pixelRatio": 2,
+  "hitAlphaThreshold": 128,
+  "source": {
+    "file": "source-v1.png",
+    "sha256": "04b3dd5f5b7bd7cf4cf8688410b9dec9890d5802fa44de4067037131e1c0d2d8",
+    "width": 1254,
+    "height": 1254,
+    "grid": {
+      "columns": 4,
+      "rows": 4,
+      "boundaries": "round(index * dimension / 4)"
+    },
+    "record": "generation-record.json",
+    "recordSha256": "dd1711df53ef6ce2e89c6f37335481a79e2bc399d8ae499902790ee1a7934496"
+  },
+  "reference": {
+    "file": "../../sprites/resting.webp",
+    "sha256": "70058a534044b00d6f29b4f9589b7f8fd5bda00acc68388152a889abc7db8348",
+    "frameIndex": 0
+  },
+  "processing": {
+    "uniformScale": 1.3890909090909092,
+    "scaleBasis": "Source first frame alpha>=128 height matched to existing resting first frame alpha>=128 height.",
+    "alphaCleanup": "Set only alpha values below 128 to zero before resizing; preserve remaining RGBA values.",
+    "alignment": "Each source column's fixed cell center maps to resting foot.x; each frame's bottom contact maps to resting foot.y. No per-frame scale or silhouette centering.",
+    "coordinates": "sourceRegion and sourceCell use source-image pixels; translation maps scaled global source coordinates to a 480px frame. rasterPlacement records integer rounding."
+  },
+  "actions": {
+    "petted": {
+      "image": "sprites/petted.webp",
+      "sha256": "07a2c1835fda6e5f735d9928fce68fe702b417d9ac897adafa94e8221389cac1",
+      "width": 3360,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": 0,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 42,
+              "y": 19,
+              "width": 250,
+              "height": 275
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": 21.912727272727267,
+              "y": 53.60727272727269
+            },
+            "rasterPlacement": {
+              "x": 80,
+              "y": 80,
+              "width": 347,
+              "height": 382
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 300,
+          "sourceFrameIndex": 1,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 349,
+              "y": 19,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 0,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": 52.21818181818179
+            },
+            "rasterPlacement": {
+              "x": 71,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 850,
+          "sourceFrameIndex": 2,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 658,
+              "y": 23,
+              "width": 246,
+              "height": 271
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 0,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -849.0472727272727,
+              "y": 53.60727272727269
+            },
+            "rasterPlacement": {
+              "x": 65,
+              "y": 86,
+              "width": 342,
+              "height": 376
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "sourceFrameIndex": 1,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 349,
+              "y": 19,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 0,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": 52.21818181818179
+            },
+            "rasterPlacement": {
+              "x": 71,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "sourceFrameIndex": 3,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 966,
+              "y": 18,
+              "width": 247,
+              "height": 277
+            },
+            "sourceCell": {
+              "x": 941,
+              "y": 0,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -1284.5272727272727,
+              "y": 52.21818181818179
+            },
+            "rasterPlacement": {
+              "x": 57,
+              "y": 77,
+              "width": 343,
+              "height": 385
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "grooming": {
+      "image": "sprites/grooming.webp",
+      "sha256": "216f6c868a00fa23e193fef83f9c66c524037e4c715d4be18107ed5049a9a1ce",
+      "width": 2880,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 250,
+          "sourceFrameIndex": 4,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 41,
+              "y": 332,
+              "width": 249,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": 21.912727272727267,
+              "y": -382.5672727272728
+            },
+            "rasterPlacement": {
+              "x": 79,
+              "y": 79,
+              "width": 346,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 500,
+          "sourceFrameIndex": 5,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 353,
+              "y": 332,
+              "width": 244,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": -382.5672727272728
+            },
+            "rasterPlacement": {
+              "x": 77,
+              "y": 79,
+              "width": 339,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 550,
+          "sourceFrameIndex": 6,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 661,
+              "y": 332,
+              "width": 245,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 314,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -849.0472727272727,
+              "y": -382.5672727272728
+            },
+            "rasterPlacement": {
+              "x": 69,
+              "y": 79,
+              "width": 340,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 300,
+          "sourceFrameIndex": 7,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 967,
+              "y": 332,
+              "width": 248,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 941,
+              "y": 314,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -1284.5272727272727,
+              "y": -382.5672727272728
+            },
+            "rasterPlacement": {
+              "x": 59,
+              "y": 79,
+              "width": 344,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "celebrating": {
+      "image": "sprites/celebrating.webp",
+      "sha256": "014d569f9535da62739146609e6dfb2f88759392f81222dd7077f0f0d261f12e",
+      "width": 3840,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 220,
+          "sourceFrameIndex": 8,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 42,
+              "y": 645,
+              "width": 249,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 627,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": 21.912727272727267,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 80,
+              "y": 79,
+              "width": 346,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "sourceFrameIndex": 9,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 350,
+              "y": 645,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 73,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "sourceFrameIndex": 10,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 660,
+              "y": 645,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 627,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -849.0472727272727,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 68,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 240,
+          "sourceFrameIndex": 9,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 350,
+              "y": 645,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 73,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 200,
+          "sourceFrameIndex": 10,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 660,
+              "y": 645,
+              "width": 246,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 627,
+              "width": 314,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -849.0472727272727,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 68,
+              "y": 79,
+              "width": 342,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2880,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 300,
+          "sourceFrameIndex": 11,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 968,
+              "y": 645,
+              "width": 247,
+              "height": 276
+            },
+            "sourceCell": {
+              "x": 941,
+              "y": 627,
+              "width": 313,
+              "height": 314
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -1284.5272727272727,
+              "y": -817.3527272727274
+            },
+            "rasterPlacement": {
+              "x": 60,
+              "y": 79,
+              "width": 343,
+              "height": 383
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 3360,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    },
+    "habit": {
+      "image": "sprites/habit.webp",
+      "sha256": "5a447e08f0b49f7d90d35ac914eb66d428ec2e086385b8cbf0d2ab0ec2b72543",
+      "width": 2880,
+      "height": 480,
+      "loop": "once",
+      "frames": [
+        {
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 480,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 350,
+          "sourceFrameIndex": 12,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 40,
+              "y": 960,
+              "width": 252,
+              "height": 275
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 941,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": 21.912727272727267,
+              "y": -1253.5272727272727
+            },
+            "rasterPlacement": {
+              "x": 77,
+              "y": 80,
+              "width": 350,
+              "height": 382
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 960,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 1000,
+          "sourceFrameIndex": 13,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 347,
+              "y": 961,
+              "width": 250,
+              "height": 274
+            },
+            "sourceCell": {
+              "x": 314,
+              "y": 941,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -413.5672727272728,
+              "y": -1253.5272727272727
+            },
+            "rasterPlacement": {
+              "x": 68,
+              "y": 81,
+              "width": 347,
+              "height": 381
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1440,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 850,
+          "sourceFrameIndex": 14,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 654,
+              "y": 961,
+              "width": 250,
+              "height": 274
+            },
+            "sourceCell": {
+              "x": 627,
+              "y": 941,
+              "width": 314,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -849.0472727272727,
+              "y": -1253.5272727272727
+            },
+            "rasterPlacement": {
+              "x": 59,
+              "y": 81,
+              "width": 347,
+              "height": 381
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 1920,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 350,
+          "sourceFrameIndex": 15,
+          "processing": {
+            "sourceFile": "source-v1.png",
+            "sourceRegion": {
+              "x": 967,
+              "y": 960,
+              "width": 249,
+              "height": 275
+            },
+            "sourceCell": {
+              "x": 941,
+              "y": 941,
+              "width": 313,
+              "height": 313
+            },
+            "scale": 1.3890909090909092,
+            "translation": {
+              "x": -1284.5272727272727,
+              "y": -1253.5272727272727
+            },
+            "rasterPlacement": {
+              "x": 59,
+              "y": 80,
+              "width": 346,
+              "height": 382
+            }
+          }
+        },
+        {
+          "region": {
+            "x": 2400,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 180,
+          "sourceFrameIndex": -1,
+          "processing": {
+            "sourceFile": "../../sprites/resting.webp",
+            "sourceRegion": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "sourceCell": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            },
+            "scale": 1,
+            "translation": {
+              "x": 0,
+              "y": 0
+            },
+            "rasterPlacement": {
+              "x": 0,
+              "y": 0,
+              "width": 480,
+              "height": 480
+            }
+          }
+        }
+      ]
+    }
+  }
+}

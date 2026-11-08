@@ -33,11 +33,20 @@ export const atlasSchema = z
       "falling",
       "landing",
       "climbing",
+      "looking",
+      "sittingdown",
+      "sitting",
+      "standingup",
+      "yawning",
+      "petted",
+      "grooming",
+      "celebrating",
+      "habit",
     ]),
     image: z
       .string()
       .regex(
-        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing|sleeping|ear|waking|settling|walking|stretching|playing|climbing)-atlas\.png$/,
+        /^(idle|tilt|paw|belly|dragging|flutter|falling|landing|sleeping|ear|waking|settling|walking|stretching|playing|climbing|looking|sittingdown|sitting|standingup|yawning|petted|grooming|celebrating|habit)-atlas\.png$/,
       ),
     // Optional authored left-facing pixels retain readable lettering while
     // using exactly the mirrored alpha geometry of the ordinary atlas.

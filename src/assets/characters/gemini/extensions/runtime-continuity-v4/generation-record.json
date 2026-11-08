@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "character": "gemini",
+  "purpose": "Minimal runtime continuity repair, preserving original neutral endpoints",
+  "pathResolution": "All relative paths are relative to this record. Original runtime atlases are archived in originals so adoption cannot invalidate hashes.",
+  "references": [
+    {
+      "file": "references/standing.png",
+      "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/sittingdown.png",
+        "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+        "width": 4320,
+        "height": 480,
+        "frame": 0,
+        "region": { "x": 0, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    },
+    {
+      "file": "references/old-first-crouch.png",
+      "sha256": "b863928349fd1a31b8a6f3e24ca496966254c546e6b73d446cd9880f8000a56a",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/sittingdown.png",
+        "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+        "width": 4320,
+        "height": 480,
+        "frame": 2,
+        "region": { "x": 960, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    },
+    {
+      "file": "references/next-crouch.png",
+      "sha256": "9b16177a17718a4a79ecfffe58e22f0d6086c329447430f87351a9ac077471ce",
+      "width": 480,
+      "height": 480,
+      "derivedFrom": {
+        "file": "originals/sittingdown.png",
+        "sha256": "227b7f2e7346d4283324615b2476dd845da9433e3fb268075d1b1d1bdd22acb1",
+        "width": 4320,
+        "height": 480,
+        "frame": 3,
+        "region": { "x": 1440, "y": 0, "width": 480, "height": 480 }
+      },
+      "method": "Crop480px frame, clear alpha<128 and RGB in cleared pixels for clean generation reference. Archived original unchanged."
+    }
+  ],
+  "attempts": [
+    {
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "references/standing.png",
+          "references/next-crouch.png"
+        ]
+      },
+      "prompt": {
+        "file": "prompt-seated.txt",
+        "sha256": "65368613eb435bf3868616bce5fb9c57b44de9d2bfefb1a89aa89ddc36d4cbb2",
+        "text": "Use case: identity-preserve. Two small animation inbetween poses for a transparent chibi game sprite.\nInput1 is the exact original standing pose and controls head/body proportions, COSTUME LENGTH and TAIL VOLUME. Input2 is the later crouching pose that the two new poses must approach; use it only for the direction of knee/hand movement, not its shorter skirt or longer thighs.\nOutput TWO full-body new poses side by side,2columns×1row, ideally960×480 with equal480px cells. These replace the first two shallow crouch frames between original standing and Input2. In each cell retain original head width, ear size, viewer-right star clip, viewer-left magenta eye/viewer-right gold eye, long blue-purple hair, purple star outfit, original long skirt hem, short visible legs and attached tail. Keep the fluffy tail exactly the ORIGINAL input1 size, not expanded. Same thick dark outline and simple flat cel rendering.\nLEFT pose = beginning knee bend: hips/head lower4px relative to input1, soles remain at462 in480px coordinates, crown84 rather than80. Both knees only just soften. Both hands drift inward and forward a few pixels, still below the waist. Do not reveal long thighs: original hem length is preserved and follows the tiny body bend.\nRIGHT pose = slightly deeper knee bend: hips/head lower9px relative to input1, crown89; soles still462. Hands halfway between input1 and input2, elbows slightly bent. Knees bend modestly and move slightly forward, keeping the character's short legs; skirt folds naturally without becoming shorter. Head never inflates, shoulders/neck/chest-star and torso stay connected.\nThese must be consecutive genuine joint positions, NOT an upright redesign followed by another pose. The current unwanted error is that a straight-standing drawing suddenly has a shorter skirt, longer exposed thighs, larger eyes and larger tail BEFORE knees bend. Avoid all of that: starting costume, eyes and tail silhouette come from input1, then the skeleton bends smoothly.\nFixed same scale and body center in both cells. Full unclipped ears/hair/tail/boots with transparent margins, true alpha. No scene, shadows, labels, numbers, grid, floor, streaks, added items or extra limbs. Never mirror star or heterochromatic eyes. New opaque single drawings, not blending/alpha copies.\n"
+      },
+      "inputs": [
+        {
+          "file": "references/standing.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/next-crouch.png",
+          "sha256": "9b16177a17718a4a79ecfffe58e22f0d6086c329447430f87351a9ac077471ce",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "generated/seated-attempt1.png",
+        "sha256": "b106d68d9c88695592217b9f9c402a6af2f0c3cd31c7c0a99fd8da73a6d8bfac",
+        "width": 1774,
+        "height": 887
+      },
+      "status": "rejected",
+      "notes": "Two poses normalize to silhouette334px, narrower than original347 and continuation356. Second crown97 is below continuation95, creating reversal.",
+      "originalToolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-7ccac172-9595-43e9-a348-57fdf1c2f400.png"
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": ["references/standing.png"]
+      },
+      "prompt": {
+        "file": "prompt-seated-attempt2.txt",
+        "sha256": "615a1002a3aedc1bd937f7843ad0d78a56aab5b573dce5dea5027f8f336192f3",
+        "text": "Use case: precise-object-edit. Edit the supplied EXISTING production sprite with the SMALLEST possible pose change, keeping its identity, clothing proportions, head size, line art and body volume EXACT.\nOutput only ONE new shallow-crouch pose, full body, true transparent background.\nThe provided image is the standing endpoint. Keep the SAME large chibi head, exactly same face/eye size, same blue/purple hairstyle volume, same cat ears, viewer-right star, magenta viewer-left eye and gold viewer-right eye. The tail must remain the original width and fluffiness, connected at the same side; do not shrink or enlarge it. Crucially keep the exact original skirt length and its relation to the very SHORT legs: do not turn this into a longer-legged redesign.\nChange only the pose slightly: both knees begin bending forward by a small amount, hips and head descend7pixels in the original480px coordinate system, shoulders/chest/skirt descend with them. The very short thighs remain mostly covered by the same long skirt. Hands move inward about6px and upward about3px as elbows begin to bend, preparing to rest on knees. Feet remain planted at exactly the original x positions and y462 baseline. Head size is unchanged; bending joints, not shrinking the figure, lowers the crown from80 to87. Body stays centered and frontal.\nGeometry invariants at480px scale: full hair-plus-tail silhouette width remains about347px (x63..410), not334px and not370px; crown87, soles462; same eye size and original face width. Preserve original white skirt hem detailing, original boots and star chest ornament. Match the flat production sprite line thickness and colors, not a cleaner or more detailed redesign. Do not change the face expression.\nThe output is one genuine slightly bent-knee pose between standing and crouching. No extra examples, pair, sheet, text, floor, shadow, background, border, icons or props. Full complete silhouette and generous transparent padding. Prefer the exact480×480 canvas; if larger, uniformly scale the entire reference canvas including padding. Do not turn the original image into a different-proportioned character.\n"
+      },
+      "inputs": [
+        {
+          "file": "references/standing.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "generated/seated-attempt2.png",
+        "sha256": "436bdafb3a4da4e8a8726a2852179f4b08afaadda153b43d847b0b37ede142eb",
+        "width": 1254,
+        "height": 1254
+      },
+      "status": "rejected-as-final-used-for-edit",
+      "notes": "Skirt/short-leg/tail proportions improved, but hands moved too far inward before continuation and would reverse outward.",
+      "originalToolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-c8b886dd-ca26-4546-9707-b8103928736b.png"
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "parameters": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "generated/seated-attempt2.png",
+          "references/standing.png",
+          "references/next-crouch.png"
+        ]
+      },
+      "prompt": {
+        "file": "prompt-seated-attempt3.txt",
+        "sha256": "85443f694f43f4c8b51041d3421f3f859c388299d93546503677e781d55086f9",
+        "text": "Use case: precise-object-edit. Make a narrowly targeted correction to INPUT1, the new shallow-crouch sprite. INPUT2 is the original standing endpoint; INPUT3 is the following deeper-crouch endpoint.\nKEEP input1's head, face, ears, star, eyes, hair silhouette, tail volume, long skirt hem, leg proportions, shoes,7px-lowered crown and overall positioning exactly unchanged. Correct ONLY the two arms/hands to an earlier phase of movement.\nInput1 currently brings both fists too close together in front of the belly. This is later than input3 and creates an inward-then-outward arm reversal. Instead place the arms almost down alongside the torso, halfway between input2's relaxed side arms and input3's slightly forward elbows. The fists must be WIDER apart, not touching belly or skirt center.\nAt the normalized480px reference scale, desired fist centers are approximately viewer-left x177,y367 and viewer-right x309,y367. Keep elbows near their same-side waist, arms pointing down with only very small elbow bend. This is a shallow crouch with hands just beginning to move inward, NOT hands already resting on knees. Input1's current inward fists are aroundx205/284; move them OUTWARD to the side positions above while maintaining anatomical upper arms/forearms and same fist sizes.\nThe original outfit sleeves/cuffs and exposed shoulder layout remain exact. Do not alter body/head scale, eye sizes, skirt length or face rendering. Do not shift body center, tail, ears, boots or floor baseline. All changes confined to plausible arm poses.\nOne full-body sprite, same square composition and transparent canvas as input1, true alpha, no added elements/text/background/shadow. Preserve the original chibi character and full outline. Do not blend the three references or redesign her.\n"
+      },
+      "inputs": [
+        {
+          "file": "generated/seated-attempt2.png",
+          "sha256": "436bdafb3a4da4e8a8726a2852179f4b08afaadda153b43d847b0b37ede142eb",
+          "width": 1254,
+          "height": 1254
+        },
+        {
+          "file": "references/standing.png",
+          "sha256": "0c5671c90fd8cee0e8ca89a9b1baaa5853e6002091bbd894e6fae3d776d9ceee",
+          "width": 480,
+          "height": 480
+        },
+        {
+          "file": "references/next-crouch.png",
+          "sha256": "9b16177a17718a4a79ecfffe58e22f0d6086c329447430f87351a9ac077471ce",
+          "width": 480,
+          "height": 480
+        }
+      ],
+      "output": {
+        "file": "generated/seated-attempt3.png",
+        "sha256": "19f06947f49109070741c9b588eacf1b134d0c8774814c31435f4254914408f7",
+        "width": 1254,
+        "height": 1254
+      },
+      "status": "accepted",
+      "notes": "Only arms corrected outward to early crouch phase. One pose replaces old1/2, preserving total140ms; crown87 between80/95, silhouette352 between347/356. Skirt remains original length while knees bend.",
+      "originalToolOutput": "/Users/frost/.codex/generated_images/01a1b937-6a06-76d0-ba57-ed29272b222f/exec-5bdb07ef-4d4b-4be9-ac80-d3a5c1902066.png"
+    }
+  ],
+  "processing": {
+    "file": "processing-record.json",
+    "sha256": "5583de005817251fc7d3aa0d0d729d20848a519e4d84f65bbb64c548b089cbf5",
+    "script": "prepare.mjs",
+    "scriptSha256": "f49fa9fb6a98b29f3d858894bffd0186b5db73a9801c87169bd1025c1c1b529a"
+  },
+  "replacementManifest": {
+    "file": "replacements.json",
+    "sha256": "ffd700a0c1144f6c462e6e0199428eda19d9c5bebb288d3bee3b141c9453cb3a"
+  },
+  "outputs": [
+    {
+      "file": "sprites/sittingdown.webp",
+      "sha256": "e280b29fa95162690e91c794c6f0c57fe8e6cf02ac393514df5eccbeed386be2",
+      "width": 3840,
+      "height": 480
+    },
+    {
+      "file": "sprites/standingup.webp",
+      "sha256": "9ab92fd6289eae39d479fb251afcd1d7560e54572c63ecfcc5a4fa70bc00672e",
+      "width": 3840,
+      "height": 480
+    }
+  ],
+  "qa": {
+    "evidenceDirectory": "test-results/runtime-continuity-before/gemini",
+    "inspected": [
+      "v4-final-sittingdown.png",
+      "v4-final-standingup.png",
+      "v4-final-join.png"
+    ],
+    "method": "Viewed generated sources, normalized endpoint strips and all final replacement frames. No desktop application started. No optical flow or head/body compositing.",
+    "originalPixelsPreserved": "All original frames retained in replacement strips are raw-copied; lossless WebP decoding equals RGBA at all alpha>0 pixels and exact alpha everywhere. Neutral anchors unmodified.",
+    "limits": "New generated drawings retain small line/rendering differences from old source frames; final desktop-speed review remains with root. No claim of pixel identity for new poses."
+  }
+}

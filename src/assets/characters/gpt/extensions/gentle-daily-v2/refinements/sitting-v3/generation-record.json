@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "createdOn": "2026-11-08",
+  "character": "gpt",
+  "action": "awake seated loop",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "transparentBackground": true
+  },
+  "references": [
+    {
+      "key": 8,
+      "file": "reference-key-8.png",
+      "sha256": "e5fede9fcf30063847a441f2cabe922ac2c9734df8f4504d60eccd5fc203aa70",
+      "originalFile": "../../../gentle-daily-v1/sprites/sitting.webp",
+      "originalSha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+      "originalRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "preparation": "Exact480px original frame extracted; only RGB under alpha=0 was zeroed for clean model reference."
+    },
+    {
+      "key": 9,
+      "file": "reference-key-9.png",
+      "sha256": "ebc4432106a4000c3a3ee8ca6a1293037bdc0ae60b4c022aea150ea5ee72fbf3",
+      "originalFile": "../../../gentle-daily-v1/sprites/sitting.webp",
+      "originalSha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+      "originalRegion": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "preparation": "Exact480px original frame extracted; only RGB under alpha=0 was zeroed for clean model reference."
+    },
+    {
+      "key": 10,
+      "file": "reference-key-10.png",
+      "sha256": "ace0404a7dd5ae365be50c6c49615f58ac2bb50453cf5d3f5f0b0e2b018748b6",
+      "originalFile": "../../../gentle-daily-v1/sprites/sitting.webp",
+      "originalSha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+      "originalRegion": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "preparation": "Exact480px original frame extracted; only RGB under alpha=0 was zeroed for clean model reference."
+    },
+    {
+      "key": 11,
+      "file": "reference-key-11.png",
+      "sha256": "0a611ea1b277018b6d06d36951321bd19298b15dc07277cdded1853a49ec2a58",
+      "originalFile": "../../../gentle-daily-v1/sprites/sitting.webp",
+      "originalSha256": "5b337c4bdb69786740c0df0bdf000eba6bd0e2eb3cabe195f80d99879680ad0c",
+      "originalRegion": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "preparation": "Exact480px original frame extracted; only RGB under alpha=0 was zeroed for clean model reference."
+    }
+  ],
+  "endpointPairs": {
+    "file": "endpoint-pairs.png",
+    "sha256": "951928891087b21aa74a4b7458caa91b6820f813f1c581ed7a6c74994d71c84b",
+    "mapping": [
+      {
+        "index": 0,
+        "from": 8,
+        "to": 9,
+        "t": 0.5
+      },
+      {
+        "index": 1,
+        "from": 9,
+        "to": 10,
+        "t": 0.5
+      },
+      {
+        "index": 2,
+        "from": 10,
+        "to": 11,
+        "t": 0.5
+      },
+      {
+        "index": 3,
+        "from": 11,
+        "to": 8,
+        "t": 0.5
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "output": "source-attempt1.png",
+      "sha256": "14af175f20eac6fb88c4488e1cf151da8c0d2167d2ac6abb130a891e30672ad3",
+      "prompt": "Use case: identity-preserve. Precise animation in-between drawing, ONE action only: awake seated idle.\nINPUT 1 is a board with FOUR endpoint pairs in a2×2 layout. Each pair shows original frame A on the left and B on the right.\nINPUT 2 is the exact approved seated model and MUST control body height, head size, sitting pose, clothes and rendering.\nCreate ONE new halfway pose for EACH pair. Output only FOUR full-body seated figures in a2×2 grid, one per equal cell. Do NOT output the8 endpoint figures. These are four actual newly drawn solid midposes, not faded blends or duplicates.\n\nHIGHEST PRIORITY: MATCH SEATED BODY GEOMETRY. The little dragon girl stays seated, upright and awake in every cell. The folded legs, shoe positions, hands resting on lap, body center, shoulder height and seat height stay exactly as input2. Her horns, head, wings, hair volume and curled tail keep exactly the same dimensions. Do not squat her lower, widen her skirt, shrink her head, stretch her body or change the angle of her legs. There is no sitting down or standing up in this sheet. Only restrained head/eye tracking and tiny facial changes happen.\n\nStyle and identity: exact same huge rounded head, white/lavender hair, cream curved dragon horns, purple eyes, pointed ears, lavender wings and tail, white/lilac dress with original rosette on viewer-right waist, white boots. Exact original outline thickness and simple flat cel colors. No new detail, clothing, accessories or redesign. Both eyes remain OPEN and alert in all four cells. No blink or sleep.\n\nCell TOP LEFT corresponds to pair1 (key8→key9): draw a gentle halfway eye/head shift from neutral toward the small left-facing attentive angle. The turn is HALF as far as endpoint B. Hair and ear contour should be midway, not a full endpoint copy.\nCell TOP RIGHT corresponds to pair2 (key9→key10): head/gaze passes smoothly THROUGH FRONT between the two directions. Keep eyes open; a slight upward eye focus at the middle makes the movement readable. Do not stay on the left-looking endpoint.\nCell BOTTOM LEFT corresponds to pair3 (key10→key11): head/gaze halfway returning from the right-facing look toward front. HALF as turned as key10, not the full right-looking pose.\nCell BOTTOM RIGHT corresponds to pair4 (key11→key8): keep the same upright seated geometry, eyes make a small downward-to-forward settling gaze (about2px at480px frame scale) while returning to the neutral focus. This is a very small living idle bridge, not a new extreme.\n\nOutput a true-transparent PNG, square960×960 if possible, TWO columns and TWO rows of equal480×480 invisible cells. In EACH480px cell match input2 positioning: full visible silhouette from y95 to y462, foot/seat support y462, centerx240; the head crown/horns, hands and feet are the same size and position as reference except the small specified head angles. For another resolution, scale ALL these coordinates uniformly. Keep transparent padding. No text, numbers, pair labels, grid, border, gray background, floor, shadow, symbols, props, chairs or extra hands. Exactly one complete full character per cell. Preserve genuine alpha.\n",
+      "inputs": ["endpoint-pairs.png", "reference-key-8.png"],
+      "status": "rejected",
+      "reason": "Misread key9→key10 as passing through front instead of moving further right."
+    },
+    {
+      "attempt": 2,
+      "output": "source-attempt2.png",
+      "sha256": "7d4fab2d0b0c88f5cc247a0084b4bd833472e33f9ae4ae27dc077a8cd5453001",
+      "prompt": "Use case: identity-preserve. Draw FOUR real intermediate animation poses for this ONE awake-seated action. Read the supplied endpoint pairs carefully; do not invent a left/right oscillation.\nINPUT1 contains FOUR pairs in a2×2 grid. Within each pair, A is on the left, B on the right. INPUT2 is the exact seated character model at480×480.\nOutput ONE NEW solid halfway pose per pair, in the same2×2 arrangement. Only FOUR figures. Do not reproduce the endpoints or blend them.\n\nCRITICAL CORRECTION: in the original frames, key8 is front-facing, key9 begins looking a LITTLE toward VIEWER-RIGHT, key10 looks MORE toward VIEWER-RIGHT, and key11 returns front. Therefore the missing key9→key10 drawing must ALSO face slightly RIGHT, between their two right-looking angles. It must NOT pass through a front-facing or left-facing pose.\nThe output's four poses should be: very slightly right / moderately right / halfway back from right / essentially front with tiny settling eye movement.\n\nMaintain the exact original seated body geometry in all4 cells: HUGE SAME-SIZE HEAD, same crown and horns height, shoulders, torso, folded legs, hands resting in exactly the same place on lap, shoes, wings and curled tail. No shrinking, lowering, squashing, leaning the torso, or changing costume. Both eyes stay open. Same white/lilac hair, cream curved horns, purple eyes, pointed ears, violet wings and tail, white/lilac dress with original spiral rosette, round boots. Same simple thick outline and flat cel color style. Only small head-turn and eye-focus changes, physically halfway between endpoints. Keep head size and eye size identical.\n\nGEOMETRY GUIDE IN480×480 CELL COORDINATES (scale uniformly if output larger):\nOriginal full seated silhouette is x≈80..410, y≈95..462; centeredx240, contact baseliney462. Keep those body/head dimensions and ground contact in ALL four cells. Do not draw a shorter seated figure. HANDS are fixed around y410, boots bottomy462. The following small facial coordinates describe the requested in-between turns, not a change of drawing scale:\nTOP LEFT (key8→9, t0.5): tiny rightward head turn, mouth center aboutx244,y290; open purple pupil centers roughlyx209 and278,y265. This is slightly more right-looking than key8, but less than key9.\nTOP RIGHT (key9→10, t0.5): rightward head turn midway between these two endpoints, mouth aboutx255,y285; pupils roughlyx219 and287,y258. Both eyes visible; do not turn through front.\nBOTTOM LEFT (key10→11, t0.5): halfway return from rightward look to front, mouth aboutx253,y287; pupils roughlyx217 and285,y261. Less turned than key10. No new head tilt.\nBOTTOM RIGHT (key11→8, t0.5): near-front bridge, mouth aboutx242,y291; eyes gently settling from a slightly raised gaze toward forward, pupil centers aboutx208 and276,y268. Same open eyes, no sleep or blink.\n\nOutput square transparent PNG, exactly TWO columns and TWO rows, ideally960×960 with480×480 invisible cells. If another resolution is used, scale all geometry uniformly, not the character independently per cell. Transparent margins, complete unclipped horns/hair/wings/tail/feet. No labels, letters, grid, background, gray board, shadows, floor, symbols or props. FOUR NEW halfway drawings, not duplicates, no ghosting or translucent blending.\n",
+      "inputs": ["endpoint-pairs.png", "reference-key-8.png"],
+      "status": "revised",
+      "reason": "Seated geometry consistent, but first three head turns were too large."
+    },
+    {
+      "attempt": 3,
+      "output": "source.png",
+      "sha256": "000ec9dd4f3c2bd9a27433254401f49e22f9c22c3c4dcc5f8ec3913c6a606529",
+      "prompt": "Use case: identity-preserve. Targeted correction of ONLY the mild head directions in the existing2×2 transparent sprite sheet.\nINPUT1 is the edit target. Its seated body height, proportions, head size, hands, clothing, feet, wings, tail, canvas framing and transparency must remain EXACTLY unchanged.\nINPUT2 is a guide with4 endpoint pairs: the required edited head pose in each target cell must be HALFWAY between the two corresponding original endpoint heads. INPUT3 is the original near-front seated identity.\n\nThe current target sheet turns the head too far right in the first3 cells. REDUCE those head turns so they lie between the provided endpoints. This is not a request for more expressive turning. Use very small angles, with both eyes equally readable.\n\nTOP LEFT: make the head ALMOST FRONT-FACING with only a tiny2–3degree rightward look. The nose/mouth should be almost centered over the body. Do not leave the present moderate right turn.\nTOP RIGHT: REDUCE THE RIGHT TURN BY ABOUT HALF. It must be a gentle6–7degree right-facing look, not three-quarter/profile. Both cheeks and both eyes have nearly equal visible widths. This is halfway between guide pair2's mild and stronger right-facing endpoints.\nBOTTOM LEFT: mild4–5degree right-facing angle, halfway recovering toward front. Less turned than it is currently.\nBOTTOM RIGHT: retain near-front head, with only a tiny downward-to-forward eye settling. Eyes remain OPEN.\n\nPrecise guide for target sheet's existing627px cells: fixed body/feet center is aboutx332. Desired mouth centers in local cell coordinates are approximately TOP LEFT x337, TOP RIGHT x351, BOTTOM LEFT x349, BOTTOM RIGHT x334. Current first3 mouths are too far right. These are small rotations through the neck; DO NOT translate the whole head or body, shrink the head, change crown height, alter the sitting pose or move hands/feet.\nKeep the same huge head size, horn shapes, hair volume, thick outlines, face, costume and rendering. In every pose the seated head top and boots bottom stay at the exact same heights as input1. All four mouths tiny and calm. No blink, no sleep.\n\nOutput same2×2 square transparent image composition, preferably exact1254×1254. Do not draw labels, grid, borders, gray reference background, arrows, numbers, floor, shadows or extra props. Preserve full unclipped figures and true alpha. Change ONLY head directions/eye focus as specified; body geometry is locked.\n",
+      "inputs": [
+        "source-attempt2.png",
+        "endpoint-pairs.png",
+        "reference-key-8.png"
+      ],
+      "status": "adopted",
+      "reason": "Targeted head-angle correction while retaining seated geometry; four open-eye small head/gaze bridges."
+    }
+  ],
+  "processing": {
+    "method": "Crop each original generated pose, apply one uniform scale to the whole group, then translate into480px frames. No per-frame bbox scaling, frame blending, warping or synthetic pose generation.",
+    "uniformScale": 0.7112403100775194,
+    "scaleBasis": {
+      "reference": "reference-key-8.png",
+      "referenceVisibleHeight": 367,
+      "sourceFirstVisibleHeight": 516
+    },
+    "horizontalAnchor": {
+      "sourceLocalX": 323.75,
+      "targetX": 240.75,
+      "basis": "Midpoint of two separated boot-contact runs on lowest alpha>=128 row of first source/reference pose; reused unchanged for all four frames."
+    },
+    "verticalAnchor": "Each raster bottom-exclusive maps to existing foot.y462.",
+    "alphaCleanup": "Alpha<128 set to zero before resize; fully transparent RGB zeroed. Remaining alpha preserved.",
+    "atlasAssembly": "Raw RGBA row copies; lossless WebP."
+  },
+  "output": {
+    "file": "midpoints.webp",
+    "sha256": "20c85795e67bd34c830405e84030d8e28917bec62233c649bc34d1df2236b125",
+    "descriptionFile": "midpoints.json",
+    "descriptionSha256": "d1d7f80d561201aef6636485967f96a7a0b90dc476b591dd0f606d43efb31892",
+    "width": 1920,
+    "height": 480,
+    "frames": [
+      {
+        "index": 0,
+        "from": 8,
+        "to": 9,
+        "t": 0.5,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "foot": {
+          "x": 240,
+          "y": 462
+        },
+        "durationMs": 110,
+        "processing": {
+          "sourceFile": "source.png",
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRegion": {
+            "x": 93,
+            "y": 22,
+            "width": 467,
+            "height": 516
+          },
+          "scale": 0.7112403100775194,
+          "rasterPlacement": {
+            "x": 77,
+            "y": 95,
+            "width": 332,
+            "height": 367
+          },
+          "anchor": {
+            "sourceX": 323.75,
+            "targetX": 240.75,
+            "sourceBottomExclusive": 538,
+            "targetBottomExclusive": 462
+          }
+        },
+        "visibleBounds": {
+          "x": 77,
+          "y": 95,
+          "width": 332,
+          "height": 367
+        }
+      },
+      {
+        "index": 1,
+        "from": 9,
+        "to": 10,
+        "t": 0.5,
+        "region": {
+          "x": 480,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "foot": {
+          "x": 240,
+          "y": 462
+        },
+        "durationMs": 110,
+        "processing": {
+          "sourceFile": "source.png",
+          "sourceCell": {
+            "x": 627,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRegion": {
+            "x": 721,
+            "y": 23,
+            "width": 467,
+            "height": 515
+          },
+          "scale": 0.7112403100775194,
+          "rasterPlacement": {
+            "x": 77,
+            "y": 96,
+            "width": 332,
+            "height": 366
+          },
+          "anchor": {
+            "sourceX": 323.75,
+            "targetX": 240.75,
+            "sourceBottomExclusive": 538,
+            "targetBottomExclusive": 462
+          }
+        },
+        "visibleBounds": {
+          "x": 77,
+          "y": 96,
+          "width": 332,
+          "height": 366
+        }
+      },
+      {
+        "index": 2,
+        "from": 10,
+        "to": 11,
+        "t": 0.5,
+        "region": {
+          "x": 960,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "foot": {
+          "x": 240,
+          "y": 462
+        },
+        "durationMs": 110,
+        "processing": {
+          "sourceFile": "source.png",
+          "sourceCell": {
+            "x": 0,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRegion": {
+            "x": 93,
+            "y": 650,
+            "width": 468,
+            "height": 515
+          },
+          "scale": 0.7112403100775194,
+          "rasterPlacement": {
+            "x": 77,
+            "y": 96,
+            "width": 333,
+            "height": 366
+          },
+          "anchor": {
+            "sourceX": 323.75,
+            "targetX": 240.75,
+            "sourceBottomExclusive": 1165,
+            "targetBottomExclusive": 462
+          }
+        },
+        "visibleBounds": {
+          "x": 77,
+          "y": 96,
+          "width": 333,
+          "height": 366
+        }
+      },
+      {
+        "index": 3,
+        "from": 11,
+        "to": 8,
+        "t": 0.5,
+        "region": {
+          "x": 1440,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "foot": {
+          "x": 240,
+          "y": 462
+        },
+        "durationMs": 110,
+        "processing": {
+          "sourceFile": "source.png",
+          "sourceCell": {
+            "x": 627,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRegion": {
+            "x": 721,
+            "y": 650,
+            "width": 467,
+            "height": 515
+          },
+          "scale": 0.7112403100775194,
+          "rasterPlacement": {
+            "x": 77,
+            "y": 96,
+            "width": 332,
+            "height": 366
+          },
+          "anchor": {
+            "sourceX": 323.75,
+            "targetX": 240.75,
+            "sourceBottomExclusive": 1165,
+            "targetBottomExclusive": 462
+          }
+        },
+        "visibleBounds": {
+          "x": 77,
+          "y": 96,
+          "width": 332,
+          "height": 366
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "index": 0,
+      "visibleTop": 95,
+      "visibleBottomExclusive": 462,
+      "visibleHeight": 367,
+      "visibleWidth": 332
+    },
+    {
+      "index": 1,
+      "visibleTop": 96,
+      "visibleBottomExclusive": 462,
+      "visibleHeight": 366,
+      "visibleWidth": 332
+    },
+    {
+      "index": 2,
+      "visibleTop": 96,
+      "visibleBottomExclusive": 462,
+      "visibleHeight": 366,
+      "visibleWidth": 333
+    },
+    {
+      "index": 3,
+      "visibleTop": 96,
+      "visibleBottomExclusive": 462,
+      "visibleHeight": 366,
+      "visibleWidth": 332
+    }
+  ]
+}

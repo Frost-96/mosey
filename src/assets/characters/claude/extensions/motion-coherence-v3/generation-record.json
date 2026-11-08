@@ -1,0 +1,689 @@
+{
+  "version": 1,
+  "character": "claude",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "transparentBackground": true,
+  "mode": "identity-preserve",
+  "references": [
+    {
+      "file": "references/standing.png",
+      "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779"
+    },
+    {
+      "file": "references/seated.png",
+      "sha256": "54f5625083c986d5039a2476db56a513a0de7c04b841321eb5974ada4159a3eb"
+    },
+    {
+      "file": "references/open-book.png",
+      "sha256": "fcf22ec0ea619407f8e19b449604d8df2c84bd2568f88d1899d1f8e9680a9f30"
+    },
+    {
+      "file": "references/paw-wrong-side.png",
+      "sha256": "6d0d372e4b2ed7df1d80e3ad4f1abbb2d7a7bc714f597ce89f479bb93cbaaedd"
+    },
+    {
+      "file": "references/stretch-extra-arm.png",
+      "sha256": "951ddc0c7a6ac8cc610378eb84b46965c431713be2326904fd9b37de9ab54d3a"
+    }
+  ],
+  "requests": [
+    {
+      "file": "arms-source.png",
+      "sha256": "42e3b89fd3a90dc2bba9cecccbd475b0538d3634cb93035c7703c62735b6bb6c",
+      "width": 1774,
+      "height": 887,
+      "grid": {
+        "columns": 4,
+        "rows": 2
+      },
+      "promptFile": "arms-prompt.txt",
+      "inputReferences": ["references/standing.png"],
+      "basis": {
+        "reference": "idle",
+        "dimension": "height",
+        "sourceFrameIndex": 0
+      },
+      "uniformScale": 1.0075566750629723,
+      "frames": [
+        {
+          "file": "arms-source.png",
+          "index": 0,
+          "sourceRegion": {
+            "x": 75,
+            "y": 7,
+            "width": 303,
+            "height": 397
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 444,
+            "height": 444
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 62,
+            "width": 305,
+            "height": 400
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 1,
+          "sourceRegion": {
+            "x": 519,
+            "y": 7,
+            "width": 303,
+            "height": 397
+          },
+          "sourceCell": {
+            "x": 444,
+            "y": 0,
+            "width": 443,
+            "height": 444
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 62,
+            "width": 305,
+            "height": 400
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 2,
+          "sourceRegion": {
+            "x": 963,
+            "y": 7,
+            "width": 302,
+            "height": 397
+          },
+          "sourceCell": {
+            "x": 887,
+            "y": 0,
+            "width": 444,
+            "height": 444
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 93,
+            "y": 62,
+            "width": 304,
+            "height": 400
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 3,
+          "sourceRegion": {
+            "x": 1406,
+            "y": 7,
+            "width": 303,
+            "height": 398
+          },
+          "sourceCell": {
+            "x": 1331,
+            "y": 0,
+            "width": 443,
+            "height": 444
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 61,
+            "width": 305,
+            "height": 401
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 4,
+          "sourceRegion": {
+            "x": 75,
+            "y": 452,
+            "width": 303,
+            "height": 398
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 444,
+            "width": 444,
+            "height": 443
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 61,
+            "width": 305,
+            "height": 401
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 5,
+          "sourceRegion": {
+            "x": 519,
+            "y": 452,
+            "width": 302,
+            "height": 398
+          },
+          "sourceCell": {
+            "x": 444,
+            "y": 444,
+            "width": 443,
+            "height": 443
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 61,
+            "width": 304,
+            "height": 401
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 6,
+          "sourceRegion": {
+            "x": 963,
+            "y": 452,
+            "width": 302,
+            "height": 398
+          },
+          "sourceCell": {
+            "x": 887,
+            "y": 444,
+            "width": 444,
+            "height": 443
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 93,
+            "y": 61,
+            "width": 304,
+            "height": 401
+          }
+        },
+        {
+          "file": "arms-source.png",
+          "index": 7,
+          "sourceRegion": {
+            "x": 1406,
+            "y": 452,
+            "width": 303,
+            "height": 398
+          },
+          "sourceCell": {
+            "x": 1331,
+            "y": 444,
+            "width": 443,
+            "height": 443
+          },
+          "uniformScale": 1.0075566750629723,
+          "placement": {
+            "x": 92,
+            "y": 61,
+            "width": 305,
+            "height": 401
+          }
+        }
+      ]
+    },
+    {
+      "file": "sitting-source.png",
+      "sha256": "7a93049262aa008773248d000b9726647a122a5c73594a324eeeb2669fb17052",
+      "width": 1774,
+      "height": 887,
+      "grid": {
+        "columns": 4,
+        "rows": 2
+      },
+      "promptFile": "sitting-prompt.txt",
+      "inputReferences": ["references/standing.png", "references/seated.png"],
+      "basis": {
+        "reference": "idle",
+        "dimension": "width",
+        "sourceFrameIndex": 3
+      },
+      "uniformScale": 1.0477815699658704,
+      "frames": [
+        {
+          "file": "sitting-source.png",
+          "index": 0,
+          "sourceRegion": {
+            "x": 78,
+            "y": 10,
+            "width": 290,
+            "height": 408
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 444,
+            "height": 444
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 35,
+            "width": 304,
+            "height": 427
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 1,
+          "sourceRegion": {
+            "x": 521,
+            "y": 19,
+            "width": 292,
+            "height": 399
+          },
+          "sourceCell": {
+            "x": 444,
+            "y": 0,
+            "width": 443,
+            "height": 444
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 44,
+            "width": 306,
+            "height": 418
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 2,
+          "sourceRegion": {
+            "x": 965,
+            "y": 31,
+            "width": 293,
+            "height": 387
+          },
+          "sourceCell": {
+            "x": 887,
+            "y": 0,
+            "width": 444,
+            "height": 444
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 57,
+            "width": 307,
+            "height": 405
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 3,
+          "sourceRegion": {
+            "x": 1408,
+            "y": 43,
+            "width": 293,
+            "height": 374
+          },
+          "sourceCell": {
+            "x": 1331,
+            "y": 0,
+            "width": 443,
+            "height": 444
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 70,
+            "width": 307,
+            "height": 392
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 4,
+          "sourceRegion": {
+            "x": 78,
+            "y": 491,
+            "width": 294,
+            "height": 371
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 444,
+            "width": 444,
+            "height": 443
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 73,
+            "width": 308,
+            "height": 389
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 5,
+          "sourceRegion": {
+            "x": 521,
+            "y": 503,
+            "width": 296,
+            "height": 359
+          },
+          "sourceCell": {
+            "x": 444,
+            "y": 444,
+            "width": 443,
+            "height": 443
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 86,
+            "width": 310,
+            "height": 376
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 6,
+          "sourceRegion": {
+            "x": 965,
+            "y": 512,
+            "width": 297,
+            "height": 352
+          },
+          "sourceCell": {
+            "x": 887,
+            "y": 444,
+            "width": 444,
+            "height": 443
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 93,
+            "width": 311,
+            "height": 369
+          }
+        },
+        {
+          "file": "sitting-source.png",
+          "index": 7,
+          "sourceRegion": {
+            "x": 1408,
+            "y": 516,
+            "width": 299,
+            "height": 348
+          },
+          "sourceCell": {
+            "x": 1331,
+            "y": 444,
+            "width": 443,
+            "height": 443
+          },
+          "uniformScale": 1.0477815699658704,
+          "placement": {
+            "x": 89,
+            "y": 97,
+            "width": 313,
+            "height": 365
+          }
+        }
+      ]
+    },
+    {
+      "file": "sitting-loop-source.png",
+      "sha256": "e2144e47a9ec4a29a8a8d456988ca015ffa525aabd034442a722033a09dc6756",
+      "width": 1254,
+      "height": 1254,
+      "grid": {
+        "columns": 2,
+        "rows": 2
+      },
+      "promptFile": "sitting-loop-prompt.txt",
+      "inputReferences": ["references/seated.png"],
+      "basis": {
+        "reference": "seat",
+        "dimension": "height",
+        "sourceFrameIndex": 0
+      },
+      "uniformScale": 0.6747663551401869,
+      "frames": [
+        {
+          "file": "sitting-loop-source.png",
+          "index": 0,
+          "sourceRegion": {
+            "x": 96,
+            "y": 20,
+            "width": 438,
+            "height": 535
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.6747663551401869,
+          "placement": {
+            "x": 93,
+            "y": 101,
+            "width": 296,
+            "height": 361
+          }
+        },
+        {
+          "file": "sitting-loop-source.png",
+          "index": 1,
+          "sourceRegion": {
+            "x": 718,
+            "y": 20,
+            "width": 440,
+            "height": 535
+          },
+          "sourceCell": {
+            "x": 627,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.6747663551401869,
+          "placement": {
+            "x": 90,
+            "y": 101,
+            "width": 297,
+            "height": 361
+          }
+        },
+        {
+          "file": "sitting-loop-source.png",
+          "index": 2,
+          "sourceRegion": {
+            "x": 96,
+            "y": 648,
+            "width": 440,
+            "height": 534
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.6747663551401869,
+          "placement": {
+            "x": 93,
+            "y": 102,
+            "width": 297,
+            "height": 360
+          }
+        },
+        {
+          "file": "sitting-loop-source.png",
+          "index": 3,
+          "sourceRegion": {
+            "x": 715,
+            "y": 651,
+            "width": 445,
+            "height": 531
+          },
+          "sourceCell": {
+            "x": 627,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.6747663551401869,
+          "placement": {
+            "x": 88,
+            "y": 104,
+            "width": 300,
+            "height": 358
+          }
+        }
+      ]
+    },
+    {
+      "file": "book-source.png",
+      "sha256": "e689f7e21693eceaf6e127b70c75b2837433fe7b7fdf991ab3736c6e69bfa8d1",
+      "width": 1254,
+      "height": 1254,
+      "grid": {
+        "columns": 2,
+        "rows": 2
+      },
+      "promptFile": "book-prompt.txt",
+      "inputReferences": [
+        "references/standing.png",
+        "references/open-book.png"
+      ],
+      "basis": {
+        "reference": "idle",
+        "dimension": "height",
+        "sourceFrameIndex": 0
+      },
+      "uniformScale": 0.7285974499089253,
+      "frames": [
+        {
+          "file": "book-source.png",
+          "index": 0,
+          "sourceRegion": {
+            "x": 113,
+            "y": 16,
+            "width": 417,
+            "height": 549
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.7285974499089253,
+          "placement": {
+            "x": 94,
+            "y": 62,
+            "width": 304,
+            "height": 400
+          }
+        },
+        {
+          "file": "book-source.png",
+          "index": 1,
+          "sourceRegion": {
+            "x": 729,
+            "y": 16,
+            "width": 418,
+            "height": 549
+          },
+          "sourceCell": {
+            "x": 627,
+            "y": 0,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.7285974499089253,
+          "placement": {
+            "x": 86,
+            "y": 62,
+            "width": 305,
+            "height": 400
+          }
+        },
+        {
+          "file": "book-source.png",
+          "index": 2,
+          "sourceRegion": {
+            "x": 113,
+            "y": 649,
+            "width": 417,
+            "height": 551
+          },
+          "sourceCell": {
+            "x": 0,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.7285974499089253,
+          "placement": {
+            "x": 94,
+            "y": 61,
+            "width": 304,
+            "height": 401
+          }
+        },
+        {
+          "file": "book-source.png",
+          "index": 3,
+          "sourceRegion": {
+            "x": 729,
+            "y": 650,
+            "width": 420,
+            "height": 550
+          },
+          "sourceCell": {
+            "x": 627,
+            "y": 627,
+            "width": 627,
+            "height": 627
+          },
+          "uniformScale": 0.7285974499089253,
+          "placement": {
+            "x": 86,
+            "y": 61,
+            "width": 306,
+            "height": 401
+          }
+        }
+      ]
+    }
+  ],
+  "originals": {
+    "file": "originals/index.json",
+    "sha256": "1fa8f7b0b2aa40331fa80c69aefc652ac8630df79a3d896d95930208243541da"
+  },
+  "processing": {
+    "script": "prepare.mjs",
+    "frameSize": 480,
+    "foot": {
+      "x": 240,
+      "y": 462
+    },
+    "alphaThreshold": 128,
+    "rule": "One scale per generated sheet, no per-frame scaling. Only crop, transparent cleanup, resize, baseline placement and raw RGBA atlas assembly."
+  },
+  "excluded": {
+    "sitting": [
+      {
+        "indices": [0, 1, 2],
+        "reason": "Generated standing legs are elongated relative to approved identity; use poses3–7 with a single reference-width scale for monotonic lowering."
+      }
+    ]
+  }
+}

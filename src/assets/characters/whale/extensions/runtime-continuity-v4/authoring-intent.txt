@@ -1,0 +1,2 @@
+Use only the stable existing seated key poses. Excluded short intermediate poses that raise hat/face/collar by10–14px above adjacent seated keys.
+Keep the first and last neutral seated anchors exact, preserve the full loop duration, and prefer a calm readable glance over extra frame count. No ImageGen was used; no prompt or generated new pose exists for this revision.

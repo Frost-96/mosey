@@ -1,0 +1,46 @@
+{
+  "character": "claude",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "promptFile": "prompt.txt",
+  "reference": {
+    "file": "reference-standing.png",
+    "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779",
+    "source": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "source": {
+    "file": "source-v1.png",
+    "sha256": "29838ad1b76c3c98cbc82355d2d03a1fff50a85ba2dcc3dbf83ff2f77dcd2945",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major"
+  },
+  "rows": [
+    {
+      "row": 0,
+      "action": "petted",
+      "description": "neutral, lean toward unseen pat, eyes closed enjoying, neutral"
+    },
+    {
+      "row": 1,
+      "action": "grooming",
+      "description": "raise free hand, smooth hair, adjust bow/flower, neutral"
+    },
+    {
+      "row": 2,
+      "action": "celebrating",
+      "description": "prepare, raise small fist, eyes closed smiling cheer, neutral"
+    },
+    {
+      "row": 3,
+      "action": "habit",
+      "description": "bring book forward, open reading, raised turning page, close and return"
+    }
+  ]
+}

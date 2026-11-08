@@ -1,0 +1,465 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "file": "extensions/gentle-daily-v2/manifest.json",
+      "sha256": "532ca673c980264e9af01d2271198e4b424947d7ac6012327368defa6b42eb35",
+      "actions": ["looking", "sittingdown", "sitting", "standingup", "yawning"]
+    },
+    {
+      "file": "extensions/motion-coherence-v3/replacements.json",
+      "sha256": "d628ff1e6c5342a31a940b46ad33e779302e3596a2738e76f4c60569f7f0767c",
+      "actions": ["sittingdown", "standingup"]
+    },
+    {
+      "file": "extensions/expressive-daily-v2/manifest.json",
+      "sha256": "2e435c614be3d422c8b15e42aea1c89267d38ccdcdcba1afa5153b43294ff7a3",
+      "actions": ["petted", "grooming", "celebrating", "habit"]
+    },
+    {
+      "file": "extensions/runtime-continuity-v4/replacements.json",
+      "sha256": "575a21322b85f398295c3730a333fa7c5c6d1a8ec35d4669073ad37e21d20b05",
+      "actions": ["sitting"]
+    }
+  ],
+  "actions": {
+    "looking": {
+      "image": "extensions/gentle-daily-v2/sprites/looking.webp",
+      "sha256": "131946172f68ca8a29e8cd997859abc5010606d03e9daa4019f2a7bdc7e46825",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 80
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 320
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 320
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    },
+    "sittingdown": {
+      "image": "extensions/motion-coherence-v3/sittingdown.webp",
+      "sha256": "d326baef1cd36171b564ccc5eb651ac7edbabae0ea3c716c46c542b058343774",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 120
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 110
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 130
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 200
+        }
+      ]
+    },
+    "sitting": {
+      "image": "extensions/runtime-continuity-v4/sitting.webp",
+      "sha256": "18e5800391da50d63fd4b81fc6b3eddbde721b73b4f99bf4b2297d003ab190b5",
+      "loop": "repeat",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 900
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 220
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 500
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 220
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 480
+        }
+      ]
+    },
+    "standingup": {
+      "image": "extensions/motion-coherence-v3/standingup.webp",
+      "sha256": "deeb1dbd2ed3c4c5ce46af557a497dcbc6f58f77da15de7e9d2c4bc2d0ca1e68",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 140
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 130
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 120
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 110
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 180
+        }
+      ]
+    },
+    "yawning": {
+      "image": "extensions/gentle-daily-v2/sprites/yawning.webp",
+      "sha256": "89cc91ec6e4e83f0dd438ccb94346df463e40be662a05264f209fb368325131c",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 180
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 550
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 130
+        },
+        {
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    },
+    "petted": {
+      "image": "extensions/expressive-daily-v2/sprites/petted.webp",
+      "sha256": "b336c0d441dd65781b547969babf581afc3c9a0b17fdba8ad73ad008101e6156",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 80
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 180
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 500
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 120
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    },
+    "grooming": {
+      "image": "extensions/expressive-daily-v2/sprites/grooming.webp",
+      "sha256": "0531221a2e080a7e38b24a862da9f4d431650a3ba7cfcea48afa2cb7d3b6b6c5",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 200
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 200
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 110
+        },
+        {
+          "region": { "x": 4320, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    },
+    "celebrating": {
+      "image": "extensions/expressive-daily-v2/sprites/celebrating.webp",
+      "sha256": "4846f47c997d7b429bbd16bfef4116b6a5afc04667c601b9f4d9759d7df9276e",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 80
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 4320, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 4800, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 80
+        },
+        {
+          "region": { "x": 5280, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 65
+        },
+        {
+          "region": { "x": 5760, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 6240, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    },
+    "habit": {
+      "image": "extensions/expressive-daily-v2/sprites/habit.webp",
+      "sha256": "4aba2dd83e9afbe7b96eb9dd7f9efe1292e8a0a7d061796f69a3658047edfee1",
+      "loop": "once",
+      "frames": [
+        {
+          "region": { "x": 0, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 100
+        },
+        {
+          "region": { "x": 480, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        },
+        {
+          "region": { "x": 960, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 1440, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 800
+        },
+        {
+          "region": { "x": 1920, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 2400, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 350
+        },
+        {
+          "region": { "x": 2880, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 90
+        },
+        {
+          "region": { "x": 3360, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        },
+        {
+          "region": { "x": 3840, "y": 0, "width": 480, "height": 480 },
+          "foot": { "x": 240, "y": 480 },
+          "durationMs": 150
+        }
+      ]
+    }
+  }
+}

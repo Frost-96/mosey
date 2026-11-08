@@ -11,6 +11,7 @@ import {
 } from "../shared/character-catalog";
 import {
   characterPackageSchema,
+  characterLoopTimings,
   characterWalk,
   type PreparedCharacter,
 } from "../shared/characters";
@@ -140,6 +141,7 @@ export class CharacterCatalog {
         character.atlases.map((atlas) => atlas.action),
       ),
       walk: characterWalk(character),
+      loopTimings: characterLoopTimings(character),
       geometry: characterGeometry(character.atlases),
     };
   }

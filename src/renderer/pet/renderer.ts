@@ -304,6 +304,15 @@ try {
       falling: "下落",
       landing: "落地",
       climbing: "攀爬",
+      looking: "张望",
+      sittingdown: "坐下",
+      sitting: "坐着休息",
+      standingup: "站起来",
+      yawning: "打哈欠",
+      petted: "被抚摸",
+      grooming: "整理仪容",
+      celebrating: "庆祝",
+      habit: "小习惯",
     };
     canvas!.setAttribute(
       "aria-label",

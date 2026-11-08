@@ -1,0 +1,329 @@
+{
+  "version": 1,
+  "character": "gpt",
+  "createdOn": "2026-11-08",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "transparentBackground": true
+  },
+  "request": {
+    "prompt": "Use case: identity-preserve.\nAsset type: a true-alpha 2D chronological animation sprite sheet for the existing Mosey GPT desktop dragon-girl pet.\nREFERENCE: Input image 1 is the STRICT identity, color, style and body-proportion reference. Draw the EXACT same little white-haired dragon-girl: cream curved horns; long white hair in broad locks with pale lilac shadows; purple eyes; pointed ears; small lavender bat wings; purple scaly tail curled toward viewer-right; identical white/lilac dress with rosette at viewer-right waist; white round boots. Match the original bold dark outline, broad flat colors, simple cel shading, huge round head and tiny limbs. Do not redesign, beautify, elongate, add trim, or change ornament sides.\n\nOUTPUT: ONE square 2048 x 2048 sprite sheet. FOUR columns by FOUR rows, exactly SIXTEEN full-body figures, in equal invisible 512 x 512 cells. Genuine transparent alpha background. No text, labels, numbers, grid lines, borders, floor, drop shadow, scenery, symbols, hearts, sparkles, motion lines or watermark. No added props, another person, hand from outside, cursor, chair, or background. Leave at least 45px transparent margins in each cell, with complete horns/hair/wings/tail/feet. Frontal fixed camera. SAME drawing scale, head size, torso length and foot locations in all 16 cells. Standing figure about 385px tall, center x=256, soles y=455 within each cell. Both feet stay planted throughout every action. Hair and tail make only restrained secondary motion.\n\nRead each row left to right as its own complete little action:\nROW 1, enjoyed petting (no visible external hand):\n1 exact calm upright reference stance, hands low, attentive purple eyes.\n2 head leans a tiny amount toward viewer-left, as if welcoming a gentle unseen touch, shoulders soften, eyes pleasantly half closed.\n3 tiny contented head nuzzle while standing, eyes comfortably closed, very small happy smile; unchanged head size and planted feet.\n4 head upright again, eyes reopen, returns to exact reference stance, hands low. Gentle affection, not dramatic head tilting or sleeping.\n\nROW 2, neatly straightening her sleeves:\n5 starts from neutral, hand on viewer-left reaches across to lightly catch the cuff on the viewer-right wrist; both hands clearly attached and in front of torso.\n6 viewer-left hand gently pulls smooth the viewer-right sleeve cuff; a small tidy gesture below chest height, eyes watching hands.\n7 switches hands: viewer-right hand lightly smooths the viewer-left sleeve cuff. Keep sleeves, hands and dress colors exactly as reference, no extra limbs or objects.\n8 both hands lower back to reference stance, a calm satisfied small smile. Do not change clothing design or length.\n\nROW 3, restrained happy clapping, NO jumping:\n9 both small hands rise toward chest height, palms facing each other a short distance apart, pleased eyes.\n10 palms touch gently at chest center, happy closed-eye smile. Elbows slightly out, no huge arm reach.\n11 palms separate a little for another soft clap, delighted expression, torso and feet remain still.\n12 hands lower and face returns to the gentle reference smile. No applause symbols or special effects.\n\nROW 4, her thoughtful habit:\n13 one small fingertip rests gently against chin, elbow low, eyes attentive.\n14 same fingertip at chin, eyes glance upward as if thinking, a tiny thoughtful mouth; keep head almost front-facing.\n15 small affirmative nod of the head, eyes close briefly, fingertip starts leaving chin. Head tips through its neck joint, never grows or shrinks.\n16 hand lowers to her side and head returns upright in exact reference standing stance, eyes open and peaceful.\n\nEvery frame must be a distinct useful authored pose, with logical in-between gestures. Preserve two arms, two hands and two legs. All horns/wings/tail remain connected and same size. Keep true alpha and unchanged character identity.\n",
+    "requestedSize": {
+      "width": 2048,
+      "height": 2048
+    },
+    "reference": {
+      "file": "reference-standing.png",
+      "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb",
+      "derivedFrom": "../../sprites/resting.webp",
+      "originalSourceSha256": "a6ed68289af5003ef510afab1db89211664301235aaa12d6f222c7d6dfafaac7",
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      }
+    }
+  },
+  "output": {
+    "file": "source-v1.png",
+    "sha256": "c40da1fa5be0392c8adc80b1301bd16b0f034df7deefa8a96b15f1a46d2cc75d",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true,
+    "columns": 4,
+    "rows": 4,
+    "gridBoundaries": [0, 314, 627, 941, 1254],
+    "tiles": [
+      {
+        "frame": 1,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 223,
+          "height": 279
+        },
+        "opaquePixels": 44892
+      },
+      {
+        "frame": 2,
+        "region": {
+          "x": 314,
+          "y": 0,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 12,
+          "width": 224,
+          "height": 279
+        },
+        "opaquePixels": 45170
+      },
+      {
+        "frame": 3,
+        "region": {
+          "x": 627,
+          "y": 0,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 48,
+          "y": 9,
+          "width": 221,
+          "height": 283
+        },
+        "opaquePixels": 45239
+      },
+      {
+        "frame": 4,
+        "region": {
+          "x": 941,
+          "y": 0,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 279
+        },
+        "opaquePixels": 44728
+      },
+      {
+        "frame": 5,
+        "region": {
+          "x": 0,
+          "y": 314,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 223,
+          "height": 280
+        },
+        "opaquePixels": 44783
+      },
+      {
+        "frame": 6,
+        "region": {
+          "x": 314,
+          "y": 314,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44710
+      },
+      {
+        "frame": 7,
+        "region": {
+          "x": 627,
+          "y": 314,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44660
+      },
+      {
+        "frame": 8,
+        "region": {
+          "x": 941,
+          "y": 314,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44807
+      },
+      {
+        "frame": 9,
+        "region": {
+          "x": 0,
+          "y": 627,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44722
+      },
+      {
+        "frame": 10,
+        "region": {
+          "x": 314,
+          "y": 627,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44758
+      },
+      {
+        "frame": 11,
+        "region": {
+          "x": 627,
+          "y": 627,
+          "width": 314,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44610
+      },
+      {
+        "frame": 12,
+        "region": {
+          "x": 941,
+          "y": 627,
+          "width": 313,
+          "height": 314
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44699
+      },
+      {
+        "frame": 13,
+        "region": {
+          "x": 0,
+          "y": 941,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 47,
+          "y": 12,
+          "width": 222,
+          "height": 281
+        },
+        "opaquePixels": 44771
+      },
+      {
+        "frame": 14,
+        "region": {
+          "x": 314,
+          "y": 941,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 223,
+          "height": 280
+        },
+        "opaquePixels": 44737
+      },
+      {
+        "frame": 15,
+        "region": {
+          "x": 627,
+          "y": 941,
+          "width": 314,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 48,
+          "y": 13,
+          "width": 221,
+          "height": 279
+        },
+        "opaquePixels": 44527
+      },
+      {
+        "frame": 16,
+        "region": {
+          "x": 941,
+          "y": 941,
+          "width": 313,
+          "height": 313
+        },
+        "visibleBounds": {
+          "x": 46,
+          "y": 12,
+          "width": 222,
+          "height": 280
+        },
+        "opaquePixels": 44808
+      }
+    ]
+  },
+  "actionRows": [
+    {
+      "row": 1,
+      "action": "petted",
+      "frames": [1, 2, 3, 4],
+      "description": "Neutral, welcoming lean, pleased closed-eye nuzzle, neutral."
+    },
+    {
+      "row": 2,
+      "action": "grooming",
+      "frames": [5, 6, 7, 8],
+      "description": "Reaches for sleeve, straightens cuff, switches to opposite cuff, lowers hands."
+    },
+    {
+      "row": 3,
+      "action": "celebrating",
+      "frames": [9, 10, 11, 12],
+      "description": "Hands lifted slightly apart, soft happy clap, hands slightly apart for next clap, returns to neutral; feet planted."
+    },
+    {
+      "row": 4,
+      "action": "habit",
+      "frames": [13, 14, 15, 16],
+      "description": "Fingertip at chin, upward thoughtful gaze, small affirmative nod, hand down and neutral."
+    }
+  ],
+  "notes": [
+    "Actual output is 1254 × 1254. Use rounded quarter-grid boundaries recorded here.",
+    "Source inspected on a gray background: all 16 complete full-body poses; true transparency; no external hands, cursors, props, lettering or decorative effects.",
+    "Clapping is restrained; use frames 9,10,11,10 before returning to 12 if two claps are desired.",
+    "No runtime registration or frame processing is included in this original-source record."
+  ]
+}

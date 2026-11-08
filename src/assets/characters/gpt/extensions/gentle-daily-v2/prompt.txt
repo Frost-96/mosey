@@ -1,0 +1,22 @@
+Use case: identity-preserve. Draw actual animation in-betweens from PAIRS OF ENDPOINTS.
+INPUT1 is a reference board with 16 large boxes in FOUR columns by FOUR rows. Each box contains TWO figures: A on the left and B on the right. They are the TWO EXISTING ENDPOINTS for one transition. The reference board has 32 figures but your OUTPUT MUST HAVE ONLY 16 FIGURES.
+For EACH reference box, draw ONE NEW full-body pose that is physically HALFWAY between that box's A and B. Put it in the SAME row and column in the output. Do not copy A or B. Do not show A and B again. Do not output32 figures. Do not alpha-blend/crossfade the two images: draw one solid anatomical character with intermediate joint positions, eyelids and mouth. Think of a traditional animator drawing the missing frame at time 0.5. Motion should become smoother when played A → your drawing → B.
+INPUT2 locks the exact character identity: same white/lavender-haired chibi dragon girl, cream curved horns, violet eyes, same white/lilac dress and spiral waist rosette, round boots, small lavender wings and curved purple tail. Preserve exact huge head/tiny body proportions, bold dark outlines, broad flat color fills and simple cel shading. All limbs complete, two arms/two legs, no extra hands or facial features.
+OUTPUT: square transparent PNG, precisely FOUR columns by FOUR rows, one new midpoint per invisible equal cell. Prefer1254×1254 to match the original1254 sheet scale. In each314px cell keep drawing scale equal to the endpoint figures in input1: standing visible height280px, same head size, centerx157, ground baseliney294. Sitting shortens only through joint bending. Keep the full character within the cell with transparent padding. Do not draw the gray reference background, labels, borders, letters, grid, floor, shadows, props or effects. True transparent alpha.
+
+SPECIFIC MIDPOINT CHECKS (box numbers left to right, top to bottom):
+1 neutral→left look: half-sized head turn and gaze shift, NOT the full left pose.
+2 left look→right look: head should be FRONT-FACING between the two turns, intermediate gaze. Do NOT copy the left-looking endpoint.
+3 right look→neutral: half-sized right head turn, not the full right endpoint.
+4 near-neutral→near-neutral: bridge the tiny eye/breath difference without inventing a large motion.
+5 standing→slightly bent knees: head about5px lower than standing, knees just flexing, BOTH HANDS HALFWAY moving from sides toward knees. Do not copy standing OR the completed hands-on-knees pose.
+6 slightly bent→deeper crouch: head another halfway level between endpoints, elbows and knees halfway more bent; character height about265px.
+7 crouch→seated: boot/leg arrangement halfway folding down, hips descend toward seated, fingers reach lap partway, same head size.
+8 seated→awake seated: stay SEATED with open eyes, slightly settle hands and posture. Never stand up.
+9-12 awake seated subtle loop: interpolate the slight gaze/head angles between each pair while keeping eyes OPEN. Box10 is midway between looking left and right, so head/gaze should pass FRONT, not copy left.
+13 drowsy hand below mouth→hand at mouth: hand truly halfway upward, half-closed eyelids, mouth slightly opening.
+14 small yawn→peak yawn: mouth and hand position halfway between endpoints, eyes closed.
+15 peak yawn→neutral: hand clearly halfway lowered at upper chest, eyes HALF OPEN and small fading yawn mouth. Not a closed-eye peak.
+16 neutral→drowsy: eyelids halfway toward half-lidded, hand halfway starting to lift near waist/chest.
+
+All16 are new in-between drawings, even when the motion is restrained. Do not make an endpoint storyboard.

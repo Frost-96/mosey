@@ -1,0 +1,173 @@
+{
+  "character": "whale",
+  "action": "sitting",
+  "version": 4,
+  "method": "Frame selection and timing revision; no image generation or algorithmic pose synthesis",
+  "source": {
+    "file": "originals/sitting-atlas.png",
+    "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+    "width": 3360,
+    "height": 480,
+    "metadata": "originals/sitting-atlas.json",
+    "metadataSha256": "cca14502002ff8120e249d9d6c5f60b2f24f7917a49dfa5dd7daab3b6c689d7b",
+    "metadataNote": "Snapshot descriptor formatted with repository Prettier; original values preserved. PNG snapshot bytes are unchanged."
+  },
+  "processing": {
+    "scale": 1,
+    "translation": {
+      "x": 0,
+      "y": 0
+    },
+    "assembly": "Exact raw RGBA row copies from current adopted480pxframes into a five-cell strip; lossless WebP output",
+    "originalLoopDurationMs": 2320,
+    "newLoopDurationMs": 2320,
+    "neutralAnchors": {
+      "firstSource": 0,
+      "lastSource": 6,
+      "unchanged": true
+    }
+  },
+  "selection": {
+    "acceptedIndices": [0, 1, 3, 5, 6],
+    "excludedIndices": [2, 4],
+    "reason": "Excluded short intermediate poses that raise hat/face/collar by10–14px above adjacent seated keys."
+  },
+  "output": {
+    "file": "sitting.webp",
+    "sha256": "18e5800391da50d63fd4b81fc6b3eddbde721b73b4f99bf4b2297d003ab190b5",
+    "width": 2400,
+    "height": 480
+  },
+  "frames": [
+    {
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 480
+      },
+      "durationMs": 900,
+      "kind": "selected-original-key",
+      "source": {
+        "file": "originals/sitting-atlas.png",
+        "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+        "frameIndex": 0,
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "originalDurationMs": 800
+      }
+    },
+    {
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 480
+      },
+      "durationMs": 220,
+      "kind": "selected-original-key",
+      "source": {
+        "file": "originals/sitting-atlas.png",
+        "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+        "frameIndex": 1,
+        "region": {
+          "x": 480,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "originalDurationMs": 180
+      }
+    },
+    {
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 480
+      },
+      "durationMs": 500,
+      "kind": "selected-original-key",
+      "source": {
+        "file": "originals/sitting-atlas.png",
+        "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+        "frameIndex": 3,
+        "region": {
+          "x": 1440,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "originalDurationMs": 500
+      }
+    },
+    {
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 480
+      },
+      "durationMs": 220,
+      "kind": "selected-original-key",
+      "source": {
+        "file": "originals/sitting-atlas.png",
+        "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+        "frameIndex": 5,
+        "region": {
+          "x": 2400,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "originalDurationMs": 200
+      }
+    },
+    {
+      "region": {
+        "x": 1920,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 480
+      },
+      "durationMs": 480,
+      "kind": "selected-original-key",
+      "source": {
+        "file": "originals/sitting-atlas.png",
+        "sha256": "a230e7728d7eff4823bcd3ac692e2829df3dc3ced3ebb7f626306a731fbb27ad",
+        "frameIndex": 6,
+        "region": {
+          "x": 2880,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        },
+        "originalDurationMs": 400
+      }
+    }
+  ]
+}

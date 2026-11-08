@@ -1,0 +1,32 @@
+Use case: identity-preserve.
+Asset type: a true-alpha 2D chronological animation sprite sheet for the existing Mosey GPT desktop dragon-girl pet.
+REFERENCE: Input image 1 is the STRICT identity, color, style and body-proportion reference. Draw the EXACT same little white-haired dragon-girl: cream curved horns; long white hair in broad locks with pale lilac shadows; purple eyes; pointed ears; small lavender bat wings; purple scaly tail curled toward viewer-right; identical white/lilac dress with rosette at viewer-right waist; white round boots. Match the original bold dark outline, broad flat colors, simple cel shading, huge round head and tiny limbs. Do not redesign, beautify, elongate, add trim, or change ornament sides.
+
+OUTPUT: ONE square 2048 x 2048 sprite sheet. FOUR columns by FOUR rows, exactly SIXTEEN full-body figures, in equal invisible 512 x 512 cells. Genuine transparent alpha background. No text, labels, numbers, grid lines, borders, floor, drop shadow, scenery, symbols, hearts, sparkles, motion lines or watermark. No added props, another person, hand from outside, cursor, chair, or background. Leave at least 45px transparent margins in each cell, with complete horns/hair/wings/tail/feet. Frontal fixed camera. SAME drawing scale, head size, torso length and foot locations in all 16 cells. Standing figure about 385px tall, center x=256, soles y=455 within each cell. Both feet stay planted throughout every action. Hair and tail make only restrained secondary motion.
+
+Read each row left to right as its own complete little action:
+ROW 1, enjoyed petting (no visible external hand):
+1 exact calm upright reference stance, hands low, attentive purple eyes.
+2 head leans a tiny amount toward viewer-left, as if welcoming a gentle unseen touch, shoulders soften, eyes pleasantly half closed.
+3 tiny contented head nuzzle while standing, eyes comfortably closed, very small happy smile; unchanged head size and planted feet.
+4 head upright again, eyes reopen, returns to exact reference stance, hands low. Gentle affection, not dramatic head tilting or sleeping.
+
+ROW 2, neatly straightening her sleeves:
+5 starts from neutral, hand on viewer-left reaches across to lightly catch the cuff on the viewer-right wrist; both hands clearly attached and in front of torso.
+6 viewer-left hand gently pulls smooth the viewer-right sleeve cuff; a small tidy gesture below chest height, eyes watching hands.
+7 switches hands: viewer-right hand lightly smooths the viewer-left sleeve cuff. Keep sleeves, hands and dress colors exactly as reference, no extra limbs or objects.
+8 both hands lower back to reference stance, a calm satisfied small smile. Do not change clothing design or length.
+
+ROW 3, restrained happy clapping, NO jumping:
+9 both small hands rise toward chest height, palms facing each other a short distance apart, pleased eyes.
+10 palms touch gently at chest center, happy closed-eye smile. Elbows slightly out, no huge arm reach.
+11 palms separate a little for another soft clap, delighted expression, torso and feet remain still.
+12 hands lower and face returns to the gentle reference smile. No applause symbols or special effects.
+
+ROW 4, her thoughtful habit:
+13 one small fingertip rests gently against chin, elbow low, eyes attentive.
+14 same fingertip at chin, eyes glance upward as if thinking, a tiny thoughtful mouth; keep head almost front-facing.
+15 small affirmative nod of the head, eyes close briefly, fingertip starts leaving chin. Head tips through its neck joint, never grows or shrinks.
+16 hand lowers to her side and head returns upright in exact reference standing stance, eyes open and peaceful.
+
+Every frame must be a distinct useful authored pose, with logical in-between gestures. Preserve two arms, two hands and two legs. All horns/wings/tail remain connected and same size. Keep true alpha and unchanged character identity.

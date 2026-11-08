@@ -1,0 +1,9 @@
+{
+  "acceptedIndices": [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15],
+  "excluded": {
+    "0": "Head turn remains too close to the left endpoint; not confidently halfway along the original eye/head path.",
+    "2": "Right-turn return remains close to its right-facing endpoint; omit instead of treating a redraw as interpolation.",
+    "3": "Leftward return resembles the target endpoint, with insufficient new intermediate head pose.",
+    "13": "Yawn mouth/eyes are already near the peak endpoint rather than a distinct intermediate jaw opening."
+  }
+}

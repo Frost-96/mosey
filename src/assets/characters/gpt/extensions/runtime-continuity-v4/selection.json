@@ -1,0 +1,11 @@
+{
+  "source": "originals/sitting-atlas.png",
+  "acceptedIndices": [0, 2, 4, 6, 8],
+  "excluded": {
+    "1": "Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family.",
+    "3": "Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family.",
+    "5": "Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family.",
+    "7": "Excluded inserted poses whose sharper outlines, pinker tones and alternate cheek/fringe drawing flash between the original key family."
+  },
+  "durationsMs": [900, 240, 600, 260, 520]
+}

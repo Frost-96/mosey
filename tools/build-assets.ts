@@ -3,7 +3,12 @@ import sharp, { type Metadata } from "sharp";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { atlasSchema } from "../src/shared/assets.ts";
 import { prepareBuild } from "./incremental-build.ts";
+import {
+  buildCharacterAssets,
+  readCharacterAssets,
+} from "./build-character-assets.ts";
 
+const characters = await readCharacterAssets();
 const build = await prepareBuild({
   name: "character-assets",
   inputs: [
@@ -14,10 +19,7 @@ const build = await prepareBuild({
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
-    ...["claude", "gemini", "gpt", "whale"].flatMap((id) => [
-      `src/assets/characters/${id}/processing.json`,
-      `src/assets/characters/${id}/sprites`,
-    ]),
+    ...characters.inputs,
     ...(await readdir("src/assets"))
       .filter((name) => name.endsWith(".png"))
       .map((name) => `src/assets/${name}`),
@@ -451,5 +453,5 @@ for (const { action, source, sequence, loop } of actionConfigs) {
   );
 }
 
-await import("./build-character-assets.ts");
+await buildCharacterAssets(characters);
 await build.complete();

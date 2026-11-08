@@ -1,0 +1,62 @@
+[
+  {
+    "file": "key-0.png",
+    "top": 80,
+    "bottomExclusive": 462,
+    "width": 344
+  },
+  {
+    "file": "key-1.png",
+    "top": 80,
+    "bottomExclusive": 462,
+    "width": 341
+  },
+  {
+    "file": "key-2.png",
+    "top": 80,
+    "bottomExclusive": 462,
+    "width": 339
+  },
+  {
+    "file": "key-3.png",
+    "top": 80,
+    "bottomExclusive": 462,
+    "width": 342
+  },
+  {
+    "file": "midpoint-0.png",
+    "top": 80,
+    "bottomExclusive": 462,
+    "width": 342
+  },
+  {
+    "file": "midpoint-1.png",
+    "top": 82,
+    "bottomExclusive": 461,
+    "width": 340
+  },
+  {
+    "file": "midpoint-2.png",
+    "top": 82,
+    "bottomExclusive": 461,
+    "width": 340
+  },
+  {
+    "file": "midpoint-3.png",
+    "top": 81,
+    "bottomExclusive": 461,
+    "width": 340
+  },
+  {
+    "file": "midpoint-4.png",
+    "top": 81,
+    "bottomExclusive": 461,
+    "width": 340
+  },
+  {
+    "file": "midpoint-5.png",
+    "top": 81,
+    "bottomExclusive": 462,
+    "width": 339
+  }
+]

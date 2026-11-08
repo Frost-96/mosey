@@ -1,0 +1,33 @@
+Use case: identity-preserve. Asset: NEW genuine animation IN-BETWEEN drawings for an existing transparent sprite sheet.
+Input image 1 is the original key-pose sprite sheet; input image 2 is the strict standing identity reference. DO NOT reproduce the original sheet or simply repeat endpoints. Draw one genuinely new halfway pose between each specified pair of key poses. Intermediate joints, fingers, eyelids, eyes and mouth are actual solid drawings, NOT blended images, crossfades, ghosting, transparent overlaps or duplicated figures.
+Preserve the exact white-haired chibi dragon girl's identity, cream horns, white/lilac dress with spiral rosette at viewer-right waist, white boots, purple eyes, lavender wings and tail. Preserve the original simple thick dark outlines, flat cel colors, head size, squat torso and tiny legs, camera angle and rendering. Do not make her taller, older, more detailed or more realistic. Hair and tail remain full and attached, with only very small secondary movement.
+OUTPUT one square sheet with FOUR columns by FOUR rows, 16 equal invisible cells, true transparent alpha. Prefer exactly 1254×1254 pixels to match input1. Same four-row grouping as input1. Keep each figure at the exact source drawing scale (standing visible figure about280px tall in a313/314px cell), same center and foot baseline as corresponding source cells; sitting gets shorter by bending joints, never by scaling the head or character. Keep entire horns/wings/hair/tail/feet inside each cell with clear transparent margins. No text, numbers, labels, grid lines, scenery, floor, shadows, effects, symbols, or added objects.
+Frame numbering in the instructions below is ZERO-BASED within each original row: original A=column0, B=column1, C=column2, D=column3. New row columns ordinarily are A→B halfway, B→C halfway, C→D halfway, D→A halfway. Only NEW intermediates appear in output; never include the four original key poses again.
+
+ROW 1 ENJOYING PETTING:
+col0 original A neutral→B welcoming lean halfway: a smaller lean than B, eyes mildly softened, shoulders easing; keep hands near sides.
+col1 B→C contented nuzzle halfway: head midway in its small nuzzle, eyes mostly closed but not yet fully, hands moving halfway inward toward C's comfortably gathered position.
+col2 C→D neutral halfway: head gently returns halfway upright, eyelids reopen halfway, hands halfway lowering from gathered to sides.
+col3 D→A neutral bridge: very small settling of shoulders/hair and calm eye focus; keep original scale and gentle character. No external hand or cursor.
+
+ROW 2 STRAIGHTENING SLEEVES:
+col0 A hand touching opposite cuff→B tugged cuff halfway: the smoothing hand is partway through the small pull, forearm and cuff folds intermediate, eyes follow.
+col1 B→C switching hands halfway: both hands pass in front of lower chest as she releases first sleeve and reaches for the opposite cuff; clearly distinguish the changing forearm positions, no clapping gesture.
+col2 C smoothing second cuff→D hands down halfway: hands release fabric, elbows partly unfold, both hands descend to a midway height.
+col3 D hands down→A reaching to first cuff halfway: one forearm is halfway across torso, fingertips approaching the other cuff.
+
+ROW 3 CELEBRATION, USE CORRECTED OPEN PALMS IN INPUT1:
+Original A and C have palms widely separated near shoulders; B has palms TOUCHING at chest center; D has hands DOWN.
+col0 A OPEN→B CLOSED halfway: BOTH HANDS move halfway inward; palms still separated by roughly one-quarter of face width, open little palms angled inward, elbows partly bent. Must NOT be touching yet.
+col1 B CLOSED→C OPEN halfway: palms have separated to roughly one-quarter of face width, hands halfway outward, elbows relaxing. Must NOT be touching.
+col2 C OPEN→D DOWN halfway: BOTH HANDS half lowered, below chest, moving outward/down toward sides, palms relaxed. Do NOT leave them at chest height.
+col3 D DOWN→A OPEN halfway: BOTH HANDS halfway raised from sides toward shoulder-side clap-ready positions, elbows bent only halfway, hands clearly apart.
+These four intermediary frames MUST show different arm positions. Never output four clasped hands. Feet stay planted, no hopping.
+
+ROW 4 THOUGHTFUL HABIT:
+col0 A fingertip at chin→B upward gaze halfway: eyes shift halfway upward, mouth begins thoughtful small shape, fingertip remains near chin.
+col1 B upward gaze→C small nod and hand lowering halfway: head begins nodding, eyelids half close, fingertip leaves chin and hand descends toward upper chest.
+col2 C nod→D upright neutral halfway: head halfway rises from nod, eyes halfway reopen, hand lowers the remaining distance toward side.
+col3 D neutral→A chin-touch halfway: hand rises halfway toward chin, forearm bent partway, eyes attentive.
+
+Keep the logical hand trajectories with clearly intermediate drawn joints; do not simply copy original keyframes. No symbols, external hands, new props, blurred ghosts or double arms.

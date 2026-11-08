@@ -1623,63 +1623,71 @@
     },
     "falling": {
       "image": "sprites/falling.webp",
-      "sha256": "e9dc33edb08cfd7de78bcc7c8547634c9336a5533f3540024153df4cdebc24f0",
+      "sha256": "f310f25db474cb07576030d604ffa09db064d2f985308d262d40947c184a8a72",
       "previewFrames": [
         {
-          "source": "whale-air-v1",
-          "index": 8,
-          "durationMs": 80,
           "region": {
             "x": 0,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "whale-air-v1",
-          "index": 9,
-          "durationMs": 70,
           "region": {
             "x": 480,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "whale-air-v1",
-          "index": 10,
-          "durationMs": 80,
           "region": {
             "x": 960,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
           "anchor": {
             "x": 240,
             "y": 462
           }
         },
         {
-          "source": "whale-air-v1",
-          "index": 11,
-          "durationMs": 70,
           "region": {
             "x": 1440,
             "y": 0,
             "width": 480,
             "height": 480
           },
+          "foot": {
+            "x": 240,
+            "y": 462
+          },
+          "durationMs": 90,
           "anchor": {
             "x": 240,
             "y": 462
@@ -1692,7 +1700,14 @@
           "file": "provenance/images/f88da3e5a058-whale-air-v1.png",
           "sha256": "f88da3e5a05876ef2b3514783a766cbda402c6a5b54ce2900bffc62e3f45c166"
         }
-      ]
+      ],
+      "revision": {
+        "id": "motion-coherence-v3",
+        "file": "extensions/motion-coherence-v3/replacements.json",
+        "sha256": "d628ff1e6c5342a31a940b46ad33e779302e3596a2738e76f4c60569f7f0767c",
+        "image": "falling.webp",
+        "notes": "Maintain the whole-body forward falling orientation throughout the loop; only hands/hair have restrained overlap. End no longer snaps to an upright first pose, and pitch matches the landing entry."
+      }
     },
     "landing": {
       "image": "sprites/landing.webp",
@@ -2198,6 +2213,12 @@
       "frames": [10, 11],
       "record": "provenance/landing-rise-2026-11-06.json",
       "summary": "Replace panic balance gestures with a calm crouch-to-stand rise; all timing and other frames preserved."
+    },
+    {
+      "id": "motion-coherence-v3",
+      "actions": ["falling"],
+      "file": "extensions/motion-coherence-v3/replacements.json",
+      "sha256": "d628ff1e6c5342a31a940b46ad33e779302e3596a2738e76f4c60569f7f0767c"
     }
   ]
 }

@@ -1,0 +1,46 @@
+{
+  "character": "claude",
+  "createdOn": "2026-11-08",
+  "tool": "built-in image_gen",
+  "promptFile": "prompt.txt",
+  "reference": {
+    "file": "reference-standing.png",
+    "sha256": "609e08d6583b73886a8feff298e3deca43691849c11caae4b5d4e8ab8e548779",
+    "source": "../../sprites/resting.webp",
+    "frame": 0
+  },
+  "source": {
+    "file": "source-v1.png",
+    "sha256": "a8c3adb3f80e592ab4d26c4cf55b34b3f544f2f5ea839fcc1f7a34517f894836",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true
+  },
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major"
+  },
+  "rows": [
+    {
+      "row": 0,
+      "action": "looking",
+      "description": "glance left, center, right, neutral"
+    },
+    {
+      "row": 1,
+      "action": "sitting-down",
+      "description": "standing to seated; reverse for getting-up"
+    },
+    {
+      "row": 2,
+      "action": "sitting",
+      "description": "awake sitting with subtle gaze and cheek support"
+    },
+    {
+      "row": 3,
+      "action": "yawning",
+      "description": "standing yawn then neutral"
+    }
+  ]
+}

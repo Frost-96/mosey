@@ -1,0 +1,288 @@
+{
+  "image": "sprites/sittingdown.webp",
+  "sha256": "dc76e5de9d11f34ed756ad4543c148acc4e158a50aa389a19a9ea5ab4feb661b",
+  "width": 4320,
+  "height": 480,
+  "loop": "once",
+  "frames": [
+    {
+      "region": {
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 100,
+      "kind": "original",
+      "sourceFrameIndex": -1,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/looking.webp",
+        "sha256": "fa223349f2f215f5037d3700be472297b8fe5749f98fae669bf2a5c86b84fa85",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 480,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 70,
+      "kind": "original",
+      "sourceFrameIndex": 4,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 480,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 960,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 90,
+      "kind": "inbetween",
+      "sourceFrameIndex": 4,
+      "source": {
+        "file": "inbetweens.png",
+        "index": 4,
+        "pair": {
+          "index": 4,
+          "from": 4,
+          "to": 5
+        },
+        "region": {
+          "x": 47,
+          "y": 330,
+          "width": 241,
+          "height": 273
+        },
+        "cell": {
+          "x": 0,
+          "y": 314,
+          "width": 314,
+          "height": 313
+        },
+        "scale": 1.3642857142857143,
+        "placement": {
+          "x": 90,
+          "y": 90,
+          "width": 329,
+          "height": 372
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 1440,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 100,
+      "kind": "original",
+      "sourceFrameIndex": 5,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 960,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 1920,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 90,
+      "kind": "inbetween",
+      "sourceFrameIndex": 5,
+      "source": {
+        "file": "inbetweens.png",
+        "index": 5,
+        "pair": {
+          "index": 5,
+          "from": 5,
+          "to": 6
+        },
+        "region": {
+          "x": 360,
+          "y": 335,
+          "width": 243,
+          "height": 265
+        },
+        "cell": {
+          "x": 314,
+          "y": 314,
+          "width": 313,
+          "height": 313
+        },
+        "scale": 1.3642857142857143,
+        "placement": {
+          "x": 89,
+          "y": 100,
+          "width": 332,
+          "height": 362
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 2400,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 120,
+      "kind": "original",
+      "sourceFrameIndex": 6,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 1440,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 2880,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 90,
+      "kind": "inbetween",
+      "sourceFrameIndex": 6,
+      "source": {
+        "file": "inbetweens.png",
+        "index": 6,
+        "pair": {
+          "index": 6,
+          "from": 6,
+          "to": 7
+        },
+        "region": {
+          "x": 675,
+          "y": 345,
+          "width": 241,
+          "height": 254
+        },
+        "cell": {
+          "x": 627,
+          "y": 314,
+          "width": 314,
+          "height": 313
+        },
+        "scale": 1.3642857142857143,
+        "placement": {
+          "x": 91,
+          "y": 115,
+          "width": 329,
+          "height": 347
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 3360,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 160,
+      "kind": "original",
+      "sourceFrameIndex": 7,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 1920,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    },
+    {
+      "region": {
+        "x": 3840,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "foot": {
+        "x": 240,
+        "y": 462
+      },
+      "durationMs": 120,
+      "kind": "original",
+      "sourceFrameIndex": 8,
+      "source": {
+        "file": "../gentle-daily-v1/sprites/sittingdown.webp",
+        "sha256": "806e9aedfd4c15d838319201bad212df1275db4b7d8953f1abe32fbb142352c5",
+        "region": {
+          "x": 2400,
+          "y": 0,
+          "width": 480,
+          "height": 480
+        }
+      }
+    }
+  ]
+}

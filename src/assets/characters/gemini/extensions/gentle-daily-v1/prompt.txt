@@ -1,0 +1,27 @@
+Use case: identity-preserve.
+Asset type: chronological transparent animation sprite sheet for the existing Mosey desktop pet Gemini.
+Input image 1 is the EXACT character identity and rendering reference. Generate new poses of that same character, not a redesign.
+Produce ONE 2048x2048 PNG sprite sheet in a precise FOUR columns by FOUR rows layout, 16 equally sized 512x512 cells, row-major order. True transparent alpha outside the characters. NO text, numbers, grid lines, floor, ground shadow, background, props, sleep symbols or effects. All sixteen complete figures fit comfortably inside their own cells.
+Identity invariants: very large round head and tiny squat body; thick dark outline; simple flat cel shading; long blue-to-purple hair in broad smooth locks; blue cat ears with pink interiors; small curl atop head; star hair clip on VIEWER-RIGHT; VIEWER-LEFT eye magenta and VIEWER-RIGHT eye golden amber; white and navy-purple short dress with gold star at chest, tiny boots, fluffy blue-purple tail on VIEWER-RIGHT. Preserve outfit, same accessory placement, eye colors, head size, hairstyle, ear sizes, head/body proportions and exact linework. Do not add detail. One pair of arms and legs only.
+Every cell uses the SAME camera, frontal with tiny head turns only, SAME drawing scale and head width. Figure standing crown around y=90, soles y=450, centered x=256. Standing figure about360px tall. Reserve transparent margins on all four sides, including full hair, ears and tail. Seated figures get shorter by bending knees and lowering pelvis, NEVER by shrinking their head/body. Seated bottom contact line remains y=450. Face remains fully visible.
+ROW 1, four distinct chronological frames of LOOKING AROUND while feet and torso remain planted:
+1 neutral upright reference pose, eyes looking to viewer-left, curious but relaxed.
+2 head gently turns 15 degrees viewer-left following the eyes, cat ears attentive, hands relaxed.
+3 head gently turns 15 degrees viewer-right, eyes following, no body spin or head tilt.
+4 head and eyes return to reference front pose, small calm smile.
+ROW 2, four chronological frames ENTERING AWAKE SEATED REST:
+5 exact neutral standing reference pose, open eyes, hands by sides.
+6 knees bend gently, pelvis lowers a little, hands begin moving toward knees.
+7 deep balanced squat, knees bent, pelvis clearly lower, hands on knees for support, head still original size.
+8 seated comfortably on ground with short legs folded in front, upright torso, hands on knees, eyes fully OPEN and alert, no sleeping or sleepy expression.
+ROW 3, four subtle loop frames of that SAME AWAKE SEATED REST:
+9 same seated pose as frame8, front gaze, both eyes fully open, hands on knees.
+10 same seated pose, tiny inhale lifting shoulders, eye gaze a little left.
+11 same seated pose, eyes and head forward, one hand supports cheek gently, attentive soft smile.
+12 same seated pose returns both hands to knees and front gaze as frame9. Do not lie down or close eyes. Preserve seated contact and head size.
+ROW 4, four chronological frames of a modest YAWN while STANDING:
+13 standing same reference pose, eyelids soften, free right hand starts lifting toward mouth.
+14 standing, palm covers small open yawning mouth, eyes gently closed, shoulders lift slightly.
+15 standing, yawn relaxes, eyes half reopening, hand moves down from mouth to chest.
+16 standing exact neutral reference pose again, hand by side, eyes open.
+Keep every pose separated by wide transparent gutters. Match the supplied reference precisely, especially the large simple face, eye colors and tiny short limbs. No stretching arms overhead, no head shrinkage, no perspective change, no duplicate characters inside one cell.

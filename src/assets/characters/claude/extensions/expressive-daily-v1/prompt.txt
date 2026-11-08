@@ -1,0 +1,33 @@
+Use case: identity-preserve.
+Asset type: production transparent 2D desktop-pet animation sprite sheet.
+Primary request: Create 16 distinct animation drawings of the EXACT Claude girl in the reference, four gentle expressive daily actions. Reference is the current approved sprite and strict identity/style authority. Preserve exact copper-orange long hair, amber eyes, tiny face, hair tuft, orange flower and black bow on VIEWER-RIGHT, cream/black/orange dress, cream boots, huge chibi head and tiny body, thick dark outlines and simple flat cel shading. No redesign, new jewelry or detailed realistic/anime proportions.
+
+Canvas: square 2048×2048, FOUR columns and FOUR rows, equal 512×512 cells, 16 complete characters in row-major order. True transparent alpha. No background, floor, cast shadows, grid, labels, text, symbols, effects, external hands or mouse pointer. Characters are small centered stamps with wide empty margins. Standing crown about local y=75, soles local y=455, body center local x=256. Exact same head size, camera, drawing scale and planted foot baseline throughout. Entire hair, limbs, accessories and boots stay inside each cell. Changes in height come from joints; do not shrink or enlarge the character.
+
+Prop rule: exactly ONE brown book with orange flower emblem. In rows1-3 it is CLOSED and hugged on VIEWER-LEFT side with the arm on VIEWER-LEFT, exactly like the reference. Free hand is on VIEWER-RIGHT. Never swap sides, change cover, drop, duplicate, or replace book. In row4 alone she uses BOTH hands to open and read this same book at center, then closes it and returns it to the original viewer-left arm.
+
+ROW1 PETTED / enjoying an unseen gentle head pat:
+1 neutral approved standing, book held at viewer-left, open calm eyes.
+2 head tilts/leans slightly toward viewer-right as if meeting a gentle unseen pat, eyelids soften, small warm smile. Free hand relaxed.
+3 eyes closed in comfort, head gently rubs toward viewer-right a little more, shoulders relaxed, sweet satisfied small smile. No hand or cursor from outside the character.
+4 head returns upright, eyes reopen, exact near-neutral standing. This is affectionate comfort, NOT sleeping or sneezing. Feet never move.
+
+ROW2 GROOMING / tidy hair and flower:
+5 near-neutral standing; free viewer-right hand starts rising toward viewer-right cheek.
+6 free hand gently smooths the loose hair on viewer-right beside the face, eyes glance to that hand.
+7 same free hand lightly adjusts orange flower and bow on viewer-right hair, focused calm face, keep flower and bow attached and unchanged.
+8 hand lowers back to side, neat hair settles, calm open eyes, near exact neutral reference. Closed book stays fixed at viewer-left all4.
+
+ROW3 CELEBRATING / quiet small cheer:
+9 near-neutral standing, gentle happy expression, free hand starting to curl into a fist near chest.
+10 free hand forms a little celebratory fist at viewer-right shoulder height, eyes bright, pleased open-mouth smile.
+11 free fist lifted slightly beside cheek, eyes closed smiling, rises slightly onto toes while toe tips keep contact with local y455. Tiny natural up movement by ankle joints only. No jump, flight, wide arm flailing, symbols or effects.
+12 heels back down, hand lowers, eyes open and warm small smile, near-neutral standing. Closed book always held on viewer-left, never switches hands.
+
+ROW4 HABIT / read the book, four clearly different stages:
+13 near-neutral standing; free viewer-right hand reaches across to meet the SAME closed brown book as it moves slightly away from viewer-left chest toward center. One book only.
+14 the book is OPEN at center below face, BOTH hands hold opposite lower corners, cream pages visible, eyes clearly look DOWN at pages. The brown outer cover remains visible at edges, orange emblem may be hidden naturally.
+15 still reading same open book at center, viewer-right hand carefully turns ONE visible cream page toward viewer-left, eyes follow it. An actual curved lifted page is visible, not another book. Viewer-left hand supports the book. Character face remains fully visible above it.
+16 book now CLOSED again and hugged at original VIEWER-LEFT chest by original arm; free hand returns to viewer-right side, eyes lift forward, calm pleased smile and exact neutral posture.
+
+Make the poses progress clearly, preserve one character identity across all16, keep anatomy to exactly two arms and two legs. No extra fingers, duplicated hands, detached props, mirrored accessories, scenery, typography, hearts or floating decorations. Use broad readable shapes appropriate for a 70px desktop pet.

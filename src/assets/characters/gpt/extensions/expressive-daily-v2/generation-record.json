@@ -1,0 +1,200 @@
+{
+  "version": 2,
+  "character": "gpt",
+  "batch": "expressive",
+  "createdOn": "2026-11-08",
+  "kind": "authored-inbetween-source",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "transparentBackground": true
+  },
+  "inputs": [
+    {
+      "file": "../expressive-daily-v1/source-v1.png",
+      "sha256": "383c68fba3280a1d6aea0b0316a7d895c6f64d90d08ac30528d63f4d7d86a572",
+      "role": "Existing key poses; expressive source includes the adopted open-clap correction."
+    },
+    {
+      "file": "../gentle-daily-v1/reference-standing.png",
+      "sha256": "b04c5cc2813954533ec0ca096675be97419238bc38a8fb676c7026d238a646eb",
+      "role": "Standing identity reference"
+    },
+    {
+      "file": "endpoint-pairs.png",
+      "sha256": "4ee60ab2098561ea9f88496715c0e4ae6de1c66d93b6843a4b93679209e14ca9",
+      "role": "Four by four boxes, each containing source A/B endpoints for the corresponding new midpoint; reference-only gray background and labels."
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "rejected",
+      "prompt": "Use case: identity-preserve. Asset: NEW genuine animation IN-BETWEEN drawings for an existing transparent sprite sheet.\nInput image 1 is the original key-pose sprite sheet; input image 2 is the strict standing identity reference. DO NOT reproduce the original sheet or simply repeat endpoints. Draw one genuinely new halfway pose between each specified pair of key poses. Intermediate joints, fingers, eyelids, eyes and mouth are actual solid drawings, NOT blended images, crossfades, ghosting, transparent overlaps or duplicated figures.\nPreserve the exact white-haired chibi dragon girl's identity, cream horns, white/lilac dress with spiral rosette at viewer-right waist, white boots, purple eyes, lavender wings and tail. Preserve the original simple thick dark outlines, flat cel colors, head size, squat torso and tiny legs, camera angle and rendering. Do not make her taller, older, more detailed or more realistic. Hair and tail remain full and attached, with only very small secondary movement.\nOUTPUT one square sheet with FOUR columns by FOUR rows, 16 equal invisible cells, true transparent alpha. Prefer exactly 1254×1254 pixels to match input1. Same four-row grouping as input1. Keep each figure at the exact source drawing scale (standing visible figure about280px tall in a313/314px cell), same center and foot baseline as corresponding source cells; sitting gets shorter by bending joints, never by scaling the head or character. Keep entire horns/wings/hair/tail/feet inside each cell with clear transparent margins. No text, numbers, labels, grid lines, scenery, floor, shadows, effects, symbols, or added objects.\nFrame numbering in the instructions below is ZERO-BASED within each original row: original A=column0, B=column1, C=column2, D=column3. New row columns ordinarily are A→B halfway, B→C halfway, C→D halfway, D→A halfway. Only NEW intermediates appear in output; never include the four original key poses again.\n\nROW 1 ENJOYING PETTING:\ncol0 original A neutral→B welcoming lean halfway: a smaller lean than B, eyes mildly softened, shoulders easing; keep hands near sides.\ncol1 B→C contented nuzzle halfway: head midway in its small nuzzle, eyes mostly closed but not yet fully, hands moving halfway inward toward C's comfortably gathered position.\ncol2 C→D neutral halfway: head gently returns halfway upright, eyelids reopen halfway, hands halfway lowering from gathered to sides.\ncol3 D→A neutral bridge: very small settling of shoulders/hair and calm eye focus; keep original scale and gentle character. No external hand or cursor.\n\nROW 2 STRAIGHTENING SLEEVES:\ncol0 A hand touching opposite cuff→B tugged cuff halfway: the smoothing hand is partway through the small pull, forearm and cuff folds intermediate, eyes follow.\ncol1 B→C switching hands halfway: both hands pass in front of lower chest as she releases first sleeve and reaches for the opposite cuff; clearly distinguish the changing forearm positions, no clapping gesture.\ncol2 C smoothing second cuff→D hands down halfway: hands release fabric, elbows partly unfold, both hands descend to a midway height.\ncol3 D hands down→A reaching to first cuff halfway: one forearm is halfway across torso, fingertips approaching the other cuff.\n\nROW 3 CELEBRATION, USE CORRECTED OPEN PALMS IN INPUT1:\nOriginal A and C have palms widely separated near shoulders; B has palms TOUCHING at chest center; D has hands DOWN.\ncol0 A OPEN→B CLOSED halfway: BOTH HANDS move halfway inward; palms still separated by roughly one-quarter of face width, open little palms angled inward, elbows partly bent. Must NOT be touching yet.\ncol1 B CLOSED→C OPEN halfway: palms have separated to roughly one-quarter of face width, hands halfway outward, elbows relaxing. Must NOT be touching.\ncol2 C OPEN→D DOWN halfway: BOTH HANDS half lowered, below chest, moving outward/down toward sides, palms relaxed. Do NOT leave them at chest height.\ncol3 D DOWN→A OPEN halfway: BOTH HANDS halfway raised from sides toward shoulder-side clap-ready positions, elbows bent only halfway, hands clearly apart.\nThese four intermediary frames MUST show different arm positions. Never output four clasped hands. Feet stay planted, no hopping.\n\nROW 4 THOUGHTFUL HABIT:\ncol0 A fingertip at chin→B upward gaze halfway: eyes shift halfway upward, mouth begins thoughtful small shape, fingertip remains near chin.\ncol1 B upward gaze→C small nod and hand lowering halfway: head begins nodding, eyelids half close, fingertip leaves chin and hand descends toward upper chest.\ncol2 C nod→D upright neutral halfway: head halfway rises from nod, eyes halfway reopen, hand lowers the remaining distance toward side.\ncol3 D neutral→A chin-touch halfway: hand rises halfway toward chin, forearm bent partway, eyes attentive.\n\nKeep the logical hand trajectories with clearly intermediate drawn joints; do not simply copy original keyframes. No symbols, external hands, new props, blurred ghosts or double arms.\n",
+      "inputFiles": [
+        "../expressive-daily-v1/source-v1.png",
+        "../gentle-daily-v1/reference-standing.png"
+      ],
+      "output": {
+        "file": "inbetweens-attempt1.png",
+        "sha256": "7cab6367d0c2701c88c826ea42fdbdb7e4ea23a0134d0951e67b61ba60460a56"
+      },
+      "reason": "Whole-sheet reference encouraged near-duplicate key poses; unsuitable for claiming sixteen real intermediate poses."
+    },
+    {
+      "attempt": 2,
+      "status": "partially-adopted",
+      "prompt": "Use case: identity-preserve. Draw actual animation in-betweens from PAIRS OF ENDPOINTS.\nINPUT1 is a reference board with 16 large boxes in FOUR columns by FOUR rows. Each box contains TWO figures: A on the left and B on the right. They are the TWO EXISTING ENDPOINTS for one transition. The reference board has 32 figures but your OUTPUT MUST HAVE ONLY 16 FIGURES.\nFor EACH reference box, draw ONE NEW full-body pose that is physically HALFWAY between that box's A and B. Put it in the SAME row and column in the output. Do not copy A or B. Do not show A and B again. Do not output32 figures. Do not alpha-blend/crossfade the two images: draw one solid anatomical character with intermediate joint positions, eyelids and mouth. Think of a traditional animator drawing the missing frame at time 0.5. Motion should become smoother when played A → your drawing → B.\nINPUT2 locks the exact character identity: same white/lavender-haired chibi dragon girl, cream curved horns, violet eyes, same white/lilac dress and spiral waist rosette, round boots, small lavender wings and curved purple tail. Preserve exact huge head/tiny body proportions, bold dark outlines, broad flat color fills and simple cel shading. All limbs complete, two arms/two legs, no extra hands or facial features.\nOUTPUT: square transparent PNG, precisely FOUR columns by FOUR rows, one new midpoint per invisible equal cell. Prefer1254×1254 to match the original1254 sheet scale. In each314px cell keep drawing scale equal to the endpoint figures in input1: standing visible height280px, same head size, centerx157, ground baseliney294. Sitting shortens only through joint bending. Keep the full character within the cell with transparent padding. Do not draw the gray reference background, labels, borders, letters, grid, floor, shadows, props or effects. True transparent alpha.\n\nThe 16 pairs are already in the correct output order. Each output cell uses the A and B figures from its corresponding reference box. The original key-pose descriptions below explain those transitions; use the supplied PAIRS as the visual endpoints.\n\nROW 1 ENJOYING PETTING:\ncol0 original A neutral→B welcoming lean halfway: a smaller lean than B, eyes mildly softened, shoulders easing; keep hands near sides.\ncol1 B→C contented nuzzle halfway: head midway in its small nuzzle, eyes mostly closed but not yet fully, hands moving halfway inward toward C's comfortably gathered position.\ncol2 C→D neutral halfway: head gently returns halfway upright, eyelids reopen halfway, hands halfway lowering from gathered to sides.\ncol3 D→A neutral bridge: very small settling of shoulders/hair and calm eye focus; keep original scale and gentle character. No external hand or cursor.\n\nROW 2 STRAIGHTENING SLEEVES:\ncol0 A hand touching opposite cuff→B tugged cuff halfway: the smoothing hand is partway through the small pull, forearm and cuff folds intermediate, eyes follow.\ncol1 B→C switching hands halfway: both hands pass in front of lower chest as she releases first sleeve and reaches for the opposite cuff; clearly distinguish the changing forearm positions, no clapping gesture.\ncol2 C smoothing second cuff→D hands down halfway: hands release fabric, elbows partly unfold, both hands descend to a midway height.\ncol3 D hands down→A reaching to first cuff halfway: one forearm is halfway across torso, fingertips approaching the other cuff.\n\nROW 3 CELEBRATION, USE CORRECTED OPEN PALMS IN INPUT1:\nOriginal A and C have palms widely separated near shoulders; B has palms TOUCHING at chest center; D has hands DOWN.\ncol0 A OPEN→B CLOSED halfway: BOTH HANDS move halfway inward; palms still separated by roughly one-quarter of face width, open little palms angled inward, elbows partly bent. Must NOT be touching yet.\ncol1 B CLOSED→C OPEN halfway: palms have separated to roughly one-quarter of face width, hands halfway outward, elbows relaxing. Must NOT be touching.\ncol2 C OPEN→D DOWN halfway: BOTH HANDS half lowered, below chest, moving outward/down toward sides, palms relaxed. Do NOT leave them at chest height.\ncol3 D DOWN→A OPEN halfway: BOTH HANDS halfway raised from sides toward shoulder-side clap-ready positions, elbows bent only halfway, hands clearly apart.\nThese four intermediary frames MUST show different arm positions. Never output four clasped hands. Feet stay planted, no hopping.\n\nROW 4 THOUGHTFUL HABIT:\ncol0 A fingertip at chin→B upward gaze halfway: eyes shift halfway upward, mouth begins thoughtful small shape, fingertip remains near chin.\ncol1 B upward gaze→C small nod and hand lowering halfway: head begins nodding, eyelids half close, fingertip leaves chin and hand descends toward upper chest.\ncol2 C nod→D upright neutral halfway: head halfway rises from nod, eyes halfway reopen, hand lowers the remaining distance toward side.\ncol3 D neutral→A chin-touch halfway: hand rises halfway toward chin, forearm bent partway, eyes attentive.\n\nKeep the logical hand trajectories with clearly intermediate drawn joints; do not simply copy original keyframes. No symbols, external hands, new props, blurred ghosts or double arms.\nCRITICAL: boxes9 and10, clapping midpoint palms must still be separated by30-35pixels inside a314px cell, about HALF the original open gap of70px. Not touching, not fully open. Boxes11 and12 hands must be HALF LOWERED/RAISED at upper waist, distinctly lower than chest. Box6 hands must pass through center while switching cuff; not stay on first cuff. Boxes3,14,15 eyelids HALF open/closed. Do NOT copy endpoint poses.\n",
+      "inputFiles": [
+        "endpoint-pairs.png",
+        "../gentle-daily-v1/reference-standing.png"
+      ],
+      "output": {
+        "file": "inbetweens.png",
+        "sha256": "9916e8ea6217e91f06b496cc9eafc9ab3435100fd2e876caba6fef6ed410938d",
+        "width": 1254,
+        "height": 1254,
+        "hasAlpha": true
+      }
+    }
+  ],
+  "output": {
+    "file": "inbetweens.png",
+    "sha256": "9916e8ea6217e91f06b496cc9eafc9ab3435100fd2e876caba6fef6ed410938d",
+    "width": 1254,
+    "height": 1254,
+    "hasAlpha": true,
+    "grid": {
+      "columns": 4,
+      "rows": 4,
+      "boundaries": "round(index * dimension / 4)"
+    },
+    "mapping": [
+      {
+        "outputIndex": 0,
+        "fromSourceIndex": 0,
+        "toSourceIndex": 1,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 1,
+        "fromSourceIndex": 1,
+        "toSourceIndex": 2,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 2,
+        "fromSourceIndex": 2,
+        "toSourceIndex": 3,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 3,
+        "fromSourceIndex": 3,
+        "toSourceIndex": 0,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 4,
+        "fromSourceIndex": 4,
+        "toSourceIndex": 5,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 5,
+        "fromSourceIndex": 5,
+        "toSourceIndex": 6,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 6,
+        "fromSourceIndex": 6,
+        "toSourceIndex": 7,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 7,
+        "fromSourceIndex": 7,
+        "toSourceIndex": 4,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 8,
+        "fromSourceIndex": 8,
+        "toSourceIndex": 9,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 9,
+        "fromSourceIndex": 9,
+        "toSourceIndex": 10,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 10,
+        "fromSourceIndex": 10,
+        "toSourceIndex": 11,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 11,
+        "fromSourceIndex": 11,
+        "toSourceIndex": 8,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 12,
+        "fromSourceIndex": 12,
+        "toSourceIndex": 13,
+        "phase": 0.5,
+        "accepted": false
+      },
+      {
+        "outputIndex": 13,
+        "fromSourceIndex": 13,
+        "toSourceIndex": 14,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 14,
+        "fromSourceIndex": 14,
+        "toSourceIndex": 15,
+        "phase": 0.5,
+        "accepted": true
+      },
+      {
+        "outputIndex": 15,
+        "fromSourceIndex": 15,
+        "toSourceIndex": 12,
+        "phase": 0.5,
+        "accepted": true
+      }
+    ]
+  },
+  "selection": {
+    "acceptedIndices": [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15],
+    "excluded": {
+      "3": "Both endpoints are nearly neutral; the redrawn pose contributes no meaningful intermediate movement.",
+      "12": "Thoughtful eyes/mouth remain too close to the upward-looking endpoint; avoid adding a redraw without meaningful positional interpolation."
+    }
+  },
+  "notes": [
+    "Selection follows A/midpoint/B visual comparison, not the number of generated cells. Only acceptedIndices are intended for insertion.",
+    "No keyframe source, application code or preparation tools were modified.",
+    "Generated sheet has a small uniform scale difference versus original key sheet; preparation must normalize drawing scale before interleaving.",
+    "Discarded cells remain archived as generated; they are not approved for playback."
+  ]
+}

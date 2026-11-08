@@ -1,0 +1,15 @@
+{
+  "acceptedIndices": [1, 4, 5, 13, 14, 15],
+  "excluded": {
+    "0": "Head turn and gaze remain too close to an original endpoint to count as a reliable in-between.",
+    "2": "Right-looking pose remains too close to the original right-looking endpoint.",
+    "3": "Endpoints are nearly identical; redrawn neutral pose adds no useful motion.",
+    "6": "Crouch-to-seat midpoint is lower than the interpolated endpoint path after matching standing scale.",
+    "7": "Seated bridge is lower than both seated endpoints; would introduce a dip.",
+    "8": "Seated redraw shifts body height below both original endpoints.",
+    "9": "Head/gaze interpolation is plausible, but the seated body-height drift would produce a visible dip.",
+    "10": "Seated redraw shifts body height below both original endpoints.",
+    "11": "Seated redraw shifts body height below both original endpoints.",
+    "12": "Yawn-start hand remains too close to the lower endpoint; mouth change alone does not resolve the arm step."
+  }
+}

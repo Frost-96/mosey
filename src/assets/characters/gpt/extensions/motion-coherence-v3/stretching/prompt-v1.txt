@@ -1,0 +1,14 @@
+Use case: identity-preserve.
+Asset: a coherent 8-frame standing stretch animation sprite sheet, 4 columns and 2 rows, transparent background.
+Input image 1 is the authoritative identity, geometry and drawing scale reference (standing neutral). Input image 2 shows the old motion only; its middle frames erroneously shrink the head/body. Correct that error: absolutely keep neutral head width/height, torso/leg proportions, boots baseline, and body center CONSTANT across all eight cells. Arms and eyelids move; no overall scaling. Head and torso always face forward together; collar/rose and shoulder perspective remain coherent. Tail stays viewer-right.
+Read left-to-right then second row:
+0 neutral, arms relaxed as reference.
+1 start stretch: elbows bend, hands rise a little from waist to lower chest, eyes open.
+2 hands rise beside cheeks, elbows bent outward, eyes gently narrowing.
+3 full shoulder stretch: hands rise beside upper head/horns, elbows open; eyes comfortably closed, small happy mouth.
+4 hold same full stretch, tiny shoulder release, eyes comfortably closed; same head size and height.
+5 begin lowering: hands alongside cheeks, eyes reopening.
+6 arms pass low chest/waist, relaxed elbows, eyes open.
+7 return exact neutral stance.
+Use physical joint articulation. Torso and head cannot get shorter when arms rise. Keep top of hair/horns at the same local height as neutral; hands can extend higher but not beyond cell. Feet remain planted at the same baseline. The body can lengthen very slightly in the peak, never shrink. No jumping or squatting. Wings may softly follow shoulders, never change identity.
+Preserve exact dragon girl identity: cream horns, white lavender hair, curled forelock, violet eyes, pointed ears, lavender wings and scaled tail, white and lavender dress with rose clasp and bell sleeves, white violet boots, thick dark outlines and soft cel shading. Every frame full body, same large head, same centered hips. 4x2 equal square cells, transparent margins, no grid/text/props/background/shadow.
