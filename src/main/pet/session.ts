@@ -45,9 +45,11 @@ export function createPetSession(
   let automaticRecoveryUsed = false;
   let rendererGeneration = 0;
   let quitting = false;
+  let commandRevision = 0;
   app.on("will-quit", () => behavior.stop());
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
+    commandRevision++;
     interaction.dismissMenu();
     if (next === "hidden") pet.hide();
     else if (rendererState === "ready") {
@@ -141,20 +143,13 @@ export function createPetSession(
     const snapshot = behavior.getSnapshot();
     const posture = String(snapshot.value);
     return (
+      !quitting &&
       rendererState === "ready" &&
       visibility === "visible" &&
       !suspended &&
       !interaction.gestureActive &&
-      snapshot.context.pendingActivity !== "climbing" &&
       characters.current.capabilities.includes(definition.capability) &&
-      ![
-        "paused",
-        "dragging",
-        "flutter",
-        "falling",
-        "landing",
-        "climbing",
-      ].includes(posture) &&
+      !["paused", "dragging"].includes(posture) &&
       (action !== "standingup" || ["sittingdown", "sitting"].includes(posture))
     );
   };
@@ -180,17 +175,11 @@ export function createPetSession(
     stopMotion: () => motion.stop(),
     constrain: (x, y) => constrain(x, y),
     alignGround: () => alignGround(),
-    reconcileDock: () => reconcileDock(),
     publish: () => publish(),
     bodyMenu: () => {
       const character = characters.current;
+      const revision = commandRevision;
       const ordinary = environment.bodyMenu();
-      if (
-        !dailyActionDefinitions.some((item) =>
-          character.capabilities.includes(item.capability),
-        )
-      )
-        return ordinary;
       return [
         {
           id: "daily-actions",
@@ -202,13 +191,15 @@ export function createPetSession(
             click: () => {
               // A stale native menu must never command a newly selected resource.
               if (
-                characters.current.id !== character.id ||
+                revision !== commandRevision ||
+                characters.current !== character ||
                 characters.current.resourceVersion !==
                   character.resourceVersion ||
                 !actionAvailable(action)
               )
                 return;
-              motion.stop();
+              // The behavior owns safe handoffs. In-flight return motion must
+              // continue while the latest valid request waits for landing.
               behavior.send({ type: "PLAY", action });
             },
           })),
@@ -268,6 +259,11 @@ export function createPetSession(
   let dockPendingSince: number | undefined;
   let dockMovementDelay = 0;
   let dockPendingTimer: ReturnType<typeof setTimeout> | undefined;
+  const publishSupportReadiness = () => {
+    const pending = dockPendingAt !== undefined;
+    if (behavior.getSnapshot().context.supportPending !== pending)
+      behavior.send({ type: "SUPPORT_PENDING", pending });
+  };
   const movementNow = () =>
     (dockPendingAt ?? timeline.now()) - dockMovementDelay;
   const finishDockPending = () => {
@@ -321,7 +317,6 @@ export function createPetSession(
       pet.isDestroyed() ||
       visibility !== "visible" ||
       suspended ||
-      interaction.menuOpen ||
       dockPendingAt !== undefined ||
       interaction.gestureActive
     )
@@ -360,9 +355,11 @@ export function createPetSession(
         dockPendingAt === undefined
       ) {
         dockPendingAt = timeline.now();
+        publishSupportReadiness();
         dockPendingTimer = setTimeout(() => {
           finishDockPending();
           reconcileDock();
+          publishSupportReadiness();
         }, 250);
       }
     } else {
@@ -372,6 +369,8 @@ export function createPetSession(
     // Repeated unavailable reports do not own desktop placement. Only a
     // capability change (or an ended pending frame) may initiate Dock motion.
     if (geometryChanged || (wasPending && !pending)) reconcileDock();
+    // Establish any required drop/climb before a waiting command can continue.
+    publishSupportReadiness();
   };
   const alignGround = () => {
     const area = screen.getPrimaryDisplay().workArea;
@@ -505,6 +504,7 @@ export function createPetSession(
     if (snapshot.value === "resting") reconcileDock();
   });
   const pause = () => {
+    commandRevision++;
     interaction.dismissMenu();
     suspended = true;
     dockSupported = false;
@@ -515,6 +515,7 @@ export function createPetSession(
     interaction.stopPolling();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
+    publishSupportReadiness();
   };
   const resume = () => {
     suspended = false;
@@ -530,11 +531,13 @@ export function createPetSession(
   powerMonitor.on("resume", resume);
   powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
+    commandRevision++;
     dockSupported = false;
     dockPendingSince = undefined;
     dockObservation = null;
     finishDockPending();
     interaction.cancel();
+    publishSupportReadiness();
     void environment.dock.stop().then(() => {
       if (!pet.isDestroyed() && visibility === "visible" && !suspended)
         environment.dock.start();
@@ -578,6 +581,7 @@ export function createPetSession(
     const next = pet.isVisible() ? "visible" : "hidden";
     if (visibility === next) return;
     visibility = next;
+    commandRevision++;
     if (next === "visible") {
       behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
       if (!quitting && !suspended) {
@@ -595,6 +599,7 @@ export function createPetSession(
       interaction.invalidate({ releaseInput: true });
       interaction.cancel();
       behavior.send({ type: "PAUSE" });
+      publishSupportReadiness();
     }
     publish();
   };
@@ -606,8 +611,7 @@ export function createPetSession(
   const nativeStatePoll = setInterval(() => {
     if (pet.isDestroyed()) return;
     synchronizeVisibility();
-    if (visibility === "visible" && !suspended && !interaction.menuOpen)
-      reconcileGround();
+    if (visibility === "visible" && !suspended) reconcileGround();
     characters.reconcile();
   }, 50);
   const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
@@ -631,6 +635,7 @@ export function createPetSession(
     // a preference, so this operational hide must never write PreferencesStore.
     rendererState = "loading";
     rendererGeneration++;
+    commandRevision++;
     characters.retireRenderer();
     interaction.stopPolling();
     interaction.invalidate({ releaseInput: true, forgetGesture: true });
@@ -728,11 +733,16 @@ export function createPetSession(
     },
     setVisibility,
     changeSize,
-    selectCharacter: (character: Settings["character"]) =>
-      characters.select(character),
+    selectCharacter: (character: Settings["character"]) => {
+      commandRevision++;
+      behavior.send({ type: "CANCEL_PLAY" });
+      characters.select(character);
+    },
     commitPreview,
     beginShutdown: () => {
       quitting = true;
+      commandRevision++;
+      behavior.send({ type: "CANCEL_PLAY" });
     },
     observeDock,
     load: loadPet,

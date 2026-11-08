@@ -8,7 +8,7 @@ import { petSizeSchema } from "./size.ts";
 import {
   baseActions,
   characterCapabilities,
-  dailyActionDefinitions,
+  hasExpandedActivities,
   extensionRequirements,
 } from "./character-capabilities.ts";
 
@@ -104,12 +104,7 @@ export function characterLoopTimings(
   const capabilities = characterCapabilities(
     character.atlases.map((a) => a.action),
   );
-  if (
-    !dailyActionDefinitions.some(({ capability }) =>
-      capabilities.includes(capability),
-    )
-  )
-    return undefined;
+  if (!hasExpandedActivities(capabilities)) return undefined;
   const timing = (action: "resting" | "sitting") => {
     const atlas = character.atlases.find((a) => a.action === action);
     return atlas

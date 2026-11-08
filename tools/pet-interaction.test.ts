@@ -77,7 +77,6 @@ function harness(t: TestContext, daily = true) {
     stopMotion() {},
     constrain() {},
     alignGround() {},
-    reconcileDock() {},
     publish() {},
     bodyMenu: () => [],
   };
@@ -167,65 +166,51 @@ function harness(t: TestContext, daily = true) {
   };
 }
 
-test("menu buffers a neutral paint, updates hit pose, and hands off only after resuming", (t) => {
+test("menu keeps neutral handoffs and action completion live without replay on close", (t) => {
   const h = harness(t);
   h.openAtBoundary();
   h.actor.send({ type: "PLAY", action: "looking" });
   h.frame(0);
   assert.equal(h.interaction.displayed?.frame, 0);
-  assert.equal(h.actor.getSnapshot().context.loopFrame?.frame, 3);
-  assert.equal(h.actor.getSnapshot().value, "resting");
-  assert.notEqual(h.timeline.pausedAt, undefined);
-  let frozenAtHandoff: number | undefined = -1;
-  h.actor.subscribe((snapshot) => {
-    if (snapshot.value === "looking") frozenAtHandoff = h.timeline.pausedAt;
-  });
-  h.menus[0].closePopup();
   assert.equal(h.actor.getSnapshot().value, "looking");
-  assert.equal(frozenAtHandoff, undefined);
+  assert.equal(h.timeline.pausedAt, undefined);
+  h.input({ type: "done", actionId: h.actor.getSnapshot().context.actionId });
+  assert.equal(h.actor.getSnapshot().value, "resting");
+  const completed = h.actor.getSnapshot().context.actionId;
+  h.menus[0].closePopup();
+  assert.equal(h.actor.getSnapshot().context.actionId, completed);
   assert.equal(h.interaction.menuOpen, false);
 });
 
 for (const invalidation of [
   "geometry",
-  "character",
-  "resource",
   "not-ready",
   "hidden",
   "suspended",
   "action",
-  "invalidate",
 ] as const) {
-  test(`menu discards buffered loop paint after ${invalidation} changes`, (t) => {
+  test(`menu rejects stale paint after ${invalidation} changes without buffering it`, (t) => {
     const h = harness(t);
     h.openAtBoundary();
-    h.frame(0);
-    h.actor.send({ type: "PLAY", action: "looking" });
+    const actionId = h.actor.getSnapshot().context.actionId;
     if (invalidation === "geometry") h.environment.geometryRevision++;
-    if (invalidation === "character") h.environment.character.id = "claude";
-    if (invalidation === "resource")
-      h.environment.character.resourceVersion = "version-b";
     if (invalidation === "not-ready") h.environment.ready = false;
     if (invalidation === "hidden") h.environment.visibility = "hidden";
     if (invalidation === "suspended") h.environment.suspended = true;
     if (invalidation === "action") h.actor.send({ type: "CANCEL" });
-    if (invalidation === "invalidate") h.interaction.invalidate();
-    h.menus[0].closePopup();
-    assert.equal(h.actor.getSnapshot().value, "resting");
-    assert.equal(h.timeline.pausedAt, undefined);
+    h.input({ type: "frame", geometryRevision: 1, actionId, frame: 0 });
     assert.notEqual(h.actor.getSnapshot().context.loopFrame?.frame, 0);
+    const before = h.actor.getSnapshot();
+    h.menus[0].closePopup();
+    assert.equal(h.actor.getSnapshot(), before);
+    assert.equal(h.timeline.pausedAt, undefined);
   });
 }
 
-test("only the latest valid frame is replayed and an old menu callback cannot flush a new menu", (t) => {
+test("an old menu callback cannot close a newer menu or replay a handoff", (t) => {
   const h = harness(t);
   h.openAtBoundary();
-  h.frame(0);
-  h.frame(2);
-  h.actor.send({ type: "PLAY", action: "looking" });
   h.menus[0].closePopup();
-  assert.equal(h.actor.getSnapshot().value, "resting");
-  assert.equal(h.actor.getSnapshot().context.loopFrame?.frame, 2);
   h.input({
     type: "context",
     geometryRevision: 1,
@@ -233,23 +218,24 @@ test("only the latest valid frame is replayed and an old menu callback cannot fl
     x: 120,
     y: 120,
   });
+  h.actor.send({ type: "PLAY", action: "looking" });
   h.frame(0);
+  const id = h.actor.getSnapshot().context.actionId;
   h.menus[0].closePopup();
   assert.equal(h.interaction.menuOpen, true);
-  assert.notEqual(h.timeline.pausedAt, undefined);
-  assert.equal(h.actor.getSnapshot().value, "resting");
-  h.menus[1].closePopup();
+  assert.equal(h.timeline.pausedAt, undefined);
   assert.equal(h.actor.getSnapshot().value, "looking");
+  h.menus[1].closePopup();
+  assert.equal(h.actor.getSnapshot().context.actionId, id);
 });
 
-test("Corgi keeps ignoring frame input during native menus", (t) => {
+test("Corgi updates its painted hit region during native menus", (t) => {
   const h = harness(t, false);
   h.openAtBoundary();
   h.frame(0);
-  assert.equal(h.interaction.displayed?.frame, 3);
+  assert.equal(h.interaction.displayed?.frame, 0);
   assert.equal(h.actor.getSnapshot().context.loopFrame, undefined);
   h.menus[0].closePopup();
   assert.equal(h.actor.getSnapshot().value, "resting");
-  assert.equal(h.actor.getSnapshot().context.loopFrame, undefined);
   assert.equal(h.timeline.pausedAt, undefined);
 });

@@ -226,12 +226,14 @@ test("Corgi retains its original 43 asset files, 16 actions and capabilities", a
     characterCapabilities(original.map((a) => a.action)),
     baseline.capabilities,
   );
-  assert.ok(
-    dailyActionDefinitions.every(
-      (item) =>
-        !characterCapabilities(original.map((a) => a.action)).includes(
+  assert.deepEqual(
+    dailyActionDefinitions
+      .filter((item) =>
+        characterCapabilities(original.map((a) => a.action)).includes(
           item.capability,
         ),
-    ),
+      )
+      .map((item) => item.action),
+    ["stretching"],
   );
 });

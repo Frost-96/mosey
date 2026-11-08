@@ -9,8 +9,10 @@ import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
 import { waitForPetVisibility } from "./support/visibility";
+import { paintedBodyPoint } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 const recording =
@@ -58,15 +60,25 @@ test(
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
               ...recording,
-              args: [`--user-data-dir=${root}/profile`],
+              args: [
+                `--user-data-dir=${root}/profile`,
+                `--force-device-scale-factor=${scaleFactor}`,
+              ],
             }
           : {
               ...recording,
-              args: [".", `--user-data-dir=${root}/profile`],
+              args: [
+                ".",
+                `--user-data-dir=${root}/profile`,
+                `--force-device-scale-factor=${scaleFactor}`,
+              ],
             },
       );
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
+      expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+        Number(scaleFactor),
+      );
       const menu = async (label: "Hide Mosey" | "Show Mosey") => {
         await app!.evaluate(({ Menu }, label) => {
           Menu.getApplicationMenu()!
@@ -223,23 +235,7 @@ test(
       }
       expect(sleepingFrames.size).toBeGreaterThan(1);
       expect(await bounds()).toEqual(sleepingBounds);
-      const body = () =>
-        pet.evaluate(() => {
-          const canvas = document.querySelector("canvas")!;
-          const data = canvas
-            .getContext("2d")!
-            .getImageData(0, 0, canvas.width, canvas.height).data;
-          const points: { x: number; y: number }[] = [];
-          for (let y = 0; y < canvas.height; y++)
-            for (let x = 0; x < canvas.width; x++)
-              if (data[(y * canvas.width + x) * 4 + 3]! > 200)
-                points.push({ x, y });
-          const point = points[Math.floor(points.length / 2)]!;
-          return {
-            x: point.x / devicePixelRatio,
-            y: point.y / devicePixelRatio,
-          };
-        });
+      const body = () => pet.evaluate(paintedBodyPoint, 200);
       const click = async () => {
         const point = await body();
         await pet.mouse.click(point.x, point.y);
@@ -305,7 +301,7 @@ test(
         };
       });
       await enterSleep();
-      const freezeMenu = async () => {
+      const holdMenu = async (completingWake = false) => {
         const point = await body();
         await pet.mouse.click(point.x, point.y, { button: "right" });
         await expect
@@ -314,33 +310,47 @@ test(
           )
           .toBe(false);
         await new Promise((resolve) => setTimeout(resolve, 60));
-        const frozen = await pixels();
+        const openingPixels = await pixels();
         const stationary = await bounds();
-        await new Promise((resolve) => setTimeout(resolve, 1300));
-        expect(await pixels()).toBe(frozen);
+        const started = Date.now();
+        await expect.poll(pixels, { timeout: 1200 }).not.toBe(openingPixels);
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, 1300 - (Date.now() - started))),
+        );
         expect(await bounds()).toEqual(stationary);
+        if (completingWake)
+          await expect.poll(posture, { timeout: 3000 }).toBe("resting");
+        const beforeClose = await pet.evaluate(() =>
+          window.mosey.getPresentation(),
+        );
         await app!.evaluate(({ BrowserWindow }) =>
           Reflect.get(globalThis, "sleepMenu").closePopup(
             BrowserWindow.getAllWindows()[0],
           ),
         );
+        expect(
+          await pet.evaluate(() => window.mosey.getPresentation()),
+        ).toEqual(beforeClose);
       };
       // A secondary click in sleep cannot arm the ordinary two-click window.
-      await freezeMenu();
+      await holdMenu();
       await click();
       await new Promise((resolve) => setTimeout(resolve, 120));
       await assertAsleep();
       const point = await body();
       await pet.mouse.click(point.x, point.y, { button: "right" });
       await expect
-        .poll(() => app!.evaluate(() => !!Reflect.get(globalThis, "sleepMenu")))
-        .toBe(true);
+        .poll(() =>
+          app!.evaluate(() => Reflect.get(globalThis, "sleepMenuClosed")),
+        )
+        .toBe(false);
       await new Promise((resolve) => setTimeout(resolve, 150));
       await assertAsleep();
-      const frozen = await pixels();
+      const earPixels = await pixels();
       const stationary = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
-      expect(await pixels()).toBe(frozen);
+      await waitForSleep();
+      expect(await pixels()).not.toBe(earPixels);
       expect(await bounds()).toEqual(stationary);
       await app.evaluate(({ BrowserWindow }) =>
         Reflect.get(globalThis, "sleepMenu").closePopup(
@@ -353,8 +363,13 @@ test(
         )
         .toBe(true);
       await new Promise((resolve) => setTimeout(resolve, 350));
+      // The first click expired while the menu stayed open. Only a fresh pair
+      // can wake the pet; closing the menu must not revive its old deadline.
       await click();
-      await freezeMenu();
+      await expect.poll(posture, { timeout: 250, interval: 10 }).toBe("ear");
+      await assertAsleep();
+      await click();
+      await holdMenu(true);
       await assertAwake();
 
       // Sleeping and ear feedback both yield immediately to the existing drag.
@@ -435,8 +450,11 @@ test(
         JSON.stringify(
           {
             rapidGapMs: rapidGap,
+            scaleFactor: Number(scaleFactor),
             sleepingFrameCount: sleepingFrames.size,
-            menuFrozenForMs: 1200,
+            menuContinuedForMs: 1300,
+            wakeClickWindowRunsWhileMenuOpen: true,
+            wakeCompletesUnderMenu: true,
             dragSources: ["sleep", "ear", "waking"],
             input:
               "Playwright directed window input; native menu tracking intercepted; suspend/resume events simulated",
@@ -448,6 +466,16 @@ test(
         ),
       );
     } catch (error) {
+      await writeFile(
+        evidencePath(`failure-${evidence}-sleep.json`),
+        JSON.stringify(
+          {
+            error: error instanceof Error ? error.stack : String(error),
+          },
+          null,
+          2,
+        ),
+      );
       await app
         ?.windows()[0]
         ?.screenshot({

@@ -111,6 +111,17 @@ for (const character of ["corgi", "whale"] as const) {
         );
         const { body } = await paintedPoints(pet);
         await pet.mouse.click(body.x, body.y);
+        // Stopping the walk briefly publishes rest before the click reaction
+        // reaches its neutral handoff. Wait through that reaction so it cannot
+        // be mistaken for a response to the later transparent-area gesture.
+        await expect
+          .poll(
+            async () =>
+              (await pet.evaluate(() => window.mosey.getPresentation()))
+                .posture,
+            { timeout: 5000 },
+          )
+          .toBe("tilt");
       }
       await expect
         .poll(

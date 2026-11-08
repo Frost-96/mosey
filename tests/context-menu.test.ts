@@ -6,10 +6,10 @@ import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
-import { matchPaintedFrames } from "./support/pixels";
+import { matchPaintedFrames, paintedBodyPoint } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
-test("body secondary clicks open a native menu and cancel without changing the pet", async () => {
+test("body menus keep the pet active and close without replaying actions", async () => {
   const session = await createPetTestSession({
     dock: "empty",
     preferences: {
@@ -114,53 +114,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
         await expect.poll(pixels, { timeout: 2000 }).not.toBe(initial);
       }
     };
-    const body = () =>
-      pet.evaluate(() => {
-        const canvas = document.querySelector("canvas")!;
-        const { data, width, height } = canvas
-          .getContext("2d")!
-          .getImageData(0, 0, canvas.width, canvas.height);
-        // The median opaque pixel can be on an outline edge that disappears on the
-        // next frame. Choose the deepest visible interior, not an arbitrary
-        // pixel in scan order, so a moving-body click survives ordinary latency.
-        const distance = new Uint16Array(width * height);
-        for (let y = 0; y < height; y++)
-          for (let x = 0; x < width; x++) {
-            const index = y * width + x;
-            if (data[index * 4 + 3]! > 200)
-              distance[index] =
-                1 +
-                Math.min(
-                  x ? distance[index - 1]! : 0,
-                  y ? distance[index - width]! : 0,
-                );
-          }
-        let deepest = 0;
-        let point: { x: number; y: number } | undefined;
-        for (let y = height - 1; y >= 0; y--)
-          for (let x = width - 1; x >= 0; x--) {
-            const index = y * width + x;
-            if (distance[index])
-              distance[index] = Math.min(
-                distance[index]!,
-                1 +
-                  Math.min(
-                    x < width - 1 ? distance[index + 1]! : 0,
-                    y < height - 1 ? distance[index + width]! : 0,
-                  ),
-              );
-            if (distance[index]! > deepest) {
-              deepest = distance[index]!;
-              point = { x, y };
-            }
-          }
-        if (!point) throw new Error("No visible body for secondary click");
-        const rect = canvas.getBoundingClientRect();
-        return {
-          x: ((point.x + 0.5) * rect.width) / width,
-          y: ((point.y + 0.5) * rect.height) / height,
-        };
-      });
+    const body = () => pet.evaluate(paintedBodyPoint, 200);
     const openMenu = async (
       control = false,
       afterTarget?: () => Promise<void>,
@@ -227,7 +181,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
     ]);
     await closeMenu();
     await expect.poll(pixels, { timeout: 2000 }).not.toBe(await pixels());
-    // Keep actual native show/items/cancel above. Long pause/progress assertions
+    const current = () => pet.evaluate(() => window.mosey.getPresentation());
+    const waitPosture = (posture: string, timeout = 4000) =>
+      expect
+        .poll(async () => (await current()).posture, { timeout, interval: 10 })
+        .toBe(posture);
+    // Keep actual native show/items/cancel above. Long progress assertions
     // replace only the OS menu tracking boundary: Cocoa may dismiss a popup
     // independently of Playwright's targeted input and physical cursor.
     await app.evaluate(({ Menu }) => {
@@ -245,11 +204,16 @@ test("body secondary clicks open a native menu and cancel without changing the p
       };
     });
     await openMenu();
-    const frozen = await pixels();
-    await new Promise((resolve) => setTimeout(resolve, 2400));
-    expect((await pixels()) === frozen).toBe(true);
+    const opened = await pet.evaluate(() => window.mosey.getPresentation());
+    const openingPixels = await pixels();
+    await expect.poll(pixels, { timeout: 2000 }).not.toBe(openingPixels);
     await closeMenu();
-    await expect.poll(pixels).not.toBe(frozen);
+    expect(
+      await pet.evaluate(() => window.mosey.getPresentation()),
+    ).toMatchObject({
+      actionId: opened.actionId,
+      startedAt: opened.startedAt,
+    });
     await pet.mouse.click(5, 5, { button: "right" });
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(await menuCount()).toBe(2);
@@ -332,17 +296,15 @@ test("body secondary clicks open a native menu and cancel without changing the p
       .toBe(false);
     await openMenu();
     await new Promise((resolve) => setTimeout(resolve, 40));
-    const reaction = await pixels();
-    await new Promise((resolve) => setTimeout(resolve, 2100));
-    expect((await pixels()) === reaction).toBe(true);
-    await closeMenu();
-    expect(matchesIdle(await pixels())).toBe(false);
     await expect
       .poll(async () => matchesIdle(await pixels()), {
         interval: 25,
         timeout: 3000,
       })
       .toBe(true);
+    const afterReaction = await current();
+    await closeMenu();
+    expect(await current()).toEqual(afterReaction);
     // A secondary click during capture leaves the original drag in charge.
     await app.evaluate(({ BrowserWindow, screen }) => {
       const pet = BrowserWindow.getAllWindows()[0]!;
@@ -375,13 +337,11 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await openMenu();
     await new Promise((resolve) => setTimeout(resolve, 40));
     const returning = { pixels: await pixels(), bounds: await bounds() };
-    await new Promise((resolve) => setTimeout(resolve, 1600));
-    expect((await pixels()) === returning.pixels).toBe(true);
-    expect(await bounds()).toEqual(returning.bounds);
-    await closeMenu();
     await expect
       .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
       .toBeGreaterThan(returning.bounds.y + 3);
+    expect(await pixels()).not.toBe(returning.pixels);
+    await closeMenu();
     // Leave enough fall distance to observe two successive drawn frames. The
     // body target must remain inside the pet when input crosses a frame change.
     const firstFallingFrame = await pixels();
@@ -395,22 +355,23 @@ test("body secondary clicks open a native menu and cancel without changing the p
         .not.toBe(selectedFrame);
     });
     const falling = { pixels: await pixels(), bounds: await bounds() };
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    expect((await pixels()) === falling.pixels).toBe(true);
-    expect(await bounds()).toEqual(falling.bounds);
-    await closeMenu();
+    await expect
+      .poll(async () => (await bounds()).y, { interval: 10 })
+      .toBeGreaterThan(falling.bounds.y);
     await expect
       .poll(() => distanceFromGround(app!), { timeout: 4000, interval: 10 })
       .toBe(0);
-    await openMenu();
+    await waitPosture("landing");
     const landing = await pixels();
     const landingBounds = await bounds();
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    expect((await pixels()) === landing).toBe(true);
+    await waitPosture("resting");
+    expect(await pixels()).not.toBe(landing);
     expect(await bounds()).toEqual(landingBounds);
+    const landed = await current();
     await closeMenu();
+    expect(await current()).toEqual(landed);
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
-    // Preserve both a native-state deadline and in-progress desktop movement.
+    // Deadlines and movement continue under an open menu, through the next walk.
     await app.evaluate(() => {
       Math.random = () => 0.1;
       const timeout = globalThis.setTimeout;
@@ -437,9 +398,15 @@ test("body secondary clicks open a native menu and cancel without changing the p
       .toBeGreaterThan(15);
     await openMenu();
     const walking = { pixels: await pixels(), bounds: await bounds() };
-    await new Promise((resolve) => setTimeout(resolve, 2900));
-    expect((await pixels()) === walking.pixels).toBe(true);
-    expect(await bounds()).toEqual(walking.bounds);
+    await expect
+      .poll(async () => Math.abs((await bounds()).x - walking.bounds.x), {
+        interval: 20,
+      })
+      .toBeGreaterThan(30);
+    await waitPosture("resting");
+    await waitPosture("walking");
+    expect(await pixels()).not.toBe(walking.pixels);
+    const beforeResize = await bounds();
     await app.evaluate(() =>
       Reflect.get(globalThis, "menus")
         .at(-1)
@@ -453,9 +420,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     const justResumed = await bounds();
     expect(justResumed.width).toBe(160);
     expect(
-      Math.abs(
-        justResumed.x + 80 - walking.bounds.x - walking.bounds.width / 2,
-      ),
+      Math.abs(justResumed.x + 80 - beforeResize.x - beforeResize.width / 2),
     ).toBeLessThan(20);
     await app.evaluate(({ Menu }) =>
       Menu.getApplicationMenu()!
@@ -473,7 +438,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     // Exercise the gap between the main-process activity deadline and its
     // first painted frame. Slow rendering must not be mistaken for inactivity.
     // Only the first stretch/play paint is delayed; the actual renderer and
-    // native/menu pause behavior stay in charge of every subsequent assertion.
+    // native/menu behavior stay in charge of every subsequent assertion.
     await pet.evaluate(() => {
       const frame = requestAnimationFrame;
       const delayed = new Set<string>();
@@ -514,10 +479,12 @@ test("body secondary clicks open a native menu and cancel without changing the p
       });
       await openMenu();
       const activity = { pixels: await pixels(), bounds: await bounds() };
-      await new Promise((resolve) => setTimeout(resolve, 2400));
-      expect(await pixels()).toBe(activity.pixels);
+      await waitPosture("resting");
+      expect(await pixels()).not.toBe(activity.pixels);
       expect(await bounds()).toEqual(activity.bounds);
+      const finished = await current();
       await closeMenu();
+      expect(await current()).toEqual(finished);
       await expect
         .poll(async () => matchesIdle(await pixels()), {
           timeout: 3000,
@@ -539,7 +506,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
     await app.evaluate(({ Menu }) => {
       Reflect.set(globalThis, "trackedClosePopup", Menu.prototype.closePopup);
       // A platform popup that never finishes opening may provide no close
-      // callback. Explicit lifecycle cancellation must still release its pause.
+      // callback. Explicit lifecycle cancellation must still release input.
       Menu.prototype.closePopup = function () {};
     });
     await app.evaluate(({ powerMonitor }) => {
@@ -630,7 +597,7 @@ test("body secondary clicks open a native menu and cancel without changing the p
             "actual first show/items/cancel; subsequent tracking boundary intercepted",
           inputs:
             "Playwright targeted right-click and Control-click; native Menu public API used for cancel/select",
-          frozen: [
+          continued: [
             "idle",
             "reaction",
             "flutter",

@@ -30,6 +30,7 @@ export const extensionRequirements = {
 export type CharacterCapability = keyof typeof extensionRequirements;
 
 export const dailyActionDefinitions = [
+  { action: "stretching", label: "伸懒腰", capability: "stretching" },
   { action: "looking", label: "张望", capability: "looking" },
   { action: "sitting", label: "坐下休息", capability: "sitting" },
   { action: "standingup", label: "站起来", capability: "sitting" },
@@ -44,6 +45,15 @@ export const dailyActionDefinitions = [
   capability: CharacterCapability;
 }[];
 export type DailyAction = (typeof dailyActionDefinitions)[number]["action"];
+
+// The original actions do not imply the newer authored neutral/seated joins.
+// Menu availability must not change a legacy character's interaction policy.
+export function hasExpandedActivities(capabilities: CharacterCapability[]) {
+  return dailyActionDefinitions.some(
+    ({ action, capability }) =>
+      action !== "stretching" && capabilities.includes(capability),
+  );
+}
 
 export function characterCapabilities(
   actions: readonly Atlas["action"][],

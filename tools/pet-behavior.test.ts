@@ -152,7 +152,7 @@ test("ground one-shots finish before playing the latest supported command", () =
       pet.actor.send({ type: "DONE", actionId: currentId - 1 });
       assert.equal(pet.state(), entry.action);
       assert.equal(pet.id(), currentId);
-      assert.equal(pet.actor.getSnapshot().context.pendingActivity, "grooming");
+      assert.equal(pet.actor.getSnapshot().context.pendingCommand, "grooming");
       pet.done();
       assert.equal(pet.state(), "grooming");
       assert.notEqual(pet.id(), currentId);
@@ -190,7 +190,7 @@ test("new one-shots defer clicks until their authored finish while petting absor
       pet.play("grooming");
       pet.actor.send({ type: "CLICK" });
       assert.equal(pet.id(), pettedId);
-      assert.equal(pet.actor.getSnapshot().context.pendingActivity, "grooming");
+      assert.equal(pet.actor.getSnapshot().context.pendingCommand, "grooming");
       pet.done();
       assert.equal(pet.state(), "grooming");
     } finally {
@@ -444,21 +444,139 @@ test("dragging preempts new gestures and discards deferred commands", () => {
       assert.equal(pet.actor.getSnapshot().context.pendingActivity, undefined);
       pet.actor.send({ type: "RELEASE" });
       assert.equal(pet.state(), "flutter");
-      pet.play("looking");
-      assert.equal(pet.state(), "flutter");
       pet.done();
       assert.equal(pet.state(), "falling");
-      pet.play("habit");
-      assert.equal(pet.state(), "falling");
       pet.actor.send({ type: "LANDED", actionId: pet.id() });
-      assert.equal(pet.state(), "landing");
-      pet.play("sitting");
       assert.equal(pet.state(), "landing");
       pet.done();
       assert.equal(pet.state(), "resting");
     } finally {
       pet.actor.stop();
     }
+  }
+});
+
+test("returning pets retain only the last supported command until landing completes", () => {
+  const pet = fixture(["stretching", "looking", "flutter", "climbing"]);
+  try {
+    for (const start of ["DRAG_START", "CLIMB"] as const) {
+      pet.actor.send({ type: start });
+      if (start === "DRAG_START") {
+        pet.actor.send({ type: "RELEASE" });
+        pet.play("looking");
+        assert.equal(pet.state(), "flutter");
+        pet.done();
+        assert.equal(pet.state(), "falling");
+      }
+      const returning = pet.state();
+      pet.play("stretching");
+      pet.play("looking");
+      pet.play("stretching");
+      pet.play("habit"); // Unavailable input must not replace the valid request.
+      assert.equal(pet.state(), returning);
+      pet.actor.send({ type: "LANDED", actionId: pet.id() });
+      assert.equal(pet.state(), "landing");
+      pet.done();
+      assert.equal(pet.state(), "stretching");
+      pet.done();
+      assert.equal(pet.state(), "resting");
+      assert.equal(pet.actor.getSnapshot().context.pendingActivity, undefined);
+    }
+  } finally {
+    pet.actor.stop();
+  }
+});
+
+test("retiring a selection drops queued commands without interrupting physical support", () => {
+  const pet = fixture();
+  try {
+    pet.actor.send({ type: "DROP" });
+    pet.play("stretching");
+    pet.actor.send({ type: "CANCEL_PLAY" });
+    assert.equal(pet.state(), "falling");
+    pet.actor.send({ type: "LANDED", actionId: pet.id() });
+    pet.done();
+    assert.equal(pet.state(), "resting");
+    pet.play("sitting");
+    pet.actor.send({ type: "CLIMB" });
+    pet.actor.send({ type: "CANCEL_PLAY" });
+    pet.done();
+    pet.done();
+    assert.equal(pet.state(), "climbing");
+  } finally {
+    pet.actor.stop();
+  }
+});
+
+test("a pending command survives changed support and a deferred seated climb", () => {
+  const pet = fixture();
+  try {
+    pet.actor.send({ type: "DROP" });
+    pet.play("stretching");
+    pet.actor.send({ type: "DROP" });
+    pet.actor.send({ type: "CLIMB" });
+    pet.actor.send({ type: "DROP" });
+    pet.actor.send({ type: "LANDED", actionId: pet.id() });
+    pet.done();
+    assert.equal(pet.state(), "stretching");
+    pet.done();
+    pet.play("sitting");
+    pet.actor.send({ type: "CLIMB" });
+    pet.play("looking");
+    pet.play("stretching");
+    pet.done();
+    assert.equal(pet.state(), "standingup");
+    pet.done();
+    assert.equal(pet.state(), "climbing");
+    pet.actor.send({ type: "LANDED", actionId: pet.id() });
+    pet.done();
+    assert.equal(pet.state(), "stretching");
+    pet.done();
+    assert.equal(pet.state(), "resting");
+  } finally {
+    pet.actor.stop();
+  }
+});
+
+test("retiring a command preserves an already expired seated deadline", () => {
+  const pet = fixture(dailyCapabilities, {
+    sitting: { durationMs: 2500, neutralMs: 100 },
+  });
+  try {
+    pet.play("sitting");
+    pet.done();
+    pet.clock.increment(6500);
+    pet.play("stretching");
+    pet.clock.increment(500);
+    pet.actor.send({ type: "CANCEL_PLAY" });
+    pet.clock.increment(500);
+    assert.equal(pet.state(), "standingup");
+    pet.done();
+    assert.equal(pet.state(), "resting");
+  } finally {
+    pet.actor.stop();
+  }
+});
+
+test("commands wait for resolved support even when a landing animation finishes first", () => {
+  const pet = fixture();
+  try {
+    pet.actor.send({ type: "DROP" });
+    pet.play("looking");
+    pet.actor.send({ type: "SUPPORT_PENDING", pending: true });
+    pet.actor.send({ type: "LANDED", actionId: pet.id() });
+    pet.done();
+    assert.equal(pet.state(), "resting");
+    pet.play("stretching");
+    assert.equal(pet.state(), "resting");
+    pet.actor.send({ type: "DROP" });
+    pet.actor.send({ type: "SUPPORT_PENDING", pending: false });
+    assert.equal(pet.state(), "falling");
+    pet.actor.send({ type: "LANDED", actionId: pet.id() });
+    pet.done();
+    assert.equal(pet.state(), "stretching");
+  } finally {
+    pet.actor.stop();
   }
 });
 
@@ -647,7 +765,7 @@ test("the seven-second seated deadline preserves a queued command and its action
     pet.clock.increment(500);
     assert.equal(pet.state(), "sitting");
     assert.equal(pet.id(), id);
-    assert.equal(pet.actor.getSnapshot().context.pendingActivity, "looking");
+    assert.equal(pet.actor.getSnapshot().context.pendingCommand, "looking");
     pet.clock.increment(100);
     pet.play("grooming");
     pet.clock.increment(399);
@@ -777,7 +895,7 @@ test("dragging and character resets cancel deferred loop exits and reject their 
   }
 });
 
-test("menu active-time pause freezes an already queued seated exit", (t) => {
+test("an explicit active-time hold preserves an already queued seated exit", (t) => {
   t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 1000 });
   const timeline = new Timeline();
   const actor = createActor(petBehavior, {

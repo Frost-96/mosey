@@ -11,9 +11,11 @@ import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
 import { distanceFromGround } from "./support/ground";
 import { evidencePath } from "./support/evidence";
-import { matchPaintedFrames } from "./support/pixels";
+import { matchPaintedFrames, paintedBodyPoint } from "./support/pixels";
+import { writeCharacterFixture } from "./support/character-fixture";
 
 const oneShots = [
+  "stretching",
   "looking",
   "yawning",
   "petted",
@@ -22,6 +24,7 @@ const oneShots = [
   "habit",
 ] as const;
 const visibleLabels = [
+  "伸懒腰",
   "张望",
   "坐下休息",
   "站起来",
@@ -55,23 +58,7 @@ async function pixels(pet: Page) {
 }
 
 async function body(pet: Page) {
-  return pet.evaluate(() => {
-    const canvas = document.querySelector("canvas")!;
-    const { data, width, height } = canvas
-      .getContext("2d")!
-      .getImageData(0, 0, canvas.width, canvas.height);
-    // Pick a solid interior block so thin hair/wing edges do not disappear
-    // between the observed frame and the directed pointer event.
-    for (let y = Math.floor(height * 0.5); y < height * 0.8; y += 2)
-      for (let x = Math.floor(width * 0.4); x < width * 0.6; x += 2) {
-        let solid = true;
-        for (let dy = -3; dy <= 3; dy++)
-          for (let dx = -3; dx <= 3; dx++)
-            if (data[((y + dy) * width + x + dx) * 4 + 3]! < 220) solid = false;
-        if (solid) return { x: x / devicePixelRatio, y: y / devicePixelRatio };
-      }
-    throw new Error("No solid painted body for daily-action input");
-  });
+  return pet.evaluate(paintedBodyPoint, 220);
 }
 
 async function moveAwayFromPointer(app: ElectronApplication) {
@@ -333,7 +320,7 @@ test.each([
   },
 );
 
-test("daily seated actions survive menu pause, queued commands, dragging, hiding and character replacement", async () => {
+test("daily seated actions continue under menus, queued commands, dragging, hiding and character replacement", async () => {
   const session = await createPetTestSession({
     dock: "empty",
     preferences: {
@@ -382,12 +369,13 @@ test("daily seated actions survive menu pause, queued commands, dragging, hiding
     await menu.open();
     await expect
       .poll(async () => (await presentation(pet)).frozenAt)
-      .not.toBeUndefined();
+      .toBeUndefined();
     await pause(50);
-    const frozen = await pixels(pet),
+    const openingPixels = await pixels(pet),
       sittingId = (await presentation(pet)).actionId;
-    await pause(350);
-    expect(await pixels(pet)).toBe(frozen);
+    await expect
+      .poll(() => pixels(pet), { timeout: 2000 })
+      .not.toBe(openingPixels);
     expect((await presentation(pet)).actionId).toBe(sittingId);
     await menu.close();
     await expect
@@ -484,7 +472,7 @@ test("daily seated actions survive menu pause, queued commands, dragging, hiding
   }
 });
 
-test("Corgi keeps its original menu without daily-action commands", async () => {
+test("Corgi can request one stretch and missing actions are explicitly unavailable", async () => {
   const session = await createPetTestSession({
     dock: "empty",
     preferences: {
@@ -498,22 +486,182 @@ test("Corgi keeps its original menu without daily-action commands", async () => 
     const { app, pet } = await session.launch();
     await moveAwayFromPointer(app);
     const menu = await nativeActions(app, pet);
-    expect(await menu.open()).toEqual([]);
+    const items = await menu.open();
+    expect(
+      items.find((item) => item.id === "daily-action-stretching"),
+    ).toMatchObject({ label: "伸懒腰", enabled: true });
+    expect(
+      items.filter((item) => item.enabled).map((item) => item.label),
+    ).toEqual(["伸懒腰"]);
     const ids = await app.evaluate(() => {
       const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
       return menu.items.map((item) => item.id);
     });
-    expect(ids).not.toContain("daily-actions");
+    expect(ids).toContain("daily-actions");
     await menu.close();
     const assets = await pet.evaluate(() => window.mosey.getCharacter());
     expect(assets.atlases).toHaveLength(16);
-    expect(
-      dailyActionDefinitions.some((item) =>
-        assets.atlases.some((atlas) => atlas.action === item.action),
-      ),
-    ).toBe(false);
+    expect(assets.atlases.some((atlas) => atlas.action === "stretching")).toBe(
+      true,
+    );
+    await menu.choose("stretching");
+    await waitPosture(pet, "stretching");
+    const stretch = await presentation(pet);
+    await menu.open();
+    await waitPosture(pet, "resting");
+    const finished = await presentation(pet);
+    expect(finished.actionId).toBeGreaterThan(stretch.actionId);
+    await menu.close();
+    await pause(1800);
+    expect(await presentation(pet)).toEqual(finished);
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "柯基 · 待机",
+    );
+  } finally {
+    await session.close();
+  }
+});
+
+test("stretch waits for landing and dragging retires both playing and queued requests", async () => {
+  const session = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "corgi",
+      size: 240,
+      visibility: "visible",
+    },
+  });
+  try {
+    const { app, pet } = await session.launch();
+    await moveAwayFromPointer(app);
+    const menu = await nativeActions(app, pet);
+    await captureTransitions(pet);
+    const drag = async () => {
+      const point = await body(pet);
+      await pet.mouse.move(point.x, point.y);
+      await pet.mouse.down();
+      await pet.mouse.move(point.x, point.y - 320, { steps: 4 });
+      await waitPosture(pet, "dragging");
+      await pet.mouse.up();
+      await waitPosture(pet, "flutter");
+    };
+    await drag();
+    await menu.choose("stretching");
+    await menu.choose("stretching");
+    expect(["flutter", "falling", "landing"]).toContain(
+      (await presentation(pet)).posture,
+    );
+    await waitPosture(pet, "stretching");
+    expect(await distanceFromGround(app)).toBe(0);
+    await waitPosture(pet, "resting");
+    const postures = (await transitions(pet)).map((p) => p.posture);
+    expect(postures).toEqual([
+      "dragging",
+      "flutter",
+      "falling",
+      "landing",
+      "stretching",
+      "resting",
+    ]);
+    await menu.choose("stretching");
+    await waitPosture(pet, "stretching");
+    await menu.choose("stretching");
+    await clearTransitions(pet);
+    await drag();
+    await waitPosture(pet, "resting");
+    await pause(1800);
+    const interrupted = (await transitions(pet)).map((p) => p.posture);
+    // Legacy Corgi cancels its stretch on press, before movement crosses the
+    // drag threshold. Neither that press nor release may revive the request.
+    expect(interrupted).not.toContain("stretching");
+    expect(interrupted.slice(interrupted.indexOf("dragging"))).toEqual([
+      "dragging",
+      "flutter",
+      "falling",
+      "landing",
+      "resting",
+    ]);
+    await writeFile(
+      evidencePath("stretch-interruptions.json"),
+      JSON.stringify(
+        { landingRequest: postures, interrupted: await transitions(pet) },
+        null,
+        2,
+      ),
+    );
+  } finally {
+    await session.close();
+  }
+});
+
+test("open menu commands retire on character selection and same-identity resource updates", async () => {
+  const session = await createPetTestSession({
+    dock: "empty",
+    preferences: {
+      version: 3,
+      character: "minimal",
+      size: 240,
+      visibility: "visible",
+    },
+  });
+  try {
+    await writeCharacterFixture(session.profile, { extra: ["stretching"] });
+    const { app, pet } = await session.launch();
+    await moveAwayFromPointer(app);
+    const menu = await nativeActions(app, pet);
+    await captureTransitions(pet);
+    const before = await presentation(pet);
+    await menu.open();
+    const clickOld = () =>
+      app.evaluate(() => {
+        const menu = Reflect.get(globalThis, "dailyMenus")[0] as Menu;
+        menu.getMenuItemById("daily-action-stretching")!.click();
+      });
+    const settings = await openSettings(app);
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("corgi");
+    await clickOld();
+    await menu.close();
+    await expect
+      .poll(async () => (await presentation(pet)).character)
+      .toBe("corgi");
+    await settings
+      .getByRole("combobox", { name: "角色" })
+      .selectOption("minimal");
+    await expect
+      .poll(async () => (await presentation(pet)).character)
+      .toBe("minimal");
+    await clickOld();
+    await writeCharacterFixture(session.profile, { color: [30, 210, 50] });
+    await settings.evaluate(() => window.moseySettings.setCharacter("minimal"));
+    await expect
+      .poll(async () => (await presentation(pet)).resourceVersion)
+      .not.toBe(before.resourceVersion);
+    await clickOld();
+    await closeSettings(app);
+    await pause(700);
+    expect((await transitions(pet)).map((p) => p.posture)).not.toContain(
+      "stretching",
+    );
+    const items = await menu.open();
+    expect(
+      items.find((item) => item.id === "daily-action-stretching")?.enabled,
+    ).toBe(false);
+    await menu.close();
+    await writeFile(
+      evidencePath("stretch-resource-validation.json"),
+      JSON.stringify(
+        {
+          before,
+          after: await presentation(pet),
+          transitions: await transitions(pet),
+          items,
+        },
+        null,
+        2,
+      ),
     );
   } finally {
     await session.close();

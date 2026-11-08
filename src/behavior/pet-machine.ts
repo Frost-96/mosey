@@ -1,5 +1,6 @@
 import {
   dailyActionDefinitions,
+  hasExpandedActivities,
   type CharacterCapability,
   type DailyAction,
 } from "../shared/character-capabilities.ts";
@@ -18,12 +19,20 @@ export const autonomy = {
   sittingMs: 7000,
 };
 type PendingActivity =
-  | Exclude<DailyAction, "standingup">
-  | "resting"
-  | "autonomous"
-  | "reaction"
-  | "sleep"
-  | "climbing";
+  "resting" | "autonomous" | "reaction" | "sleep" | "climbing";
+type PendingCommand = Exclude<DailyAction, "standingup"> | "resting";
+type Continuation = {
+  pendingActivity: PendingActivity | undefined;
+  pendingCommand: PendingCommand | undefined;
+};
+function continuation(context: Continuation) {
+  return context.pendingActivity === "climbing"
+    ? "climbing"
+    : (context.pendingCommand ?? context.pendingActivity);
+}
+function hasPending(context: Continuation) {
+  return continuation(context) !== undefined;
+}
 type ChoiceContext = {
   choice: number;
   capabilities: CharacterCapability[];
@@ -41,11 +50,6 @@ function hasPaintedNeutral(context: {
     !context.paintedHandoffs ||
     (context.loopFrame?.actionId === context.actionId &&
       context.loopFrame.frame === 0)
-  );
-}
-function hasDailyActions(capabilities: CharacterCapability[]) {
-  return dailyActionDefinitions.some(({ capability }) =>
-    capabilities.includes(capability),
   );
 }
 function neutralDelay(timing: LoopTimings["resting"], elapsed: number) {
@@ -115,6 +119,8 @@ export const petBehavior = setup({
       choice: number;
       direction: "left" | "right";
       pendingActivity: PendingActivity | undefined;
+      pendingCommand: PendingCommand | undefined;
+      supportPending: boolean;
       resumeSeat: "sittingdown" | "standingup" | undefined;
     },
     events: {} as
@@ -128,6 +134,8 @@ export const petBehavior = setup({
         }
       | { type: "CLICK" }
       | { type: "PLAY"; action: DailyAction }
+      | { type: "CANCEL_PLAY" }
+      | { type: "SUPPORT_PENDING"; pending: boolean }
       | { type: "CLIMB" }
       | { type: "DROP" }
       | { type: "PAUSE" }
@@ -146,7 +154,7 @@ export const petBehavior = setup({
     restDelay: ({ context }) => {
       const delay =
         autonomy.restMinMs + Math.random() * autonomy.restVariationMs;
-      return hasDailyActions(context.capabilities)
+      return hasExpandedActivities(context.capabilities)
         ? delay +
             neutralDelay(
               context.loopTimings.resting,
@@ -169,11 +177,12 @@ export const petBehavior = setup({
     currentAction: ({ context, event }) =>
       (event.type === "DONE" || event.type === "LANDED") &&
       event.actionId === context.actionId,
-    dailyContinuity: ({ context }) => hasDailyActions(context.capabilities),
+    dailyContinuity: ({ context }) =>
+      hasExpandedActivities(context.capabilities),
     currentLoopRequest: ({ context, event }) =>
       (event.type === "SEAT_READY" || event.type === "IDLE_READY") &&
       event.actionId === context.actionId &&
-      context.pendingActivity !== undefined,
+      hasPending(context),
     currentLoopFrame: ({ context, event }) =>
       event.type === "LOOP_FRAME" &&
       event.actionId === context.actionId &&
@@ -214,15 +223,22 @@ export const petBehavior = setup({
     queuePlay: assign(({ event }) =>
       event.type === "PLAY"
         ? {
-            pendingActivity:
+            pendingCommand:
               event.action === "standingup"
                 ? ("resting" as const)
                 : event.action,
           }
         : {},
     ),
-    queueReaction: assign({ pendingActivity: "reaction" as const }),
-    queueRest: assign({ pendingActivity: "resting" as const }),
+    queueReaction: assign({
+      pendingActivity: "reaction" as const,
+      pendingCommand: undefined,
+    }),
+    queueRest: assign({
+      pendingActivity: "resting" as const,
+      pendingCommand: undefined,
+    }),
+    queueAutomaticRest: assign({ pendingActivity: "resting" as const }),
     queueClimb: assign({ pendingActivity: "climbing" as const }),
     queueSleep: assign({ pendingActivity: "sleep" as const }),
     queueIdleActivity: assign(({ context }) => ({
@@ -237,12 +253,20 @@ export const petBehavior = setup({
         ? { loopFrame: { actionId: event.actionId, frame: event.frame } }
         : {},
     ),
-    clearPending: assign({ pendingActivity: undefined }),
+    clearPending: assign({
+      pendingActivity: undefined,
+      pendingCommand: undefined,
+    }),
+    clearActivity: assign({ pendingActivity: undefined }),
+    clearCommand: assign({ pendingCommand: undefined }),
+    setSupportPending: assign(({ event }) =>
+      event.type === "SUPPORT_PENDING" ? { supportPending: event.pending } : {},
+    ),
     clearSeatResume: assign({ resumeSeat: undefined }),
     pauseSittingDown: assign({ resumeSeat: "sittingdown" as const }),
     pauseSeated: assign({ resumeSeat: "standingup" as const }),
     requestSeatExit: enqueueActions(({ context, enqueue }) => {
-      if (context.pendingActivity === undefined) return;
+      if (!hasPending(context) || context.supportPending) return;
       enqueue.cancel("seat-ready");
       const event = { type: "SEAT_READY", actionId: context.actionId } as const;
       const delay = neutralDelay(
@@ -255,10 +279,10 @@ export const petBehavior = setup({
       else if (hasPaintedNeutral(context)) enqueue.raise(event);
     }),
     requestIdleExit: enqueueActions(({ context, enqueue }) => {
-      if (context.pendingActivity === undefined) return;
+      if (!hasPending(context) || context.supportPending) return;
       enqueue.cancel("idle-ready");
       const event = { type: "IDLE_READY", actionId: context.actionId } as const;
-      const delay = hasDailyActions(context.capabilities)
+      const delay = hasExpandedActivities(context.capabilities)
         ? neutralDelay(
             context.loopTimings.resting,
             context.now() - context.startedAt,
@@ -285,10 +309,14 @@ export const petBehavior = setup({
     choice: 0,
     direction: "right",
     pendingActivity: undefined,
+    pendingCommand: undefined,
+    supportPending: false,
     resumeSeat: undefined,
   }),
   initial: "paused",
   on: {
+    SUPPORT_PENDING: { actions: "setSupportPending" },
+    CANCEL_PLAY: { actions: "clearCommand" },
     CHARACTER: [
       {
         guard: ({ event }) => event.paused,
@@ -347,11 +375,11 @@ export const petBehavior = setup({
     CLIMB: {
       guard: ({ context }) => context.capabilities.includes("climbing"),
       target: ".climbing",
-      actions: ["rest", "wakeCycle", "clearPending", "clearSeatResume"],
+      actions: ["rest", "wakeCycle", "clearActivity", "clearSeatResume"],
     },
     DROP: {
       target: ".falling",
-      actions: ["rest", "clearPending", "clearSeatResume"],
+      actions: ["rest", "clearActivity", "clearSeatResume"],
     },
   },
   states: {
@@ -401,7 +429,7 @@ export const petBehavior = setup({
         return {
           choice,
           direction:
-            hasDailyActions(context.capabilities) && !walks
+            hasExpandedActivities(context.capabilities) && !walks
               ? context.direction
               : direction,
         };
@@ -476,57 +504,69 @@ export const petBehavior = setup({
     continuing: {
       always: [
         {
-          guard: ({ context }) => context.pendingActivity === "autonomous",
+          guard: ({ context }) => context.supportPending,
+          target: "resting",
+          actions: "rest",
+        },
+        {
+          guard: ({ context }) =>
+            continuation(context) === "stretching" &&
+            context.capabilities.includes("stretching"),
+          target: "stretching",
+          actions: ["rest", "clearPending"],
+        },
+        {
+          guard: ({ context }) => continuation(context) === "autonomous",
           target: "autonomous",
           actions: "clearPending",
         },
         {
-          guard: ({ context }) => context.pendingActivity === "looking",
+          guard: ({ context }) => continuation(context) === "looking",
           target: "looking",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "sitting",
+          guard: ({ context }) => continuation(context) === "sitting",
           target: "sittingdown",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "yawning",
+          guard: ({ context }) => continuation(context) === "yawning",
           target: "yawning",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "petted",
+          guard: ({ context }) => continuation(context) === "petted",
           target: "petted",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "grooming",
+          guard: ({ context }) => continuation(context) === "grooming",
           target: "grooming",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "celebrating",
+          guard: ({ context }) => continuation(context) === "celebrating",
           target: "celebrating",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "habit",
+          guard: ({ context }) => continuation(context) === "habit",
           target: "habit",
           actions: ["rest", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "reaction",
+          guard: ({ context }) => continuation(context) === "reaction",
           target: "choosing",
           actions: ["begin", "clearPending"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "climbing",
+          guard: ({ context }) => continuation(context) === "climbing",
           target: "climbing",
-          actions: ["rest", "clearPending"],
+          actions: ["rest", "clearActivity"],
         },
         {
-          guard: ({ context }) => context.pendingActivity === "sleep",
+          guard: ({ context }) => continuation(context) === "sleep",
           target: "settling",
           actions: ["rest", "clearPending"],
         },
@@ -565,7 +605,10 @@ export const petBehavior = setup({
     },
     climbing: {
       on: {
-        PLAY: {},
+        PLAY: {
+          guard: "canPlayStandingAction",
+          actions: ["queuePlay", "wakeCycle"],
+        },
         LANDED: { guard: "currentAction", target: "landing", actions: "rest" },
         CLICK: { target: "choosing", actions: "begin" },
       },
@@ -585,20 +628,29 @@ export const petBehavior = setup({
     },
     flutter: {
       on: {
-        PLAY: {},
+        PLAY: {
+          guard: "canPlayStandingAction",
+          actions: ["queuePlay", "wakeCycle"],
+        },
         DONE: { guard: "currentAction", target: "falling", actions: "rest" },
       },
     },
     falling: {
       on: {
-        PLAY: {},
+        PLAY: {
+          guard: "canPlayStandingAction",
+          actions: ["queuePlay", "wakeCycle"],
+        },
         LANDED: { guard: "currentAction", target: "landing", actions: "rest" },
       },
     },
     landing: {
       on: {
-        PLAY: {},
-        DONE: { guard: "currentAction", target: "resting", actions: "rest" },
+        PLAY: {
+          guard: "canPlayStandingAction",
+          actions: ["queuePlay", "wakeCycle"],
+        },
+        DONE: { guard: "currentAction", target: "continuing" },
       },
     },
     settling: {
@@ -674,6 +726,7 @@ export const petBehavior = setup({
         ],
       },
       on: {
+        SUPPORT_PENDING: { actions: ["setSupportPending", "requestIdleExit"] },
         LOOP_FRAME: {
           guard: "currentLoopFrame",
           actions: ["recordLoopFrame", "requestIdleExit"],
@@ -686,7 +739,7 @@ export const petBehavior = setup({
           {
             guard: ({ context }) =>
               context.now() - context.lastClickAt >= clickMergeIntervalMs &&
-              hasDailyActions(context.capabilities) &&
+              hasExpandedActivities(context.capabilities) &&
               context.loopTimings.resting !== undefined,
             actions: ["queueReaction", "wakeCycle", "requestIdleExit"],
           },
@@ -696,7 +749,8 @@ export const petBehavior = setup({
           {
             guard: ({ context, event }) =>
               event.actionId === context.actionId &&
-              context.pendingActivity !== undefined &&
+              hasPending(context) &&
+              !context.supportPending &&
               hasPaintedNeutral(context) &&
               neutralDelay(
                 context.loopTimings.resting,
@@ -833,8 +887,7 @@ export const petBehavior = setup({
         DONE: [
           {
             guard: ({ context, event }) =>
-              event.actionId === context.actionId &&
-              context.pendingActivity !== undefined,
+              event.actionId === context.actionId && hasPending(context),
             target: "standingup",
             actions: "rest",
           },
@@ -851,10 +904,11 @@ export const petBehavior = setup({
             guard: "readyToSleep",
             actions: ["queueSleep", "requestSeatExit"],
           },
-          { actions: ["queueRest", "requestSeatExit"] },
+          { actions: ["queueAutomaticRest", "requestSeatExit"] },
         ],
       },
       on: {
+        SUPPORT_PENDING: { actions: ["setSupportPending", "requestSeatExit"] },
         LOOP_FRAME: {
           guard: "currentLoopFrame",
           actions: ["recordLoopFrame", "requestSeatExit"],
@@ -885,7 +939,8 @@ export const petBehavior = setup({
           {
             guard: ({ context, event }) =>
               event.actionId === context.actionId &&
-              context.pendingActivity !== undefined &&
+              hasPending(context) &&
+              !context.supportPending &&
               hasPaintedNeutral(context) &&
               neutralDelay(
                 context.loopTimings.sitting,

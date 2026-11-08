@@ -21,7 +21,6 @@ type Environment = {
   stopMotion(): void;
   constrain(x: number, y: number): void;
   alignGround(): void;
-  reconcileDock(): void;
   publish(): void;
   bodyMenu(): Electron.MenuItemConstructorOptions[];
 };
@@ -35,15 +34,6 @@ export function createPetInteraction(
   environment: Environment,
 ) {
   let bodyMenu: Menu | undefined;
-  let menuLoopFrame:
-    | {
-        actionId: number;
-        frame: number;
-        geometryRevision: number;
-        character: string;
-        resourceVersion: string;
-      }
-    | undefined;
   let gesturePaused = false;
   const resumeGesture = () => {
     if (!gesturePaused) return;
@@ -65,37 +55,15 @@ export function createPetInteraction(
   const finishBodyMenu = (menu: Menu) => {
     if (bodyMenu !== menu) return;
     bodyMenu = undefined;
-    const painted = menuLoopFrame;
-    menuLoopFrame = undefined;
-    timeline.resume();
     if (!pet.isDestroyed()) {
-      if (
-        painted &&
-        environment.ready &&
-        environment.visibility === "visible" &&
-        !environment.suspended &&
-        painted.geometryRevision === environment.geometryRevision &&
-        painted.character === environment.character.id &&
-        painted.resourceVersion === environment.character.resourceVersion &&
-        painted.actionId === behavior.getSnapshot().context.actionId &&
-        ["resting", "sitting"].includes(String(behavior.getSnapshot().value))
-      )
-        behavior.send({
-          type: "LOOP_FRAME",
-          actionId: painted.actionId,
-          frame: painted.frame,
-        });
-      environment.publish();
       routePointer();
-      environment.reconcileDock();
     }
   };
   const dismissBodyMenu = () => {
     const menu = bodyMenu;
     if (!menu) return;
     menu.closePopup(pet);
-    // Lifecycle cancellation owns the pause even if the OS never opened its
-    // tracking loop and therefore does not deliver a popup completion callback.
+    // Release tracking even when the OS never delivers a completion callback.
     finishBodyMenu(menu);
   };
   pet.setIgnoreMouseEvents(true, { forward: true });
@@ -221,8 +189,6 @@ export function createPetInteraction(
         environment.publish();
         return;
       }
-      timeline.pause();
-      environment.publish();
       const menu = Menu.buildFromTemplate(environment.bodyMenu());
       bodyMenu = menu;
       app.focus({ steal: true });
@@ -248,13 +214,9 @@ export function createPetInteraction(
       }
       return;
     }
-    if (
-      bodyMenu &&
-      (input.type !== "frame" ||
-        !environment.character.loopTimings ||
-        !["resting", "sitting"].includes(String(behavior.getSnapshot().value)))
-    )
-      return;
+    // Native tracking owns pointer input only. Painted frames and completion
+    // messages keep behavior, hit geometry and motion advancing under the menu.
+    if (bodyMenu && input.type !== "frame" && input.type !== "done") return;
     if (input.type === "move") {
       if (
         !gesture ||
@@ -300,22 +262,11 @@ export function createPetInteraction(
         environment.character.loopTimings &&
         ["resting", "sitting"].includes(atlas.action)
       ) {
-        if (bodyMenu) {
-          // rAF can paint the neutral frame after the menu freezes its clock.
-          // Keep that observation without allowing a handoff under the menu.
-          menuLoopFrame = {
-            actionId: input.actionId,
-            frame: input.frame,
-            geometryRevision: input.geometryRevision,
-            character: environment.character.id,
-            resourceVersion: environment.character.resourceVersion,
-          };
-        } else
-          behavior.send({
-            type: "LOOP_FRAME",
-            actionId: input.actionId,
-            frame: input.frame,
-          });
+        behavior.send({
+          type: "LOOP_FRAME",
+          actionId: input.actionId,
+          frame: input.frame,
+        });
       }
       routePointer();
     } else if (input.type === "press") {
@@ -377,7 +328,6 @@ export function createPetInteraction(
       releaseInput = false,
       forgetGesture = false,
     }: { releaseInput?: boolean; forgetGesture?: boolean } = {}) {
-      menuLoopFrame = undefined;
       displayed = undefined;
       if (releaseInput) {
         pet.setIgnoreMouseEvents(true, { forward: true });

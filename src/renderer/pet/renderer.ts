@@ -248,7 +248,6 @@ try {
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     if (gesture) return;
-    cancelDrawing();
     const rect = canvas.getBoundingClientRect();
     window.mosey.input({
       type: "context",

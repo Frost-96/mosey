@@ -7,6 +7,7 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
 test.each([
   ["build", "Show Mosey"],
@@ -87,11 +88,18 @@ test.each([
               ),
             }
           : {}),
-        args: [...(packaged ? [] : ["."]), `--user-data-dir=${root}`],
+        args: [
+          ...(packaged ? [] : ["."]),
+          `--user-data-dir=${root}`,
+          `--force-device-scale-factor=${scaleFactor}`,
+        ],
       });
       await ensureRunning();
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
+      expect(await pet.evaluate(() => devicePixelRatio)).toBe(
+        Number(scaleFactor),
+      );
       const hooks = await app.evaluateHandle(
         ({ Menu }, { boundary, command }) => {
           const build = Menu.buildFromTemplate;
@@ -164,6 +172,7 @@ test.each([
           {
             scope:
               "Controlled public input interleaving at the native menu boundary",
+            scaleFactor: Number(scaleFactor),
             inputs: await hooks.evaluate((hooks) => hooks.inputs()),
             observed,
             preferences,

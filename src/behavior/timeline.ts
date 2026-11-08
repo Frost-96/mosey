@@ -1,5 +1,5 @@
 // One active-time clock for behavior deadlines, animation and desktop motion.
-// Native menus freeze this clock without transitioning the pet's behavior.
+// Holding an idle pose pauses this clock without transitioning the behavior.
 export class Timeline {
   offset = 0;
   pausedAt: number | undefined;
