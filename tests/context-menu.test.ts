@@ -296,11 +296,15 @@ test("body menus keep the pet active and close without replaying actions", async
       .toBe(false);
     await openMenu();
     await new Promise((resolve) => setTimeout(resolve, 40));
+    // The reaction's tail already resembles idle before its done input arrives.
+    // Establish completed behavior and paint before comparing across dismissal.
     await expect
-      .poll(async () => matchesIdle(await pixels()), {
-        interval: 25,
-        timeout: 3000,
-      })
+      .poll(
+        async () =>
+          (await current()).posture === "resting" &&
+          matchesIdle(await pixels()),
+        { interval: 25, timeout: 3000 },
+      )
       .toBe(true);
     const afterReaction = await current();
     await closeMenu();
