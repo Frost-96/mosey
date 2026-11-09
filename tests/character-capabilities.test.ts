@@ -3,6 +3,7 @@ import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
 import { writeCharacterFixture } from "./support/character-fixture";
 import { distanceFromGround } from "./support/ground";
+import { observeGeometry } from "./support/geometry-observer";
 import type { ElectronApplication, Page } from "playwright";
 import { evidencePath } from "./support/evidence";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -141,82 +142,66 @@ test("missing reactions and flutter keep clicks and drag-release on the five bas
       visibility: "visible",
     },
   });
-  let restoreWorkArea: (() => Promise<void>) | undefined;
-  try {
-    await writeCharacterFixture(f.profile);
-    const { app, pet } = await f.launch();
-    // Pin the native observation so the only floor change in this scenario is
-    // the one made while dragging, without a display-metrics notification.
-    const workArea = await app.evaluateHandle(({ screen }) => {
-      const readDisplay = screen.getPrimaryDisplay;
-      const display = readDisplay.call(screen);
-      let heightDelta = 0;
-      screen.getPrimaryDisplay = () => ({
-        ...display,
-        workArea: {
-          ...display.workArea,
-          height: display.workArea.height + heightDelta,
-        },
-      });
-      return {
-        changeHeight(delta: number) {
-          heightDelta = delta;
-        },
-        restore() {
-          screen.getPrimaryDisplay = readDisplay;
-        },
-      };
+  await writeCharacterFixture(f.profile);
+  const { app, pet } = await f.launch();
+  // Pin the native observation so the only floor change in this scenario is
+  // the one made while dragging, without a display-metrics notification.
+  const workArea = await app.evaluateHandle(({ screen }) => {
+    const readDisplay = screen.getPrimaryDisplay;
+    const display = readDisplay.call(screen);
+    let heightDelta = 0;
+    screen.getPrimaryDisplay = () => ({
+      ...display,
+      workArea: {
+        ...display.workArea,
+        height: display.workArea.height + heightDelta,
+      },
     });
-    restoreWorkArea = async () => {
-      try {
-        await workArea.evaluate((control) => control.restore());
-      } finally {
-        await workArea.dispose();
-      }
+    return {
+      changeHeight(delta: number) {
+        heightDelta = delta;
+      },
     };
-    const label = () => pet.locator("canvas").getAttribute("aria-label");
-    const bounds = () =>
-      app.evaluate(({ BrowserWindow }) =>
-        BrowserWindow.getAllWindows()
-          .find((w) => w.getTitle() === "Mosey")!
-          .getBounds(),
-      );
-    await pet.mouse.click(90, 180);
-    await expect.poll(label).toBe("五动作角色 · 待机");
-    // Move away from the physical cursor before targeted drag input.
-    await app.evaluate(({ BrowserWindow, screen }) => {
-      const window = BrowserWindow.getAllWindows().find(
-        (w) => w.getTitle() === "Mosey",
-      )!;
-      const area = screen.getPrimaryDisplay().workArea;
-      const cursor = screen.getCursorScreenPoint();
-      window.setPosition(
-        cursor.x > area.x + area.width / 2 ? area.x : area.x + area.width - 240,
-        window.getBounds().y,
-      );
-    });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect.poll(() => distanceFromGround(app)).toBe(0);
-    const ground = await bounds();
-    await pet.mouse.move(90, 180);
-    await pet.mouse.down();
-    await pet.mouse.move(90, 60, { steps: 4 });
-    await expect.poll(label).toBe("五动作角色 · 拖拽");
-    expect((await bounds()).y).toBeLessThan(ground.y - 80);
-    await workArea.evaluate((control) => control.changeHeight(-1));
-    await pet.mouse.up();
-    await expect.poll(label, { interval: 20 }).toBe("五动作角色 · 下落");
-    // Landing follows the live floor, even before a native metrics event.
-    await expect.poll(() => distanceFromGround(app)).toBe(0);
-    await expect.poll(() => bounds()).toEqual({ ...ground, y: ground.y - 1 });
-    await expect.poll(label).toBe("五动作角色 · 待机");
-  } finally {
-    try {
-      await restoreWorkArea?.();
-    } finally {
-      await f.close();
-    }
-  }
+  });
+  // Keep this isolated app (including its pinned display getter) alive for
+  // failure evidence. The session's test-exit hook owns process cleanup.
+  await observeGeometry(app, pet, "minimal-drag-release", { detailed: true });
+  const label = () => pet.locator("canvas").getAttribute("aria-label");
+  const bounds = () =>
+    app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()
+        .find((w) => w.getTitle() === "Mosey")!
+        .getBounds(),
+    );
+  await pet.mouse.click(90, 180);
+  await expect.poll(label).toBe("五动作角色 · 待机");
+  // Move away from the physical cursor before targeted drag input.
+  await app.evaluate(({ BrowserWindow, screen }) => {
+    const window = BrowserWindow.getAllWindows().find(
+      (w) => w.getTitle() === "Mosey",
+    )!;
+    const area = screen.getPrimaryDisplay().workArea;
+    const cursor = screen.getCursorScreenPoint();
+    window.setPosition(
+      cursor.x > area.x + area.width / 2 ? area.x : area.x + area.width - 240,
+      window.getBounds().y,
+    );
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  await expect.poll(() => distanceFromGround(app)).toBe(0);
+  const ground = await bounds();
+  await pet.mouse.move(90, 180);
+  await pet.mouse.down();
+  await pet.mouse.move(90, 60, { steps: 4 });
+  await expect.poll(label).toBe("五动作角色 · 拖拽");
+  expect((await bounds()).y).toBeLessThan(ground.y - 80);
+  await workArea.evaluate((control) => control.changeHeight(-1));
+  await pet.mouse.up();
+  await expect.poll(label, { interval: 20 }).toBe("五动作角色 · 下落");
+  // Landing follows the live floor, even before a native metrics event.
+  await expect.poll(() => distanceFromGround(app)).toBe(0);
+  await expect.poll(() => bounds()).toEqual({ ...ground, y: ground.y - 1 });
+  await expect.poll(label).toBe("五动作角色 · 待机");
 });
 
 test("a minimal character stays active past sleep time and does not climb a newly appearing Dock", async () => {
