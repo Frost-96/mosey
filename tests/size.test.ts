@@ -1,5 +1,6 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -47,58 +48,70 @@ test("size menu scales the visible corgi and keeps its feet on the same ground",
         throw new Error("Size fixture did not restore Dock helper");
     }
   };
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup([
+    restoreDockHelper,
+    async () => {
+      await stopForge?.();
+    },
+    () => rm(root, { recursive: true, force: true }),
+  ]);
+  onTestFinished(() => fixture.cleanup(failure));
+  const args = [
+    `--user-data-dir=${path.join(root, "profile")}`,
+    `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
+  ];
+  const launchApplication = () =>
+    electron.launch(
+      packaged
+        ? {
+            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+            args,
+          }
+        : { args: [".", ...args] },
+    );
+  const launch = () => fixture.launch(launchApplication);
   try {
-    if (!packaged) stopForge = await startForge();
-    if (packaged)
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    // This case measures geometry/input against the ordinary work-area floor.
-    // Substitute only the external OS source with an explicitly empty Dock;
-    // real Dock support is covered separately, without changing desktop settings.
-    dockHelper = packaged
-      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-      : path.resolve("build/native/dock-runtime");
-    if (!packaged) {
-      originalDockHelper = await readFile(dockHelper);
-      originalDockMode = (await stat(dockHelper)).mode & 0o777;
-    }
-    await writeFile(
-      dockHelper,
-      `#!${process.execPath}
+    app = await fixture.launch(async () => {
+      if (!packaged) stopForge = await startForge();
+      if (packaged)
+        execFileSync("/usr/bin/ditto", [
+          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+          path.join(root, "Mosey.app"),
+        ]);
+      // This case measures geometry/input against the ordinary work-area floor.
+      // Substitute only the external OS source with an explicitly empty Dock;
+      // real Dock support is covered separately, without changing desktop settings.
+      dockHelper = packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+        : path.resolve("build/native/dock-runtime");
+      if (!packaged) {
+        originalDockHelper = await readFile(dockHelper);
+        originalDockMode = (await stat(dockHelper)).mode & 0o777;
+      }
+      await writeFile(
+        dockHelper,
+        `#!${process.execPath}
 const started = performance.now(); let sequence = 0;
 console.log(JSON.stringify({type:'environment',protocol:1,processID:process.pid,parentPID:process.ppid}));
 process.on('SIGTERM',()=>process.exit(0));
 setInterval(()=>console.log(JSON.stringify({type:'observation',elapsed:(performance.now()-started)/1000,sequence:++sequence,sourceAgeSeconds:0,callbackAgeSeconds:0,idle:false,reason:'alpha_empty',observation:null})),100);
 setTimeout(()=>process.exit(0),120000);
 `,
-    );
-    await chmod(dockHelper, 0o755);
-    await mkdir(path.join(root, "profile"), { recursive: true });
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "corgi",
-        size: 160,
-        visibility: "visible",
-      }),
-    );
-    const args = [
-      `--user-data-dir=${path.join(root, "profile")}`,
-      `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
-    ];
-    const launch = () =>
-      electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args,
-            }
-          : { args: [".", ...args] },
       );
-    app = await launch();
+      await chmod(dockHelper, 0o755);
+      await mkdir(path.join(root, "profile"), { recursive: true });
+      await writeFile(
+        path.join(root, "profile/preferences.json"),
+        JSON.stringify({
+          version: 3,
+          character: "corgi",
+          size: 160,
+          visibility: "visible",
+        }),
+      );
+      return launchApplication();
+    });
     let pet = await app.firstWindow();
     const bounds = () =>
       app!.evaluate(({ BrowserWindow }) =>
@@ -352,7 +365,7 @@ setTimeout(()=>process.exit(0),120000);
     // A size write while hidden must retain hidden intent across restart.
     await invoke("Hide Mosey");
     await choose("Large");
-    await app.close();
+    await fixture.closeApp();
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
@@ -383,7 +396,7 @@ setTimeout(()=>process.exit(0),120000);
     // legitimately differ from the previous process by even one desktop point.
     const { bounds: stable, area: restoredArea } = await desktop();
     expect(stable.y + stable.height).toBe(restoredArea.y + restoredArea.height);
-    await app.close();
+    await fixture.closeApp();
     app = undefined;
     const profile = path.join(root, "profile");
     // The previous validated choice survives interrupted and corrupt primary writes.
@@ -401,7 +414,7 @@ setTimeout(()=>process.exit(0),120000);
       ),
     ).toBe(false);
     await invoke("Show Mosey");
-    await app.close();
+    await fixture.closeApp();
     app = undefined;
     await rm(path.join(profile, "preferences.json"));
     await mkdir(path.join(profile, "preferences.json"));
@@ -425,6 +438,7 @@ setTimeout(()=>process.exit(0),120000);
       "Unable to save pet size",
     );
   } catch (error) {
+    failure = { error };
     await app
       ?.windows()[0]
       ?.screenshot({
@@ -436,12 +450,6 @@ setTimeout(()=>process.exit(0),120000);
       .catch(() => {});
     throw error;
   } finally {
-    await app?.close().catch(() => {});
-    try {
-      await restoreDockHelper();
-    } finally {
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
-    }
+    await fixture.cleanup(failure);
   }
 });

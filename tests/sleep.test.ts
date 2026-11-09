@@ -1,7 +1,8 @@
 import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -33,47 +34,66 @@ test(
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
     let restoreDockCapture: (() => Promise<void>) | undefined;
+    let failure: { error: unknown } | undefined;
+    const fixture = createElectronFixtureCleanup([
+      async () => {
+        await restoreDockCapture?.();
+      },
+      async () => {
+        await stopForge?.();
+      },
+      () => rm(root, { recursive: true, force: true }),
+    ]);
+    onTestFinished(() => fixture.cleanup(failure));
     try {
-      await mkdir(path.join(root, "profile"), { recursive: true });
-      await writeFile(
-        path.join(root, "profile/preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: whale ? "whale" : "corgi",
-          size: 240,
-          visibility: "visible",
-        }),
-      );
-      if (!packaged) stopForge = await startForge();
-      else
-        execFileSync("/usr/bin/ditto", [
-          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-          path.join(root, "Mosey.app"),
-        ]);
-      restoreDockCapture = await emptyDockCapture(
-        packaged
-          ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-          : path.resolve("build/native/dock-runtime"),
-      );
-      app = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              ...recording,
-              args: [
-                `--user-data-dir=${root}/profile`,
-                `--force-device-scale-factor=${scaleFactor}`,
-              ],
-            }
-          : {
-              ...recording,
-              args: [
-                ".",
-                `--user-data-dir=${root}/profile`,
-                `--force-device-scale-factor=${scaleFactor}`,
-              ],
-            },
-      );
+      app = await fixture.launch(async () => {
+        await mkdir(path.join(root, "profile"), { recursive: true });
+        await writeFile(
+          path.join(root, "profile/preferences.json"),
+          JSON.stringify({
+            version: 3,
+            character: whale ? "whale" : "corgi",
+            size: 240,
+            visibility: "visible",
+          }),
+        );
+        if (!packaged) stopForge = await startForge();
+        else
+          execFileSync("/usr/bin/ditto", [
+            path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+            path.join(root, "Mosey.app"),
+          ]);
+        restoreDockCapture = await emptyDockCapture(
+          packaged
+            ? path.join(
+                root,
+                "Mosey.app/Contents/Resources/native/dock-runtime",
+              )
+            : path.resolve("build/native/dock-runtime"),
+        );
+        return electron.launch(
+          packaged
+            ? {
+                executablePath: path.join(
+                  root,
+                  "Mosey.app/Contents/MacOS/Mosey",
+                ),
+                ...recording,
+                args: [
+                  `--user-data-dir=${root}/profile`,
+                  `--force-device-scale-factor=${scaleFactor}`,
+                ],
+              }
+            : {
+                ...recording,
+                args: [
+                  ".",
+                  `--user-data-dir=${root}/profile`,
+                  `--force-device-scale-factor=${scaleFactor}`,
+                ],
+              },
+        );
+      });
       const pet = await app.firstWindow();
       await pet.waitForLoadState("networkidle");
       expect(await pet.evaluate(() => devicePixelRatio)).toBe(
@@ -466,6 +486,7 @@ test(
         ),
       );
     } catch (error) {
+      failure = { error };
       await writeFile(
         evidencePath(`failure-${evidence}-sleep.json`),
         JSON.stringify(
@@ -484,10 +505,7 @@ test(
         .catch(() => {});
       throw error;
     } finally {
-      await app?.close().catch(() => {});
-      await restoreDockCapture?.();
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
+      await fixture.cleanup(failure);
     }
   },
 );
