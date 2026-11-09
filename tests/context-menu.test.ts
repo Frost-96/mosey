@@ -1,5 +1,6 @@
 import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
+import { observeGeometry } from "./support/geometry-observer";
 import { test, expect } from "vitest";
 import type { ElectronApplication } from "playwright";
 import { writeFile, readFile } from "node:fs/promises";
@@ -24,6 +25,7 @@ test("body menus keep the pet active and close without replaying actions", async
     const launched = await session.launch();
     app = launched.app;
     const pet = launched.pet;
+    const geometry = await observeGeometry(app, pet, "context-menu");
     session.mark("native-menu-scenarios");
     await pet.waitForLoadState("networkidle");
     await app.evaluate(({ Menu }) => {
@@ -189,11 +191,17 @@ test("body menus keep the pet active and close without replaying actions", async
     // Keep actual native show/items/cancel above. Long progress assertions
     // replace only the OS menu tracking boundary: Cocoa may dismiss a popup
     // independently of Playwright's targeted input and physical cursor.
-    await app.evaluate(({ Menu }) => {
+    await app.evaluate(({ Menu, BrowserWindow, screen }) => {
       Reflect.set(globalThis, "trackingIntercepted", true);
       Menu.prototype.popup = function (options) {
         Reflect.get(globalThis, "menus").push(this);
         Reflect.set(this, "testShown", true);
+        const bounds = BrowserWindow.getAllWindows()[0]!.getBounds();
+        const area = screen.getPrimaryDisplay().workArea;
+        Reflect.set(this, "testOpened", {
+          bounds,
+          ground: area.y + area.height - bounds.height,
+        });
         Reflect.set(this, "trackingCallback", options?.callback);
       };
       Menu.prototype.closePopup = function () {
@@ -350,19 +358,36 @@ test("body menus keep the pet active and close without replaying actions", async
       .poll(pixels, { timeout: 1000, interval: 5 })
       .not.toBe(returning.pixels);
     await closeMenu();
-    // Leave enough fall distance to observe two successive drawn frames. The
-    // body target must remain inside the pet when input crosses a frame change.
-    const firstFallingFrame = await pixels();
+    // A fresh drop gives the cross-frame input scenario its own falling
+    // interval; observing the preceding menu must not consume that interval.
+    await expect.poll(() => distanceFromGround(app!)).toBe(0);
+    await waitPosture("resting");
+    const secondGround = await bounds();
+    await pet.mouse.move(120, 180);
+    await pet.mouse.down();
+    await pet.mouse.move(120, -120, { steps: 4 });
     await expect
-      .poll(pixels, { timeout: 1000, interval: 5 })
-      .not.toBe(firstFallingFrame);
+      .poll(async () => (await bounds()).y)
+      .toBeLessThan(secondGround.y - 200);
+    await pet.mouse.up();
+    await waitPosture("falling");
+    const fallingPresentation = await current();
+    expect(fallingPresentation.posture).toBe("falling");
+    await geometry.waitForPaint(fallingPresentation);
+    // Select a painted falling body, then deliver the same target after the
+    // next real paint. No motion or animation clocks are slowed for this check.
     await openMenu(false, async () => {
       const selectedFrame = await pixels();
       await expect
         .poll(pixels, { timeout: 1000, interval: 5 })
         .not.toBe(selectedFrame);
     });
-    const falling = { pixels: await pixels(), bounds: await bounds() };
+    // The baseline belongs to popup delivery, before later driver round trips
+    // can use up the remaining fall. Opening after landing is still a failure.
+    const falling = await app.evaluate(() =>
+      Reflect.get(Reflect.get(globalThis, "menus").at(-1), "testOpened"),
+    );
+    expect(falling.bounds.y).toBeLessThan(falling.ground);
     await expect
       .poll(async () => (await bounds()).y, { interval: 10 })
       .toBeGreaterThan(falling.bounds.y);
