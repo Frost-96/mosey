@@ -102,9 +102,10 @@ jobs:
   acceptance:
     name: Application acceptance (${{ matrix.shard }}/5)
     # Every shard consumes the same package, then owns an isolated serial
-    # desktop. On package failure the development channels still run.
+    # desktop. On package failure the development channels still run. A
+    # cancelled preparation (including no runner) must not fan out more jobs.
     needs: [changes, package]
-    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
+    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' && needs.package.result != 'cancelled' }}
     runs-on: macos-15
     strategy:
       fail-fast: false
