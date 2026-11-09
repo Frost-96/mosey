@@ -416,22 +416,32 @@ test("body menus keep the pet active and close without replaying actions", async
     await expect
       .poll(pixels, { timeout: 1000, interval: 5 })
       .not.toBe(walking.pixels);
-    const beforeResize = await bounds();
-    await app.evaluate(() =>
+    // Walking continues between driver calls. Observe the synchronous menu
+    // resize itself so normal movement is not counted as a resize jump.
+    const resized = await app.evaluate(({ BrowserWindow }) => {
+      const pet = BrowserWindow.getAllWindows().find(
+        (window) => window.getTitle() === "Mosey",
+      )!;
+      const before = pet.getBounds();
       Reflect.get(globalThis, "menus")
         .at(-1)
         .items.find((item: { label: string }) => item.label === "Pet Size")
         .submenu.items.find(
           (item: { label: string }) => item.label === "Medium",
         )
-        .click(),
+        .click();
+      return { before, after: pet.getBounds() };
+    });
+    expect(resized.after).toMatchObject({ width: 160, height: 160 });
+    expect(resized.after.x + resized.after.width / 2).toBe(
+      resized.before.x + resized.before.width / 2,
+    );
+    expect(resized.after.y + resized.after.height).toBe(
+      resized.before.y + resized.before.height,
     );
     await closeMenu();
     const justResumed = await bounds();
     expect(justResumed.width).toBe(160);
-    expect(
-      Math.abs(justResumed.x + 80 - beforeResize.x - beforeResize.width / 2),
-    ).toBeLessThan(20);
     await app.evaluate(({ Menu }) =>
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!
@@ -490,9 +500,12 @@ test("body menus keep the pet active and close without replaying actions", async
       await openMenu();
       const activity = { pixels: await pixels(), bounds: await bounds() };
       await waitPosture("resting");
-      expect(await pixels()).not.toBe(activity.pixels);
+      await expect
+        .poll(pixels, { timeout: 1000, interval: 5 })
+        .not.toBe(activity.pixels);
       expect(await bounds()).toEqual(activity.bounds);
       const finished = await current();
+      expect(finished.posture).toBe("resting");
       await closeMenu();
       expect(await current()).toEqual(finished);
       await expect
