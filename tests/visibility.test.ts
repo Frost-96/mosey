@@ -16,6 +16,8 @@ import os from "node:os";
 import { appendFileSync } from "node:fs";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 
 test("manual visibility survives restart, duplicate launches and damaged preferences", async () => {
   const started = performance.now();
@@ -76,9 +78,9 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${profile}`],
+              args: [scaleArgument, `--user-data-dir=${profile}`],
             }
-          : { args: [".", `--user-data-dir=${profile}`] },
+          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
       );
       applicationProcess = launched.process();
       mark(`launch-${launches}-complete`);
@@ -94,6 +96,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       const window = await app!.firstWindow();
       mark(`document-${launches}`);
       await window.waitForLoadState("load");
+      expect(await window.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
       mark(`document-${launches}-complete`);
       return window;
     };

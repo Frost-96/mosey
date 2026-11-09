@@ -9,6 +9,8 @@ import { startForge } from "./support/forge";
 import { closeSettings, openSettings } from "./support/settings";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 test("login settings explain availability and follow system approval, failure and focus refresh", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-login-"));
   let app: ElectronApplication | undefined;
@@ -25,11 +27,21 @@ test("login settings explain availability and follow system approval, failure an
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${path.join(root, "profile")}`],
+            args: [
+              scaleArgument,
+              `--user-data-dir=${path.join(root, "profile")}`,
+            ],
           }
-        : { args: [".", `--user-data-dir=${path.join(root, "profile")}`] },
+        : {
+            args: [
+              ".",
+              scaleArgument,
+              `--user-data-dir=${path.join(root, "profile")}`,
+            ],
+          },
     );
     const pet = await app.firstWindow();
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     const settingsScriptsInPet = () =>
       pet.evaluate(() =>
         performance

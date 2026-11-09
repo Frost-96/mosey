@@ -543,9 +543,11 @@ test("a failed same-identity update retains the visible name and pixels until re
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("更新后的角色 · 待机");
-    expect(await settings.locator("#character-status").textContent()).toBe(
-      "当前角色：更新后的角色",
-    );
+    // Each window renders independently; the pet's label does not acknowledge
+    // the settings window's final notification.
+    await expect
+      .poll(() => settings.locator("#character-status").textContent())
+      .toBe("当前角色：更新后的角色");
     await expect
       .poll(async () => (await paintedShape(pet)).green)
       .toBeGreaterThan(200);

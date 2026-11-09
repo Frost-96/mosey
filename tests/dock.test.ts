@@ -95,6 +95,8 @@ async function finishFixture(close: () => Promise<void>, failed: boolean) {
 }
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
 // Only the OS capture producer is substituted. The actual Electron window,
@@ -181,11 +183,11 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
             timeout: 30000,
           }
         : {
-            args: [".", `--user-data-dir=${root}/profile`],
+            args: [".", scaleArgument, `--user-data-dir=${root}/profile`],
             timeout: 30000,
           },
     );
@@ -267,6 +269,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     }
     stage = "first-window";
     const pet = await app.firstWindow({ timeout: 15000 });
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     stage = "initial-paint";
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
@@ -1320,11 +1323,11 @@ test("real Dock helper clears its capability and exits when transport stops or t
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
             timeout: 30000,
           }
         : {
-            args: [".", `--user-data-dir=${root}/profile`],
+            args: [".", scaleArgument, `--user-data-dir=${root}/profile`],
             timeout: 30000,
           },
     );
@@ -1335,6 +1338,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
     }
     stage = "first-window";
     const pet = await app.firstWindow({ timeout: 15000 });
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     stage = "initial-paint";
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");

@@ -3,7 +3,9 @@ import { BaseSequencer, type TestSpecification } from "vitest/node";
 import { balance } from "./balance-ci.ts";
 import durations from "./ci-test-durations.json" with { type: "json" };
 
-// Measured on main, run 42575008827; seconds are scheduling hints only.
+// Measured with shared preparation, run 42597781285. The interrupted
+// packaged-1x context-menu module uses the slowest successful channel's time.
+// Seconds are scheduling hints only; no validation depends on these values.
 const weights: Record<string, Record<string, number>> = durations;
 
 export class BalancedSequencer extends BaseSequencer {

@@ -76,7 +76,9 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm package:mac
       - name: Archive local unsigned app
-        run: ditto -c -k --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
+        # Fast ZIP compression retains bytes, modes and symlinks. PNG assets
+        # gain little from spending another full compression pass on the app.
+        run: ditto -c -k --zlibCompressionLevel 1 --keepParent out/Mosey-darwin-arm64/Mosey.app out/Mosey-darwin-arm64.zip
       - name: Share verified preparation within this run
         # Native outputs are small; the 50 MB generated assets already exist
         # in the checkout. Their receipt is only a hint: a differing/missing
@@ -165,6 +167,15 @@ jobs:
           JS
       - uses: actions/checkout@v5
         if: needs.changes.outputs.code == 'true'
+        with:
+          # This gate reads only the inventory and its built-in-only checker.
+          # Do not download character artwork again after acceptance has run.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.node-version
+            /package.json
+            /tools/check-ci-coverage.ts
+            /tests/*.test.ts
       - uses: actions/setup-node@v5
         if: needs.changes.outputs.code == 'true'
         with:

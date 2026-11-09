@@ -22,6 +22,8 @@ import { distanceFromGround } from "./support/ground";
 import { nativeRuntimeFixture } from "./support/native-runtime";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 
 // The external OS producer is the only substitution. Public Electron window
 // geometry, menu actions and owned OS processes observe the entire real app.
@@ -150,9 +152,9 @@ setInterval(()=>{
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
     );
     publicEvents = await app.evaluateHandle(
       ({ app, BrowserWindow, screen, powerMonitor }) => {
@@ -274,6 +276,7 @@ setInterval(()=>{
       });
     }
     await pet.locator("canvas").waitFor();
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     await pet.waitForLoadState("networkidle");
     await expect
       .poll(

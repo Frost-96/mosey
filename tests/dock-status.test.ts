@@ -7,6 +7,8 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 
 test("diagnostic status keeps the latest Retry during a native permission query", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-dock-status-"));
@@ -33,15 +35,13 @@ test("diagnostic status keeps the latest Retry during a native permission query"
             executablePath: path.resolve(
               "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
             ),
-            args: [`--user-data-dir=${root}/profile`],
+            args: [scaleArgument, `--user-data-dir=${root}/profile`],
           }
-        : { args: [".", `--user-data-dir=${root}/profile`] },
+        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
     );
-    await (
-      await app.firstWindow()
-    )
-      .locator("canvas")
-      .waitFor({ state: "attached" });
+    const pet = await app.firstWindow();
+    await pet.locator("canvas").waitFor({ state: "attached" });
+    expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     const invoke = (section: string, label: string) =>
       app!.evaluate(
         ({ Menu }, { section, label }) => {
