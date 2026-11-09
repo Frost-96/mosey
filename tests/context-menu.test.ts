@@ -340,7 +340,11 @@ test("body menus keep the pet active and close without replaying actions", async
     await expect
       .poll(async () => (await bounds()).y, { timeout: 3000, interval: 10 })
       .toBeGreaterThan(returning.bounds.y + 3);
-    expect(await pixels()).not.toBe(returning.pixels);
+    // Window motion advances every 16ms; authored falling frames last 140ms.
+    // Observe the new paint independently while the same menu remains open.
+    await expect
+      .poll(pixels, { timeout: 1000, interval: 5 })
+      .not.toBe(returning.pixels);
     await closeMenu();
     // Leave enough fall distance to observe two successive drawn frames. The
     // body target must remain inside the pet when input crosses a frame change.
@@ -365,7 +369,7 @@ test("body menus keep the pet active and close without replaying actions", async
     const landing = await pixels();
     const landingBounds = await bounds();
     await waitPosture("resting");
-    expect(await pixels()).not.toBe(landing);
+    await expect.poll(pixels, { timeout: 1000, interval: 5 }).not.toBe(landing);
     expect(await bounds()).toEqual(landingBounds);
     const landed = await current();
     await closeMenu();
@@ -405,7 +409,9 @@ test("body menus keep the pet active and close without replaying actions", async
       .toBeGreaterThan(30);
     await waitPosture("resting");
     await waitPosture("walking");
-    expect(await pixels()).not.toBe(walking.pixels);
+    await expect
+      .poll(pixels, { timeout: 1000, interval: 5 })
+      .not.toBe(walking.pixels);
     const beforeResize = await bounds();
     await app.evaluate(() =>
       Reflect.get(globalThis, "menus")

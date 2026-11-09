@@ -8,6 +8,8 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
 test("slider previews without saving, commits on release, and persists nonpreset sizes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-slider-"));
   const profile = path.join(root, "profile");
@@ -35,12 +37,14 @@ test("slider previews without saving, commits on release, and persists nonpreset
         packaged
           ? {
               executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [`--user-data-dir=${profile}`],
+              args: [scaleArgument, `--user-data-dir=${profile}`],
             }
-          : { args: [".", `--user-data-dir=${profile}`] },
+          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
       );
     app = await launch();
-    await app.firstWindow();
+    expect(
+      await (await app.firstWindow()).evaluate(() => devicePixelRatio),
+    ).toBe(scaleFactor);
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "sliderNativeTrace", []);
       app.on("browser-window-created", (_event, window) => {
@@ -243,7 +247,9 @@ test("slider previews without saving, commits on release, and persists nonpreset
       .toBe(70);
     await app.close();
     app = await launch();
-    await app.firstWindow();
+    expect(
+      await (await app.firstWindow()).evaluate(() => devicePixelRatio),
+    ).toBe(scaleFactor);
     expect(await side()).toBe(70);
     expect(
       await app.evaluate(({ BrowserWindow }) =>

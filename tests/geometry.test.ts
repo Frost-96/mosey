@@ -3,6 +3,7 @@ import type { Page } from "playwright";
 import { readFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
+import { observeGeometry } from "./support/geometry-observer";
 
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
@@ -67,7 +68,39 @@ for (const character of ["corgi", "whale"] as const) {
         preferences: { version: 3, character, size: 160, visibility: "hidden" },
       });
       const { app, pet } = await session.launch();
+      const geometry = await observeGeometry(
+        app,
+        pet,
+        `${character}-${direction}`,
+      );
       const settings = await openSettings(app);
+      const delayedPaint =
+        character === "corgi" && direction === "left"
+          ? await pet.evaluateHandle(() => {
+              const original = window.requestAnimationFrame;
+              const held: FrameRequestCallback[] = [];
+              let released = false;
+              window.requestAnimationFrame = (callback) =>
+                original((time) => {
+                  if (
+                    !released &&
+                    document
+                      .querySelector("canvas")
+                      ?.getAttribute("aria-label")
+                      ?.endsWith(" · 走路")
+                  )
+                    held.push(callback);
+                  else callback(time);
+                });
+              return {
+                release() {
+                  released = true;
+                  window.requestAnimationFrame = original;
+                  for (const callback of held.splice(0)) original(callback);
+                },
+              };
+            })
+          : undefined;
       const native = () =>
         app.evaluate(({ BrowserWindow, screen }) => ({
           bounds: BrowserWindow.getAllWindows()
@@ -109,6 +142,22 @@ for (const character of ["corgi", "whale"] as const) {
         await app.evaluate(() =>
           Reflect.get(globalThis, "restoreGeometryClock")(),
         );
+        const walking = await pet.evaluate(() =>
+          window.mosey.getPresentation(),
+        );
+        let painted = false;
+        const ready = geometry.waitForPaint(walking).then(() => {
+          painted = true;
+        });
+        if (delayedPaint) {
+          // The main process has already turned left, but the real Canvas is
+          // deliberately still facing right. Reading state alone must not make
+          // input sampling ready; release the actual draw after this barrier.
+          await geometry.readFrame();
+          expect(painted).toBe(false);
+          await delayedPaint.evaluate((control) => control.release());
+        }
+        await ready;
         const { body } = await paintedPoints(pet);
         await pet.mouse.click(body.x, body.y);
         // Stopping the walk briefly publishes rest before the click reaction

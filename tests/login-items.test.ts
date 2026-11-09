@@ -10,6 +10,9 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { openSettings } from "./support/settings";
 
+const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
+const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
+
 test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
   "login launch follows the packaged app service across changes, quit and restart",
   async () => {
@@ -53,10 +56,12 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
     const launch = async () => {
       app = await electron.launch({
         executablePath: path.join(bundle, "Contents/MacOS/Mosey"),
-        args: [`--user-data-dir=${path.join(root, "profile")}`],
+        args: [scaleArgument, `--user-data-dir=${path.join(root, "profile")}`],
         timeout: 20000,
       });
-      await app.firstWindow();
+      expect(
+        await (await app.firstWindow()).evaluate(() => devicePixelRatio),
+      ).toBe(scaleFactor);
       await app.context().setOffline(true);
       settings = await openSettings(app);
     };

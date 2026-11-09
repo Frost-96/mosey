@@ -1,10 +1,9 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect, onTestFinished } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
+import { test, expect } from "vitest";
+import type { ElectronApplication } from "playwright";
+import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
-import os from "node:os";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
@@ -17,89 +16,28 @@ test.each([
 ] as const)(
   "menu %s preserves the newer %s choice",
   async (boundary, command) => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "mosey-menu-reentry-"));
-    let app: ElectronApplication | undefined;
-    let stop: (() => Promise<void>) | undefined;
-    let restore: (() => Promise<void>) | undefined;
-    let cleanup: Promise<void> | undefined;
-    let finished = false;
-    const dispose = () => {
-      finished = true;
-      if (cleanup) return cleanup;
-      const ownedApp = app;
-      const ownedStop = stop;
-      const ownedRestore = restore;
-      app = undefined;
-      stop = undefined;
-      restore = undefined;
-      cleanup = (async () => {
-        const child = ownedApp?.process();
-        // A native exception dialog can block both hook restoration and quit.
-        // The fallback owns only this test's isolated child, including timeout.
-        const deadline = child
-          ? setTimeout(() => child.kill("SIGKILL"), 5000)
-          : undefined;
-        try {
-          await ownedRestore?.().catch(() => {});
-          await ownedApp?.close().catch(() => {});
-          if (child && child.exitCode === null && child.signalCode === null)
-            await new Promise<void>((resolve) =>
-              child.once("exit", () => resolve()),
-            );
-        } finally {
-          clearTimeout(deadline);
-          await ownedStop?.();
-          await rm(root, { recursive: true, force: true });
-        }
-      })();
-      return cleanup;
-    };
-    const ensureRunning = async () => {
-      if (!finished) return;
-      // A timed-out launch can still resolve later. Finish the earlier cleanup,
-      // then take ownership of any newly acquired app or Forge process as well.
-      await cleanup;
-      cleanup = undefined;
-      await dispose();
-      throw new Error("Test finished while acquiring application resources");
-    };
-    onTestFinished(dispose);
     const visible = command === "Show Mosey";
+    // The controlled interleaving concerns menu updates. Native capture and its
+    // menu status are exercised by the Dock acceptance suite.
+    const session = await createPetTestSession({
+      dock: "empty",
+      preferences: {
+        version: 3,
+        character: "corgi",
+        visibility: visible ? "hidden" : "visible",
+        size: 160,
+      },
+    });
+    let app: ElectronApplication | undefined;
+    let restore: (() => Promise<void>) | undefined;
     try {
-      await writeFile(
-        path.join(root, "preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: "corgi",
-          visibility: visible ? "hidden" : "visible",
-          size: 160,
-        }),
-      );
-      await ensureRunning();
-      if (!packaged) {
-        stop = await startForge();
-        await ensureRunning();
-      }
-      app = await electron.launch({
-        ...(packaged
-          ? {
-              executablePath: path.resolve(
-                "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
-              ),
-            }
-          : {}),
-        args: [
-          ...(packaged ? [] : ["."]),
-          `--user-data-dir=${root}`,
-          `--force-device-scale-factor=${scaleFactor}`,
-        ],
-      });
-      await ensureRunning();
-      const pet = await app.firstWindow();
-      await pet.waitForLoadState("networkidle");
+      const launched = await session.launch();
+      app = launched.app;
+      const pet = launched.pet;
       expect(await pet.evaluate(() => devicePixelRatio)).toBe(
         Number(scaleFactor),
       );
+      session.mark("controlled-menu-reentry");
       const hooks = await app.evaluateHandle(
         ({ Menu }, { boundary, command }) => {
           const build = Menu.buildFromTemplate;
@@ -161,7 +99,7 @@ test.each([
         },
       );
       const preferences: unknown = JSON.parse(
-        await readFile(path.join(root, "preferences.json"), "utf8"),
+        await readFile(path.join(session.profile, "preferences.json"), "utf8"),
       );
 
       await writeFile(
@@ -200,7 +138,11 @@ test.each([
         .catch(() => {});
       throw error;
     } finally {
-      await dispose();
+      try {
+        await restore?.().catch(() => {});
+      } finally {
+        await session.close();
+      }
     }
   },
 );
