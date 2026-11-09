@@ -19,6 +19,7 @@ import path from "node:path";
 import type { DockObservation } from "../../src/main/platform/dock/runtime-protocol";
 import { startForge } from "./forge";
 import { observePetRenderer } from "./pet-renderer";
+import { closeOwnedElectron, ownedProcessGroup } from "./owned-electron";
 
 type SessionOptions = {
   preferences?: unknown;
@@ -34,14 +35,6 @@ type SessionOptions = {
     fps: number;
   };
 };
-
-const processGroup = (pid: number) =>
-  execFileSync("/bin/ps", ["-axo", "pid=,ppid=,pgid=,uid=,state=,comm="], {
-    timeout: 5000,
-    encoding: "utf8",
-  })
-    .split("\n")
-    .filter((line) => Number(line.trim().split(/\s+/)[2]) === pid);
 
 // A session owns its profile, launcher, substituted capture producer and every
 // app it launches. Cleanup is registered before acquisition and unwinds in
@@ -115,7 +108,7 @@ export async function createPetTestSession(options: SessionOptions) {
     if (!child?.pid || child.exitCode !== null || child.signalCode !== null)
       return;
     try {
-      record("owned-process-group", processGroup(child.pid));
+      record("owned-process-group", ownedProcessGroup(child.pid));
     } catch (error) {
       record("process-group-unavailable", String(error));
     }
@@ -154,60 +147,10 @@ export async function createPetTestSession(options: SessionOptions) {
     const child = appProcess!;
     appProcess = undefined;
     record("app-stopping", { pid: child.pid });
-    // Playwright gives each Electron process its own process group on macOS.
-    // Bound graceful shutdown, then kill only this session's group (including
-    // its capture helper), never matching other apps by executable name.
-    const signal = () => {
-      if (!child.pid) return;
-      try {
-        process.kill(-child.pid, "SIGKILL");
-      } catch (error) {
-        const code = (error as NodeJS.ErrnoException).code;
-        if (code === "EPERM") {
-          // macOS may signal some group members and still report EPERM.
-          // Success below requires the leader's exit and no live members;
-          // a permission failure that leaves a process alive still fails.
-          record("group-signal-partial", processGroup(child.pid));
-        } else if (code !== "ESRCH") throw error;
-      }
-    };
-    const exited = new Promise<void>((resolve) => {
-      if (child.exitCode !== null || child.signalCode !== null) resolve();
-      else child.once("exit", () => resolve());
+    await closeOwnedElectron(current, child, {
+      partialSignal: (group) => record("group-signal-partial", group),
     });
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const forced = new Promise<void>((resolve, reject) => {
-      timer = setTimeout(() => {
-        try {
-          signal();
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      }, 5000);
-    });
-    try {
-      if (child.exitCode === null && child.signalCode === null)
-        await Promise.race([current.close(), exited, forced]);
-    } finally {
-      clearTimeout(timer);
-      // Reap any remaining helper in the owned group even if graceful close
-      // rejected or the main process exited before its children.
-      signal();
-      await expect
-        .poll(
-          () => ({
-            exited: child.exitCode !== null || child.signalCode !== null,
-            // A zombie has exited and cannot execute or retain app resources.
-            live: processGroup(child.pid!).filter(
-              (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
-            ),
-          }),
-          { timeout: 5000 },
-        )
-        .toEqual({ exited: true, live: [] });
-      record("app-stopped", { pid: child.pid });
-    }
+    record("app-stopped", { pid: child.pid });
   };
   try {
     const preparation = (async () => {

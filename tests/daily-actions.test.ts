@@ -434,12 +434,67 @@ test("daily seated actions continue under menus, queued commands, dragging, hidi
     await waitPosture(pet, "sitting");
     const before = await presentation(pet);
     const settings = await openSettings(app);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("gemini");
-    await expect
-      .poll(async () => (await presentation(pet)).character)
-      .toBe("gemini");
+    await app.evaluate(({ BrowserWindow }) => {
+      const contents = BrowserWindow.getAllWindows().find(
+        (window) => window.getTitle() === "Mosey",
+      )!.webContents;
+      const callbacks: ((value: { cancel: boolean }) => void)[] = [];
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const release = () => {
+        clearTimeout(timer);
+        contents.session.webRequest.onBeforeRequest(null);
+        for (const callback of callbacks.splice(0)) callback({ cancel: false });
+      };
+      Reflect.set(globalThis, "dailyPreparationImages", callbacks);
+      Reflect.set(globalThis, "releaseDailyPreparationImages", release);
+      Reflect.set(globalThis, "scheduleDailyPreparationImages", () => {
+        timer = setTimeout(release, 1400);
+      });
+      contents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (
+          details.webContentsId === contents.id &&
+          details.resourceType === "image" &&
+          new URL(details.url).pathname.startsWith("/gemini/")
+        )
+          callbacks.push(callback);
+        else callback({ cancel: false });
+      });
+    });
+    try {
+      await settings
+        .getByRole("combobox", { name: "角色" })
+        .selectOption("gemini");
+      await expect
+        .poll(
+          () =>
+            app.evaluate(
+              () => Reflect.get(globalThis, "dailyPreparationImages").length,
+            ),
+          { timeout: 5000 },
+        )
+        .toBeGreaterThan(0);
+      await expect
+        .poll(() => settings.locator("#character-status").textContent())
+        .toContain("正在准备Gemini");
+      expect((await presentation(pet)).character).toBe("gpt");
+      // A valid cold preparation can outlast expect.poll's default 1s.
+      // Delay real candidate image requests, leaving the renderer handshake intact.
+      await app.evaluate(() =>
+        Reflect.get(globalThis, "scheduleDailyPreparationImages")(),
+      );
+      await expect
+        .poll(async () => (await presentation(pet)).character, {
+          timeout: 15000,
+        })
+        .toBe("gemini");
+      expect(await settings.locator("#character-error").isVisible()).toBe(
+        false,
+      );
+    } finally {
+      await app.evaluate(() =>
+        Reflect.get(globalThis, "releaseDailyPreparationImages")(),
+      );
+    }
     await closeSettings(app);
     await waitPosture(pet, "resting");
     const current = await presentation(pet);

@@ -1,5 +1,5 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
 import {
@@ -16,6 +16,83 @@ import path from "node:path";
 import os from "node:os";
 import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
+import { closeOwnedElectron } from "./support/owned-electron";
+
+async function bounded<T>(operation: Promise<T>, timeoutMs: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(`Dock fixture diagnostic exceeded ${timeoutMs}ms`),
+            ),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function recordFailure(
+  application: ElectronApplication | undefined,
+  error: unknown,
+  stage: string,
+  label: string,
+  child: ReturnType<ElectronApplication["process"]> | undefined,
+) {
+  const file = evidencePath(`failure-${label}-error.json`);
+  const originalError =
+    error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack }
+      : { message: String(error) };
+  // Persist the first error before diagnostics; an unresponsive main process
+  // must not turn the evidence into only the outer Vitest deadline.
+  await writeFile(file, JSON.stringify({ stage, originalError }, null, 2));
+  let processSample: unknown;
+  if (child?.pid && child.exitCode === null && child.signalCode === null) {
+    const sample = evidencePath(`failure-${label}-process-${child.pid}.txt`);
+    try {
+      execFileSync(
+        "/usr/bin/sample",
+        [String(child.pid), "1", "1", "-file", sample],
+        {
+          timeout: 5000,
+          stdio: "ignore",
+        },
+      );
+      processSample = { file: sample, pid: child.pid };
+    } catch (failure) {
+      processSample = { unavailable: String(failure), pid: child.pid };
+    }
+  }
+  const appReady = application
+    ? await bounded(
+        application.evaluate(({ app }) => app.isReady()),
+        2000,
+      ).catch((failure: unknown) => ({ unavailable: String(failure) }))
+    : { unavailable: "application not acquired" };
+  await writeFile(
+    file,
+    JSON.stringify({ stage, originalError, appReady, processSample }, null, 2),
+  );
+}
+
+async function finishFixture(close: () => Promise<void>, failed: boolean) {
+  try {
+    await close();
+  } catch (error) {
+    if (!failed) throw error;
+    console.error(
+      "Dock fixture cleanup also failed; retaining original error",
+      error,
+    );
+  }
+}
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
@@ -32,6 +109,40 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
   let applicationStderrTail = "";
   let applicationProcess:
     ReturnType<ElectronApplication["process"]> | undefined;
+  let stage = "preparing";
+  let failed = false;
+  let cleanup: Promise<void> | undefined;
+  const close = () =>
+    (cleanup ??= (async () => {
+      try {
+        if (app && applicationProcess)
+          await closeOwnedElectron(app, applicationProcess);
+      } finally {
+        try {
+          if (!packaged && helper) {
+            if (original) await writeFile(helper, original);
+            else await rm(helper, { force: true });
+          }
+        } finally {
+          try {
+            await stopForge?.();
+          } finally {
+            await rm(root, { recursive: true, force: true });
+          }
+        }
+      }
+    })());
+  onTestFinished(async ({ task }) => {
+    if (task.result?.state === "fail" && !failed)
+      await recordFailure(
+        app,
+        task.result.errors,
+        stage,
+        `${evidence}-dock`,
+        applicationProcess,
+      ).catch(() => {});
+    await finishFixture(close, task.result?.state === "fail");
+  });
   const input = path.join(root, "observation.json");
   const publishObservation = async (value: string) => {
     await writeFile(`${input}.next`, value);
@@ -65,17 +176,24 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         size: 240,
       }),
     );
+    stage = "launch";
     app = await electron.launch(
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
             args: [`--user-data-dir=${root}/profile`],
+            timeout: 30000,
           }
         : {
             args: [".", `--user-data-dir=${root}/profile`],
+            timeout: 30000,
           },
     );
     applicationProcess = app.process();
+    if (cleanup) {
+      await closeOwnedElectron(app, applicationProcess);
+      throw new Error("Dock fixture closed during launch");
+    }
     applicationProcess.stderr?.on("data", (bytes: Buffer) => {
       applicationStderrTail = (
         applicationStderrTail + bytes.toString("utf8")
@@ -147,7 +265,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     } catch (error) {
       runtimeProvenance = { unavailable: String(error).slice(0, 500) };
     }
-    const pet = await app.firstWindow();
+    stage = "first-window";
+    const pet = await app.firstWindow({ timeout: 15000 });
+    stage = "initial-paint";
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     await expect
@@ -164,6 +284,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         { timeout: 15000 },
       )
       .toBeGreaterThan(5000);
+    stage = "dock-scenario";
     const petWindowID = await app.evaluate(
       ({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.id,
     );
@@ -927,192 +1048,202 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       ),
     );
   } catch (error) {
-    console.log("Owned app at failure", {
-      pid: applicationProcess?.pid,
-      exitCode: applicationProcess?.exitCode,
-      signalCode: applicationProcess?.signalCode,
-      os: applicationProcess?.pid
-        ? (() => {
-            try {
-              return execFileSync(
-                "/bin/ps",
-                [
-                  "-p",
-                  String(applicationProcess!.pid),
-                  "-o",
-                  "state=,command=",
-                ],
-                { encoding: "utf8" },
-              ).trim();
-            } catch {
-              return "exited";
-            }
-          })()
-        : "not launched",
-    });
-    console.log(
-      "Owned windows at failure",
-      await app
-        ?.evaluate(({ BrowserWindow, screen, powerMonitor }) => ({
-          windows: BrowserWindow.getAllWindows().map((window) => ({
-            id: window.id,
-            visible: window.isVisible(),
-            bounds: window.getBounds(),
-            url: window.webContents.getURL(),
-            loading: window.webContents.isLoading(),
-          })),
-          display: screen.getPrimaryDisplay(),
-          idleState: powerMonitor.getSystemIdleState(1),
-        }))
-        .catch(() => undefined),
-      await app
-        ?.windows()[0]
-        ?.evaluate(async () => ({
-          presentation: await window.mosey.getPresentation(),
-          visibility: document.visibilityState,
-          readyState: document.readyState,
-          scripts: Array.from(document.scripts, (script) => script.src),
-        }))
-        .catch(() => undefined),
-    );
-    console.log(
-      "Dock menu at failure",
-      await app
-        ?.evaluate(({ Menu }) =>
-          Menu.getApplicationMenu()?.items.map((item) => ({
-            label: item.label,
-            submenu: item.submenu?.items.map((i) => i.label),
-          })),
-        )
-        .catch(() => undefined),
-    );
-
-    const navigationState = await app
-      ?.evaluate(async ({ app, BrowserWindow }) => ({
-        ...(Reflect.get(globalThis, "dockNavigationTrace") ?? {
-          unavailable: "navigation trace not attached",
-        }),
-        publicWindows: await Promise.all(
-          BrowserWindow.getAllWindows()
-            .slice(0, 4)
-            .map(async (window) => {
-              const contents = window.webContents;
-              const url = contents.getURL();
-              const diagnostic = await contents
-                .executeJavaScript(
-                  `({status: document.querySelector('p[role="status"]')?.textContent, localLog: document.querySelector('input[aria-label="Local log"]')?.value})`,
-                )
-                .catch((error: unknown) => ({
-                  unavailable: String(error).slice(0, 500),
-                }));
-              let localLogEvidence: unknown;
-              if (typeof diagnostic.localLog === "string") {
+    failed = true;
+    await recordFailure(
+      app,
+      error,
+      stage,
+      `${evidence}-dock`,
+      applicationProcess,
+    ).catch(() => {});
+    await bounded(
+      (async () => {
+        console.log("Owned app at failure", {
+          pid: applicationProcess?.pid,
+          exitCode: applicationProcess?.exitCode,
+          signalCode: applicationProcess?.signalCode,
+          os: applicationProcess?.pid
+            ? (() => {
                 try {
-                  const fs = process.getBuiltinModule("node:fs");
-                  const path = process.getBuiltinModule("node:path");
-                  const crypto = process.getBuiltinModule("node:crypto");
-                  const expected = fs.realpathSync(
-                    path.join(app.getPath("userData"), "dock-validation"),
-                  );
-                  const file = fs.realpathSync(diagnostic.localLog);
-                  if (
-                    path.dirname(file) !== expected ||
-                    !/^run-[\da-f-]+\.jsonl$/.test(path.basename(file))
-                  )
-                    throw new Error("Local diagnostic log identity mismatch");
-                  if (fs.statSync(file).size > 8 * 1024 * 1024)
-                    throw new Error(
-                      "Local diagnostic log exceeds existing bound",
-                    );
-                  const bytes = fs.readFileSync(file);
-                  const records = bytes
-                    .toString("utf8")
-                    .trim()
-                    .split("\n")
-                    .filter(Boolean)
-                    .map((line) => JSON.parse(line));
-                  const host = records.find(
-                    (row) => row.type === "electron-host",
-                  );
-                  if (host?.processID !== process.pid)
-                    throw new Error("Local diagnostic host PID mismatch");
-                  const native = records.find(
-                    (row) =>
-                      row.type === "native" &&
-                      row.record?.type === "environment",
-                  );
-                  const stops = records.filter(
-                    (row) => row.type === "electron-stop",
-                  );
-                  localLogEvidence = {
-                    basename: path.basename(file),
-                    sha256: crypto
-                      .createHash("sha256")
-                      .update(bytes)
-                      .digest("hex"),
-                    hostPID: host.processID,
-                    nativePID: native?.record.processID,
-                    nativeParentPID: native?.record.parentPID,
-                    nativeEnvironmentReceivedAt: native?.receivedAtMonotonicMs,
-                    stopRecordCount: stops.length,
-                    stops: stops.slice(-3).map((row) => ({
-                      code: row.code,
-                      signal: row.signal,
-                      reason: String(row.reason).slice(0, 200),
-                    })),
-                    limitation:
-                      "Stop records have no close timestamp; align nativePID with the public childEvents trace",
-                  };
-                } catch (error) {
-                  localLogEvidence = {
-                    unavailable: String(error).slice(0, 500),
-                  };
+                  return execFileSync(
+                    "/bin/ps",
+                    [
+                      "-p",
+                      String(applicationProcess!.pid),
+                      "-o",
+                      "state=,command=",
+                    ],
+                    { encoding: "utf8" },
+                  ).trim();
+                } catch {
+                  return "exited";
                 }
-              }
-              return {
-                windowID: window.id,
-                webContentsID: contents.id,
-                url: url.slice(0, 2000),
-                urlTruncated: url.length > 2000,
+              })()
+            : "not launched",
+        });
+        console.log(
+          "Owned windows at failure",
+          await app
+            ?.evaluate(({ BrowserWindow, screen, powerMonitor }) => ({
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                id: window.id,
                 visible: window.isVisible(),
-                loading: contents.isLoading(),
-                status: diagnostic.status ?? diagnostic.unavailable,
-                localLogEvidence,
-              };
+                bounds: window.getBounds(),
+                url: window.webContents.getURL(),
+                loading: window.webContents.isLoading(),
+              })),
+              display: screen.getPrimaryDisplay(),
+              idleState: powerMonitor.getSystemIdleState(1),
+            }))
+            .catch(() => undefined),
+          await app
+            ?.windows()[0]
+            ?.evaluate(async () => ({
+              presentation: await window.mosey.getPresentation(),
+              visibility: document.visibilityState,
+              readyState: document.readyState,
+              scripts: Array.from(document.scripts, (script) => script.src),
+            }))
+            .catch(() => undefined),
+        );
+        console.log(
+          "Dock menu at failure",
+          await app
+            ?.evaluate(({ Menu }) =>
+              Menu.getApplicationMenu()?.items.map((item) => ({
+                label: item.label,
+                submenu: item.submenu?.items.map((i) => i.label),
+              })),
+            )
+            .catch(() => undefined),
+        );
+
+        const navigationState = await app
+          ?.evaluate(async ({ app, BrowserWindow }) => ({
+            ...(Reflect.get(globalThis, "dockNavigationTrace") ?? {
+              unavailable: "navigation trace not attached",
             }),
-        ),
-      }))
-      .catch((failure: unknown) => ({ unavailable: String(failure) }));
-    await writeFile(
-      evidencePath(`failure-${evidence}-dock-navigation.json`),
-      JSON.stringify(
-        {
-          runtimeProvenance,
-          applicationStderrTail,
-          ...(navigationState ?? {
-            unavailable: "navigation trace not attached",
-          }),
-        },
-        null,
-        2,
-      ),
-    );
-    await app
-      ?.windows()[0]
-      ?.screenshot({
-        path: evidencePath(`failure-${evidence}-dock.png`),
-        timeout: 3000,
-      })
-      .catch(() => {});
+            publicWindows: await Promise.all(
+              BrowserWindow.getAllWindows()
+                .slice(0, 4)
+                .map(async (window) => {
+                  const contents = window.webContents;
+                  const url = contents.getURL();
+                  const diagnostic = await contents
+                    .executeJavaScript(
+                      `({status: document.querySelector('p[role="status"]')?.textContent, localLog: document.querySelector('input[aria-label="Local log"]')?.value})`,
+                    )
+                    .catch((error: unknown) => ({
+                      unavailable: String(error).slice(0, 500),
+                    }));
+                  let localLogEvidence: unknown;
+                  if (typeof diagnostic.localLog === "string") {
+                    try {
+                      const fs = process.getBuiltinModule("node:fs");
+                      const path = process.getBuiltinModule("node:path");
+                      const crypto = process.getBuiltinModule("node:crypto");
+                      const expected = fs.realpathSync(
+                        path.join(app.getPath("userData"), "dock-validation"),
+                      );
+                      const file = fs.realpathSync(diagnostic.localLog);
+                      if (
+                        path.dirname(file) !== expected ||
+                        !/^run-[\da-f-]+\.jsonl$/.test(path.basename(file))
+                      )
+                        throw new Error(
+                          "Local diagnostic log identity mismatch",
+                        );
+                      if (fs.statSync(file).size > 8 * 1024 * 1024)
+                        throw new Error(
+                          "Local diagnostic log exceeds existing bound",
+                        );
+                      const bytes = fs.readFileSync(file);
+                      const records = bytes
+                        .toString("utf8")
+                        .trim()
+                        .split("\n")
+                        .filter(Boolean)
+                        .map((line) => JSON.parse(line));
+                      const host = records.find(
+                        (row) => row.type === "electron-host",
+                      );
+                      if (host?.processID !== process.pid)
+                        throw new Error("Local diagnostic host PID mismatch");
+                      const native = records.find(
+                        (row) =>
+                          row.type === "native" &&
+                          row.record?.type === "environment",
+                      );
+                      const stops = records.filter(
+                        (row) => row.type === "electron-stop",
+                      );
+                      localLogEvidence = {
+                        basename: path.basename(file),
+                        sha256: crypto
+                          .createHash("sha256")
+                          .update(bytes)
+                          .digest("hex"),
+                        hostPID: host.processID,
+                        nativePID: native?.record.processID,
+                        nativeParentPID: native?.record.parentPID,
+                        nativeEnvironmentReceivedAt:
+                          native?.receivedAtMonotonicMs,
+                        stopRecordCount: stops.length,
+                        stops: stops.slice(-3).map((row) => ({
+                          code: row.code,
+                          signal: row.signal,
+                          reason: String(row.reason).slice(0, 200),
+                        })),
+                        limitation:
+                          "Stop records have no close timestamp; align nativePID with the public childEvents trace",
+                      };
+                    } catch (error) {
+                      localLogEvidence = {
+                        unavailable: String(error).slice(0, 500),
+                      };
+                    }
+                  }
+                  return {
+                    windowID: window.id,
+                    webContentsID: contents.id,
+                    url: url.slice(0, 2000),
+                    urlTruncated: url.length > 2000,
+                    visible: window.isVisible(),
+                    loading: contents.isLoading(),
+                    status: diagnostic.status ?? diagnostic.unavailable,
+                    localLogEvidence,
+                  };
+                }),
+            ),
+          }))
+          .catch((failure: unknown) => ({ unavailable: String(failure) }));
+        await writeFile(
+          evidencePath(`failure-${evidence}-dock-navigation.json`),
+          JSON.stringify(
+            {
+              runtimeProvenance,
+              applicationStderrTail,
+              ...(navigationState ?? {
+                unavailable: "navigation trace not attached",
+              }),
+            },
+            null,
+            2,
+          ),
+        );
+        await app
+          ?.windows()[0]
+          ?.screenshot({
+            path: evidencePath(`failure-${evidence}-dock.png`),
+            timeout: 3000,
+          })
+          .catch(() => {});
+      })(),
+      5000,
+    ).catch(() => {});
     throw error;
   } finally {
-    await app?.close().catch(() => {});
-    if (!packaged && helper) {
-      if (original) await writeFile(helper, original);
-      else await rm(helper, { force: true });
-    }
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await finishFixture(close, failed);
   }
 });
 
@@ -1123,6 +1254,35 @@ test("real Dock helper clears its capability and exits when transport stops or t
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   let helperPID: number | undefined;
+  let applicationProcess:
+    ReturnType<ElectronApplication["process"]> | undefined;
+  let stage = "preparing";
+  let failed = false;
+  let cleanup: Promise<void> | undefined;
+  const close = () =>
+    (cleanup ??= (async () => {
+      try {
+        if (app && applicationProcess)
+          await closeOwnedElectron(app, applicationProcess);
+      } finally {
+        try {
+          await stopForge?.();
+        } finally {
+          await rm(root, { recursive: true, force: true });
+        }
+      }
+    })());
+  onTestFinished(async ({ task }) => {
+    if (task.result?.state === "fail" && !failed)
+      await recordFailure(
+        app,
+        task.result.errors,
+        stage,
+        `${evidence}-real-dock`,
+        applicationProcess,
+      ).catch(() => {});
+    await finishFixture(close, task.result?.state === "fail");
+  });
   const readiness: { status: string; pid?: number }[] = [];
   const alive = (pid: number) => {
     try {
@@ -1155,19 +1315,30 @@ test("real Dock helper clears its capability and exits when transport stops or t
         path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
         path.join(root, "Mosey.app"),
       ]);
+    stage = "launch";
     app = await electron.launch(
       packaged
         ? {
             executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
             args: [`--user-data-dir=${root}/profile`],
+            timeout: 30000,
           }
         : {
             args: [".", `--user-data-dir=${root}/profile`],
+            timeout: 30000,
           },
     );
-    const pet = await app.firstWindow();
+    applicationProcess = app.process();
+    if (cleanup) {
+      await closeOwnedElectron(app, applicationProcess);
+      throw new Error("Dock fixture closed during launch");
+    }
+    stage = "first-window";
+    const pet = await app.firstWindow({ timeout: 15000 });
+    stage = "initial-paint";
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
+    stage = "native-capability";
     const menuStatus = () =>
       app!.evaluate(
         ({ Menu }) =>
@@ -1247,8 +1418,12 @@ test("real Dock helper clears its capability and exits when transport stops or t
     await invoke("Show Mosey");
     const resumed = await waitForCapability();
     const restarted = resumed.pid;
-    await app.close();
+    const shutdown = await closeOwnedElectron(app, applicationProcess);
     app = undefined;
+    expect(
+      shutdown.forced,
+      "real helper must exit without forced cleanup",
+    ).toBe(false);
     if (restarted)
       await expect.poll(() => alive(restarted), { timeout: 4000 }).toBe(false);
 
@@ -1269,6 +1444,14 @@ test("real Dock helper clears its capability and exits when transport stops or t
       ),
     );
   } catch (error) {
+    failed = true;
+    await recordFailure(
+      app,
+      error,
+      stage,
+      `${evidence}-real-dock`,
+      applicationProcess,
+    ).catch(() => {});
     await app
       ?.windows()[0]
       ?.screenshot({
@@ -1284,9 +1467,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
         JSON.stringify(readiness, null, 2),
       );
     } finally {
-      await app?.close().catch(() => {});
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
+      await finishFixture(close, failed);
     }
   }
 });

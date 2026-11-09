@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
 import { writeCharacterFixture } from "./support/character-fixture";
+import { distanceFromGround } from "./support/ground";
 import type { ElectronApplication, Page } from "playwright";
 import { evidencePath } from "./support/evidence";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -140,9 +141,39 @@ test("missing reactions and flutter keep clicks and drag-release on the five bas
       visibility: "visible",
     },
   });
+  let restoreWorkArea: (() => Promise<void>) | undefined;
   try {
     await writeCharacterFixture(f.profile);
     const { app, pet } = await f.launch();
+    // Pin the native observation so the only floor change in this scenario is
+    // the one made while dragging, without a display-metrics notification.
+    const workArea = await app.evaluateHandle(({ screen }) => {
+      const readDisplay = screen.getPrimaryDisplay;
+      const display = readDisplay.call(screen);
+      let heightDelta = 0;
+      screen.getPrimaryDisplay = () => ({
+        ...display,
+        workArea: {
+          ...display.workArea,
+          height: display.workArea.height + heightDelta,
+        },
+      });
+      return {
+        changeHeight(delta: number) {
+          heightDelta = delta;
+        },
+        restore() {
+          screen.getPrimaryDisplay = readDisplay;
+        },
+      };
+    });
+    restoreWorkArea = async () => {
+      try {
+        await workArea.evaluate((control) => control.restore());
+      } finally {
+        await workArea.dispose();
+      }
+    };
     const label = () => pet.locator("canvas").getAttribute("aria-label");
     const bounds = () =>
       app.evaluate(({ BrowserWindow }) =>
@@ -165,18 +196,26 @@ test("missing reactions and flutter keep clicks and drag-release on the five bas
       );
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect.poll(() => distanceFromGround(app)).toBe(0);
     const ground = await bounds();
     await pet.mouse.move(90, 180);
     await pet.mouse.down();
     await pet.mouse.move(90, 60, { steps: 4 });
     await expect.poll(label).toBe("五动作角色 · 拖拽");
     expect((await bounds()).y).toBeLessThan(ground.y - 80);
+    await workArea.evaluate((control) => control.changeHeight(-1));
     await pet.mouse.up();
     await expect.poll(label, { interval: 20 }).toBe("五动作角色 · 下落");
-    await expect.poll(() => bounds()).toEqual(ground);
+    // Landing follows the live floor, even before a native metrics event.
+    await expect.poll(() => distanceFromGround(app)).toBe(0);
+    await expect.poll(() => bounds()).toEqual({ ...ground, y: ground.y - 1 });
     await expect.poll(label).toBe("五动作角色 · 待机");
   } finally {
-    await f.close();
+    try {
+      await restoreWorkArea?.();
+    } finally {
+      await f.close();
+    }
   }
 });
 
