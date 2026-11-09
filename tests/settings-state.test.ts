@@ -1,35 +1,15 @@
 import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 import { closeSettings, openSettings } from "./support/settings";
 import type { Settings } from "../src/shared/contract";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 test("settings protects edits while independently merging IPC results and notifications", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-state-"));
-  let app: ElectronApplication | undefined;
-  let stop: (() => Promise<void>) | undefined;
+  const session = await createPetTestSession({ dock: "empty" });
   try {
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [`--user-data-dir=${path.join(root, "profile")}`],
-          }
-        : { args: [".", `--user-data-dir=${path.join(root, "profile")}`] },
-    );
-    await app.firstWindow();
+    const { app } = await session.launch();
+    session.mark("initial-settings-window");
     const original = await openSettings(app);
     await closeSettings(app);
     const initial: Settings = {
@@ -109,6 +89,7 @@ test("settings protects edits while independently merging IPC results and notifi
         Reflect.get(window.webContents, "notifySettingsTest")(next);
       });
     }, initial);
+    session.mark("reopen-with-controlled-transport");
     const settings = await openSettings(app, { waitForInitialState: false });
     expect(original.isClosed()).toBe(true);
     const notify = (next: Settings) =>
@@ -314,8 +295,6 @@ test("settings protects edits while independently merging IPC results and notifi
       ),
     });
   } finally {
-    await app?.close();
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    await session.close();
   }
 });

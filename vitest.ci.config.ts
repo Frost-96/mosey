@@ -12,6 +12,8 @@ const modes: ("development" | "packaged")[] =
 
 export default defineConfig({
   test: {
+    // Share development preparation, while each test owns its app and profile.
+    globalSetup: ["./tests/support/ci-forge.ts"],
     maxWorkers: 1,
     fileParallelism: false,
     bail: 0,

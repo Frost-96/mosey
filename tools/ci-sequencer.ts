@@ -3,7 +3,7 @@ import { BaseSequencer, type TestSpecification } from "vitest/node";
 import { balance } from "./balance-ci.ts";
 import durations from "./ci-test-durations.json" with { type: "json" };
 
-// Measured on PR #93, run 41400947123; seconds are scheduling hints only.
+// Measured on main, run 42575008827; seconds are scheduling hints only.
 const weights: Record<string, Record<string, number>> = durations;
 
 export class BalancedSequencer extends BaseSequencer {

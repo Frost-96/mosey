@@ -20,6 +20,7 @@ import type { DockObservation } from "../../src/main/platform/dock/runtime-proto
 import { startForge } from "./forge";
 import { observePetRenderer } from "./pet-renderer";
 import { closeOwnedElectron, ownedProcessGroup } from "./owned-electron";
+import { collectNativeCrashEvidence } from "./native-crash-evidence";
 
 type SessionOptions = {
   preferences?: unknown;
@@ -51,6 +52,7 @@ export async function createPetTestSession(options: SessionOptions) {
   let root: string | undefined;
   let app: ElectronApplication | undefined;
   let appProcess: ReturnType<ElectronApplication["process"]> | undefined;
+  let appLaunchedAt: number | undefined;
   const processes: ReturnType<ElectronApplication["process"]>[] = [];
   const record = (event: string, detail?: unknown) => {
     appendFileSync(
@@ -145,11 +147,38 @@ export async function createPetTestSession(options: SessionOptions) {
     // The driver detaches its process accessor after an explicit quit/crash.
     // Retain the owned OS handle from acquisition through final cleanup.
     const child = appProcess!;
+    const launchedAt = appLaunchedAt!;
     appProcess = undefined;
+    appLaunchedAt = undefined;
     record("app-stopping", { pid: child.pid });
-    await closeOwnedElectron(current, child, {
-      partialSignal: (group) => record("group-signal-partial", group),
-    });
+    try {
+      await closeOwnedElectron(current, child, {
+        partialSignal: (group) => record("group-signal-partial", group),
+      });
+    } finally {
+      if (
+        process.env.CI === "true" &&
+        process.platform === "darwin" &&
+        child.pid &&
+        ["SIGSEGV", "SIGABRT", "SIGBUS", "SIGILL", "SIGTRAP"].includes(
+          child.signalCode ?? "",
+        )
+      ) {
+        try {
+          record(
+            "native-crash-evidence",
+            await collectNativeCrashEvidence({
+              pid: child.pid,
+              executable: path.basename(child.spawnfile),
+              launchedAt,
+              evidenceDirectory: evidence,
+            }),
+          );
+        } catch {
+          // Diagnostic collection must never replace the original test error.
+        }
+      }
+    }
     record("app-stopped", { pid: child.pid });
   };
   try {
@@ -290,6 +319,7 @@ setInterval(() => {
         ];
         // Playwright owns a launch that rejects before returning. Once it
         // returns, even after a test deadline, the session owns that process.
+        const launchedAt = Date.now();
         app = await electron.launch({
           ...(executablePath ? { executablePath } : {}),
           args,
@@ -297,6 +327,7 @@ setInterval(() => {
           ...(options.recordVideo ? { recordVideo: options.recordVideo } : {}),
         });
         appProcess = app.process();
+        appLaunchedAt = launchedAt;
         processes.push(appProcess);
         appProcess.stderr?.on("data", (data: Buffer) =>
           appendFileSync(path.join(evidence, "stderr.txt"), data),

@@ -4,12 +4,24 @@ export async function openSettings(
   app: ElectronApplication,
   { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
 ) {
-  await app.evaluate(({ Menu }) => {
-    Menu.getApplicationMenu()!
-      .items.find((item) => item.label === "Mosey")!
-      .submenu!.items.find((item) => item.label === "设置…")!
-      .click();
-  });
+  await app.evaluate(
+    ({ Menu }) =>
+      new Promise<void>((resolve, reject) => {
+        // Inspector evaluation can interrupt a native window callback. Dispatch
+        // user input on the ordinary main loop, as the real menu does.
+        setImmediate(() => {
+          try {
+            Menu.getApplicationMenu()!
+              .items.find((item) => item.label === "Mosey")!
+              .submenu!.items.find((item) => item.label === "设置…")!
+              .click();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }),
+  );
   let page: Page | undefined;
   await expect
     .poll(
@@ -69,11 +81,21 @@ export async function closeSettings(app: ElectronApplication) {
   // Electron's native close completes before Playwright receives Page.close.
   // Subscribe first and await both boundaries before a later reopen.
   const closed = page?.waitForEvent("close");
-  await app.evaluate(({ BrowserWindow }) => {
-    BrowserWindow.getAllWindows()
-      .find((window) => window.getTitle() === "Mosey 设置")
-      ?.close();
-  });
+  await app.evaluate(
+    ({ BrowserWindow }) =>
+      new Promise<void>((resolve, reject) => {
+        setImmediate(() => {
+          try {
+            BrowserWindow.getAllWindows()
+              .find((window) => window.getTitle() === "Mosey 设置")
+              ?.close();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }),
+  );
   await closed;
 }
 
