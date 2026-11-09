@@ -3,6 +3,7 @@ import type { ElectronApplication, Page } from "playwright";
 import { writeFile } from "node:fs/promises";
 import type { PetInput, Presentation } from "../../src/shared/contract";
 import { evidencePath } from "./evidence";
+import { finishGeometryObservation } from "./geometry-observer-cleanup";
 
 // Observe the existing input boundary without replacing its listeners or
 // changing the frame reports that drive the application's real hit regions.
@@ -75,24 +76,27 @@ export async function observeGeometry(
     };
   });
   onTestFinished(async ({ task }) => {
-    try {
-      if (task.result?.state === "fail") {
-        const records = await Promise.allSettled([
-          input.evaluate((trace) => trace.records),
-          renderer.evaluate((trace) => trace.records),
-        ]);
-        await writeFile(
-          evidencePath(`failure-geometry-${label}.json`),
-          JSON.stringify(records, null, 2),
-        );
-      }
-    } finally {
-      await Promise.allSettled([
-        input.evaluate((trace) => trace.stop()),
-        renderer.evaluate((trace) => trace.stop()),
-      ]);
-      await Promise.allSettled([input.dispose(), renderer.dispose()]);
-    }
+    const failed = task.result?.state === "fail";
+    const evidence = await finishGeometryObservation({
+      records: failed
+        ? () =>
+            Promise.allSettled([
+              input.evaluate((trace) => trace.records),
+              renderer.evaluate((trace) => trace.records),
+            ])
+        : undefined,
+      stop: () =>
+        Promise.allSettled([
+          input.evaluate((trace) => trace.stop()),
+          renderer.evaluate((trace) => trace.stop()),
+        ]),
+      dispose: () => Promise.allSettled([input.dispose(), renderer.dispose()]),
+    });
+    if (failed || evidence.unavailable.length)
+      await writeFile(
+        evidencePath(`failure-geometry-${label}.json`),
+        JSON.stringify(evidence, null, 2),
+      ).catch(() => {}); // Diagnostics must not replace the original failure.
   });
   const readFrame = () => input.evaluate((trace) => trace.frame());
   return {
