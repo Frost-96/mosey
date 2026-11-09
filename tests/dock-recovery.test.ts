@@ -1,5 +1,6 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import {
   _electron as electron,
   type ElectronApplication,
@@ -13,6 +14,7 @@ import {
   readFile,
   rename,
   rm,
+  stat,
   writeFile,
 } from "node:fs/promises";
 import os from "node:os";
@@ -80,6 +82,24 @@ async function withRuntime(
   let stopForge: (() => Promise<void>) | undefined;
   let helper = "";
   let original: Buffer | undefined;
+  let originalMode: number | undefined;
+  let helperReplaced = false;
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup([
+    async () => {
+      if (!packaged && helperReplaced) {
+        if (original) {
+          await writeFile(helper, original);
+          await chmod(helper, originalMode!);
+        } else await rm(helper, { force: true });
+      }
+    },
+    async () => {
+      await stopForge?.();
+    },
+    () => rm(root, { recursive: true, force: true }),
+  ]);
+  onTestFinished(() => fixture.cleanup(failure));
   const ledger = async () =>
     (await readFile(pids, "utf8").catch(() => ""))
       .trim()
@@ -89,18 +109,25 @@ async function withRuntime(
   let publicEvents: JSHandle<LifecycleEvent[]> | undefined;
   await publish(initial.startupSilence ? initial : { observation: null });
   try {
-    if (!packaged) stopForge = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    helper = packaged
-      ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-      : path.resolve("build/native/dock-runtime");
-    original = await readFile(helper).catch(() => undefined);
-    await mkdir(path.dirname(helper), { recursive: true });
-    const scriptedProducer = `#!${process.execPath}
+    app = await fixture.launch(async () => {
+      if (!packaged) stopForge = await startForge();
+      else
+        execFileSync("/usr/bin/ditto", [
+          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+          path.join(root, "Mosey.app"),
+        ]);
+      helper = packaged
+        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
+        : path.resolve("build/native/dock-runtime");
+      original = await readFile(helper).catch(
+        (error: NodeJS.ErrnoException) => {
+          if (error.code === "ENOENT") return undefined;
+          throw error;
+        },
+      );
+      if (original) originalMode = (await stat(helper)).mode & 0o777;
+      await mkdir(path.dirname(helper), { recursive: true });
+      const scriptedProducer = `#!${process.execPath}
 import fs from 'node:fs';
 const start=performance.now(), birth=Date.now(); let sequence=0;
 let scene={};
@@ -129,33 +156,35 @@ setInterval(()=>{
   if(blocked)process.exit(2);
 },100);
 `;
-    await writeFile(
-      helper,
-      source === "native-status"
-        ? await nativeRuntimeFixture(root, input, pids)
-        : scriptedProducer,
-    );
-    await chmod(helper, 0o755);
-    // Existing contour coordinates use a 240DIP pet; keep this setup explicit
-    // after main introduced numeric size preferences and a 160DIP default.
-    await mkdir(path.join(root, "profile"), { recursive: true });
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "corgi",
-        visibility: initial.startupSilence ? "hidden" : "visible",
-        size: 240,
-      }),
-    );
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
-          }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
-    );
+      helperReplaced = true;
+      await writeFile(
+        helper,
+        source === "native-status"
+          ? await nativeRuntimeFixture(root, input, pids)
+          : scriptedProducer,
+      );
+      await chmod(helper, 0o755);
+      // Existing contour coordinates use a 240DIP pet; keep this setup explicit
+      // after main introduced numeric size preferences and a 160DIP default.
+      await mkdir(path.join(root, "profile"), { recursive: true });
+      await writeFile(
+        path.join(root, "profile/preferences.json"),
+        JSON.stringify({
+          version: 3,
+          character: "corgi",
+          visibility: initial.startupSilence ? "hidden" : "visible",
+          size: 240,
+        }),
+      );
+      return electron.launch(
+        packaged
+          ? {
+              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+              args: [scaleArgument, `--user-data-dir=${root}/profile`],
+            }
+          : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
+      );
+    });
     publicEvents = await app.evaluateHandle(
       ({ app, BrowserWindow, screen, powerMonitor }) => {
         const events: LifecycleEvent[] = [];
@@ -509,6 +538,7 @@ setInterval(()=>{
       ),
     );
   } catch (error) {
+    failure = { error };
     const name = expect
       .getState()
       .currentTestName!.replace(/[^a-z0-9]+/gi, "-")
@@ -561,13 +591,7 @@ setInterval(()=>{
       .catch(() => {});
     throw error;
   } finally {
-    await app?.close().catch(() => {});
-    if (!packaged && helper) {
-      if (original) await writeFile(helper, original);
-      else await rm(helper, { force: true });
-    }
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
   }
 }
 

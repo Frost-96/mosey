@@ -2,7 +2,8 @@ import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import {
@@ -125,38 +126,73 @@ async function exercisePet() {
   let packagedRoot: string | undefined;
   const ownedNativeChildren = new Set<number>();
   const ownedDiagnosticLogs = new Set<string>();
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup(
+    [
+      async () => {
+        await restoreDockCapture?.();
+      },
+      async () => {
+        await stopForge?.();
+      },
+      async () => {
+        if (packagedRoot)
+          await rm(packagedRoot, { recursive: true, force: true });
+      },
+      () => rm(profile, { recursive: true, force: true }),
+    ],
+    () => {
+      const errors: unknown[] = [];
+      for (const pid of ownedNativeChildren) {
+        try {
+          process.kill(pid, "SIGCONT");
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH")
+            errors.push(error);
+        }
+      }
+      if (errors.length)
+        throw new AggregateError(
+          errors,
+          "Unable to resume owned native children",
+        );
+    },
+  );
+  onTestFinished(() => fixture.cleanup(failure));
   try {
-    if (!packaged) stopForge = await startForge();
-    if (packaged) {
-      packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(packagedRoot, "Mosey.app"),
-      ]);
-    }
-    restoreDockCapture = await emptyDockCapture(
-      packaged
-        ? path.join(
-            packagedRoot!,
-            "Mosey.app/Contents/Resources/native/dock-runtime",
-          )
-        : path.resolve("build/native/dock-runtime"),
-    );
-    app = await electron.launch(
-      packaged
-        ? {
-            timeout: 20000,
-            args: [scaleArgument, `--user-data-dir=${profile}`],
-            executablePath: path.join(
+    app = await fixture.launch(async () => {
+      if (!packaged) stopForge = await startForge();
+      if (packaged) {
+        packagedRoot = await mkdtemp(path.join(os.tmpdir(), "mosey-packaged-"));
+        execFileSync("/usr/bin/ditto", [
+          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+          path.join(packagedRoot, "Mosey.app"),
+        ]);
+      }
+      restoreDockCapture = await emptyDockCapture(
+        packaged
+          ? path.join(
               packagedRoot!,
-              "Mosey.app/Contents/MacOS/Mosey",
-            ),
-          }
-        : {
-            args: [".", scaleArgument, `--user-data-dir=${profile}`],
-            timeout: 20000,
-          },
-    );
+              "Mosey.app/Contents/Resources/native/dock-runtime",
+            )
+          : path.resolve("build/native/dock-runtime"),
+      );
+      return electron.launch(
+        packaged
+          ? {
+              timeout: 20000,
+              args: [scaleArgument, `--user-data-dir=${profile}`],
+              executablePath: path.join(
+                packagedRoot!,
+                "Mosey.app/Contents/MacOS/Mosey",
+              ),
+            }
+          : {
+              args: [".", scaleArgument, `--user-data-dir=${profile}`],
+              timeout: 20000,
+            },
+      );
+    });
     expect(await app.evaluate(({ app }) => app.getPath("userData"))).toBe(
       profile,
     );
@@ -1058,6 +1094,7 @@ async function exercisePet() {
       JSON.stringify(runtime, null, 2),
     );
   } catch (error) {
+    failure = { error };
     // Keep bounded native evidence before an isolated profile is removed.
     for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
       const info = await stat(localLog).catch(() => undefined);
@@ -1079,17 +1116,6 @@ async function exercisePet() {
         .catch(() => {});
     throw error;
   } finally {
-    for (const pid of ownedNativeChildren) {
-      try {
-        process.kill(pid, "SIGCONT");
-      } catch {
-        /* exited */
-      }
-    }
-    await app?.close().catch(() => {});
-    await restoreDockCapture?.();
-    await stopForge?.();
-    if (packagedRoot) await rm(packagedRoot, { recursive: true, force: true });
-    await rm(profile, { recursive: true, force: true });
+    await fixture.cleanup(failure);
   }
 }

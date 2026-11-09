@@ -1,14 +1,11 @@
 import { evidencePath } from "./support/evidence";
-import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
-import { startForge } from "./support/forge";
+import { createPetTestSession } from "./support/pet-session";
 import { waitForPetVisibility } from "./support/visibility";
 import { test, expect } from "vitest";
-import { _electron as electron, type ElectronApplication } from "playwright";
-import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
+import type { ElectronApplication } from "playwright";
+import { writeFile, readFile } from "node:fs/promises";
 import { appendFileSync } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { PNG } from "pngjs";
 import whaleWalking from "../src/assets/characters/whale/motion.json" with { type: "json" };
@@ -16,12 +13,9 @@ import whaleWalking from "../src/assets/characters/whale/motion.json" with { typ
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
 const evidence = `${packaged ? "packaged" : "development"}${whale ? "-whale" : ""}`;
-const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("autonomous activities stay grounded, yield to interaction and pause without catch-up", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "mosey-autonomy-"));
+  let session: Awaited<ReturnType<typeof createPetTestSession>> | undefined;
   let app: ElectronApplication | undefined;
-  let stopForge: (() => Promise<void>) | undefined;
-  let restoreDockCapture: (() => Promise<void>) | undefined;
 
   const tracePath = evidencePath(`${evidence}-autonomy-progress.jsonl`);
   await writeFile(tracePath, "");
@@ -31,38 +25,20 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     console.log(`[autonomy-progress] ${entry}`);
   };
   try {
-    await mkdir(path.join(root, "profile"), { recursive: true });
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
+    session = await createPetTestSession({
+      dock: "empty",
+      preferences: {
         version: 3,
         character: whale ? "whale" : "corgi",
         size: 240,
         visibility: "visible",
-      }),
-    );
-    if (!packaged) stopForge = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    restoreDockCapture = await emptyDockCapture(
-      packaged
-        ? path.join(root, "Mosey.app/Contents/Resources/native/dock-runtime")
-        : path.resolve("build/native/dock-runtime"),
-    );
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
-          }
-        : {
-            args: [".", scaleArgument, `--user-data-dir=${root}/profile`],
-          },
-    );
-    const pet = await app.firstWindow();
+      },
+    });
+    // The session owns an isolated native producer and registers bounded
+    // process cleanup before launch, including startup failure and test timeout.
+    const launched = await session.launch();
+    app = launched.app;
+    const pet = launched.pet;
     // Bounded public-boundary diagnostics only. These do not change menu
     // selection, timing expectations or the asserted visibility intent.
     await app.evaluate(({ Menu, BrowserWindow, powerMonitor, app, screen }) => {
@@ -515,51 +491,84 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     );
     checkpoint("complete");
   } catch (error) {
-    checkpoint("failure");
-
-    const externalState = await app
-      ?.evaluate(({ Menu, BrowserWindow, app }) => ({
-        applicationHidden: app.isHidden(),
-        menus: Menu.getApplicationMenu()?.items.map((item) => ({
-          label: item.label,
-          role: item.role,
-          items: item.submenu?.items.map((child) => ({
-            label: child.label,
-            role: child.role,
-          })),
-        })),
-        windows: BrowserWindow.getAllWindows().map((window) => ({
-          id: window.id,
-          visible: window.isVisible(),
-          bounds: window.getBounds(),
-        })),
-        trace: Reflect.get(globalThis, "autonomyMenuTrace"),
-      }))
-      .catch((failure: unknown) => ({ unavailable: String(failure) }));
-    const inputTrace = await app
-      ?.windows()[0]
-      ?.evaluate(() => Reflect.get(window, "autonomyInputTrace"))
-      .catch((failure: unknown) => ({ unavailable: String(failure) }));
-    const preferences = await readFile(
-      path.join(root, "profile/preferences.json"),
-      "utf8",
-    ).catch((failure: unknown) => `Unavailable: ${String(failure)}`);
-    await writeFile(
-      evidencePath(`failure-${evidence}-autonomy-state.json`),
-      JSON.stringify({ externalState, inputTrace, preferences }, null, 2),
+    const failurePath = evidencePath(`failure-${evidence}-autonomy-state.json`);
+    const failure = {
+      error:
+        error instanceof Error
+          ? { name: error.name, message: error.message, stack: error.stack }
+          : String(error),
+    };
+    // Save the first error before any driver diagnostics can stall or a test
+    // deadline can supersede it. Evidence errors must not replace that failure.
+    await writeFile(failurePath, JSON.stringify(failure, null, 2)).catch(
+      () => {},
     );
-    await app
-      ?.windows()[0]
-      ?.screenshot({
-        path: evidencePath(`failure-${evidence}-autonomy.png`),
-        timeout: 3000,
-      })
-      .catch(() => {});
+    try {
+      checkpoint("failure");
+    } catch {
+      // A failed progress write must preserve the original test error too.
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const diagnostics = await Promise.race([
+        (async () => {
+          const [externalState, inputTrace, preferences] = await Promise.all([
+            app
+              ?.evaluate(({ Menu, BrowserWindow, app }) => ({
+                applicationHidden: app.isHidden(),
+                menus: Menu.getApplicationMenu()?.items.map((item) => ({
+                  label: item.label,
+                  role: item.role,
+                  items: item.submenu?.items.map((child) => ({
+                    label: child.label,
+                    role: child.role,
+                  })),
+                })),
+                windows: BrowserWindow.getAllWindows().map((window) => ({
+                  id: window.id,
+                  visible: window.isVisible(),
+                  bounds: window.getBounds(),
+                })),
+                trace: Reflect.get(globalThis, "autonomyMenuTrace"),
+              }))
+              .catch((failure: unknown) => ({ unavailable: String(failure) })),
+            app
+              ?.windows()[0]
+              ?.evaluate(() => Reflect.get(window, "autonomyInputTrace"))
+              .catch((failure: unknown) => ({ unavailable: String(failure) })),
+            session
+              ? readFile(
+                  path.join(session.profile, "preferences.json"),
+                  "utf8",
+                ).catch((failure: unknown) => `Unavailable: ${String(failure)}`)
+              : undefined,
+          ]);
+          await app
+            ?.windows()[0]
+            ?.screenshot({
+              path: evidencePath(`failure-${evidence}-autonomy.png`),
+              timeout: 3000,
+            })
+            .catch(() => {});
+          return { externalState, inputTrace, preferences };
+        })().catch((failure: unknown) => ({ unavailable: String(failure) })),
+        new Promise<{ unavailable: string }>((resolve) => {
+          timer = setTimeout(
+            () =>
+              resolve({ unavailable: "Autonomy diagnostics exceeded 2000ms" }),
+            2000,
+          );
+        }),
+      ]);
+      await writeFile(
+        failurePath,
+        JSON.stringify({ ...failure, ...diagnostics }, null, 2),
+      ).catch(() => {});
+    } finally {
+      clearTimeout(timer);
+    }
     throw error;
-  } finally {
-    await app?.close().catch(() => {});
-    await restoreDockCapture?.();
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
   }
+  // createPetTestSession's onTestFinished releases every owned resource even
+  // when the test deadline interrupts the body or the app refuses to quit.
 });
