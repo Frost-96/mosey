@@ -3,8 +3,8 @@ import { BaseSequencer, type TestSpecification } from "vitest/node";
 import { balance } from "./balance-ci.ts";
 import durations from "./ci-test-durations.json" with { type: "json" };
 
-// Measured with shared preparation, run 42597781285. The interrupted
-// packaged-1x context-menu module uses the slowest successful channel's time.
+// Per-module medians from successful runs 42602134379 and 42625052903
+// (attempt 2). Skipped modules retain zero weight.
 // Seconds are scheduling hints only; no validation depends on these values.
 const weights: Record<string, Record<string, number>> = durations;
 
