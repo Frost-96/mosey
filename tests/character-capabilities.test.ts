@@ -1,9 +1,10 @@
-import { expect, test } from "vitest";
+import { expect, onTestFinished, test } from "vitest";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
 import { writeCharacterFixture } from "./support/character-fixture";
 import { distanceFromGround } from "./support/ground";
 import { observeGeometry } from "./support/geometry-observer";
+import { finishGeometryObservation } from "./support/geometry-observer-cleanup";
 import type { ElectronApplication, Page } from "playwright";
 import { evidencePath } from "./support/evidence";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -148,7 +149,9 @@ test("missing reactions and flutter keep clicks and drag-release on the five bas
   // the one made while dragging, without a display-metrics notification.
   const workArea = await app.evaluateHandle(({ screen }) => {
     const readDisplay = screen.getPrimaryDisplay;
+    const emit = screen.emit;
     const display = readDisplay.call(screen);
+    const notifications: unknown[] = [];
     let heightDelta = 0;
     screen.getPrimaryDisplay = () => ({
       ...display,
@@ -157,11 +160,47 @@ test("missing reactions and flutter keep clicks and drag-release on the five bas
         height: display.workArea.height + heightDelta,
       },
     });
+    // A real work-area-only notification contradicts this pinned observation.
+    // Other display changes and lifecycle cancellation retain their real path.
+    screen.emit = function (event, ...args) {
+      if (
+        event === "display-metrics-changed" &&
+        args[1]?.id === display.id &&
+        Array.isArray(args[2]) &&
+        args[2].length === 1 &&
+        args[2][0] === "workArea"
+      ) {
+        notifications.push({
+          time: Date.now(),
+          display: args[1],
+          changedMetrics: args[2],
+        });
+        if (notifications.length > 20) notifications.shift();
+        return false;
+      }
+      return Reflect.apply(emit, this, [event, ...args]);
+    };
     return {
+      notifications,
       changeHeight(delta: number) {
         heightDelta = delta;
       },
+      restore() {
+        screen.getPrimaryDisplay = readDisplay;
+        screen.emit = emit;
+      },
     };
+  });
+  onTestFinished(async () => {
+    const evidence = await finishGeometryObservation({
+      records: () => workArea.evaluate((control) => control.notifications),
+      stop: () => workArea.evaluate((control) => control.restore()),
+      dispose: () => workArea.dispose(),
+    });
+    await writeFile(
+      evidencePath("minimal-work-area-notifications.json"),
+      JSON.stringify(evidence, null, 2),
+    ).catch(() => {});
   });
   // Keep this isolated app (including its pinned display getter) alive for
   // failure evidence. The session's test-exit hook owns process cleanup.
