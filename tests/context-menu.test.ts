@@ -1,4 +1,5 @@
 import { evidencePath } from "./support/evidence";
+import { controlRest } from "./support/rest-clock";
 import { distanceFromGround } from "./support/ground";
 import { observeGeometry } from "./support/geometry-observer";
 import { test, expect } from "vitest";
@@ -405,20 +406,9 @@ test("body menus keep the pet active and close without replaying actions", async
     expect(await current()).toEqual(landed);
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     // Deadlines and movement continue under an open menu, through the next walk.
+    const rest = await controlRest(app, pet, 800);
     await app.evaluate(() => {
       Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      Reflect.set(globalThis, "unshortenedTimeout", timeout);
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 800 : delay,
-          ...args,
-        )) as typeof setTimeout;
     });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
@@ -541,9 +531,8 @@ test("body menus keep the pet active and close without replaying actions", async
         .toBe(true);
     }
     await pet.evaluate(() => Reflect.get(window, "restoreMenuFrames")());
-    await app.evaluate(() => {
-      globalThis.setTimeout = Reflect.get(globalThis, "unshortenedTimeout");
-    });
+    await rest.evaluate((control) => control.restore());
+    await rest.dispose();
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
     await expect

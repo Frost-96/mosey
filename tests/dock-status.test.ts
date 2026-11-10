@@ -1,5 +1,6 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -15,31 +16,61 @@ test("diagnostic status keeps the latest Retry during a native permission query"
   let app: ElectronApplication | undefined;
   let stopForge: (() => Promise<void>) | undefined;
   let restore: (() => Promise<void>) | undefined;
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup(
+    [
+      async () => {
+        await stopForge?.();
+      },
+      () => rm(root, { recursive: true, force: true }),
+    ],
+    async () => {
+      await restore?.();
+    },
+  );
+  onTestFinished(() => fixture.cleanup(failure));
   try {
-    // No capture is started: preserve hidden intent while exercising the real
-    // diagnostic document and real OS permission result, without a fake grant.
-    await mkdir(path.join(root, "profile"));
-    await writeFile(
-      path.join(root, "profile/preferences.json"),
-      JSON.stringify({
-        version: 3,
-        character: "corgi",
-        visibility: "hidden",
-        size: 160,
-      }),
-    );
-    if (!packaged) stopForge = await startForge();
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.resolve(
-              "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
-            ),
-            args: [scaleArgument, `--user-data-dir=${root}/profile`],
-          }
-        : { args: [".", scaleArgument, `--user-data-dir=${root}/profile`] },
-    );
-    const pet = await app.firstWindow();
+    app = await fixture.launch(async () => {
+      // No capture is started: preserve hidden intent while exercising the real
+      // diagnostic document and real OS permission result, without a fake grant.
+      await mkdir(path.join(root, "profile"));
+      await writeFile(
+        path.join(root, "profile/preferences.json"),
+        JSON.stringify({
+          version: 3,
+          character: "corgi",
+          visibility: "hidden",
+          size: 160,
+        }),
+      );
+      if (!packaged) stopForge = await startForge();
+      return electron.launch(
+        packaged
+          ? {
+              timeout: 30000,
+              executablePath: path.resolve(
+                "out/Mosey-darwin-arm64/Mosey.app/Contents/MacOS/Mosey",
+              ),
+              args: [
+                scaleArgument,
+                "-ApplePersistenceIgnoreState",
+                "YES",
+                `--user-data-dir=${root}/profile`,
+              ],
+            }
+          : {
+              args: [
+                ".",
+                scaleArgument,
+                "-ApplePersistenceIgnoreState",
+                "YES",
+                `--user-data-dir=${root}/profile`,
+              ],
+              timeout: 30000,
+            },
+      );
+    });
+    const pet = await app.firstWindow({ timeout: 15000 });
     await pet.locator("canvas").waitFor({ state: "attached" });
     expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     const invoke = (section: string, label: string) =>
@@ -155,10 +186,10 @@ test("diagnostic status keeps the latest Retry during a native permission query"
       }),
     );
     expect(final).toBe("Stopped: product Dock interaction requested");
+  } catch (error) {
+    failure = { error };
+    throw error;
   } finally {
-    await restore?.().catch(() => {});
-    await app?.close().catch(() => {});
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
   }
 });

@@ -1,5 +1,8 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { withinDeadline } from "./support/deadline";
+import { controlRest } from "./support/rest-clock";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -71,6 +74,14 @@ test(
     const root = await mkdtemp(path.join(os.tmpdir(), "mosey-size-autonomy-"));
     let app: ElectronApplication | undefined;
     let stopForge: (() => Promise<void>) | undefined;
+    let failure: { error: unknown } | undefined;
+    const fixture = createElectronFixtureCleanup([
+      async () => {
+        await stopForge?.();
+      },
+      () => rm(root, { recursive: true, force: true }),
+    ]);
+    onTestFinished(() => fixture.cleanup(failure));
     const evidence: unknown[] = [];
     const diagnostics: unknown[] = [];
     const settingsEvents: unknown[] = [];
@@ -79,35 +90,47 @@ test(
       { right: Set<string>; left: Set<string> }
     >();
     try {
-      if (!packaged) stopForge = await startForge();
-      else
-        execFileSync("/usr/bin/ditto", [
-          path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-          path.join(root, "Mosey.app"),
-        ]);
-      await mkdir(path.join(root, "profile"), { recursive: true });
-      await writeFile(
-        path.join(root, "profile/preferences.json"),
-        JSON.stringify({
-          version: 3,
-          character: "corgi",
-          size: 160,
-          visibility: "visible",
-        }),
-      );
-      const args = [
-        `--user-data-dir=${root}/profile`,
-        `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
-      ];
-      app = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args,
-            }
-          : { args: [".", ...args] },
-      );
-      const pet = await app.firstWindow();
+      app = await fixture.launch(async () => {
+        if (!packaged) stopForge = await startForge();
+        else
+          execFileSync(
+            "/usr/bin/ditto",
+            [
+              path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+              path.join(root, "Mosey.app"),
+            ],
+            { timeout: 30000 },
+          );
+        await mkdir(path.join(root, "profile"), { recursive: true });
+        await writeFile(
+          path.join(root, "profile/preferences.json"),
+          JSON.stringify({
+            version: 3,
+            character: "corgi",
+            size: 160,
+            visibility: "visible",
+          }),
+        );
+        const args = [
+          "-ApplePersistenceIgnoreState",
+          "YES",
+          `--user-data-dir=${root}/profile`,
+          `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`,
+        ];
+        return electron.launch(
+          packaged
+            ? {
+                timeout: 30000,
+                executablePath: path.join(
+                  root,
+                  "Mosey.app/Contents/MacOS/Mosey",
+                ),
+                args,
+              }
+            : { args: [".", ...args], timeout: 30000 },
+        );
+      });
+      const pet = await app.firstWindow({ timeout: 15000 });
       await pet.waitForLoadState("load");
       const displaySession = await pet.context().newCDPSession(pet);
       const baseRatio = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
@@ -266,24 +289,10 @@ test(
           ).toBe(false);
         references.set(side, { right, left });
       }
-      await app.evaluate(() => {
-        const control = { restMs: 60000 };
-        Reflect.set(globalThis, "sizeAutonomyClock", control);
-        const timeout = globalThis.setTimeout;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 10000 ? control.restMs : delay,
-            ...args,
-          )) as typeof setTimeout;
-      });
+      const rest = await controlRest(app, pet, 60000);
       const restClock = (ms: number) =>
-        app!.evaluate((_electron, ms) => {
-          Reflect.get(globalThis, "sizeAutonomyClock").restMs = ms;
+        rest.evaluate((control, ms) => {
+          control.milliseconds = ms;
         }, ms);
       const activity = async (random: number, atLeftEdge = false) => {
         await app!.evaluate((_electron, random) => {
@@ -651,19 +660,22 @@ test(
         ),
       );
     } catch (error) {
-      const failureState = await app
-        ?.evaluate(({ Menu, BrowserWindow }) => ({
-          menus: Menu.getApplicationMenu()?.items.map((item) => ({
-            label: item.label,
-            items: item.submenu?.items.map((entry) => entry.label),
+      failure = { error };
+      const failureState = await withinDeadline(
+        "Size failure observation",
+        () =>
+          app?.evaluate(({ Menu, BrowserWindow }) => ({
+            menus: Menu.getApplicationMenu()?.items.map((item) => ({
+              label: item.label,
+              items: item.submenu?.items.map((entry) => entry.label),
+            })),
+            windows: BrowserWindow.getAllWindows().map((window) => ({
+              title: window.getTitle(),
+              visible: window.isVisible(),
+              bounds: window.getBounds(),
+            })),
           })),
-          windows: BrowserWindow.getAllWindows().map((window) => ({
-            title: window.getTitle(),
-            visible: window.isVisible(),
-            bounds: window.getBounds(),
-          })),
-        }))
-        .catch(() => undefined);
+      ).catch((error: unknown) => ({ unavailable: String(error) }));
       await writeFile(
         evidencePath(
           `failure-${packaged ? "packaged" : "development"}-size-autonomy-trace.json`,
@@ -674,20 +686,20 @@ test(
           2,
         ),
       );
-      await app
-        ?.windows()[0]
-        ?.screenshot({
-          path: evidencePath(
-            `failure-${packaged ? "packaged" : "development"}-size-autonomy.png`,
-          ),
-          timeout: 3000,
-        })
-        .catch(() => {});
+      await withinDeadline(
+        "Size failure screenshot",
+        () =>
+          app?.windows()[0]?.screenshot({
+            path: evidencePath(
+              `failure-${packaged ? "packaged" : "development"}-size-autonomy.png`,
+            ),
+            timeout: 3000,
+          }),
+        3000,
+      ).catch(() => {});
       throw error;
     } finally {
-      await app?.close().catch(() => {});
-      await stopForge?.();
-      await rm(root, { recursive: true, force: true });
+      await fixture.cleanup(failure);
     }
   },
 );

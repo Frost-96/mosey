@@ -1,5 +1,6 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -15,32 +16,52 @@ test("login settings explain availability and follow system approval, failure an
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-login-"));
   let app: ElectronApplication | undefined;
   let stop: (() => Promise<void>) | undefined;
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup([
+    async () => {
+      await stop?.();
+    },
+    () => rm(root, { recursive: true, force: true }),
+  ]);
+  onTestFinished(() => fixture.cleanup(failure));
   const runtimeErrors: string[] = [];
   try {
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    app = await electron.launch(
-      packaged
-        ? {
-            executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-            args: [
-              scaleArgument,
-              `--user-data-dir=${path.join(root, "profile")}`,
-            ],
-          }
-        : {
-            args: [
-              ".",
-              scaleArgument,
-              `--user-data-dir=${path.join(root, "profile")}`,
-            ],
-          },
-    );
-    const pet = await app.firstWindow();
+    app = await fixture.launch(async () => {
+      if (!packaged) stop = await startForge();
+      else
+        execFileSync(
+          "/usr/bin/ditto",
+          [
+            path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+            path.join(root, "Mosey.app"),
+          ],
+          { timeout: 30000 },
+        );
+      return electron.launch(
+        packaged
+          ? {
+              timeout: 30000,
+              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
+              args: [
+                scaleArgument,
+                "-ApplePersistenceIgnoreState",
+                "YES",
+                `--user-data-dir=${path.join(root, "profile")}`,
+              ],
+            }
+          : {
+              timeout: 30000,
+              args: [
+                ".",
+                scaleArgument,
+                "-ApplePersistenceIgnoreState",
+                "YES",
+                `--user-data-dir=${path.join(root, "profile")}`,
+              ],
+            },
+      );
+    });
+    const pet = await app.firstWindow({ timeout: 15000 });
     expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     const settingsScriptsInPet = () =>
       pet.evaluate(() =>
@@ -302,11 +323,10 @@ test("login settings explain availability and follow system approval, failure an
     expect(await settingsScriptsInPet()).toEqual([]);
     expect(await pet.locator("canvas").count()).toBe(1);
   } catch (error) {
+    failure = { error };
     console.error({ runtimeErrors });
     throw error;
   } finally {
-    await app?.close();
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
   }
 });

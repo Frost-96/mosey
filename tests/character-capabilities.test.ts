@@ -5,24 +5,15 @@ import { writeCharacterFixture } from "./support/character-fixture";
 import { distanceFromGround } from "./support/ground";
 import { observeGeometry } from "./support/geometry-observer";
 import { finishGeometryObservation } from "./support/geometry-observer-cleanup";
+import { controlRest } from "./support/rest-clock";
 import type { ElectronApplication, Page } from "playwright";
 import { evidencePath } from "./support/evidence";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-async function shortenRest(app: ElectronApplication) {
+async function shortenRest(app: ElectronApplication, pet: Page) {
+  await controlRest(app, pet, 800);
   await app.evaluate(() => {
-    const timeout = globalThis.setTimeout;
-    globalThis.setTimeout = ((
-      callback: (...args: unknown[]) => void,
-      delay?: number,
-      ...args: unknown[]
-    ) =>
-      timeout(
-        callback,
-        delay && delay >= 10000 ? 800 : delay,
-        ...args,
-      )) as typeof setTimeout;
     Math.random = () => 0.9;
   });
 }
@@ -249,7 +240,7 @@ test("a minimal character stays active past sleep time and does not climb a newl
     await writeCharacterFixture(f.profile);
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
-    await shortenRest(app);
+    await shortenRest(app, pet);
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("minimal");
@@ -328,7 +319,7 @@ test("a complete sleep extension animates, responds and wakes through its own po
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
     await settings.getByRole("button", { name: "大", exact: true }).click();
-    await shortenRest(app);
+    await shortenRest(app, pet);
     await settings
       .getByRole("combobox", { name: "角色" })
       .selectOption("minimal");

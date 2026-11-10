@@ -12,6 +12,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
 import { createElectronFixtureCleanup } from "../tests/support/electron-fixture-cleanup.ts";
 import { emptyDockCapture } from "../tests/support/empty-dock.ts";
 import { closeOwnedElectron } from "../tests/support/owned-electron.ts";
@@ -31,6 +32,46 @@ const application = (child: ChildProcess) => ({
     await exited;
   },
 });
+
+test(
+  "a stalled pre-close diagnostic cannot block process cleanup or the next fixture",
+  { timeout: 5000 },
+  async (t) => {
+    const child = startChild();
+    t.after(() => stopChild(child));
+    await once(child, "spawn");
+    const original = new Error("application observation failed");
+    let released = false;
+    const fixture = createElectronFixtureCleanup(
+      [
+        () => {
+          released = true;
+        },
+      ],
+      () => new Promise<void>(() => {}),
+    );
+    await fixture.launch(async () => application(child));
+    const result = await Promise.race([
+      fixture.cleanup({ error: original }).then(
+        () => undefined,
+        (error: unknown) => error,
+      ),
+      delay(2000, "cleanup stalled"),
+    ]);
+    assert.ok(result instanceof AggregateError, String(result));
+    assert.equal(result.errors[0], original);
+    assert.match(String(result.errors[1].errors[0]), /before-close.*deadline/i);
+    assert.equal(released, true);
+    assert.ok(child.exitCode !== null || child.signalCode !== null);
+    const next = startChild();
+    t.after(() => stopChild(next));
+    await once(next, "spawn");
+    const following = createElectronFixtureCleanup([]);
+    await following.launch(async () => application(next));
+    await following.cleanup();
+    assert.ok(next.exitCode !== null || next.signalCode !== null);
+  },
+);
 
 test("cleanup attempts every release once and preserves the original failure", async () => {
   const calls: string[] = [];
@@ -60,6 +101,24 @@ test("cleanup attempts every release once and preserves the original failure", a
     });
   assert.deepEqual(calls, ["restore", "Forge", "remove"]);
 });
+
+test(
+  "an explicit restart rejects a forced close instead of hiding a shutdown failure",
+  { timeout: 10000 },
+  async (t) => {
+    const child = startChild();
+    t.after(() => stopChild(child));
+    await once(child, "spawn");
+    const fixture = createElectronFixtureCleanup([]);
+    await fixture.launch(async () => ({
+      process: () => child,
+      close: () => new Promise<void>(() => {}),
+    }));
+    await assert.rejects(fixture.closeApp(), /required forced termination/);
+    assert.ok(child.exitCode !== null || child.signalCode !== null);
+    await fixture.cleanup();
+  },
+);
 
 test(
   "a late launch is killed before restoring native bytes and mode",

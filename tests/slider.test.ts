@@ -1,5 +1,7 @@
 import { evidencePath } from "./support/evidence";
-import { test, expect } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { withinDeadline } from "./support/deadline";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, readFile, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -15,6 +17,27 @@ test("slider previews without saving, commits on release, and persists nonpreset
   const profile = path.join(root, "profile");
   let app: ElectronApplication | undefined;
   let stop: (() => Promise<void>) | undefined;
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup(
+    [
+      async () => {
+        await stop?.();
+      },
+      () => rm(root, { recursive: true, force: true }),
+    ],
+    async () => {
+      await Promise.all([
+        ...(app?.windows() ?? []).map((page) => page.mouse.up()),
+        app?.evaluate(({ BrowserWindow }) => {
+          BrowserWindow.getAllWindows()
+            .find((window) => window.getTitle() === "Mosey 设置")
+            ?.setIgnoreMouseEvents(false);
+        }),
+      ]);
+    },
+  );
+  onTestFinished(() => fixture.cleanup(failure));
+  let prepared = false;
   try {
     await mkdir(profile, { recursive: true });
     await writeFile(
@@ -26,21 +49,48 @@ test("slider previews without saving, commits on release, and persists nonpreset
         visibility: "visible",
       }),
     );
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
     const launch = () =>
-      electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [scaleArgument, `--user-data-dir=${profile}`],
-            }
-          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
-      );
+      fixture.launch(async () => {
+        if (!prepared) {
+          if (!packaged) stop = await startForge();
+          else
+            execFileSync(
+              "/usr/bin/ditto",
+              [
+                path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+                path.join(root, "Mosey.app"),
+              ],
+              { timeout: 30000 },
+            );
+          prepared = true;
+        }
+        return electron.launch(
+          packaged
+            ? {
+                timeout: 30000,
+                executablePath: path.join(
+                  root,
+                  "Mosey.app/Contents/MacOS/Mosey",
+                ),
+                args: [
+                  scaleArgument,
+                  "-ApplePersistenceIgnoreState",
+                  "YES",
+                  `--user-data-dir=${profile}`,
+                ],
+              }
+            : {
+                args: [
+                  ".",
+                  scaleArgument,
+                  "-ApplePersistenceIgnoreState",
+                  "YES",
+                  `--user-data-dir=${profile}`,
+                ],
+                timeout: 30000,
+              },
+        );
+      });
     app = await launch();
     expect(
       await (await app.firstWindow()).evaluate(() => devicePixelRatio),
@@ -245,7 +295,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await expect
       .poll(async () => JSON.parse(await readFile(file, "utf8")).size)
       .toBe(70);
-    await app.close();
+    await fixture.closeApp();
     app = await launch();
     expect(
       await (await app.firstWindow()).evaluate(() => devicePixelRatio),
@@ -259,17 +309,18 @@ test("slider previews without saving, commits on release, and persists nonpreset
       ),
     ).toBe(false);
   } catch (error) {
+    failure = { error };
     const settings = app
       ?.windows()
       .find((page) => new URL(page.url()).searchParams.has("settings"));
-    const renderer = await settings
-      ?.evaluate(async () => ({
+    const renderer = await withinDeadline("Slider renderer evidence", () =>
+      settings?.evaluate(async () => ({
         events: Reflect.get(window, "sliderTrace"),
         settings: await window.moseySettings.get(),
-      }))
-      .catch(() => undefined);
-    const native = await app
-      ?.evaluate(({ BrowserWindow }) => ({
+      })),
+    ).catch((error: unknown) => ({ unavailable: String(error) }));
+    const native = await withinDeadline("Slider native evidence", () =>
+      app?.evaluate(({ BrowserWindow }) => ({
         events: Reflect.get(globalThis, "sliderNativeTrace"),
         windows: BrowserWindow.getAllWindows().map((window) => ({
           title: window.getTitle(),
@@ -277,8 +328,8 @@ test("slider previews without saving, commits on release, and persists nonpreset
           visible: window.isVisible(),
           focused: window.isFocused(),
         })),
-      }))
-      .catch(() => undefined);
+      })),
+    ).catch((error: unknown) => ({ unavailable: String(error) }));
     await writeFile(
       evidencePath(
         `failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
@@ -300,17 +351,6 @@ test("slider previews without saving, commits on release, and persists nonpreset
     }
     throw error;
   } finally {
-    for (const page of app?.windows() ?? [])
-      await page.mouse.up().catch(() => {});
-    await app
-      ?.evaluate(({ BrowserWindow }) => {
-        BrowserWindow.getAllWindows()
-          .find((window) => window.getTitle() === "Mosey 设置")
-          ?.setIgnoreMouseEvents(false);
-      })
-      .catch(() => {});
-    await app?.close().catch(() => {});
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
   }
 });
