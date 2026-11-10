@@ -32,9 +32,7 @@ python3 tests/native/test-dock-live.py build/native/dock-live
 pnpm measure:resources --seconds 60 --growth-seconds 300
 ```
 
-设置页提供五个角色。DeepSeek 沿用鲸鱼娘的已保存选择；尚无角色选择记录时默认 DeepSeek，之后恢复上次保存的选择。旧偏好的大小和隐藏意图继续保留。
-
-资源测量支持 `--app /绝对路径/Mosey.app` 和 `--output test-results/新目录`；输出目录必须尚不存在，避免覆盖证据。报告记录包与测量工具的哈希、进程成本、Dock 捕获状态和每分钟的持续运行数据，每 30 秒保存一次原始样本。测量完成不代表性能达标；无有效 Dock 捕获时不能据此判断 Dock 交互成本，预算与验收结论仍记录在 #11。
+资源测量的参数见 `tools/measure-resources.ts`。测量完成不代表性能达标，预算与验收结论记录在 #11。
 
 ## 使用与权限
 
@@ -46,10 +44,6 @@ Dock 交互需要当前应用启动链的屏幕录制权限。应用不会主动
 
 ## 项目资料
 
-当前实现以源码、测试和配置为准。术语见 [GLOSSARY.md](GLOSSARY.md)；架构取舍保留在以下 ADR：
-
-- [使用 Electron](docs/adr/0001-use-electron.md)
-- [语言、动画与行为边界](docs/adr/0002-desktop-pet-architecture-boundaries.md)
-- [Dock 原生桥接与权限边界](docs/adr/0003-dock-native-bridge.md)
+当前实现以源码、测试和配置为准。术语见 [GLOSSARY.md](GLOSSARY.md)；架构取舍见 [docs/adr/](docs/adr/)。
 
 待办与历史记录保存在 [GitHub Issues](https://github.com/Frost-96/mosey/issues)，仓库不维护已完成功能的镜像规格或验收流水账。
