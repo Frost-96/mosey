@@ -2,8 +2,7 @@ import { evidencePath } from "./support/evidence";
 import { startForge } from "./support/forge";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
-import { withinDeadline } from "./support/deadline";
-import { once } from "node:events";
+import { closeOwnedElectron } from "./support/owned-electron";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import {
@@ -51,11 +50,8 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       () => rm(root, { recursive: true, force: true }),
     ],
     async () => {
-      if (duplicate?.exitCode === null && duplicate.signalCode === null) {
-        const exited = once(duplicate, "exit");
-        duplicate.kill("SIGKILL");
-        await withinDeadline("Duplicate application exit", () => exited);
-      }
+      if (duplicate)
+        await closeOwnedElectron({ close: async () => {} }, duplicate);
     },
   );
   onTestFinished(async ({ task }) => {
@@ -263,6 +259,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
         stdio: "ignore",
+        detached: true,
       },
     );
     await expect.poll(() => duplicate!.exitCode, { timeout: 10000 }).toBe(0);
