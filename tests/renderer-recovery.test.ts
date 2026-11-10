@@ -1,4 +1,5 @@
 import { evidencePath } from "./support/evidence";
+import { controlRest } from "./support/rest-clock";
 import { test, expect } from "vitest";
 import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -113,26 +114,15 @@ test.each([
     else if (phase === "walking" || phase === "sleeping") {
       // Control time/randomness at the system boundary; never set behavior
       // states or recovery counters. Restore these before the actual fault.
+      const rest = await controlRest(app, page, 800);
       await app.evaluate(() => {
-        const timeout = globalThis.setTimeout;
         const random = Math.random;
         const now = Date.now;
         Reflect.set(globalThis, "restoreRecoveryClock", () => {
-          globalThis.setTimeout = timeout;
           Math.random = random;
           Date.now = now;
         });
         Math.random = () => 0.1;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 15000 && delay <= 32000 ? 800 : delay,
-            ...args,
-          )) as typeof setTimeout;
       });
       await invoke("Hide Mosey");
       await invoke("Show Mosey");
@@ -157,6 +147,8 @@ test.each([
       await app.evaluate(() =>
         Reflect.get(globalThis, "restoreRecoveryClock")(),
       );
+      await rest.evaluate((control) => control.restore());
+      await rest.dispose();
     } else if (phase !== "preview") {
       await page.mouse.move(120, 180);
       await page.mouse.down();

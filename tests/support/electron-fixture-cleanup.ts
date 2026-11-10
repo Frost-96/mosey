@@ -1,5 +1,6 @@
 import type { ElectronApplication } from "playwright";
 import { closeOwnedElectron } from "./owned-electron.ts";
+import { withinDeadline } from "./deadline.ts";
 
 type OwnedApplication = Pick<ElectronApplication, "close" | "process">;
 
@@ -17,11 +18,15 @@ export function createElectronFixtureCleanup(
   let closing = false;
   let cleanupPromise: Promise<void> | undefined;
   const closedDuringLaunch = new Error("Electron fixture closed during launch");
-  const closeApp = () =>
+  const closeApp = (requireGraceful = false) =>
     (stopping ??= (async () => {
       const current = owned;
       owned = undefined;
-      if (current) await closeOwnedElectron(current.app, current.child);
+      if (current) {
+        const result = await closeOwnedElectron(current.app, current.child);
+        if (requireGraceful && result.forced)
+          throw new Error("Application close required forced termination");
+      }
     })().finally(() => {
       stopping = undefined;
     }));
@@ -61,7 +66,10 @@ export function createElectronFixtureCleanup(
           if (!errors.includes(error)) errors.push(error);
         }
       };
-      if (beforeClose) await attempt(beforeClose);
+      if (beforeClose)
+        await attempt(() =>
+          withinDeadline("Electron before-close", beforeClose),
+        );
       await attempt(closeApp);
       // A timed-out test may still be awaiting launch. Its late process must
       // exit before restoring a helper that the process could still execute.
@@ -90,5 +98,7 @@ export function createElectronFixtureCleanup(
     }
     if (failure) throw failure.error;
   };
-  return { launch, closeApp, cleanup };
+  // Scenario restarts must prove a graceful exit. Final cleanup can force an
+  // owned process down, while retaining the failure that required cleanup.
+  return { launch, closeApp: () => closeApp(true), cleanup };
 }

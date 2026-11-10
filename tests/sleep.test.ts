@@ -3,6 +3,7 @@ import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { controlRest } from "./support/rest-clock";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -190,19 +191,9 @@ test(
         idleFrames.add(await pixels());
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
+      await controlRest(app, pet, 1200);
       await app.evaluate(() => {
         Math.random = () => 0.6;
-        const timeout = globalThis.setTimeout;
-        globalThis.setTimeout = ((
-          callback: (...args: unknown[]) => void,
-          delay?: number,
-          ...args: unknown[]
-        ) =>
-          timeout(
-            callback,
-            delay && delay >= 10000 ? 1200 : delay,
-            ...args,
-          )) as typeof setTimeout;
       });
       await menu("Hide Mosey");
       await menu("Show Mosey");

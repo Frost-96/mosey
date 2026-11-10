@@ -1,6 +1,8 @@
 import { evidencePath } from "./support/evidence";
 import { startForge } from "./support/forge";
-import { test, expect, onTestFailed } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { closeOwnedElectron } from "./support/owned-electron";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import {
@@ -38,62 +40,97 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
   let app: ElectronApplication | undefined;
   let applicationProcess: ChildProcess | undefined;
   let launches = 0;
-  onTestFailed(async () => {
-    mark("test-failed");
-    const child = applicationProcess;
-    if (child?.exitCode === null && child.signalCode === null) {
-      // A Vitest deadline does not unwind a pending Playwright call. Preserve
-      // the native stack before releasing only this test's application process.
-      try {
-        execFileSync(
-          "/usr/bin/sample",
-          [
-            String(child.pid),
-            "1",
-            "1",
-            "-file",
-            evidencePath(`${evidence}-visibility-process.txt`),
-          ],
-          { timeout: 5000, stdio: "ignore" },
-        );
-      } catch {
-        // The process may have exited before sampling starts.
+  let prepared = false;
+  let failure: { error: unknown } | undefined;
+  const fixture = createElectronFixtureCleanup(
+    [
+      async () => {
+        await stopForge?.();
+      },
+      () => rm(root, { recursive: true, force: true }),
+    ],
+    async () => {
+      if (duplicate)
+        await closeOwnedElectron({ close: async () => {} }, duplicate);
+    },
+  );
+  onTestFinished(async ({ task }) => {
+    try {
+      if (task.result?.state === "fail") {
+        mark("test-failed");
+        const child = applicationProcess;
+        if (child?.exitCode === null && child.signalCode === null) {
+          // A Vitest deadline does not unwind a pending Playwright call. Preserve
+          // the native stack before releasing only this test's application process.
+          try {
+            execFileSync(
+              "/usr/bin/sample",
+              [
+                String(child.pid),
+                "1",
+                "1",
+                "-file",
+                evidencePath(`${evidence}-visibility-process.txt`),
+              ],
+              { timeout: 5000, stdio: "ignore" },
+            );
+          } catch {
+            // The process may have exited before sampling starts.
+          }
+        }
       }
-      child.kill("SIGKILL");
+    } finally {
+      await fixture.cleanup(failure);
     }
-    if (duplicate?.exitCode === null && duplicate.signalCode === null)
-      duplicate.kill("SIGKILL");
   });
   try {
-    if (!packaged) stopForge = await startForge();
-    if (packaged) {
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
-    }
     const launch = async () => {
       mark(`launch-${++launches}`);
-      const launched = await electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [scaleArgument, `--user-data-dir=${profile}`],
-            }
-          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
-      );
+      const launched = await fixture.launch(async () => {
+        if (!prepared) {
+          if (!packaged) stopForge = await startForge();
+          else
+            execFileSync(
+              "/usr/bin/ditto",
+              [
+                path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+                path.join(root, "Mosey.app"),
+              ],
+              { timeout: 30000 },
+            );
+          prepared = true;
+        }
+        const args = [
+          scaleArgument,
+          "-ApplePersistenceIgnoreState",
+          "YES",
+          `--user-data-dir=${profile}`,
+        ];
+        return electron.launch(
+          packaged
+            ? {
+                timeout: 30000,
+                executablePath: path.join(
+                  root,
+                  "Mosey.app/Contents/MacOS/Mosey",
+                ),
+                args,
+              }
+            : { args: [".", ...args], timeout: 30000 },
+        );
+      });
       applicationProcess = launched.process();
       mark(`launch-${launches}-complete`);
       return launched;
     };
     const close = async () => {
       mark(`close-${launches}`);
-      await app!.close();
+      await fixture.closeApp();
       mark(`close-${launches}-complete`);
     };
     const waitForDocument = async () => {
       mark(`window-${launches}`);
-      const window = await app!.firstWindow();
+      const window = await app!.firstWindow({ timeout: 15000 });
       mark(`document-${launches}`);
       await window.waitForLoadState("load");
       expect(await window.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
@@ -222,6 +259,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
         stdio: "ignore",
+        detached: true,
       },
     );
     await expect.poll(() => duplicate!.exitCode, { timeout: 10000 }).toBe(0);
@@ -339,6 +377,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       ),
     );
   } catch (error) {
+    failure = { error };
     for (const [index, window] of (app?.windows() ?? []).entries()) {
       await window
         .screenshot({
@@ -352,10 +391,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     throw error;
   } finally {
     mark("cleanup");
-    if (duplicate?.exitCode === null) duplicate.kill();
-    await app?.close().catch(() => {});
-    await stopForge?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
     mark("done");
   }
 });

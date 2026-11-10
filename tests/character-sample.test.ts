@@ -2,6 +2,7 @@ import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
+import { controlRest } from "./support/rest-clock";
 import { distanceFromGround } from "./support/ground";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -127,19 +128,9 @@ test("selected whale paints one character, walks, yields to dragging and returns
         item.click();
       }, label);
     // Only shorten the external rest clock; animation and desktop movement stay real-time.
+    await controlRest(app, pet, 500);
     await app.evaluate(() => {
       Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 500 : delay,
-          ...args,
-        )) as typeof setTimeout;
     });
     await menu("Hide Mosey");
     await expect

@@ -1,6 +1,8 @@
 import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
-import { test, expect, onTestFailed } from "vitest";
+import { test, expect, onTestFinished } from "vitest";
+import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { withinDeadline } from "./support/deadline";
 import {
   _electron as electron,
   type ElectronApplication,
@@ -18,10 +20,16 @@ const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCAL
 test("settings owns presets, reuses its window and preserves hidden intent and failed targets", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "mosey-settings-"));
   let app: ElectronApplication | undefined;
-  let applicationProcess:
-    ReturnType<ElectronApplication["process"]> | undefined;
   let stop: (() => Promise<void>) | undefined;
   let settings: Page | undefined;
+  let failure: { error: unknown } | undefined;
+  let prepared = false;
+  const fixture = createElectronFixtureCleanup([
+    async () => {
+      await stop?.();
+    },
+    () => rm(root, { recursive: true, force: true }),
+  ]);
   const profile = path.join(root, "profile");
   const progressFile = evidencePath(
     `${packaged ? "packaged" : "development"}-settings-progress.json`,
@@ -32,39 +40,62 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await writeFile(progressFile, JSON.stringify(progress, null, 2));
   };
-  onTestFailed(async () => {
-    await stage("test failed");
-    await (settings ?? app?.windows()[0])
-      ?.screenshot({
-        path: evidencePath(
-          `failure-settings-${packaged ? "packaged" : "development"}.png`,
-        ),
-        timeout: 3000,
-      })
-      .catch(() => {});
-    // Vitest's test timeout does not unwind an outstanding Playwright call.
-    // Release only this test's process so its pending calls and finally settle.
-    const child = applicationProcess;
-    if (child?.exitCode === null && child.signalCode === null)
-      child.kill("SIGTERM");
+  onTestFinished(async ({ task }) => {
+    try {
+      if (task.result?.state === "fail") {
+        await stage("test failed");
+        await withinDeadline(
+          "Settings failure screenshot",
+          () =>
+            (settings ?? app?.windows()[0])?.screenshot({
+              path: evidencePath(
+                `failure-settings-${packaged ? "packaged" : "development"}.png`,
+              ),
+              timeout: 3000,
+            }),
+          3000,
+        ).catch(() => {});
+      }
+    } finally {
+      await fixture.cleanup(failure);
+    }
   });
   try {
     await stage("prepare app");
-    if (!packaged) stop = await startForge();
-    else
-      execFileSync("/usr/bin/ditto", [
-        path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
-        path.join(root, "Mosey.app"),
-      ]);
     const launch = () =>
-      electron.launch(
-        packaged
-          ? {
-              executablePath: path.join(root, "Mosey.app/Contents/MacOS/Mosey"),
-              args: [scaleArgument, `--user-data-dir=${profile}`],
-            }
-          : { args: [".", scaleArgument, `--user-data-dir=${profile}`] },
-      );
+      fixture.launch(async () => {
+        if (!prepared) {
+          if (!packaged) stop = await startForge();
+          else
+            execFileSync(
+              "/usr/bin/ditto",
+              [
+                path.resolve("out/Mosey-darwin-arm64/Mosey.app"),
+                path.join(root, "Mosey.app"),
+              ],
+              { timeout: 30000 },
+            );
+          prepared = true;
+        }
+        const args = [
+          scaleArgument,
+          "-ApplePersistenceIgnoreState",
+          "YES",
+          `--user-data-dir=${profile}`,
+        ];
+        return electron.launch(
+          packaged
+            ? {
+                timeout: 30000,
+                executablePath: path.join(
+                  root,
+                  "Mosey.app/Contents/MacOS/Mosey",
+                ),
+                args,
+              }
+            : { args: [".", ...args], timeout: 30000 },
+        );
+      });
     const invoke = (label: string) =>
       app!.evaluate(({ Menu }, label) => {
         const item = Menu.getApplicationMenu()
@@ -86,9 +117,8 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       });
     await stage("launch");
     app = await launch();
-    applicationProcess = app.process();
     await stage("first window");
-    await app.firstWindow();
+    await app.firstWindow({ timeout: 15000 });
     expect((await petState()).bounds.width).toBe(160);
     await stage("open settings");
     settings = await openSettings(app);
@@ -238,12 +268,11 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await invoke("设置…");
     await expect.poll(() => app!.windows().length).toBe(2);
     await stage("quit after reopening settings");
-    await app.close();
+    await fixture.closeApp();
     await stage("restart");
     app = await launch();
-    applicationProcess = app.process();
     await stage("restart first window");
-    await app.firstWindow();
+    await app.firstWindow({ timeout: 15000 });
     expect((await petState()).bounds.width).toBe(160);
     expect((await petState()).visible).toBe(false);
     expect(JSON.parse(await readFile(file, "utf8"))).toEqual({
@@ -253,6 +282,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       visibility: "hidden",
     });
   } catch (error) {
+    failure = { error };
     await (settings ?? app?.windows()[0])
       ?.screenshot({
         path: evidencePath(
@@ -264,9 +294,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     throw error;
   } finally {
     await stage("cleanup app");
-    await app?.close().catch(() => {});
-    await stop?.();
-    await rm(root, { recursive: true, force: true });
+    await fixture.cleanup(failure);
     await stage("complete");
   }
 });

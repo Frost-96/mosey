@@ -1,6 +1,7 @@
 import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { createPetTestSession } from "./support/pet-session";
+import { controlRest } from "./support/rest-clock";
 import { waitForPetVisibility } from "./support/visibility";
 import { test, expect } from "vitest";
 import type { ElectronApplication } from "playwright";
@@ -261,20 +262,9 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       ),
     );
 
+    await controlRest(app, pet, 1000);
     await app.evaluate(() => {
       Math.random = () => 0.1;
-      const timeout = globalThis.setTimeout;
-      // Mock only the long rest clock, retaining real movement/animation time.
-      globalThis.setTimeout = ((
-        callback: (...args: unknown[]) => void,
-        delay?: number,
-        ...args: unknown[]
-      ) =>
-        timeout(
-          callback,
-          delay && delay >= 10000 ? 1000 : delay,
-          ...args,
-        )) as typeof setTimeout;
     });
     await invoke("Hide Mosey");
     await invoke("Show Mosey");
