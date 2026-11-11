@@ -6,7 +6,8 @@ import log from "electron-log/main";
 import { createActor } from "xstate";
 import { Timeline } from "../../behavior/timeline";
 import { petBehavior, autonomy } from "../../behavior/pet-machine";
-import { dockSupport } from "../../behavior/dock-support";
+import { createFooting, type FootingBody } from "./footing";
+import { electronFootingAdapter } from "./footing-electron";
 import {
   assetErrorSchema,
   channels,
@@ -90,6 +91,7 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  const footing = createFooting(electronFootingAdapter(pet));
   const characters: CharacterSwitch = new CharacterSwitch(pet, preferences, {
     placement: (candidate) => {
       const bounds = pet.getBounds();
@@ -102,11 +104,10 @@ export function createPetSession(
         footY: bounds.y + bounds.height,
         supports: [
           supportAt(bounds.x, bounds.y),
-          supportAt(
-            bounds.x,
-            bounds.y,
-            candidate.geometry,
-            candidate.capabilities,
+          footing.supportAt(
+            candidateBody(candidate),
+            { x: bounds.x, y: bounds.y },
+            dockObservation,
           ),
         ],
       };
@@ -232,25 +233,7 @@ export function createPetSession(
     constrain: (x, y) => constrain(x, y),
     reconcile: () => reconcileDock(),
   });
-  const constrain = (x: number, y: number) => {
-    const area = screen.getPrimaryDisplay().workArea;
-    const bounds = pet.getBounds();
-    pet.setPosition(
-      Math.round(
-        Math.max(
-          area.x,
-          Math.min(x, area.x + Math.max(0, area.width - bounds.width)),
-        ),
-      ),
-      Math.round(
-        Math.max(
-          area.y,
-          Math.min(y, area.y + Math.max(0, area.height - bounds.height)),
-        ),
-      ),
-      false,
-    );
-  };
+  const constrain = footing.constrain;
   let dockObservation: DockObservation | null = null;
   // Only an observed overlapping bottom edge owns vertical support. A null or
   // pending capture report cannot turn an unrelated desktop position into a drop.
@@ -273,45 +256,34 @@ export function createPetSession(
     clearTimeout(dockPendingTimer);
     dockPendingTimer = undefined;
   };
-  const supportAt = (
-    x: number,
-    y: number,
-    candidate = characters.current.geometry,
-    capabilities = characters.current.capabilities,
-  ) => {
-    const area = screen.getPrimaryDisplay().workArea;
-    const floor = area.y + area.height;
-    // Current side avoidance follows the last painted pose. A candidate
-    // character starts at rest; support must fit before that switch commits.
-    const pose =
-      candidate === characters.current.geometry
-        ? interaction.displayed
-        : undefined;
-    const body = candidate
-      .frame({
-        posture: pose?.posture ?? "resting",
-        frame: pose?.frame ?? 0,
-        direction: pose?.direction ?? behavior.getSnapshot().context.direction,
-        size: liveSize,
-      })
-      ?.boundsAt({ x, y });
-    if (!body) return { footY: floor, shiftX: 0 };
-    if (dockObservation?.orientation === "bottom") {
-      const contact = candidate.contactAt(liveSize, x);
-      if (!contact) return { footY: floor, shiftX: 0 };
-      body.left = contact.left;
-      body.right = contact.right;
-    }
-    const support = dockSupport(dockObservation, body, floor);
-    // A character without climbing can land on a lower Dock edge, but must not
-    // be pulled up through it when the edge rises or appears above its feet.
-    if (
-      !capabilities.includes("climbing") &&
-      support.footY < pet.getBounds().y + liveSize - 1
-    )
-      return { footY: floor, shiftX: support.shiftX };
-    return support;
+  // Current side avoidance follows the last painted pose.
+  const currentBody = (): FootingBody => {
+    const character = characters.current;
+    const pose = interaction.displayed;
+    return {
+      geometry: character.geometry,
+      capabilities: character.capabilities,
+      size: liveSize,
+      posture: pose?.posture ?? "resting",
+      frame: pose?.frame ?? 0,
+      direction: pose?.direction ?? behavior.getSnapshot().context.direction,
+      footY: pet.getBounds().y + liveSize,
+    };
   };
+  // A candidate character starts at rest; support must fit before that
+  // switch commits.
+  const candidateBody = (
+    candidate: CharacterSwitch["current"],
+  ): FootingBody => ({
+    ...currentBody(),
+    geometry: candidate.geometry,
+    capabilities: candidate.capabilities,
+    posture: "resting",
+    frame: 0,
+    direction: behavior.getSnapshot().context.direction,
+  });
+  const supportAt = (x: number, y: number) =>
+    footing.supportAt(currentBody(), { x, y }, dockObservation);
   const reconcileDock = () => {
     if (
       pet.isDestroyed() ||
@@ -372,15 +344,7 @@ export function createPetSession(
     // Establish any required drop/climb before a waiting command can continue.
     publishSupportReadiness();
   };
-  const alignGround = () => {
-    const area = screen.getPrimaryDisplay().workArea;
-    const bounds = pet.getBounds();
-    const support = supportAt(bounds.x, bounds.y);
-    constrain(
-      bounds.x + support.shiftX,
-      Math.min(area.y + area.height, support.footY) - bounds.height,
-    );
-  };
+  const alignGround = () => footing.alignGround(currentBody(), dockObservation);
   const reconcileGround = () => {
     // The live work area can change before its native notification arrives.
     // Keep grounded poses on that floor without touching captured or moving pets.
