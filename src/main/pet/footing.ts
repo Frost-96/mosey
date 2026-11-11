@@ -12,6 +12,9 @@ import type { PetSize } from "../../shared/size.ts";
 // bounds, window placement and the work area come only through the adapter
 // passed at construction: the Electron adapter in production, the in-memory
 // adapter in tooling tests, so support rules are verified without a desktop.
+// It also owns the Dock observation and its bounded pending hold, and decides
+// whether to climb, drop or stay. It never sends behavior events: callers act
+// on the returned decision, so the behavior machine stays independent of it.
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -38,16 +41,75 @@ export type FootingBody = {
 
 export type Support = { footY: number; shiftX: number };
 
-export function createFooting(adapter: FootingAdapter) {
+export type DockDecision = {
+  move: "climb" | "drop" | "stay";
+  // Side avoidance for the caller to apply before the move.
+  shiftX: number;
+};
+
+// A new complete frame invalidates the old edge immediately. Movement holds
+// while its worker finishes, never moving on that old geometry; the bound keeps
+// a stuck producer from turning the hold into a permanent one.
+const dockHoldMs = 250;
+
+export function createFooting(
+  adapter: FootingAdapter,
+  options: {
+    // The clock motion is timed by. A hold freezes it and later subtracts the
+    // held duration; it may pause independently of the adapter's time.
+    movementClock?: () => number;
+    // A hold ended by its bound rather than by a completed frame.
+    holdEnded?: () => void;
+  } = {},
+) {
+  const movementClock = options.movementClock ?? adapter.now;
+  let dock: DockSurface | null = null;
+  // Only an observed overlapping bottom edge owns vertical support. A null or
+  // pending capture report cannot turn an unrelated desktop position into a drop.
+  let supported = false;
+  let pendingSince: number | undefined;
+  let heldAt: number | undefined;
+  let heldDuration = 0;
+  let cancelHold: (() => void) | undefined;
+
   const floor = () => {
     const area = adapter.workArea();
     return area.y + area.height;
   };
 
+  const endHold = () => {
+    if (heldAt !== undefined) heldDuration += movementClock() - heldAt;
+    heldAt = undefined;
+    cancelHold?.();
+    cancelHold = undefined;
+  };
+
+  // Returns whether support may have changed, so the caller should reconcile.
+  const observe = (observation: DockSurface | null, pending: boolean) => {
+    const changed = dock !== null || observation !== null;
+    const wasHeld = heldAt !== undefined;
+    dock = observation;
+    if (pending) {
+      pendingSince ??= adapter.now();
+      if (adapter.now() - pendingSince < dockHoldMs && heldAt === undefined) {
+        heldAt = movementClock();
+        cancelHold = adapter.schedule(dockHoldMs, () => {
+          endHold();
+          options.holdEnded?.();
+        });
+      }
+    } else {
+      pendingSince = undefined;
+      endHold();
+    }
+    // Repeated unavailable reports do not own desktop placement. Only a
+    // capability change (or an ended pending frame) may initiate Dock motion.
+    return changed || (wasHeld && !pending);
+  };
+
   const supportAt = (
     body: FootingBody,
     position: { x: number; y: number },
-    dock: DockSurface | null,
   ): Support => {
     const ground = floor();
     const bounds = body.geometry
@@ -97,16 +159,56 @@ export function createFooting(adapter: FootingAdapter) {
   };
 
   // Place the window's foot on its current support without other motion.
-  const alignGround = (body: FootingBody, dock: DockSurface | null) => {
+  const alignGround = (body: FootingBody) => {
     const bounds = adapter.windowBounds();
-    const support = supportAt(body, { x: bounds.x, y: bounds.y }, dock);
+    const support = supportAt(body, { x: bounds.x, y: bounds.y });
     constrain(
       bounds.x + support.shiftX,
       Math.min(floor(), support.footY) - bounds.height,
     );
   };
 
-  return { supportAt, constrain, alignGround };
+  // Decide how the window at its current position follows the observed Dock.
+  // Only call while the pet may move; each call consumes a lost-support edge.
+  const reconcile = (body: FootingBody): DockDecision => {
+    if (heldAt !== undefined) return { move: "stay", shiftX: 0 };
+    const bounds = adapter.windowBounds();
+    const support = supportAt(body, { x: bounds.x, y: bounds.y });
+    const nowSupported = support.footY < floor() - 1;
+    const lostSupport = supported && !nowSupported;
+    supported = nowSupported;
+    const footY = bounds.y + bounds.height;
+    const move =
+      (!nowSupported && !lostSupport) || Math.abs(support.footY - footY) <= 1
+        ? "stay"
+        : support.footY < footY
+          ? "climb"
+          : "drop";
+    return { move, shiftX: support.shiftX };
+  };
+
+  // Forget the Dock entirely while the pet cannot be observed.
+  const reset = () => {
+    supported = false;
+    pendingSince = undefined;
+    endHold();
+    dock = null;
+  };
+
+  return {
+    observe,
+    reconcile,
+    reset,
+    endHold,
+    get holding() {
+      return heldAt !== undefined;
+    },
+    // Motion time, standing still while a pending Dock frame holds movement.
+    movementNow: () => (heldAt ?? movementClock()) - heldDuration,
+    supportAt,
+    constrain,
+    alignGround,
+  };
 }
 
 export type Footing = ReturnType<typeof createFooting>;

@@ -91,7 +91,13 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  const footing = createFooting(electronFootingAdapter(pet));
+  const footing = createFooting(electronFootingAdapter(pet), {
+    movementClock: timeline.now,
+    holdEnded: () => {
+      reconcileDock();
+      publishSupportReadiness();
+    },
+  });
   const characters: CharacterSwitch = new CharacterSwitch(pet, preferences, {
     placement: (candidate) => {
       const bounds = pet.getBounds();
@@ -100,15 +106,14 @@ export function createPetSession(
         suspended,
         gestureActive: interaction.gestureActive,
         menuOpen: interaction.menuOpen,
-        dockFramePending: dockPendingAt !== undefined,
+        dockFramePending: footing.holding,
         footY: bounds.y + bounds.height,
         supports: [
           supportAt(bounds.x, bounds.y),
-          footing.supportAt(
-            candidateBody(candidate),
-            { x: bounds.x, y: bounds.y },
-            dockObservation,
-          ),
+          footing.supportAt(candidateBody(candidate), {
+            x: bounds.x,
+            y: bounds.y,
+          }),
         ],
       };
     },
@@ -212,10 +217,10 @@ export function createPetSession(
   });
   const motion = new PetMotion(pet, behavior, {
     get now() {
-      return movementNow();
+      return footing.movementNow();
     },
     get held() {
-      return timeline.pausedAt !== undefined || dockPendingAt !== undefined;
+      return timeline.pausedAt !== undefined || footing.holding;
     },
     get gestureActive() {
       return interaction.gestureActive;
@@ -234,27 +239,10 @@ export function createPetSession(
     reconcile: () => reconcileDock(),
   });
   const constrain = footing.constrain;
-  let dockObservation: DockObservation | null = null;
-  // Only an observed overlapping bottom edge owns vertical support. A null or
-  // pending capture report cannot turn an unrelated desktop position into a drop.
-  let dockSupported = false;
-  let dockPendingAt: number | undefined;
-  let dockPendingSince: number | undefined;
-  let dockMovementDelay = 0;
-  let dockPendingTimer: ReturnType<typeof setTimeout> | undefined;
   const publishSupportReadiness = () => {
-    const pending = dockPendingAt !== undefined;
+    const pending = footing.holding;
     if (behavior.getSnapshot().context.supportPending !== pending)
       behavior.send({ type: "SUPPORT_PENDING", pending });
-  };
-  const movementNow = () =>
-    (dockPendingAt ?? timeline.now()) - dockMovementDelay;
-  const finishDockPending = () => {
-    if (dockPendingAt !== undefined)
-      dockMovementDelay += timeline.now() - dockPendingAt;
-    dockPendingAt = undefined;
-    clearTimeout(dockPendingTimer);
-    dockPendingTimer = undefined;
   };
   // Current side avoidance follows the last painted pose.
   const currentBody = (): FootingBody => {
@@ -283,13 +271,12 @@ export function createPetSession(
     direction: behavior.getSnapshot().context.direction,
   });
   const supportAt = (x: number, y: number) =>
-    footing.supportAt(currentBody(), { x, y }, dockObservation);
+    footing.supportAt(currentBody(), { x, y });
   const reconcileDock = () => {
     if (
       pet.isDestroyed() ||
       visibility !== "visible" ||
       suspended ||
-      dockPendingAt !== undefined ||
       interaction.gestureActive
     )
       return;
@@ -299,61 +286,24 @@ export function createPetSession(
     )
       return;
     const bounds = pet.getBounds();
-    const support = supportAt(bounds.x, bounds.y);
-    if (support.shiftX) constrain(bounds.x + support.shiftX, bounds.y);
-    const area = screen.getPrimaryDisplay().workArea;
-    const supported = support.footY < area.y + area.height - 1;
-    const lostSupport = dockSupported && !supported;
-    dockSupported = supported;
-    if (!supported && !lostSupport) return;
-    const footY = bounds.y + bounds.height;
-    if (support.footY < footY - 1) behavior.send({ type: "CLIMB" });
-    else if (support.footY > footY + 1) behavior.send({ type: "DROP" });
+    const decision = footing.reconcile(currentBody());
+    if (decision.shiftX) constrain(bounds.x + decision.shiftX, bounds.y);
+    if (decision.move === "climb") behavior.send({ type: "CLIMB" });
+    else if (decision.move === "drop") behavior.send({ type: "DROP" });
   };
   const observeDock = (
     observation: DockObservation | null,
     pending: boolean,
   ) => {
-    const geometryChanged = dockObservation !== null || observation !== null;
-    const wasPending = dockPendingAt !== undefined;
-    dockObservation = observation;
-    if (pending) {
-      dockPendingSince ??= performance.now();
-      // A new complete frame invalidates the old edge immediately. Briefly
-      // hold the current position while its worker finishes; never move using
-      // that old geometry. The bounded hold cannot mask a stuck producer.
-      if (
-        performance.now() - dockPendingSince < 250 &&
-        dockPendingAt === undefined
-      ) {
-        dockPendingAt = timeline.now();
-        publishSupportReadiness();
-        dockPendingTimer = setTimeout(() => {
-          finishDockPending();
-          reconcileDock();
-          publishSupportReadiness();
-        }, 250);
-      }
-    } else {
-      dockPendingSince = undefined;
-      finishDockPending();
-    }
-    // Repeated unavailable reports do not own desktop placement. Only a
-    // capability change (or an ended pending frame) may initiate Dock motion.
-    if (geometryChanged || (wasPending && !pending)) reconcileDock();
+    if (footing.observe(observation, pending)) reconcileDock();
     // Establish any required drop/climb before a waiting command can continue.
     publishSupportReadiness();
   };
-  const alignGround = () => footing.alignGround(currentBody(), dockObservation);
+  const alignGround = () => footing.alignGround(currentBody());
   const reconcileGround = () => {
     // The live work area can change before its native notification arrives.
     // Keep grounded poses on that floor without touching captured or moving pets.
-    if (
-      interaction.gestureActive ||
-      motion.active ||
-      dockPendingAt !== undefined
-    )
-      return;
+    if (interaction.gestureActive || motion.active || footing.holding) return;
     const posture = behavior.getSnapshot().value;
     if (
       posture === "dragging" ||
@@ -471,11 +421,8 @@ export function createPetSession(
     commandRevision++;
     interaction.dismissMenu();
     suspended = true;
-    dockSupported = false;
-    dockPendingSince = undefined;
-    finishDockPending();
+    footing.reset();
     void environment.dock.stop();
-    dockObservation = null;
     interaction.stopPolling();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
@@ -496,10 +443,7 @@ export function createPetSession(
   powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
     commandRevision++;
-    dockSupported = false;
-    dockPendingSince = undefined;
-    dockObservation = null;
-    finishDockPending();
+    footing.reset();
     interaction.cancel();
     publishSupportReadiness();
     void environment.dock.stop().then(() => {
@@ -532,7 +476,7 @@ export function createPetSession(
   pet.webContents.on("did-start-loading", interaction.cancel);
   app.on("before-quit", interaction.dismissMenu);
   app.on("before-quit", motion.stop);
-  app.on("before-quit", finishDockPending);
+  app.on("before-quit", footing.endHold);
   // Some packaged macOS launches update native visibility without delivering
   // show/hide notifications. Reconcile explicit operations and native state;
   // duplicate notifications must not reset a running action or click window.
@@ -553,11 +497,8 @@ export function createPetSession(
         environment.dock.start();
       }
     } else {
-      dockSupported = false;
-      dockPendingSince = undefined;
-      finishDockPending();
+      footing.reset();
       void environment.dock.stop();
-      dockObservation = null;
       interaction.stopPolling();
       // Immediately release any last opaque region, independent of cursor polling.
       interaction.invalidate({ releaseInput: true });
