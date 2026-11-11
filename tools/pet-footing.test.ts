@@ -335,7 +335,7 @@ test("reset forgets the observation, support and any hold", () => {
   footing.observe(bottomDock(740), false);
   assert.equal(footing.reconcile(body({ footY: 740 })).move, "stay");
   footing.observe(bottomDock(740), true);
-  footing.reset();
+  void footing.reset();
   assert.equal(footing.holding, false);
   adapter.advance(1000);
   assert.deepEqual(holdsEnded, []);
@@ -345,6 +345,38 @@ test("reset forgets the observation, support and any hold", () => {
   // The pending run was forgotten too, so a new frame may hold again.
   footing.observe(null, true);
   assert.equal(footing.holding, true);
+});
+
+test("reset stops observing only after the state is forgotten", async () => {
+  const adapter = createMemoryFootingAdapter({
+    window: { x: 400, y: 640, width: 100, height: 100 },
+    workArea,
+  });
+  const holdsEnded: number[] = [];
+  const footing = createFooting(adapter, {
+    holdEnded: () => holdsEnded.push(adapter.now()),
+  });
+  const standing = body({ footY: 740 });
+  footing.observe(bottomDock(740), false);
+  assert.equal(footing.reconcile(standing).move, "stay");
+  footing.observe(bottomDock(740), true);
+  // Stopping a capture reports one last unavailable frame synchronously.
+  const lastReports: boolean[] = [];
+  const order: string[] = [];
+  adapter.onStopObserving(() => {
+    order.push("stop");
+    lastReports.push(footing.observe(null, false));
+  });
+  // Work done while forgotten sees no hold and precedes that last report.
+  await footing.reset(() => order.push(`forgotten holding=${footing.holding}`));
+  assert.deepEqual(order, ["forgotten holding=false", "stop"]);
+  assert.equal(adapter.observationStops, 1);
+  // That report met no Dock, no support and no hold: nothing to reconcile.
+  assert.deepEqual(lastReports, [false]);
+  assert.equal(footing.holding, false);
+  assert.equal(footing.reconcile(standing).move, "stay");
+  adapter.advance(1000);
+  assert.deepEqual(holdsEnded, []);
 });
 
 test("the in-memory adapter runs scheduled work in time order", () => {

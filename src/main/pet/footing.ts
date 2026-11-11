@@ -9,9 +9,10 @@ import type { PetSize } from "../../shared/size.ts";
 // ask it instead of reading support through each other's closures. The module never imports
 // Electron and never holds character state; callers describe the body on each
 // call (the current character, or a switch candidate alike). Time, window
-// bounds, window placement and the work area come only through the adapter
-// passed at construction: the Electron adapter in production, the in-memory
-// adapter in tooling tests, so support rules are verified without a desktop.
+// bounds, window placement, the work area and stopping Dock capture come only
+// through the adapter passed at construction: the Electron adapter in
+// production, the in-memory adapter in tooling tests, so support rules are
+// verified without a desktop.
 // It also owns the Dock observation and its bounded pending hold, and decides
 // whether to climb, drop or stay. It never sends behavior events: callers act
 // on the returned decision, so the behavior machine stays independent of it.
@@ -25,6 +26,9 @@ export type FootingAdapter = {
   windowBounds(): Rect;
   setWindowPosition(x: number, y: number): void;
   workArea(): Rect;
+  // Stop the Dock capture feeding observe(). It may report one last frame
+  // synchronously, before the returned promise settles.
+  stopObserving(): Promise<void>;
 };
 
 // Everything the rules need to know about one body, as painted right now.
@@ -187,12 +191,17 @@ export function createFooting(
     return { move, shiftX: support.shiftX };
   };
 
-  // Forget the Dock entirely while the pet cannot be observed.
-  const reset = () => {
+  // Forget the Dock entirely while the pet cannot be observed. State is
+  // cleared before capture stops, so its last report meets no stale support.
+  // Capture restarts are the caller's: they depend on whether the pet is shown.
+  // Work that must see the forgotten footing before that report runs between.
+  const reset = (whileForgotten?: () => void) => {
     supported = false;
     pendingSince = undefined;
     endHold();
     dock = null;
+    whileForgotten?.();
+    return adapter.stopObserving();
   };
 
   return {
@@ -223,7 +232,11 @@ export function createMemoryFootingAdapter(initial: {
   let window = { ...initial.window };
   let area = { ...initial.workArea };
   let tasks: { at: number; callback: () => void }[] = [];
+  let onStop = () => {};
+  let observationStops = 0;
   const adapter: FootingAdapter & {
+    readonly observationStops: number;
+    onStopObserving(callback: () => void): void;
     advance(ms: number): void;
     setWindow(rect: Rect): void;
     setWorkArea(rect: Rect): void;
@@ -241,6 +254,17 @@ export function createMemoryFootingAdapter(initial: {
       window = { ...window, x, y };
     },
     workArea: () => ({ ...area }),
+    stopObserving() {
+      observationStops++;
+      onStop();
+      return Promise.resolve();
+    },
+    get observationStops() {
+      return observationStops;
+    },
+    onStopObserving(callback) {
+      onStop = callback;
+    },
     advance(ms) {
       const target = now + ms;
       for (;;) {
