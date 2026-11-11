@@ -14,3 +14,6 @@ playwright-report/
 !/docs/agents/
 !/docs/adr/
 /docs/validation/
+
+# Personal Claude Code settings.
+.claude/settings.local.json
