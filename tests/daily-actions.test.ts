@@ -871,7 +871,9 @@ test("free activity selects and paints all five daily behaviors without action c
           if (!item) throw new Error(`Missing visibility item ${label}`);
           item.click();
         }, label);
-      await waitPosture(pet, action, 4000);
+      // The shortened wait drops the neutral alignment, so leaving rest can
+      // still take up to two idle cycles. Far below the real 18s rest wait.
+      await waitPosture(pet, action, 500 + 2 * idleCycle + 2000);
       await expect
         .poll(async () => expected.get(action)!(await pixels(pet)), {
           interval: 20,
