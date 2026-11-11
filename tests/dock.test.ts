@@ -872,7 +872,16 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     const regrab = await bodyPoint();
     await pet.mouse.move(regrab.x, regrab.y);
     await pet.mouse.down();
-    await new Promise((resolve) => setTimeout(resolve, 70));
+    // A press during the return becomes a drag. Sample the held position only
+    // once the main process has accepted it, not after a fixed delay: input
+    // delivery can lag behind the climb under CI load.
+    await expect
+      .poll(
+        async () =>
+          (await pet.evaluate(() => window.mosey.getPresentation())).posture,
+        { timeout: 2000, interval: 10 },
+      )
+      .toBe("dragging");
     const held = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 450));
     expect(await bounds()).toEqual(held);
