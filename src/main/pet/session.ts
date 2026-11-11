@@ -91,7 +91,7 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  const footing = createFooting(electronFootingAdapter(pet), {
+  const footing = createFooting(electronFootingAdapter(pet, environment.dock), {
     movementClock: timeline.now,
     holdEnded: () => {
       reconcileDock();
@@ -243,6 +243,12 @@ export function createPetSession(
     const pending = footing.holding;
     if (behavior.getSnapshot().context.supportPending !== pending)
       behavior.send({ type: "SUPPORT_PENDING", pending });
+  };
+  // While the pet cannot be observed, forget its footing and stop Dock capture.
+  const forgetFooting = (whileForgotten?: () => void) => {
+    const stopped = footing.reset(whileForgotten);
+    publishSupportReadiness();
+    return stopped;
   };
   // Current side avoidance follows the last painted pose.
   const currentBody = (): FootingBody => {
@@ -421,12 +427,10 @@ export function createPetSession(
     commandRevision++;
     interaction.dismissMenu();
     suspended = true;
-    footing.reset();
-    void environment.dock.stop();
+    void forgetFooting();
     interaction.stopPolling();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
-    publishSupportReadiness();
   };
   const resume = () => {
     suspended = false;
@@ -443,10 +447,9 @@ export function createPetSession(
   powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
     commandRevision++;
-    footing.reset();
-    interaction.cancel();
-    publishSupportReadiness();
-    void environment.dock.stop().then(() => {
+    // Cancelling realigns and reconciles, so it must meet forgotten footing,
+    // yet still reach behavior before capture's last report ends the hold.
+    void forgetFooting(interaction.cancel).then(() => {
       if (!pet.isDestroyed() && visibility === "visible" && !suspended)
         environment.dock.start();
     });
@@ -497,14 +500,12 @@ export function createPetSession(
         environment.dock.start();
       }
     } else {
-      footing.reset();
-      void environment.dock.stop();
+      void forgetFooting();
       interaction.stopPolling();
       // Immediately release any last opaque region, independent of cursor polling.
       interaction.invalidate({ releaseInput: true });
       interaction.cancel();
       behavior.send({ type: "PAUSE" });
-      publishSupportReadiness();
     }
     publish();
   };
@@ -545,6 +546,7 @@ export function createPetSession(
     interaction.stopPolling();
     interaction.invalidate({ releaseInput: true, forgetGesture: true });
     pet.hide();
+    // A shown pet becomes hidden here, which forgets its footing.
     synchronizeVisibility();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
