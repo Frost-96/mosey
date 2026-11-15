@@ -5,6 +5,7 @@ import { rm, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
+import whaleWalking from "../src/assets/characters/whale/motion.json" with { type: "json" };
 
 // An independent image-identity observation: the whale has blue hair/clothes;
 // corgi is warm orange. No atlas metadata or redraw implementation is used.
@@ -838,9 +839,16 @@ test("walking switches preserve left facing and ground placement at both end siz
       const actual = await bounds();
       expect(actual.y + actual.height).toBe(old.y + old.height);
       expect(actual.width).toBe(size);
-      // Preparation may take a few real walking frames; it cannot recenter the
-      // pet. The saved placement remains within one ordinary walk's distance.
-      expect(Math.abs(actual.x - old.x)).toBeLessThan(130);
+      // Preparation keeps the whale walking left until the switch commits, so
+      // its duration (CI load) decides how far. The commit itself cannot move
+      // or recenter the pet: it stays on the leftward path, within the rest of
+      // the one ordinary whale walk that was underway when `old` was sampled.
+      const walkDistance =
+        (whaleWalking.cycleDistancePixels / whaleWalking.pixelRatio) *
+        whaleWalking.cyclesPerWalk *
+        (size / whaleWalking.referenceWindowSize);
+      expect(actual.x).toBeLessThanOrEqual(old.x);
+      expect(old.x - actual.x).toBeLessThanOrEqual(Math.ceil(walkDistance));
     } finally {
       await f.close();
     }

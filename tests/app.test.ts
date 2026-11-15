@@ -504,6 +504,13 @@ async function exercisePet() {
     // Match the regrab release budget while still requiring the exact floor.
     const waitForGround = (timeout = 3000) =>
       expect.poll(() => distanceFromGround(app!), { timeout }).toBe(0);
+    // Reaching the floor is not the end of a release: a release at the floor
+    // still plays flutter (360ms) and landing (420ms) before idle, and each 2x
+    // readback is slow on CI. The default 1s poll left almost no margin.
+    const waitForIdlePose = () =>
+      expect
+        .poll(async () => idleFrames.has(await pixels()), { timeout: 3000 })
+        .toBe(true);
     await window.mouse.move(120, 180);
     await window.mouse.down();
     await window.mouse.move(180, 80, { steps: 5 });
@@ -565,7 +572,7 @@ async function exercisePet() {
       ),
       omitBackground: true,
     });
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     for (const phase of ["immediate", "flutter", "falling", "landing"]) {
       await window.mouse.move(120, 180);
       await window.mouse.down();
@@ -620,7 +627,7 @@ async function exercisePet() {
       ).toBe(false);
       await window.mouse.up();
       await waitForGround(3000);
-      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await waitForIdlePose();
     }
     // Browser pointer-capture loss is a real input cancellation event; subsequent
     // directed mouse movement must not keep moving the pet or trigger a click.
@@ -646,7 +653,7 @@ async function exercisePet() {
     await new Promise((resolve) => setTimeout(resolve, 50));
     await window.mouse.move(500, -300);
     await waitForGround();
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     const cancelled = await petBounds();
     await window.mouse.move(-500, -500);
     await window.mouse.up();
@@ -668,7 +675,7 @@ async function exercisePet() {
     );
     await window.mouse.up();
     await waitForGround();
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     // The visible desktop window stays within the primary work area even when
     // captured input travels far beyond it, then releases at the same floor.
     const area = await app.evaluate(
@@ -683,7 +690,7 @@ async function exercisePet() {
     expect((await petBounds()).y).toBe(area.y);
     await window.mouse.up();
     await waitForGround(4000);
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     if (!packaged) {
       await placeAwayFromPhysicalCursor();
       await window.mouse.move(120, 180);
@@ -764,7 +771,7 @@ async function exercisePet() {
       .toBeGreaterThan(rapidHeld.y + 40);
     await window.mouse.up();
     await waitForGround();
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     // Inject only Electron's external display boundary. Actual renderer, IPC,
     // pointer capture, drawing and native window placement remain in use.
     const recoverOnDisplayChange = (event: string) =>
@@ -880,7 +887,7 @@ async function exercisePet() {
           )
           .toBe(false);
       }
-      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await waitForIdlePose();
       // Old held-pointer movement/release cannot revive the cancelled drag.
       await window.mouse.move(500, -500);
       await window.mouse.up();
@@ -896,7 +903,7 @@ async function exercisePet() {
         .toBeLessThan(recovered.bounds.y - 40);
       await window.mouse.up();
       await waitForGround();
-      await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+      await waitForIdlePose();
       await restoreDisplayBoundary();
       await waitForGround();
     }
@@ -920,7 +927,7 @@ async function exercisePet() {
       ),
     ).toBe(false);
     await invokeVisibility("Show Mosey");
-    await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
+    await waitForIdlePose();
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
