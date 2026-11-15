@@ -136,21 +136,16 @@ test("reconciling reports each silent visibility change once", () => {
   assert.equal(presence.reconcile(), undefined);
 });
 
-// Callers the queries cannot serve yet read the lifecycle dimensions directly.
-test("each lifecycle dimension stays readable on its own", () => {
-  const { adapter, presence, show } = fixture();
-  show();
+// The character switch reads suspension on its own: a hidden pet may still
+// switch character, a sleeping one may not.
+test("suspension stays readable apart from visibility", () => {
+  const { adapter, presence, observe, hide } = fixture();
+  observe();
   adapter.suspend();
-  assert.deepEqual(
-    {
-      visibility: presence.visibility,
-      suspended: presence.suspended,
-      ready: presence.ready,
-    },
-    { visibility: "visible", suspended: true, ready: false },
-  );
-  adapter.finishLoad();
-  assert.equal(presence.ready, true);
+  hide();
+  assert.equal(presence.suspended, true);
+  adapter.resume();
+  assert.equal(presence.suspended, false);
 });
 
 test("suspending an observed pet stops observation once, and waking starts it once", () => {

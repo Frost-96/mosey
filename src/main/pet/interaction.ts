@@ -11,11 +11,9 @@ import {
 import type { PetSize } from "../../shared/size";
 import type { CharacterSwitch } from "./character-switch";
 import type { Footing, FootingBody } from "./footing";
+import type { Presence } from "./presence";
 
 type Environment = {
-  readonly ready: boolean;
-  readonly visibility: Presentation["visibility"];
-  readonly suspended: boolean;
   readonly geometryRevision: number;
   readonly size: PetSize;
   readonly character: CharacterSwitch["current"];
@@ -28,11 +26,15 @@ type Environment = {
 // tracking. The session observes these facts but never writes gesture internals.
 // Dragging and cancelling place the window through footing directly; the
 // painted pose owned here is also the body footing measures for everyone.
+// Input is gated on presence directly, by whether the pet is shown: a shown
+// window always holds a ready renderer, and a quitting pet stays shown and
+// keeps answering the pointer while Dock capture drains, as it did before.
 export function createPetInteraction(
   pet: BrowserWindow,
   behavior: ActorRefFrom<typeof petBehavior>,
   timeline: Timeline,
   footing: Footing,
+  presence: Presence,
   environment: Environment,
 ) {
   let bodyMenu: Menu | undefined;
@@ -82,18 +84,12 @@ export function createPetInteraction(
     // Establish the new stable location before publishing resting: otherwise
     // its Dock reconciliation can start a new climb from the old location.
     const finishingSeat =
-      environment.visibility === "visible" &&
-      !environment.suspended &&
+      presence.shown &&
       ["sittingdown", "sitting", "standingup"].includes(
         String(behavior.getSnapshot().value),
       );
     if (!pet.isDestroyed() && !finishingSeat) footing.alignGround(body());
-    behavior.send({
-      type:
-        environment.visibility === "visible" && !environment.suspended
-          ? "CANCEL"
-          : "PAUSE",
-    });
+    behavior.send({ type: presence.shown ? "CANCEL" : "PAUSE" });
   };
   const release = (cancelled: boolean) => {
     if (!gesture) return;
@@ -102,11 +98,7 @@ export function createPetInteraction(
     resumeGesture();
     if (dragged) behavior.send({ type: "RELEASE" });
     else {
-      if (
-        behavior.getSnapshot().value === "paused" &&
-        environment.visibility === "visible" &&
-        !environment.suspended
-      )
+      if (behavior.getSnapshot().value === "paused" && presence.shown)
         behavior.send({ type: "RESUME" });
       if (!cancelled) behavior.send({ type: "CLICK" });
     }
@@ -138,12 +130,7 @@ export function createPetInteraction(
   const hit = (x: number, y: number) => {
     // Until the next draw report, the previous pose is still what the user sees.
     // Behavior transitions must not create an ungrabbable frame between poses.
-    if (
-      !environment.ready ||
-      !displayed ||
-      environment.visibility !== "visible"
-    )
-      return false;
+    if (!presence.shown || !displayed) return false;
     return (
       environment.character.geometry
         .frame({ ...displayed, size: environment.size })
@@ -151,8 +138,7 @@ export function createPetInteraction(
     );
   };
   const routePointer = () => {
-    if (pet.isDestroyed() || environment.visibility !== "visible" || bodyMenu)
-      return;
+    if (pet.isDestroyed() || !presence.shown || bodyMenu) return;
     const pointer = screen.getCursorScreenPoint();
     const bounds = pet.getBounds();
     const next = !gesture && !hit(pointer.x - bounds.x, pointer.y - bounds.y);
@@ -169,7 +155,7 @@ export function createPetInteraction(
     pointerPoll = undefined;
   };
   const startPointerPolling = () => {
-    if (pet.isDestroyed() || environment.visibility !== "visible") return;
+    if (pet.isDestroyed() || !presence.shown) return;
     routePointer();
     pointerPoll ??= setInterval(routePointer, 8);
   };
@@ -180,13 +166,7 @@ export function createPetInteraction(
     event.sender === pet?.webContents &&
     event.senderFrame === pet.webContents.mainFrame;
   ipcMain.on(channels.input, (event, value: unknown) => {
-    if (
-      !authorized(event) ||
-      !environment.ready ||
-      environment.visibility !== "visible" ||
-      environment.suspended
-    )
-      return;
+    if (!authorized(event) || !presence.shown) return;
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;
@@ -210,12 +190,7 @@ export function createPetInteraction(
       bodyMenu = menu;
       app.focus({ steal: true });
       menu.once("menu-will-show", () => {
-        if (
-          bodyMenu !== menu ||
-          environment.visibility !== "visible" ||
-          environment.suspended
-        )
-          menu.closePopup(pet);
+        if (bodyMenu !== menu || !presence.shown) menu.closePopup(pet);
       });
       try {
         menu.popup({
@@ -235,12 +210,7 @@ export function createPetInteraction(
     // messages keep behavior, hit geometry and motion advancing under the menu.
     if (bodyMenu && input.type !== "frame" && input.type !== "done") return;
     if (input.type === "move") {
-      if (
-        !gesture ||
-        gesture.id !== input.gestureId ||
-        environment.visibility !== "visible"
-      )
-        return;
+      if (!gesture || gesture.id !== input.gestureId || !presence.shown) return;
       const dx = input.screenX - gesture.x,
         dy = input.screenY - gesture.y;
       if (!gesture.dragged && Math.hypot(dx, dy) >= 5) {

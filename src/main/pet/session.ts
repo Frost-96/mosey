@@ -176,69 +176,64 @@ export function createPetSession(
       (action !== "standingup" || ["sittingdown", "sitting"].includes(posture))
     );
   };
-  const interaction = createPetInteraction(pet, behavior, timeline, footing, {
-    get ready() {
-      return presence.ready;
+  const interaction = createPetInteraction(
+    pet,
+    behavior,
+    timeline,
+    footing,
+    presence,
+    {
+      get geometryRevision() {
+        return geometryRevision;
+      },
+      get size() {
+        return liveSize;
+      },
+      get character() {
+        return characters.current;
+      },
+      stopMotion: () => motion.stop(),
+      publish: () => publish(),
+      bodyMenu: () => {
+        const character = characters.current;
+        const revision = commandRevision;
+        const ordinary = environment.bodyMenu();
+        return [
+          {
+            id: "daily-actions",
+            label: "动作",
+            submenu: dailyActionDefinitions.map(({ action, label }) => ({
+              id: `daily-action-${action}`,
+              label,
+              enabled: actionAvailable(action),
+              click: () => {
+                // A stale native menu must never command a newly selected resource.
+                if (
+                  revision !== commandRevision ||
+                  characters.current !== character ||
+                  characters.current.resourceVersion !==
+                    character.resourceVersion ||
+                  !actionAvailable(action)
+                )
+                  return;
+                // The behavior owns safe handoffs. In-flight return motion must
+                // continue while the latest valid request waits for landing.
+                behavior.send({ type: "PLAY", action });
+              },
+            })),
+          },
+          { type: "separator" },
+          ...ordinary,
+        ];
+      },
     },
-    get visibility() {
-      return presence.visibility;
-    },
-    get suspended() {
-      return presence.suspended;
-    },
-    get geometryRevision() {
-      return geometryRevision;
-    },
-    get size() {
-      return liveSize;
-    },
-    get character() {
-      return characters.current;
-    },
-    stopMotion: () => motion.stop(),
-    publish: () => publish(),
-    bodyMenu: () => {
-      const character = characters.current;
-      const revision = commandRevision;
-      const ordinary = environment.bodyMenu();
-      return [
-        {
-          id: "daily-actions",
-          label: "动作",
-          submenu: dailyActionDefinitions.map(({ action, label }) => ({
-            id: `daily-action-${action}`,
-            label,
-            enabled: actionAvailable(action),
-            click: () => {
-              // A stale native menu must never command a newly selected resource.
-              if (
-                revision !== commandRevision ||
-                characters.current !== character ||
-                characters.current.resourceVersion !==
-                  character.resourceVersion ||
-                !actionAvailable(action)
-              )
-                return;
-              // The behavior owns safe handoffs. In-flight return motion must
-              // continue while the latest valid request waits for landing.
-              behavior.send({ type: "PLAY", action });
-            },
-          })),
-        },
-        { type: "separator" },
-        ...ordinary,
-      ];
-    },
-  });
-  const motion = new PetMotion(pet, behavior, footing, {
+  );
+  const motion = new PetMotion(pet, behavior, footing, presence, {
     get paused() {
       return timeline.pausedAt !== undefined;
     },
     get gestureActive() {
       return interaction.gestureActive;
-    },
-    get visible() {
-      return presence.visibility === "visible";
     },
     get size() {
       return liveSize;

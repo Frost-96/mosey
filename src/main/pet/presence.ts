@@ -31,8 +31,14 @@
 //
 // Two queries are the gates:
 // - observable: renderer ready, window visible, not suspended, not quitting.
-// - shown: window natively visible and not suspended. Only the presentation
-//   published to the renderer reads it.
+//   Session gates read it: Dock capture, Dock coordination, ground
+//   reconciliation and the daily action menu.
+// - shown: window natively visible and not suspended. The presentation
+//   published to the renderer reads it, and so do interaction and motion,
+//   which hold presence directly. A shown window holds a ready renderer,
+//   since presence hides any other on every operation and reconcile, so for
+//   them shown differs from observable only while quitting: the pet stays
+//   shown through the quit drain and keeps taking input and moving as before.
 //
 // Transitions mark the edges of observation: "observed" when the pet starts
 // being observed, "unobserved" when it stops. Each edge is reported once, so
@@ -51,10 +57,9 @@
 // The session reconciles native visibility from its own state poll. The
 // operations that can change visibility return the new visibility only when it
 // changed, so the caller republishes its presentation.
-// The raw dimension reads serve callers not yet moved onto the queries: the
-// interaction and motion environments (ready, visibility, suspended). The
-// character switch also reads suspended, which neither query expresses: a
-// hidden pet may still switch character, a sleeping one may not.
+// One raw dimension stays readable beside the queries: the character switch
+// reads suspended, which neither query expresses: a hidden pet may still
+// switch character, a sleeping one may not.
 
 export type PresenceTransition =
   | { type: "observed" }
@@ -210,12 +215,6 @@ export function createPresence(
     },
     get shown() {
       return visible && !suspended;
-    },
-    get ready() {
-      return renderer === "ready";
-    },
-    get visibility(): "visible" | "hidden" {
-      return visible ? "visible" : "hidden";
     },
     get suspended() {
       return suspended;

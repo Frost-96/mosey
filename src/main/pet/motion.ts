@@ -4,12 +4,12 @@ import { petBehavior, autonomy } from "../../behavior/pet-machine";
 import type { PetSize } from "../../shared/size";
 import type { CharacterSwitch } from "./character-switch";
 import type { Footing, FootingBody } from "./footing";
+import type { Presence } from "./presence";
 
 type Scene = {
   // A captured gesture froze the behavior timeline.
   readonly paused: boolean;
   readonly gestureActive: boolean;
-  readonly visible: boolean;
   readonly size: PetSize;
   readonly character: CharacterSwitch["current"];
   // The body as painted right now, for footing to measure.
@@ -21,6 +21,8 @@ type Scene = {
 // Own the single motion timer and its action identity. Scene getters stay live
 // across native calls; the application never manages per-motion progress.
 // Support, placement and the pending-frame hold come from footing directly.
+// A walk or climb stops once presence no longer shows the pet. Quitting keeps
+// it shown, so motion continues while Dock capture drains instead of freezing.
 export class PetMotion {
   private timer: ReturnType<typeof setInterval> | undefined;
   private action = -1;
@@ -28,6 +30,7 @@ export class PetMotion {
     private readonly pet: BrowserWindow,
     private readonly behavior: ActorRefFrom<typeof petBehavior>,
     private readonly footing: Footing,
+    private readonly presence: Presence,
     private readonly scene: Scene,
   ) {}
 
@@ -99,7 +102,7 @@ export class PetMotion {
         if (
           this.pet.isDestroyed() ||
           this.scene.gestureActive ||
-          !this.scene.visible ||
+          !this.presence.shown ||
           this.behavior.getSnapshot().context.actionId !== id
         )
           return this.stop();
@@ -144,7 +147,7 @@ export class PetMotion {
         if (
           this.pet.isDestroyed() ||
           this.scene.gestureActive ||
-          !this.scene.visible ||
+          !this.presence.shown ||
           this.behavior.getSnapshot().context.actionId !== id
         )
           return this.stop();
