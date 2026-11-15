@@ -7,6 +7,10 @@ import ts from "typescript";
 import { createActor } from "xstate";
 import { petBehavior } from "../src/behavior/pet-machine.ts";
 import { Timeline } from "../src/behavior/timeline.ts";
+import {
+  createFooting,
+  createMemoryFootingAdapter,
+} from "../src/main/pet/footing.ts";
 import type { createPetInteraction } from "../src/main/pet/interaction.ts";
 
 // Execute the actual adapter with small native-boundary substitutes. No Electron
@@ -24,12 +28,20 @@ const adapter = ts.transpileModule(
   },
 ).outputText;
 
+// A 1000x800 work area at the origin holds the 240-point pet window, whose
+// painted body spans its middle half horizontally and its whole height.
+const workArea = { x: 0, y: 0, width: 1000, height: 800 };
+
 class PetWindow extends EventEmitter {
   destroyed = false;
   webContents = { mainFrame: {}, send() {} };
+  getBounds: () => object;
+  constructor(window: { windowBounds(): object }) {
+    super();
+    this.getBounds = () => window.windowBounds();
+  }
   isDestroyed = () => this.destroyed;
   setIgnoreMouseEvents() {}
-  getBounds = () => ({ x: 0, y: 0, width: 240, height: 240 });
 }
 class NativeMenu extends EventEmitter {
   callback: (() => void) | undefined;
@@ -60,7 +72,12 @@ function harness(t: TestContext, daily = true) {
     },
   }).start();
   actor.send({ type: "RESUME" });
-  const pet = new PetWindow();
+  const window = createMemoryFootingAdapter({
+    window: { x: 400, y: 560, width: 240, height: 240 },
+    workArea,
+  });
+  const footing = createFooting(window);
+  const pet = new PetWindow(window);
   const environment = {
     ready: true,
     visibility: "visible",
@@ -72,11 +89,24 @@ function harness(t: TestContext, daily = true) {
       resourceVersion: "version-a",
       loopTimings,
       atlases: [{ action: "resting", frames: [{}, {}, {}, {}] }],
-      geometry: { frame: () => ({ contains: () => true }) },
+      capabilities: daily ? ["looking"] : [],
+      geometry: {
+        frame: () => ({
+          contains: () => true,
+          boundsAt: (origin: { x: number; y: number }) => ({
+            left: origin.x + 60,
+            right: origin.x + 180,
+            top: origin.y,
+            bottom: origin.y + 240,
+          }),
+        }),
+        contactAt: (_size: number, x: number) => ({
+          left: x + 60,
+          right: x + 180,
+        }),
+      },
     },
     stopMotion() {},
-    constrain() {},
-    alignGround() {},
     publish() {},
     bodyMenu: () => [],
   };
@@ -122,7 +152,8 @@ function harness(t: TestContext, daily = true) {
     pet as unknown as BrowserWindow,
     actor,
     timeline,
-    environment as unknown as Parameters<typeof createPetInteraction>[3],
+    footing,
+    environment as unknown as Parameters<typeof createPetInteraction>[4],
   );
   t.after(() => {
     actor.stop();
@@ -157,6 +188,8 @@ function harness(t: TestContext, daily = true) {
   return {
     actor,
     timeline,
+    window,
+    footing,
     environment,
     interaction,
     menus,
@@ -238,4 +271,42 @@ test("Corgi updates its painted hit region during native menus", (t) => {
   h.menus[0].closePopup();
   assert.equal(h.actor.getSnapshot().value, "resting");
   assert.equal(h.timeline.pausedAt, undefined);
+});
+
+test("a drag keeps the whole window inside the work area", (t) => {
+  const h = harness(t, false);
+  h.frame(0);
+  const gesture = {
+    geometryRevision: h.environment.geometryRevision,
+    gestureId: 7,
+  };
+  h.input({
+    ...gesture,
+    type: "press",
+    actionId: h.actor.getSnapshot().context.actionId,
+    x: 120,
+    y: 120,
+    screenX: 520,
+    screenY: 680,
+  });
+  h.input({ ...gesture, type: "move", screenX: 5520, screenY: -1000 });
+  assert.equal(h.actor.getSnapshot().value, "dragging");
+  const { x, y } = h.window.windowBounds();
+  assert.deepEqual({ x, y }, { x: 760, y: 0 });
+});
+
+test("cancelling puts the feet back on the observed Dock edge", (t) => {
+  const h = harness(t, false);
+  h.frame(0);
+  h.footing.observe(
+    {
+      orientation: "bottom",
+      contour: [400, 500, 600].map((axis) => ({ axis, inward: 700 })),
+    },
+    false,
+  );
+  h.window.setWindow({ x: 400, y: 100, width: 240, height: 240 });
+  h.interaction.cancel();
+  const { x, y } = h.window.windowBounds();
+  assert.deepEqual({ x, y }, { x: 400, y: 460 });
 });

@@ -10,6 +10,7 @@ import {
 } from "../../shared/contract";
 import type { PetSize } from "../../shared/size";
 import type { CharacterSwitch } from "./character-switch";
+import type { Footing, FootingBody } from "./footing";
 
 type Environment = {
   readonly ready: boolean;
@@ -19,18 +20,19 @@ type Environment = {
   readonly size: PetSize;
   readonly character: CharacterSwitch["current"];
   stopMotion(): void;
-  constrain(x: number, y: number): void;
-  alignGround(): void;
   publish(): void;
   bodyMenu(): Electron.MenuItemConstructorOptions[];
 };
 
 // Own captured pointer identity, the last painted hit region and native menu
 // tracking. The session observes these facts but never writes gesture internals.
+// Dragging and cancelling place the window through footing directly; the
+// painted pose owned here is also the body footing measures for everyone.
 export function createPetInteraction(
   pet: BrowserWindow,
   behavior: ActorRefFrom<typeof petBehavior>,
   timeline: Timeline,
+  footing: Footing,
   environment: Environment,
 ) {
   let bodyMenu: Menu | undefined;
@@ -85,7 +87,7 @@ export function createPetInteraction(
       ["sittingdown", "sitting", "standingup"].includes(
         String(behavior.getSnapshot().value),
       );
-    if (!pet.isDestroyed() && !finishingSeat) environment.alignGround();
+    if (!pet.isDestroyed() && !finishingSeat) footing.alignGround(body());
     behavior.send({
       type:
         environment.visibility === "visible" && !environment.suspended
@@ -117,6 +119,21 @@ export function createPetInteraction(
         direction: Presentation["direction"];
       }
     | undefined;
+  // Side avoidance follows the last painted pose; before the first report
+  // after an invalidation, the body is the character at rest.
+  const body = (): FootingBody => {
+    const character = environment.character;
+    return {
+      geometry: character.geometry,
+      capabilities: character.capabilities,
+      size: environment.size,
+      posture: displayed?.posture ?? "resting",
+      frame: displayed?.frame ?? 0,
+      direction:
+        displayed?.direction ?? behavior.getSnapshot().context.direction,
+      footY: pet.getBounds().y + environment.size,
+    };
+  };
   let ignoring = true;
   const hit = (x: number, y: number) => {
     // Until the next draw report, the previous pose is still what the user sees.
@@ -233,7 +250,7 @@ export function createPetInteraction(
         behavior.send({ type: "DRAG_START" });
       }
       if (gesture.dragged)
-        environment.constrain(gesture.originX + dx, gesture.originY + dy);
+        footing.constrain(gesture.originX + dx, gesture.originY + dy);
       return;
     }
     if (input.type === "release" || input.type === "cancel") {
@@ -324,6 +341,7 @@ export function createPetInteraction(
     get displayed() {
       return displayed;
     },
+    body,
     invalidate({
       releaseInput = false,
       forgetGesture = false,

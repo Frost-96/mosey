@@ -56,7 +56,7 @@ export function createPetSession(
     else if (rendererState === "ready") {
       behavior.send({ type: "CANCEL" });
       interaction.invalidate();
-      alignGround();
+      footing.alignGround(interaction.body());
       pet.showInactive();
     }
     synchronizeVisibility();
@@ -109,11 +109,8 @@ export function createPetSession(
         dockFramePending: footing.holding,
         footY: bounds.y + bounds.height,
         supports: [
-          supportAt(bounds.x, bounds.y),
-          footing.supportAt(candidateBody(candidate), {
-            x: bounds.x,
-            y: bounds.y,
-          }),
+          footing.supportAt(interaction.body(), bounds),
+          footing.supportAt(candidateBody(candidate), bounds),
         ],
       };
     },
@@ -159,7 +156,7 @@ export function createPetSession(
       (action !== "standingup" || ["sittingdown", "sitting"].includes(posture))
     );
   };
-  const interaction = createPetInteraction(pet, behavior, timeline, {
+  const interaction = createPetInteraction(pet, behavior, timeline, footing, {
     get ready() {
       return rendererState === "ready";
     },
@@ -179,8 +176,6 @@ export function createPetSession(
       return characters.current;
     },
     stopMotion: () => motion.stop(),
-    constrain: (x, y) => constrain(x, y),
-    alignGround: () => alignGround(),
     publish: () => publish(),
     bodyMenu: () => {
       const character = characters.current;
@@ -215,12 +210,9 @@ export function createPetSession(
       ];
     },
   });
-  const motion = new PetMotion(pet, behavior, {
-    get now() {
-      return footing.movementNow();
-    },
-    get held() {
-      return timeline.pausedAt !== undefined || footing.holding;
+  const motion = new PetMotion(pet, behavior, footing, {
+    get paused() {
+      return timeline.pausedAt !== undefined;
     },
     get gestureActive() {
       return interaction.gestureActive;
@@ -234,11 +226,9 @@ export function createPetSession(
     get character() {
       return characters.current;
     },
-    supportAt: (x, y) => supportAt(x, y),
-    constrain: (x, y) => constrain(x, y),
+    body: () => interaction.body(),
     reconcile: () => reconcileDock(),
   });
-  const constrain = footing.constrain;
   const publishSupportReadiness = () => {
     const pending = footing.holding;
     if (behavior.getSnapshot().context.supportPending !== pending)
@@ -250,34 +240,18 @@ export function createPetSession(
     publishSupportReadiness();
     return stopped;
   };
-  // Current side avoidance follows the last painted pose.
-  const currentBody = (): FootingBody => {
-    const character = characters.current;
-    const pose = interaction.displayed;
-    return {
-      geometry: character.geometry,
-      capabilities: character.capabilities,
-      size: liveSize,
-      posture: pose?.posture ?? "resting",
-      frame: pose?.frame ?? 0,
-      direction: pose?.direction ?? behavior.getSnapshot().context.direction,
-      footY: pet.getBounds().y + liveSize,
-    };
-  };
   // A candidate character starts at rest; support must fit before that
   // switch commits.
   const candidateBody = (
     candidate: CharacterSwitch["current"],
   ): FootingBody => ({
-    ...currentBody(),
+    ...interaction.body(),
     geometry: candidate.geometry,
     capabilities: candidate.capabilities,
     posture: "resting",
     frame: 0,
     direction: behavior.getSnapshot().context.direction,
   });
-  const supportAt = (x: number, y: number) =>
-    footing.supportAt(currentBody(), { x, y });
   const reconcileDock = () => {
     if (
       pet.isDestroyed() ||
@@ -292,8 +266,9 @@ export function createPetSession(
     )
       return;
     const bounds = pet.getBounds();
-    const decision = footing.reconcile(currentBody());
-    if (decision.shiftX) constrain(bounds.x + decision.shiftX, bounds.y);
+    const decision = footing.reconcile(interaction.body());
+    if (decision.shiftX)
+      footing.constrain(bounds.x + decision.shiftX, bounds.y);
     if (decision.move === "climb") behavior.send({ type: "CLIMB" });
     else if (decision.move === "drop") behavior.send({ type: "DROP" });
   };
@@ -305,7 +280,6 @@ export function createPetSession(
     // Establish any required drop/climb before a waiting command can continue.
     publishSupportReadiness();
   };
-  const alignGround = () => footing.alignGround(currentBody());
   const reconcileGround = () => {
     // The live work area can change before its native notification arrives.
     // Keep grounded poses on that floor without touching captured or moving pets.
@@ -318,7 +292,8 @@ export function createPetSession(
     )
       return;
     const bounds = pet.getBounds();
-    const support = supportAt(bounds.x, bounds.y);
+    const body = interaction.body();
+    const support = footing.supportAt(body, bounds);
     if (
       ["sittingdown", "sitting", "standingup"].includes(String(posture)) &&
       characters.current.capabilities.includes("climbing") &&
@@ -330,7 +305,7 @@ export function createPetSession(
         behavior.send({ type: "CLIMB" });
       return;
     }
-    if (bounds.y + bounds.height !== support.footY) alignGround();
+    if (bounds.y + bounds.height !== support.footY) footing.alignGround(body);
   };
   const presentation = () =>
     presentationSchema.parse({
@@ -393,7 +368,7 @@ export function createPetSession(
       },
       false,
     );
-    constrain(pet.getBounds().x, pet.getBounds().y);
+    footing.constrain(pet.getBounds().x, pet.getBounds().y);
     interaction.release();
     if (
       ["climbing", "falling"].includes(String(behavior.getSnapshot().value))
@@ -434,7 +409,7 @@ export function createPetSession(
   };
   const resume = () => {
     suspended = false;
-    alignGround();
+    footing.alignGround(interaction.body());
     interaction.startPolling();
     if (visibility === "visible") {
       behavior.send({ type: "RESUME" });
@@ -613,7 +588,7 @@ export function createPetSession(
     if (quitting || rendererState !== "loading") return;
     rendererState = "ready";
     characters.rendererLoaded();
-    alignGround();
+    footing.alignGround(interaction.body());
     if (preferences.visibility === "visible") pet.showInactive();
     synchronizeVisibility();
     environment.refreshMenus();
