@@ -9,29 +9,42 @@ import {
 } from "../src/main/pet/presence.ts";
 
 // Presence is verified only through its interface, with the in-memory adapter
-// standing in for the native window and the system events it reports.
+// standing in for the native window, the stored intent and the system events.
+// The log records, in order, each show preparation, each show or hide presence
+// asks of the window, and each transition it reports.
 function fixture() {
   const adapter = createMemoryPresenceAdapter();
+  const log: string[] = [];
   const transitions: PresenceTransition["type"][] = [];
-  const presence = createPresence(adapter, (transition) =>
-    transitions.push(transition.type),
+  const presence = createPresence(
+    {
+      ...adapter,
+      show() {
+        log.push("show");
+        adapter.show();
+      },
+      hide() {
+        log.push("hide");
+        adapter.hide();
+      },
+    },
+    (transition) => {
+      log.push(transition.type);
+      transitions.push(transition.type);
+    },
+    () => log.push("prepare"),
   );
-  // The platform shows or hides the window, then presence reconciles.
-  const show = () => {
-    adapter.setVisible(true);
-    return presence.synchronize();
-  };
-  const hide = () => {
-    adapter.setVisible(false);
-    return presence.synchronize();
-  };
+  // The platform shows or hides the window and reports it.
+  const show = () => adapter.show();
+  const hide = () => adapter.hide();
   // A ready renderer in a shown window: the pet is being observed.
   const observe = () => {
     presence.rendererLoaded();
     show();
     transitions.length = 0;
+    log.length = 0;
   };
-  return { adapter, presence, show, hide, observe, transitions };
+  return { adapter, presence, show, hide, observe, transitions, log };
 }
 
 const queries = (presence: ReturnType<typeof fixture>["presence"]) => ({
@@ -70,11 +83,12 @@ test("a shown window is observable only once its renderer is ready", () => {
   assert.deepEqual(queries(presence), { observable: false, shown: true });
   presence.rendererLoaded();
   assert.deepEqual(queries(presence), { observable: true, shown: true });
+  // A renderer that is not ready never stays shown.
   presence.rendererLoading();
-  assert.deepEqual(queries(presence), { observable: false, shown: true });
+  assert.deepEqual(queries(presence), { observable: false, shown: false });
   presence.rendererLoaded();
   presence.rendererFailed();
-  assert.deepEqual(queries(presence), { observable: false, shown: true });
+  assert.deepEqual(queries(presence), { observable: false, shown: false });
 });
 
 test("suspension hides a shown pet from both queries until it resumes", () => {
@@ -106,14 +120,16 @@ test("quitting ends observation but keeps the pet shown through the drain", () =
   assert.deepEqual(queries(presence), { observable: false, shown: true });
 });
 
-test("repeated native notifications report each visibility edge once", () => {
-  const { presence, show, hide } = fixture();
-  assert.equal(presence.synchronize(), undefined);
-  assert.equal(show(), "visible");
-  assert.equal(show(), undefined);
-  assert.equal(presence.synchronize(), undefined);
-  assert.equal(hide(), "hidden");
-  assert.equal(hide(), undefined);
+test("reconciling reports each silent visibility change once", () => {
+  const { adapter, presence, observe } = fixture();
+  observe();
+  assert.equal(presence.reconcile(), undefined);
+  adapter.setVisible(false);
+  assert.equal(presence.reconcile(), "hidden");
+  assert.equal(presence.reconcile(), undefined);
+  adapter.setVisible(true);
+  assert.equal(presence.reconcile(), "visible");
+  assert.equal(presence.reconcile(), undefined);
 });
 
 // Callers the queries cannot serve yet read the lifecycle dimensions directly.
@@ -159,14 +175,14 @@ test("a pet suspended while hidden starts observation only after it is shown and
 
 test("duplicate or coalesced native visibility notifications never repeat a transition", () => {
   const { adapter, presence, observe, transitions } = fixture();
+  adapter.show();
   presence.rendererLoaded();
   adapter.show();
-  adapter.show();
-  presence.synchronize();
+  presence.reconcile();
   assert.deepEqual(transitions, ["observed"]);
   adapter.hide();
   adapter.hide();
-  presence.synchronize();
+  presence.reconcile();
   assert.deepEqual(transitions, ["observed", "unobserved"]);
   // A hide and show the platform coalesced into no observable change.
   observe();
@@ -211,4 +227,63 @@ test("a pet still observed while quitting stops observation when it is suspended
     adapter[end]();
     assert.deepEqual(transitions, ["unobserved"], end);
   }
+});
+
+// Presence alone shows and hides the window; the stored intent is only read.
+test("the poll hides a window the platform showed before its renderer was ready", () => {
+  const { adapter, presence, log } = fixture();
+  adapter.setVisible(true);
+  assert.equal(presence.reconcile(), undefined);
+  assert.equal(adapter.nativelyVisible(), false);
+  assert.deepEqual(log, ["hide"]);
+  assert.equal(adapter.intent(), "visible");
+});
+
+test("a renderer reload hides the pet without changing its intent and shows it again once loaded", () => {
+  const { adapter, presence, observe, log } = fixture();
+  observe();
+  presence.rendererLoading();
+  assert.deepEqual(log, ["hide", "unobserved"]);
+  assert.equal(adapter.intent(), "visible");
+  presence.rendererLoaded();
+  assert.deepEqual(log, ["hide", "unobserved", "prepare", "show", "observed"]);
+});
+
+test("a hidden intent hides the pet and keeps it hidden through reloads and silent shows", () => {
+  const { adapter, presence, observe, log } = fixture();
+  observe();
+  adapter.setIntent("hidden");
+  assert.equal(presence.intentChanged(), "hidden");
+  presence.rendererLoading();
+  presence.rendererLoaded();
+  adapter.setVisible(true);
+  presence.reconcile();
+  assert.deepEqual(log, ["hide", "unobserved", "hide"]);
+  assert.equal(adapter.nativelyVisible(), false);
+  assert.equal(adapter.intent(), "hidden");
+});
+
+test("choosing to show prepares the pet before showing it, only once its renderer is ready", () => {
+  const { adapter, presence, log } = fixture();
+  adapter.setIntent("hidden");
+  presence.rendererLoaded();
+  adapter.setIntent("visible");
+  assert.equal(presence.intentChanged(), "visible");
+  assert.deepEqual(log, ["prepare", "show", "observed"]);
+  presence.rendererLoading();
+  log.length = 0;
+  presence.intentChanged();
+  assert.deepEqual(log, []);
+  assert.equal(adapter.nativelyVisible(), false);
+});
+
+// Preparation readies a pet about to be observed. A suspended pet is shown,
+// as before, but stays paused until it wakes.
+test("a pet shown while suspended is not prepared and starts observation when it wakes", () => {
+  const { adapter, presence, log } = fixture();
+  adapter.suspend();
+  presence.rendererLoaded();
+  assert.deepEqual(log, ["show"]);
+  adapter.resume();
+  assert.deepEqual(log, ["show", "observed"]);
 });

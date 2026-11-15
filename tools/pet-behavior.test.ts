@@ -425,6 +425,48 @@ test("pause needs no renderer acknowledgement and resumes through a complete ris
   }
 });
 
+// Preparing a show sends CANCEL to the paused pet just before observation
+// resumes it. Both orders must leave the pet in the same activity.
+test("a paused pet resumed after a cancel ends where a plain resume ends", () => {
+  const settled = (pet: ReturnType<typeof fixture>) => {
+    const { context } = pet.actor.getSnapshot();
+    return {
+      state: pet.state(),
+      startedAt: context.startedAt,
+      awakeSince: context.awakeSince,
+      pendingActivity: context.pendingActivity,
+      pendingCommand: context.pendingCommand,
+      resumeSeat: context.resumeSeat,
+      direction: context.direction,
+    };
+  };
+  for (const seat of [false, true]) {
+    const run = (cancel: boolean) => {
+      const pet = fixture();
+      if (seat) {
+        pet.play("sitting");
+        pet.done();
+      } else pet.play("habit");
+      pet.actor.send({ type: "PAUSE" });
+      pet.clock.increment(5000);
+      if (cancel) pet.actor.send({ type: "CANCEL" });
+      pet.actor.send({ type: "RESUME" });
+      const result = { settled: settled(pet), actionId: pet.id() };
+      pet.actor.stop();
+      return result;
+    };
+    const resumed = run(false);
+    const cancelled = run(true);
+    assert.deepEqual(cancelled.settled, resumed.settled, `seat ${seat}`);
+    assert.equal(resumed.settled.state, seat ? "standingup" : "resting");
+    // With a seat to resume, CANCEL is ignored. Without one, CANCEL first
+    // rests the pet and RESUME rests it again, so the action id advances one
+    // further. The intermediate id is published only while the pet is still
+    // hidden, and the renderer keys every later report off the latest id.
+    assert.equal(cancelled.actionId - resumed.actionId, seat ? 0 : 1);
+  }
+});
+
 test("dragging preempts new gestures and discards deferred commands", () => {
   for (const action of dailyActionDefinitions.map(({ action }) => action)) {
     const pet = fixture();
