@@ -22,7 +22,8 @@ type Scene = {
 // across native calls; the application never manages per-motion progress.
 // Support, placement and the pending-frame hold come from footing directly.
 // A walk or climb stops once presence no longer shows the pet. Quitting keeps
-// it shown, so motion continues while Dock capture drains instead of freezing.
+// it shown, so presence never freezes motion mid-step during the quit drain;
+// quit's own cleanup stops it.
 export class PetMotion {
   private timer: ReturnType<typeof setInterval> | undefined;
   private action = -1;
