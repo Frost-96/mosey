@@ -28,3 +28,16 @@ test("every mode/scale/file is assigned exactly once, including unknown files", 
   );
   assert(Math.max(...totals) - Math.min(...totals) <= 90);
 });
+
+test("reserved seconds move work away from a shard with other duties", () => {
+  const items = ["a", "b", "c", "d", "e", "f"];
+  const seconds = () => 10;
+  const identity = (item: string) => item;
+  const shards = balance(items, 3, seconds, identity, [25]);
+  assert.deepEqual(shards.flat().sort(), [...items].sort());
+  assert.equal(shards[0]!.length, 0);
+  assert.deepEqual(
+    shards.map((shard) => shard.length),
+    [0, 3, 3],
+  );
+});

@@ -28,10 +28,15 @@ test("coverage gate rejects a missing, duplicated or unassigned application file
     for (let shard = 0; shard < 5; shard++) {
       const directory = path.join(root, "reports", String(shard));
       await mkdir(directory, { recursive: true });
-      await writeFile(
-        path.join(directory, "ci-matrix.json"),
-        JSON.stringify(items.filter((_, i) => i % 5 === shard)),
-      );
+      for (const phase of ["development", "packaged"])
+        await writeFile(
+          path.join(directory, `ci-matrix-${phase}.json`),
+          JSON.stringify(
+            items.filter(
+              (item, i) => i % 5 === shard && item.project.startsWith(phase),
+            ),
+          ),
+        );
     }
   }
   const run = () =>
@@ -49,6 +54,9 @@ test("coverage gate rejects a missing, duplicated or unassigned application file
   assert.notEqual(run().status, 0);
   await report([...modules, modules[0]!]);
   assert.match(run().stderr, /Duplicate validation/);
+  await report(modules);
+  await rm(path.join(root, "reports", "3", "ci-matrix-packaged.json"));
+  assert.match(run().stderr, /Both phase reports/);
   await report(modules);
   await writeFile(path.join(root, "tests", "new.test.ts"), "");
   assert.notEqual(run().status, 0);
