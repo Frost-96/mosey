@@ -5,7 +5,6 @@ type SampleRequest = {
   pid: number;
   name: string;
   evidenceDirectory: string;
-  seconds?: number;
   command?: string;
   timeoutMs?: number;
 };
@@ -17,7 +16,6 @@ export function sampleProcess({
   pid,
   name,
   evidenceDirectory,
-  seconds = 2,
   command = "/usr/bin/sample",
   // Sampling is followed by symbolication; diagnostics stay bounded so the
   // failing test still reaches its cleanup.
@@ -27,12 +25,8 @@ export function sampleProcess({
   return new Promise((resolve) => {
     execFile(
       command,
-      [
-        String(pid),
-        String(seconds),
-        "-file",
-        path.join(evidenceDirectory, report),
-      ],
+      // Two seconds covers a stall without delaying the failure report.
+      [String(pid), "2", "-file", path.join(evidenceDirectory, report)],
       { timeout: timeoutMs, killSignal: "SIGKILL" },
       (error) =>
         resolve(

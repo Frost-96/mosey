@@ -1,4 +1,4 @@
-export type HeldPointerEvent = {
+export type PointerEventDuringHold = {
   type: string;
   buttons: number;
   screenX: number;
@@ -9,14 +9,14 @@ export type HeldPointerEvent = {
 // While a directed drag holds the button, every event it produces reports that
 // button; an unpressed event can only come from the OS, which ends the drag.
 export function describeSyntheticDragInterference(
-  events: readonly HeldPointerEvent[],
+  events: readonly PointerEventDuringHold[],
 ) {
-  const native = events.filter((event) => event.buttons === 0);
-  const first = native[0];
+  const unpressed = events.filter((event) => event.buttons === 0);
+  const first = unpressed[0];
   if (!first) return undefined;
   return (
     "Physical pointer movement reached the settings window during a synthetic drag " +
-    `(${native.length} unpressed events, first at screen ` +
+    `(${unpressed.length} unpressed events, first at screen ` +
     `${Math.round(first.screenX)},${Math.round(first.screenY)}); the OS released ` +
     "the held button, so this run cannot validate slider behavior. Keep the " +
     "mouse still during desktop acceptance."

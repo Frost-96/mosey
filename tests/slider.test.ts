@@ -20,6 +20,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
   let app: ElectronApplication | undefined;
   let stop: (() => Promise<void>) | undefined;
   let failure: { error: unknown } | undefined;
+  let holding = false;
   const fixture = createElectronFixtureCleanup(
     [
       async () => {
@@ -136,16 +137,13 @@ test("slider previews without saving, commits on release, and persists nonpreset
           if (
             Reflect.get(window, "sliderSyntheticHold") &&
             event instanceof PointerEvent &&
-            [
-              "pointerdown",
-              "pointermove",
-              "pointerup",
-              "pointercancel",
-            ].includes(type) &&
+            ["pointerdown", "pointermove", "pointerup"].includes(type) &&
             held.length < 50
           )
+            // Shape of PointerEventDuringHold; evaluated code cannot import it.
             held.push({
               type,
+              at: Date.now(),
               buttons: event.buttons,
               screenX: event.screenX,
               screenY: event.screenY,
@@ -221,7 +219,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     // desktop check. Ignoring mouse events excludes OS movement outside the
     // settings window while the synthetic drag is held. It does not exclude
     // movement over the window: the OS reports its unpressed button, which ends
-    // the drag (#121). Such a run is reported as interference, not judged.
+    // the drag. A failure during such a hold is reported as interference.
     const isolateNativePointer = (ignore: boolean) =>
       app!.evaluate(({ BrowserWindow }, ignore) => {
         BrowserWindow.getAllWindows()
@@ -229,20 +227,22 @@ test("slider previews without saving, commits on release, and persists nonpreset
           ?.setIgnoreMouseEvents(ignore);
       }, ignore);
     // Bounds the interval in which every pointer event must report the button
-    // held by the directed drag.
-    const holdSyntheticDrag = (hold: boolean) =>
-      settings.evaluate(
-        (hold) => Reflect.set(window, "sliderSyntheticHold", hold),
-        hold,
-      );
+    // held by the directed drag. Each hold observes only its own events.
+    const holdSyntheticDrag = async (hold: boolean) => {
+      await settings.evaluate((hold) => {
+        if (hold) Reflect.get(window, "sliderHeldPointer")?.splice(0);
+        Reflect.set(window, "sliderSyntheticHold", hold);
+      }, hold);
+      holding = hold;
+    };
     await isolateNativePointer(true);
     const bounds = (await slider.boundingBox())!;
     await settings.mouse.move(
       bounds.x + bounds.width * (await thumbFraction()),
       bounds.y + bounds.height / 2,
     );
-    await settings.mouse.down();
     await holdSyntheticDrag(true);
+    await settings.mouse.down();
     await settings.mouse.move(bounds.x + 8, bounds.y + bounds.height / 2, {
       steps: 4,
     });
@@ -314,20 +314,21 @@ test("slider previews without saving, commits on release, and persists nonpreset
       closingBounds.x + closingBounds.width * (await thumbFraction()),
       closingBounds.y + closingBounds.height / 2,
     );
-    await settings.mouse.down();
     await holdSyntheticDrag(true);
+    await settings.mouse.down();
     await settings.mouse.move(
       closingBounds.x + 8,
       closingBounds.y + closingBounds.height / 2,
     );
     await expect.poll(side).toBe(70);
     expect(JSON.parse(await readFile(file, "utf8")).size).toBe(160);
-    // Closing tears the renderer down; the hold ends with the window.
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()
         .find((w) => w.getTitle() === "Mosey 设置")!
         .close(),
     );
+    // The held drag ends with the window it belonged to.
+    holding = false;
     await expect
       .poll(async () => JSON.parse(await readFile(file, "utf8")).size)
       .toBe(70);
@@ -346,6 +347,11 @@ test("slider previews without saving, commits on release, and persists nonpreset
     ).toBe(false);
   } catch (error) {
     failure = { error };
+    // Only a failure inside a held drag, and only input before it, can be
+    // attributed to OS movement; later steps and later movement cannot.
+    const failedAt = Date.now();
+    const failedWhileHeld = holding;
+    const evidence = `failure-${packaged ? "packaged" : "development"}-slider`;
     const settings = app
       ?.windows()
       .find((page) => new URL(page.url()).searchParams.has("settings"));
@@ -367,8 +373,9 @@ test("slider previews without saving, commits on release, and persists nonpreset
         })),
       })),
     ).catch((error: unknown) => ({ unavailable: String(error) }));
-    // Neither side answered: the main thread also carries every CDP command,
-    // so its stacks are the only record of what stalled the run (#121).
+    // An unanswered probe leaves no trace of its own. The main thread also
+    // carries every CDP command, so its stacks are kept as the record of what
+    // stalled the run; sampling an exited process fails fast.
     const pid = app?.process().pid;
     const sample =
       pid !== undefined &&
@@ -376,19 +383,24 @@ test("slider previews without saving, commits on release, and persists nonpreset
         (native && "unavailable" in native))
         ? await sampleProcess({
             pid,
-            name: `failure-${packaged ? "packaged" : "development"}-slider-main-sample`,
+            name: `${evidence}-main-sample`,
             evidenceDirectory: evidencePath(),
           })
         : undefined;
     await writeFile(
-      evidencePath(
-        `failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
-      ),
+      evidencePath(`${evidence}-trace.json`),
       JSON.stringify({ renderer, native, sample }, null, 2),
     ).catch(() => {});
     const interference =
-      renderer && "held" in renderer && Array.isArray(renderer.held)
-        ? describeSyntheticDragInterference(renderer.held)
+      failedWhileHeld &&
+      renderer &&
+      "held" in renderer &&
+      Array.isArray(renderer.held)
+        ? describeSyntheticDragInterference(
+            renderer.held.filter(
+              (event: { at: number }) => event.at <= failedAt,
+            ),
+          )
         : undefined;
     if (interference)
       failure = { error: new Error(interference, { cause: error }) };
@@ -398,9 +410,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
         : "pet";
       await page
         .screenshot({
-          path: evidencePath(
-            `failure-${packaged ? "packaged" : "development"}-slider-${name}.png`,
-          ),
+          path: evidencePath(`${evidence}-${name}.png`),
           timeout: 3000,
         })
         .catch(() => {});
