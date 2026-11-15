@@ -41,30 +41,19 @@ export function createPetSession(
   environment: Environment,
 ) {
   const timeline = new Timeline();
+  // Presence needs only readiness; the session keeps the renderer lifecycle
+  // and tells presence of each change.
   let rendererState: "loading" | "ready" | "failed" = "loading";
-  // Presence needs only readiness; the session keeps the renderer lifecycle.
-  // Retirement tells presence itself, once the pet is hidden.
-  const setRendererState = (next: "ready" | "failed") => {
-    rendererState = next;
-    if (next === "ready") presence.rendererLoaded();
-    else presence.rendererFailed();
-  };
   let automaticRecoveryUsed = false;
   let rendererGeneration = 0;
   let commandRevision = 0;
   app.on("will-quit", () => behavior.stop());
+  // The intent is a preference; presence reads it and shows or hides the pet.
   const setVisibility = (next: "visible" | "hidden") => {
     if (!preferences.setVisibility(next)) return;
     commandRevision++;
     interaction.dismissMenu();
-    if (next === "hidden") pet.hide();
-    else if (rendererState === "ready") {
-      behavior.send({ type: "CANCEL" });
-      interaction.invalidate();
-      footing.alignGround(interaction.body());
-      pet.showInactive();
-    }
-    synchronizeVisibility();
+    if (presence.intentChanged()) publish();
     environment.refreshMenus();
     environment.publishSettings();
   };
@@ -97,8 +86,17 @@ export function createPetSession(
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   // Every start or stop of observation runs one handler, whatever caused it.
-  const presence = createPresence(electronPresenceAdapter(pet), (transition) =>
-    transition.type === "observed" ? startObserving() : stopObserving(),
+  // Every show, chosen or after a renderer load, is prepared the same way: a
+  // fresh activity, a fresh click window and grounded feet.
+  const presence = createPresence(
+    electronPresenceAdapter(pet, preferences),
+    (transition) =>
+      transition.type === "observed" ? startObserving() : stopObserving(),
+    () => {
+      behavior.send({ type: "CANCEL" });
+      interaction.invalidate();
+      footing.alignGround(interaction.body());
+    },
   );
   const footing = createFooting(electronFootingAdapter(pet, environment.dock), {
     movementClock: timeline.now,
@@ -450,24 +448,15 @@ export function createPetSession(
   app.on("before-quit", interaction.dismissMenu);
   app.on("before-quit", motion.stop);
   app.on("before-quit", footing.endHold);
-  // Some packaged macOS launches update native visibility without delivering
-  // show/hide notifications. Reconcile explicit operations and native state;
-  // presence reports each observation edge once, so duplicate notifications
-  // never reset a running action or click window.
-  const synchronizeVisibility = () => {
-    if (
-      (rendererState !== "ready" || preferences.visibility === "hidden") &&
-      pet.isVisible()
-    )
-      pet.hide();
-    if (presence.synchronize()) publish();
-  };
-  // Native hide/show and work-area events can be omitted or coalesced. Keep a
-  // bounded lifecycle check even when hidden; expensive pointer polling still
-  // stops while hidden. Idempotent visibility updates preserve active actions.
+  // Native hide/show and work-area events can be omitted or coalesced; some
+  // packaged macOS launches update native visibility without delivering
+  // show/hide notifications. Keep a bounded lifecycle check even when hidden;
+  // expensive pointer polling still stops while hidden. Presence reports each
+  // observation edge once, so duplicate notifications never reset a running
+  // action or click window.
   const nativeStatePoll = setInterval(() => {
     if (pet.isDestroyed()) return;
-    synchronizeVisibility();
+    if (presence.reconcile()) publish();
     if (presence.observable) reconcileGround();
     characters.reconcile();
   }, 50);
@@ -488,18 +477,16 @@ export function createPetSession(
     log.error("Pet load failed", code, description),
   );
   const retireRenderer = () => {
-    // Hide and release native hit regions before any reload. Hidden intent is
-    // a preference, so this operational hide must never write PreferencesStore.
+    // Release native hit regions and hide before any reload. Presence never
+    // writes the intent, so this operational hide never becomes a preference.
     rendererState = "loading";
     rendererGeneration++;
     characters.retireRenderer();
     interaction.stopPolling();
     interaction.invalidate({ releaseInput: true, forgetGesture: true });
-    pet.hide();
-    // A shown pet becomes hidden here and stops being observed. Presence
-    // learns of the reload only afterwards, so the stop meets a hidden pet.
-    synchronizeVisibility();
-    presence.rendererLoading();
+    // Presence hides a shown pet before it reports the stop, so the stop
+    // meets a hidden pet.
+    if (presence.rendererLoading()) publish();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
     geometryRevision++;
@@ -538,7 +525,8 @@ export function createPetSession(
         return;
       log.error("Pet recovery load failed", error);
       retireRenderer();
-      setRendererState("failed");
+      rendererState = "failed";
+      if (presence.rendererFailed()) publish();
       environment.refreshMenus();
     }
   };
@@ -550,7 +538,8 @@ export function createPetSession(
       void loadPet();
     } else {
       retireRenderer();
-      setRendererState("failed");
+      rendererState = "failed";
+      if (presence.rendererFailed()) publish();
       environment.refreshMenus();
     }
   });
@@ -567,11 +556,9 @@ export function createPetSession(
   });
   pet.webContents.on("did-finish-load", () => {
     if (presence.quitting || rendererState !== "loading") return;
-    setRendererState("ready");
+    rendererState = "ready";
     characters.rendererLoaded();
-    footing.alignGround(interaction.body());
-    if (preferences.visibility === "visible") pet.showInactive();
-    synchronizeVisibility();
+    if (presence.rendererLoaded()) publish();
     environment.refreshMenus();
   });
   return {
