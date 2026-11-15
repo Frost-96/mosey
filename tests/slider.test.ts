@@ -9,6 +9,8 @@ import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
+import { describeSyntheticDragInterference } from "./support/synthetic-drag-interference";
+import { sampleProcess } from "./support/process-sample-evidence";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
 const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
@@ -126,7 +128,28 @@ test("slider previews without saving, commits on release, and persists nonpreset
         observer.disconnect();
         const events: unknown[] = [];
         Reflect.set(window, "sliderTrace", events);
+        // Kept apart from the rolling trace: OS movement can flood it with
+        // later events after it ends the held drag.
+        const held: unknown[] = [];
+        Reflect.set(window, "sliderHeldPointer", held);
         const record = (type: string, event?: Event) => {
+          if (
+            Reflect.get(window, "sliderSyntheticHold") &&
+            event instanceof PointerEvent &&
+            [
+              "pointerdown",
+              "pointermove",
+              "pointerup",
+              "pointercancel",
+            ].includes(type) &&
+            held.length < 50
+          )
+            held.push({
+              type,
+              buttons: event.buttons,
+              screenX: event.screenX,
+              screenY: event.screenY,
+            });
           const rect = input.getBoundingClientRect();
           events.push({
             type,
@@ -195,14 +218,23 @@ test("slider previews without saving, commits on release, and persists nonpreset
           (Number(input.max) - Number(input.min)),
       );
     // This acceptance directs CDP input; physical mouse/OS routing is a separate
-    // desktop check. Native range capture receives global OS movement even when
-    // the cursor is outside, so exclude it only while the synthetic drag is held.
+    // desktop check. Ignoring mouse events excludes OS movement outside the
+    // settings window while the synthetic drag is held. It does not exclude
+    // movement over the window: the OS reports its unpressed button, which ends
+    // the drag (#121). Such a run is reported as interference, not judged.
     const isolateNativePointer = (ignore: boolean) =>
       app!.evaluate(({ BrowserWindow }, ignore) => {
         BrowserWindow.getAllWindows()
           .find((window) => window.getTitle() === "Mosey 设置")
           ?.setIgnoreMouseEvents(ignore);
       }, ignore);
+    // Bounds the interval in which every pointer event must report the button
+    // held by the directed drag.
+    const holdSyntheticDrag = (hold: boolean) =>
+      settings.evaluate(
+        (hold) => Reflect.set(window, "sliderSyntheticHold", hold),
+        hold,
+      );
     await isolateNativePointer(true);
     const bounds = (await slider.boundingBox())!;
     await settings.mouse.move(
@@ -210,11 +242,13 @@ test("slider previews without saving, commits on release, and persists nonpreset
       bounds.y + bounds.height / 2,
     );
     await settings.mouse.down();
+    await holdSyntheticDrag(true);
     await settings.mouse.move(bounds.x + 8, bounds.y + bounds.height / 2, {
       steps: 4,
     });
     await expect.poll(side).toBe(70);
     expect(JSON.parse(await readFile(file, "utf8")).size).toBe(160);
+    await holdSyntheticDrag(false);
     await settings.mouse.up();
     await isolateNativePointer(false);
     await expect
@@ -281,12 +315,14 @@ test("slider previews without saving, commits on release, and persists nonpreset
       closingBounds.y + closingBounds.height / 2,
     );
     await settings.mouse.down();
+    await holdSyntheticDrag(true);
     await settings.mouse.move(
       closingBounds.x + 8,
       closingBounds.y + closingBounds.height / 2,
     );
     await expect.poll(side).toBe(70);
     expect(JSON.parse(await readFile(file, "utf8")).size).toBe(160);
+    // Closing tears the renderer down; the hold ends with the window.
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()
         .find((w) => w.getTitle() === "Mosey 设置")!
@@ -316,6 +352,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     const renderer = await withinDeadline("Slider renderer evidence", () =>
       settings?.evaluate(async () => ({
         events: Reflect.get(window, "sliderTrace"),
+        held: Reflect.get(window, "sliderHeldPointer"),
         settings: await window.moseySettings.get(),
       })),
     ).catch((error: unknown) => ({ unavailable: String(error) }));
@@ -330,12 +367,31 @@ test("slider previews without saving, commits on release, and persists nonpreset
         })),
       })),
     ).catch((error: unknown) => ({ unavailable: String(error) }));
+    // Neither side answered: the main thread also carries every CDP command,
+    // so its stacks are the only record of what stalled the run (#121).
+    const pid = app?.process().pid;
+    const sample =
+      pid !== undefined &&
+      ((renderer && "unavailable" in renderer) ||
+        (native && "unavailable" in native))
+        ? await sampleProcess({
+            pid,
+            name: `failure-${packaged ? "packaged" : "development"}-slider-main-sample`,
+            evidenceDirectory: evidencePath(),
+          })
+        : undefined;
     await writeFile(
       evidencePath(
         `failure-${packaged ? "packaged" : "development"}-slider-trace.json`,
       ),
-      JSON.stringify({ renderer, native }, null, 2),
+      JSON.stringify({ renderer, native, sample }, null, 2),
     ).catch(() => {});
+    const interference =
+      renderer && "held" in renderer && Array.isArray(renderer.held)
+        ? describeSyntheticDragInterference(renderer.held)
+        : undefined;
+    if (interference)
+      failure = { error: new Error(interference, { cause: error }) };
     for (const page of app?.windows() ?? []) {
       const name = new URL(page.url()).searchParams.has("settings")
         ? "settings"
@@ -349,7 +405,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
         })
         .catch(() => {});
     }
-    throw error;
+    throw failure.error;
   } finally {
     await fixture.cleanup(failure);
   }
