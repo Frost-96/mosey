@@ -39,7 +39,7 @@ function fixture() {
   const hide = () => adapter.hide();
   // A ready renderer in a shown window: the pet is being observed.
   const observe = () => {
-    presence.rendererLoaded();
+    adapter.finishLoad();
     show();
     transitions.length = 0;
     log.length = 0;
@@ -78,22 +78,26 @@ test("a pet that has never loaded or been shown is neither observable nor shown"
 });
 
 test("a shown window is observable only once its renderer is ready", () => {
-  const { presence, show } = fixture();
+  const { adapter, presence, show } = fixture();
   show();
   assert.deepEqual(queries(presence), { observable: false, shown: true });
-  presence.rendererLoaded();
+  adapter.finishLoad();
   assert.deepEqual(queries(presence), { observable: true, shown: true });
   // A renderer that is not ready never stays shown.
-  presence.rendererLoading();
+  void presence.load();
   assert.deepEqual(queries(presence), { observable: false, shown: false });
-  presence.rendererLoaded();
-  presence.rendererFailed();
+  adapter.finishLoad();
+  // The automatic recovery, then a failed renderer.
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  adapter.exitRenderer();
+  assert.equal(presence.failed, true);
   assert.deepEqual(queries(presence), { observable: false, shown: false });
 });
 
 test("suspension hides a shown pet from both queries until it resumes", () => {
   const { adapter, presence, show, hide } = fixture();
-  presence.rendererLoaded();
+  adapter.finishLoad();
   show();
   adapter.suspend();
   assert.deepEqual(queries(presence), { observable: false, shown: false });
@@ -110,13 +114,13 @@ test("suspension hides a shown pet from both queries until it resumes", () => {
 
 test("quitting ends observation but keeps the pet shown through the drain", () => {
   const { adapter, presence, show } = fixture();
-  presence.rendererLoaded();
+  adapter.finishLoad();
   show();
   presence.beginShutdown();
   assert.deepEqual(queries(presence), { observable: false, shown: true });
   adapter.suspend();
   adapter.resume();
-  presence.rendererLoaded();
+  adapter.finishLoad();
   assert.deepEqual(queries(presence), { observable: false, shown: true });
 });
 
@@ -141,12 +145,12 @@ test("each lifecycle dimension stays readable on its own", () => {
     {
       visibility: presence.visibility,
       suspended: presence.suspended,
-      quitting: presence.quitting,
+      ready: presence.ready,
     },
-    { visibility: "visible", suspended: true, quitting: false },
+    { visibility: "visible", suspended: true, ready: false },
   );
-  presence.beginShutdown();
-  assert.equal(presence.quitting, true);
+  adapter.finishLoad();
+  assert.equal(presence.ready, true);
 });
 
 test("suspending an observed pet stops observation once, and waking starts it once", () => {
@@ -176,14 +180,14 @@ test("a pet suspended while hidden starts observation only after it is shown and
 test("duplicate or coalesced native visibility notifications never repeat a transition", () => {
   const { adapter, presence, observe, transitions } = fixture();
   adapter.show();
-  presence.rendererLoaded();
+  adapter.finishLoad();
   adapter.show();
   presence.reconcile();
-  assert.deepEqual(transitions, ["observed"]);
+  assert.deepEqual(transitions, ["rendererReady", "observed"]);
   adapter.hide();
   adapter.hide();
   presence.reconcile();
-  assert.deepEqual(transitions, ["observed", "unobserved"]);
+  assert.deepEqual(transitions, ["rendererReady", "observed", "unobserved"]);
   // A hide and show the platform coalesced into no observable change.
   observe();
   adapter.setVisible(false);
@@ -193,11 +197,11 @@ test("duplicate or coalesced native visibility notifications never repeat a tran
 });
 
 test("a window shown before its renderer is ready starts observation when the renderer loads", () => {
-  const { presence, show, transitions } = fixture();
+  const { adapter, show, transitions } = fixture();
   show();
   assert.deepEqual(transitions, []);
-  presence.rendererLoaded();
-  assert.deepEqual(transitions, ["observed"]);
+  adapter.finishLoad();
+  assert.deepEqual(transitions, ["rendererReady", "observed"]);
 });
 
 // Quitting is the one exception: it ends observability without a stop, so the
@@ -242,11 +246,19 @@ test("the poll hides a window the platform showed before its renderer was ready"
 test("a renderer reload hides the pet without changing its intent and shows it again once loaded", () => {
   const { adapter, presence, observe, log } = fixture();
   observe();
-  presence.rendererLoading();
-  assert.deepEqual(log, ["hide", "unobserved"]);
+  void presence.load();
+  assert.deepEqual(log, ["hide", "unobserved", "rendererRetired"]);
   assert.equal(adapter.intent(), "visible");
-  presence.rendererLoaded();
-  assert.deepEqual(log, ["hide", "unobserved", "prepare", "show", "observed"]);
+  adapter.finishLoad();
+  assert.deepEqual(log, [
+    "hide",
+    "unobserved",
+    "rendererRetired",
+    "rendererReady",
+    "prepare",
+    "show",
+    "observed",
+  ]);
 });
 
 test("a hidden intent hides the pet and keeps it hidden through reloads and silent shows", () => {
@@ -254,11 +266,17 @@ test("a hidden intent hides the pet and keeps it hidden through reloads and sile
   observe();
   adapter.setIntent("hidden");
   assert.equal(presence.intentChanged(), "hidden");
-  presence.rendererLoading();
-  presence.rendererLoaded();
+  void presence.load();
+  adapter.finishLoad();
   adapter.setVisible(true);
   presence.reconcile();
-  assert.deepEqual(log, ["hide", "unobserved", "hide"]);
+  assert.deepEqual(log, [
+    "hide",
+    "unobserved",
+    "rendererRetired",
+    "rendererReady",
+    "hide",
+  ]);
   assert.equal(adapter.nativelyVisible(), false);
   assert.equal(adapter.intent(), "hidden");
 });
@@ -266,11 +284,11 @@ test("a hidden intent hides the pet and keeps it hidden through reloads and sile
 test("choosing to show prepares the pet before showing it, only once its renderer is ready", () => {
   const { adapter, presence, log } = fixture();
   adapter.setIntent("hidden");
-  presence.rendererLoaded();
+  adapter.finishLoad();
   adapter.setIntent("visible");
   assert.equal(presence.intentChanged(), "visible");
-  assert.deepEqual(log, ["prepare", "show", "observed"]);
-  presence.rendererLoading();
+  assert.deepEqual(log, ["rendererReady", "prepare", "show", "observed"]);
+  void presence.load();
   log.length = 0;
   presence.intentChanged();
   assert.deepEqual(log, []);
@@ -280,10 +298,167 @@ test("choosing to show prepares the pet before showing it, only once its rendere
 // Preparation readies a pet about to be observed. A suspended pet is shown,
 // as before, but stays paused until it wakes.
 test("a pet shown while suspended is not prepared and starts observation when it wakes", () => {
-  const { adapter, presence, log } = fixture();
+  const { adapter, log } = fixture();
   adapter.suspend();
-  presence.rendererLoaded();
-  assert.deepEqual(log, ["show"]);
+  adapter.finishLoad();
+  assert.deepEqual(log, ["rendererReady", "show"]);
   adapter.resume();
-  assert.deepEqual(log, ["show", "observed"]);
+  assert.deepEqual(log, ["rendererReady", "show", "observed"]);
+});
+
+// Presence decides the renderer lifecycle; the adapter only performs loads and
+// reports page loads and renderer exits.
+test("the first renderer exit reloads once, retiring a hidden pet, and shows it again once loaded", () => {
+  const { adapter, presence, observe, log } = fixture();
+  observe();
+  adapter.exitRenderer();
+  // The stop meets a hidden pet; retirement follows it.
+  assert.deepEqual(log, ["hide", "unobserved", "rendererRetired"]);
+  assert.equal(adapter.loads.length, 1);
+  assert.equal(adapter.intent(), "visible");
+  adapter.finishLoad();
+  assert.deepEqual(log.slice(3), [
+    "rendererReady",
+    "prepare",
+    "show",
+    "observed",
+  ]);
+  assert.equal(presence.failed, false);
+});
+
+// Load settlement crosses a promise; let it run before asserting.
+const settled = () => new Promise((resolve) => setImmediate(resolve));
+
+test("a second renderer exit fails the renderer without loading again", () => {
+  const { adapter, presence, observe, log } = fixture();
+  observe();
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  log.length = 0;
+  adapter.exitRenderer();
+  assert.deepEqual(log, [
+    "hide",
+    "unobserved",
+    "rendererRetired",
+    "rendererFailed",
+  ]);
+  assert.equal(adapter.loads.length, 1);
+  assert.equal(presence.failed, true);
+  assert.equal(adapter.nativelyVisible(), false);
+});
+
+test("a failed automatic reload fails the renderer and keeps the pet hidden", async () => {
+  const { adapter, presence, observe, log } = fixture();
+  observe();
+  adapter.exitRenderer();
+  adapter.loads[0].reject(new Error("load failed"));
+  await settled();
+  assert.equal(presence.failed, true);
+  assert.deepEqual(log, [
+    "hide",
+    "unobserved",
+    "rendererRetired",
+    "rendererRetired",
+    "rendererFailed",
+  ]);
+  // A failed renderer is never shown, even when the window reports a show.
+  adapter.setVisible(true);
+  presence.reconcile();
+  assert.equal(adapter.nativelyVisible(), false);
+});
+
+test("a failure carries the load error so the caller can report it", async () => {
+  const adapter = createMemoryPresenceAdapter();
+  const failures: PresenceTransition[] = [];
+  const presence = createPresence(
+    adapter,
+    (transition) => {
+      if (transition.type === "rendererFailed") failures.push(transition);
+    },
+    () => {},
+  );
+  const error = new Error("load failed");
+  const loading = presence.load();
+  adapter.loads[0].reject(error);
+  await loading;
+  // A repeated exit has no load error to carry.
+  void presence.load();
+  adapter.finishLoad();
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  adapter.exitRenderer();
+  assert.deepEqual(failures, [
+    { type: "rendererFailed", error },
+    { type: "rendererFailed" },
+  ]);
+});
+
+test("a stale load's failure is dropped once a newer load has started", async () => {
+  const { adapter, presence } = fixture();
+  const first = presence.load();
+  const second = presence.load();
+  adapter.loads[0].reject(new Error("superseded"));
+  await first;
+  assert.equal(presence.failed, false);
+  adapter.loads[1].reject(new Error("latest failed"));
+  await second;
+  assert.equal(presence.failed, true);
+});
+
+test("a manual retry loads again but never restores the automatic recovery", () => {
+  const { adapter, presence, observe, transitions } = fixture();
+  observe();
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  adapter.exitRenderer();
+  assert.equal(presence.failed, true);
+  void presence.load();
+  assert.equal(presence.failed, false);
+  assert.equal(adapter.loads.length, 2);
+  adapter.finishLoad();
+  assert.equal(presence.observable, true);
+  transitions.length = 0;
+  adapter.exitRenderer();
+  assert.equal(adapter.loads.length, 2);
+  assert.equal(presence.failed, true);
+  assert.deepEqual(transitions, [
+    "unobserved",
+    "rendererRetired",
+    "rendererFailed",
+  ]);
+});
+
+test("a page load only readies a loading renderer", () => {
+  const { adapter, presence, observe, transitions } = fixture();
+  observe();
+  // A reload of an already ready page, such as a development reload.
+  adapter.finishLoad();
+  assert.deepEqual(transitions, []);
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  adapter.exitRenderer();
+  transitions.length = 0;
+  adapter.finishLoad();
+  assert.deepEqual(transitions, []);
+  assert.equal(presence.failed, true);
+});
+
+test("quitting ends the renderer lifecycle: no load, exit or load result is acted on", async () => {
+  const { adapter, presence, observe, transitions } = fixture();
+  observe();
+  // The automatic recovery is spent, so an exit would otherwise fail.
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  const loading = presence.load();
+  adapter.finishLoad();
+  transitions.length = 0;
+  presence.beginShutdown();
+  await presence.load();
+  adapter.exitRenderer();
+  adapter.finishLoad();
+  adapter.loads[1].reject(new Error("aborted by quit"));
+  await loading;
+  assert.equal(adapter.loads.length, 2);
+  assert.deepEqual(transitions, []);
+  assert.equal(presence.failed, false);
 });

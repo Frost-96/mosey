@@ -41,11 +41,6 @@ export function createPetSession(
   environment: Environment,
 ) {
   const timeline = new Timeline();
-  // Presence needs only readiness; the session keeps the renderer lifecycle
-  // and tells presence of each change.
-  let rendererState: "loading" | "ready" | "failed" = "loading";
-  let automaticRecoveryUsed = false;
-  let rendererGeneration = 0;
   let commandRevision = 0;
   app.on("will-quit", () => behavior.stop());
   // The intent is a preference; presence reads it and shows or hides the pet.
@@ -85,13 +80,33 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  // Every start or stop of observation runs one handler, whatever caused it.
-  // Every show, chosen or after a renderer load, is prepared the same way: a
-  // fresh activity, a fresh click window and grounded feet.
+  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
+    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
+    : undefined;
+  const devOrigin = devURL ? new URL(devURL).origin : undefined;
+  // Every start or stop of observation runs one handler, whatever caused it;
+  // each renderer transition runs its own. Every show, chosen or after a
+  // renderer load, is prepared the same way: a fresh activity, a fresh click
+  // window and grounded feet.
   const presence = createPresence(
-    electronPresenceAdapter(pet, preferences),
-    (transition) =>
-      transition.type === "observed" ? startObserving() : stopObserving(),
+    electronPresenceAdapter(pet, preferences, devURL),
+    (transition) => {
+      switch (transition.type) {
+        case "observed":
+          return startObserving();
+        case "unobserved":
+          return stopObserving();
+        case "rendererRetired":
+          return retireRenderer();
+        case "rendererReady":
+          characters.rendererLoaded();
+          return environment.refreshMenus();
+        case "rendererFailed":
+          if (transition.error !== undefined)
+            log.error("Pet recovery load failed", transition.error);
+          return environment.refreshMenus();
+      }
+    },
     () => {
       behavior.send({ type: "CANCEL" });
       interaction.invalidate();
@@ -163,7 +178,7 @@ export function createPetSession(
   };
   const interaction = createPetInteraction(pet, behavior, timeline, footing, {
     get ready() {
-      return rendererState === "ready";
+      return presence.ready;
     },
     get visibility() {
       return presence.visibility;
@@ -463,10 +478,6 @@ export function createPetSession(
   const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
   pet.once("closed", stopNativeStatePolling);
   app.once("before-quit", stopNativeStatePolling);
-  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
-    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
-    : undefined;
-  const devOrigin = devURL ? new URL(devURL).origin : undefined;
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   pet.webContents.on("will-navigate", (event, url) => {
     // Allow reload of only the exact configured development entry.
@@ -476,19 +487,14 @@ export function createPetSession(
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
+  // Presence hides the pet and stops its observation before it retires the
+  // renderer, so the stop meets a hidden pet. Presence never writes the
+  // intent, so this operational hide never becomes a preference. What remains
+  // belongs to the retired renderer alone: its prepared character work, any
+  // gesture it captured, and the place it stood.
   const retireRenderer = () => {
-    // Release native hit regions and hide before any reload. Presence never
-    // writes the intent, so this operational hide never becomes a preference.
-    rendererState = "loading";
-    rendererGeneration++;
     characters.retireRenderer();
-    interaction.stopPolling();
-    interaction.invalidate({ releaseInput: true, forgetGesture: true });
-    // Presence hides a shown pet before it reports the stop, so the stop
-    // meets a hidden pet.
-    if (presence.rendererLoading()) publish();
-    interaction.cancel();
-    behavior.send({ type: "PAUSE" });
+    interaction.invalidate({ forgetGesture: true });
     geometryRevision++;
     const area = screen.getPrimaryDisplay().workArea;
     const side = liveSize;
@@ -501,48 +507,9 @@ export function createPetSession(
       },
       false,
     );
-  };
-  const loadPet = async () => {
-    if (presence.quitting || pet.isDestroyed()) return;
-    retireRenderer();
+    publish();
     environment.refreshMenus();
-    const generation = rendererGeneration;
-    try {
-      if (devURL) await pet.loadURL(devURL);
-      else
-        await pet.loadFile(
-          path.join(
-            import.meta.dirname,
-            `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
-          ),
-        );
-    } catch (error) {
-      if (
-        presence.quitting ||
-        pet.isDestroyed() ||
-        generation !== rendererGeneration
-      )
-        return;
-      log.error("Pet recovery load failed", error);
-      retireRenderer();
-      rendererState = "failed";
-      if (presence.rendererFailed()) publish();
-      environment.refreshMenus();
-    }
   };
-  pet.webContents.on("render-process-gone", (_event, details) => {
-    log.error("Pet renderer exited", details.reason, details.exitCode);
-    if (presence.quitting || pet.isDestroyed()) return;
-    if (!automaticRecoveryUsed) {
-      automaticRecoveryUsed = true;
-      void loadPet();
-    } else {
-      retireRenderer();
-      rendererState = "failed";
-      if (presence.rendererFailed()) publish();
-      environment.refreshMenus();
-    }
-  });
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
@@ -554,13 +521,6 @@ export function createPetSession(
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.webContents.on("did-finish-load", () => {
-    if (presence.quitting || rendererState !== "loading") return;
-    rendererState = "ready";
-    characters.rendererLoaded();
-    if (presence.rendererLoaded()) publish();
-    environment.refreshMenus();
-  });
   return {
     get settings() {
       return {
@@ -571,7 +531,7 @@ export function createPetSession(
       };
     },
     get failed() {
-      return rendererState === "failed";
+      return presence.failed;
     },
     get capturePermitted() {
       return presence.observable;
@@ -590,7 +550,7 @@ export function createPetSession(
       behavior.send({ type: "CANCEL_PLAY" });
     },
     observeDock,
-    load: loadPet,
+    load: () => presence.load(),
   };
 }
 
