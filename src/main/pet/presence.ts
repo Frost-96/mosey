@@ -1,12 +1,13 @@
 // Presence answers whether the pet can be observed right now. It owns native
-// window visibility, suspension (sleep or a locked screen) and quitting, so
-// gates ask one judgment instead of rebuilding it from session closures. The
-// module never imports Electron: the native window, the stored display intent
-// and the system events come only through the adapter passed at construction,
-// the Electron adapter in production and the in-memory adapter in tooling
-// tests, so these rules are verified without a desktop. It never sends
-// behavior events and never calls footing, interaction or Dock capture: it
-// reports transitions through one callback and callers act on them.
+// window visibility, suspension (sleep or a locked screen), the renderer
+// lifecycle and quitting, so gates ask one judgment instead of rebuilding it
+// from session closures. The module never imports Electron: the native window,
+// the stored display intent, renderer loads and the system events come only
+// through the adapter passed at construction, the Electron adapter in
+// production and the in-memory adapter in tooling tests, so these rules are
+// verified without a desktop. It never sends behavior events and never calls
+// footing, interaction or Dock capture: it reports transitions through one
+// callback and callers act on them.
 //
 // Presence alone shows and hides the window. While the renderer is not ready
 // or the intent is hidden, a visible window is hidden; when the renderer is
@@ -17,6 +18,16 @@
 // is suspended: preparation readies a pet about to be observed, and a
 // suspended pet stays paused until it wakes. Native notifications only record
 // visibility; hiding against them waits for the next reconcile.
+//
+// The renderer is loading, ready or failed. Every load, first or retried,
+// retires the current renderer: the pet is hidden first, so a stop of
+// observation meets a hidden pet, and "rendererRetired" follows. Only the
+// latest load's failure counts; an earlier one is stale and dropped. A page
+// load makes a loading renderer ready ("rendererReady") before the pet is
+// shown. The first renderer exit reloads once automatically; a later exit or a
+// failed load makes the renderer failed ("rendererFailed"). A manual retry
+// loads the same way and never restores the automatic recovery, so an exit
+// after a retry fails at once.
 //
 // Two queries are the gates:
 // - observable: renderer ready, window visible, not suspended, not quitting.
@@ -34,18 +45,24 @@
 // and its footing reset would stop capture alongside quit's own cleanup. The
 // existing quit handling still owns that cleanup. A pet still observed when
 // quitting begins does report "unobserved" if it is then suspended or hidden.
+// Quitting also ends the renderer lifecycle: no load starts, and no page load,
+// exit or load failure is acted on.
 //
-// For now the session tells presence when its renderer starts loading,
-// finishes or fails, and reconciles native visibility from its own state poll.
-// The operations that can change visibility return the new visibility only
-// when it changed, so the caller republishes its presentation.
-// The raw dimension reads serve callers not yet moved onto the queries:
-// renderer recovery (quitting) and the interaction and motion environments
-// (visibility, suspended). The character switch also reads suspended, which
-// neither query expresses: a hidden pet may still switch character, a sleeping
-// one may not.
+// The session reconciles native visibility from its own state poll. The
+// operations that can change visibility return the new visibility only when it
+// changed, so the caller republishes its presentation.
+// The raw dimension reads serve callers not yet moved onto the queries: the
+// interaction and motion environments (ready, visibility, suspended). The
+// character switch also reads suspended, which neither query expresses: a
+// hidden pet may still switch character, a sleeping one may not.
 
-export type PresenceTransition = { type: "observed" } | { type: "unobserved" };
+export type PresenceTransition =
+  | { type: "observed" }
+  | { type: "unobserved" }
+  | { type: "rendererRetired" }
+  | { type: "rendererReady" }
+  // A failed load carries its error; a repeated exit carries none.
+  | { type: "rendererFailed"; error?: unknown };
 
 // The system events presence consumes. Adapters decide which platform events
 // count as each one.
@@ -53,6 +70,10 @@ export type PresenceInputs = {
   suspend(): void;
   resume(): void;
   visibilityChanged(): void;
+  // The renderer's page finished loading.
+  rendererLoaded(): void;
+  // The renderer process exited.
+  rendererGone(): void;
 };
 
 export type PresenceAdapter = {
@@ -62,6 +83,10 @@ export type PresenceAdapter = {
   hide(): void;
   // The user's display intent, read from the preferences store.
   intent(): "visible" | "hidden";
+  // Load the renderer's page; rejects when the load fails.
+  load(): Promise<unknown>;
+  // The window is gone; nothing more can be loaded into it.
+  destroyed(): boolean;
   // Subscribe to system events for the window's lifetime; the adapter
   // unsubscribes when the window closes.
   listen(inputs: PresenceInputs): void;
@@ -73,13 +98,16 @@ export function createPresence(
   prepareShow: () => void,
 ) {
   let visible = false;
-  let ready = false;
+  let renderer: "loading" | "ready" | "failed" = "loading";
+  // A load result belongs to the generation it started in.
+  let generation = 0;
+  let automaticRecoveryUsed = false;
   let suspended = false;
   let quitting = false;
   // Whether the last reported transition was "observed".
   let observed = false;
   const settle = () => {
-    const live = ready && visible && !suspended;
+    const live = renderer === "ready" && visible && !suspended;
     if (observed && !live) {
       observed = false;
       notify({ type: "unobserved" });
@@ -96,7 +124,10 @@ export function createPresence(
   // The window may report its own change while it is shown or hidden, so the
   // result compares with the visibility before the whole operation.
   const align = (before = visible) => {
-    if ((!ready || adapter.intent() === "hidden") && adapter.nativelyVisible())
+    if (
+      (renderer !== "ready" || adapter.intent() === "hidden") &&
+      adapter.nativelyVisible()
+    )
       adapter.hide();
     synchronize();
     if (visible === before) return undefined;
@@ -104,11 +135,39 @@ export function createPresence(
   };
   const showIntended = () => {
     const before = visible;
-    if (ready && adapter.intent() === "visible") {
+    if (renderer === "ready" && adapter.intent() === "visible") {
       if (!suspended) prepareShow();
       adapter.show();
     }
     return align(before);
+  };
+  // Hide before anything else learns of the reload, so a stop of observation
+  // meets a hidden pet.
+  const retire = () => {
+    renderer = "loading";
+    generation++;
+    align();
+    notify({ type: "rendererRetired" });
+  };
+  const fail = (error?: unknown) => {
+    retire();
+    renderer = "failed";
+    notify(
+      error === undefined
+        ? { type: "rendererFailed" }
+        : { type: "rendererFailed", error },
+    );
+  };
+  const load = async () => {
+    if (quitting || adapter.destroyed()) return;
+    retire();
+    const current = generation;
+    try {
+      await adapter.load();
+    } catch (error) {
+      if (quitting || adapter.destroyed() || current !== generation) return;
+      fail(error);
+    }
   };
   adapter.listen({
     suspend() {
@@ -120,11 +179,19 @@ export function createPresence(
       settle();
     },
     visibilityChanged: synchronize,
+    rendererLoaded() {
+      if (quitting || renderer !== "loading") return;
+      renderer = "ready";
+      notify({ type: "rendererReady" });
+      showIntended();
+    },
+    rendererGone() {
+      if (quitting || adapter.destroyed()) return;
+      if (automaticRecoveryUsed) return fail();
+      automaticRecoveryUsed = true;
+      void load();
+    },
   });
-  const unready = () => {
-    ready = false;
-    return align();
-  };
   return {
     beginShutdown() {
       quitting = true;
@@ -133,17 +200,19 @@ export function createPresence(
     reconcile: () => align(),
     // The stored intent changed.
     intentChanged: showIntended,
-    rendererLoading: unready,
-    rendererLoaded() {
-      ready = true;
-      return showIntended();
+    // First load and manual retry alike.
+    load,
+    get failed() {
+      return renderer === "failed";
     },
-    rendererFailed: unready,
     get observable() {
-      return !quitting && ready && visible && !suspended;
+      return !quitting && renderer === "ready" && visible && !suspended;
     },
     get shown() {
       return visible && !suspended;
+    },
+    get ready() {
+      return renderer === "ready";
     },
     get visibility(): "visible" | "hidden" {
       return visible ? "visible" : "hidden";
@@ -151,26 +220,26 @@ export function createPresence(
     get suspended() {
       return suspended;
     },
-    get quitting() {
-      return quitting;
-    },
   };
 }
 
 export type Presence = ReturnType<typeof createPresence>;
 
 // Deterministic adapter for tests: one window whose native visibility the test
-// sets directly, a stored intent the test sets (visible by default), and
-// system events the test delivers. setVisible changes the window silently,
-// like a platform that omits or coalesces notifications; show and hide change
-// it and notify.
+// sets directly, a stored intent the test sets (visible by default), renderer
+// loads the test settles, and system events the test delivers. setVisible
+// changes the window silently, like a platform that omits or coalesces
+// notifications; show and hide change it and notify.
 export function createMemoryPresenceAdapter() {
   let visible = false;
   let intent: "visible" | "hidden" = "visible";
   let inputs: PresenceInputs | undefined;
+  // Every load requested, oldest first; each settles when the test says.
+  const loads: { resolve(): void; reject(error: unknown): void }[] = [];
   const adapter = {
     nativelyVisible: () => visible,
     intent: () => intent,
+    destroyed: () => false,
     setIntent(next: "visible" | "hidden") {
       intent = next;
     },
@@ -188,8 +257,13 @@ export function createMemoryPresenceAdapter() {
       visible = false;
       inputs?.visibilityChanged();
     },
+    load: () =>
+      new Promise<void>((resolve, reject) => loads.push({ resolve, reject })),
+    loads,
     suspend: () => inputs?.suspend(),
     resume: () => inputs?.resume(),
+    finishLoad: () => inputs?.rendererLoaded(),
+    exitRenderer: () => inputs?.rendererGone(),
   };
   return adapter satisfies PresenceAdapter;
 }
