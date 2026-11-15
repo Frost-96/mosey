@@ -2,10 +2,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import type { Reporter, TestModule } from "vitest/node";
 
 export class MatrixReporter implements Reporter {
+  constructor(private readonly output = "test-results/ci-matrix.json") {}
+
   async onTestRunEnd(modules: readonly TestModule[]) {
     await mkdir("test-results", { recursive: true });
     await writeFile(
-      "test-results/ci-matrix.json",
+      this.output,
       JSON.stringify(
         modules.map((module) => ({
           project: module.project.name,

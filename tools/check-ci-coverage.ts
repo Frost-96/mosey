@@ -16,7 +16,10 @@ for await (const file of glob("tests/*.test.ts")) {
 const seen = new Set<string>();
 let reports = 0;
 const summary: Record<string, Record<string, number>> = {};
-for await (const file of glob("**/ci-matrix.json", { cwd: process.argv[2] })) {
+// Each of the five shards reports its development and packaged phase.
+for await (const file of glob("**/ci-matrix-{development,packaged}.json", {
+  cwd: process.argv[2],
+})) {
   reports++;
   const modules = JSON.parse(
     await readFile(path.join(process.argv[2]!, file), "utf8"),
@@ -35,7 +38,11 @@ for await (const file of glob("**/ci-matrix.json", { cwd: process.argv[2] })) {
       counts[test.state] = (counts[test.state] ?? 0) + 1;
   }
 }
-assert.equal(reports, 5, "All five shard reports must be present");
+assert.equal(
+  reports,
+  10,
+  "Both phase reports of all five shards must be present",
+);
 assert.deepEqual(
   seen,
   expected,
