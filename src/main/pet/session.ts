@@ -1,6 +1,6 @@
 import { createPetInteraction } from "./interaction";
 import { PetMotion } from "./motion";
-import { app, BrowserWindow, screen, ipcMain, powerMonitor } from "electron";
+import { app, BrowserWindow, screen, ipcMain } from "electron";
 import path from "node:path";
 import log from "electron-log/main";
 import { createActor } from "xstate";
@@ -43,10 +43,10 @@ export function createPetSession(
   const timeline = new Timeline();
   let rendererState: "loading" | "ready" | "failed" = "loading";
   // Presence needs only readiness; the session keeps the renderer lifecycle.
-  const setRendererState = (next: typeof rendererState) => {
+  // Retirement tells presence itself, once the pet is hidden.
+  const setRendererState = (next: "ready" | "failed") => {
     rendererState = next;
-    if (next === "loading") presence.rendererLoading();
-    else if (next === "ready") presence.rendererLoaded();
+    if (next === "ready") presence.rendererLoaded();
     else presence.rendererFailed();
   };
   let automaticRecoveryUsed = false;
@@ -96,7 +96,10 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  const presence = createPresence(electronPresenceAdapter(pet));
+  // Every start or stop of observation runs one handler, whatever caused it.
+  const presence = createPresence(electronPresenceAdapter(pet), (transition) =>
+    transition.type === "observed" ? startObserving() : stopObserving(),
+  );
   const footing = createFooting(electronFootingAdapter(pet, environment.dock), {
     movementClock: timeline.now,
     holdEnded: () => {
@@ -397,28 +400,26 @@ export function createPetSession(
     publish();
     if (snapshot.value === "resting") reconcileDock();
   });
-  const pause = () => {
+  // A stopped pet holds no footing, pointer polling, hit region, gesture or
+  // running behavior; stale menu commands lapse.
+  const stopObserving = () => {
     commandRevision++;
     interaction.dismissMenu();
-    presence.suspend();
     void forgetFooting();
     interaction.stopPolling();
+    // Immediately release any last opaque region, independent of cursor polling.
+    interaction.invalidate({ releaseInput: true });
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
+    publish();
   };
-  const resume = () => {
-    presence.resume();
-    footing.alignGround(interaction.body());
+  const startObserving = () => {
+    commandRevision++;
+    behavior.send({ type: "RESUME" });
     interaction.startPolling();
-    if (presence.shown) {
-      behavior.send({ type: "RESUME" });
-      environment.dock.start();
-    }
+    environment.dock.start();
+    publish();
   };
-  powerMonitor.on("suspend", pause);
-  powerMonitor.on("lock-screen", pause);
-  powerMonitor.on("resume", resume);
-  powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
     commandRevision++;
     // Cancelling realigns and reconciles, so it must meet forgotten footing,
@@ -441,10 +442,6 @@ export function createPetSession(
   pet.on("closed", () => {
     interaction.invalidate({ forgetGesture: true });
     motion.stop();
-    powerMonitor.off("suspend", pause);
-    powerMonitor.off("resume", resume);
-    powerMonitor.off("unlock-screen", resume);
-    powerMonitor.off("lock-screen", pause);
     screen.off("display-metrics-changed", displayMetricsChanged);
     screen.off("display-added", displayChanged);
     screen.off("display-removed", displayChanged);
@@ -455,34 +452,16 @@ export function createPetSession(
   app.on("before-quit", footing.endHold);
   // Some packaged macOS launches update native visibility without delivering
   // show/hide notifications. Reconcile explicit operations and native state;
-  // duplicate notifications must not reset a running action or click window.
+  // presence reports each observation edge once, so duplicate notifications
+  // never reset a running action or click window.
   const synchronizeVisibility = () => {
     if (
       (rendererState !== "ready" || preferences.visibility === "hidden") &&
       pet.isVisible()
     )
       pet.hide();
-    const next = presence.synchronize();
-    if (!next) return;
-    commandRevision++;
-    if (next === "visible") {
-      behavior.send({ type: presence.shown ? "RESUME" : "PAUSE" });
-      if (presence.observable) {
-        interaction.startPolling();
-        environment.dock.start();
-      }
-    } else {
-      void forgetFooting();
-      interaction.stopPolling();
-      // Immediately release any last opaque region, independent of cursor polling.
-      interaction.invalidate({ releaseInput: true });
-      interaction.cancel();
-      behavior.send({ type: "PAUSE" });
-    }
-    publish();
+    if (presence.synchronize()) publish();
   };
-  pet.on("show", synchronizeVisibility);
-  pet.on("hide", synchronizeVisibility);
   // Native hide/show and work-area events can be omitted or coalesced. Keep a
   // bounded lifecycle check even when hidden; expensive pointer polling still
   // stops while hidden. Idempotent visibility updates preserve active actions.
@@ -511,15 +490,16 @@ export function createPetSession(
   const retireRenderer = () => {
     // Hide and release native hit regions before any reload. Hidden intent is
     // a preference, so this operational hide must never write PreferencesStore.
-    setRendererState("loading");
+    rendererState = "loading";
     rendererGeneration++;
-    commandRevision++;
     characters.retireRenderer();
     interaction.stopPolling();
     interaction.invalidate({ releaseInput: true, forgetGesture: true });
     pet.hide();
-    // A shown pet becomes hidden here, which forgets its footing.
+    // A shown pet becomes hidden here and stops being observed. Presence
+    // learns of the reload only afterwards, so the stop meets a hidden pet.
     synchronizeVisibility();
+    presence.rendererLoading();
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
     geometryRevision++;
