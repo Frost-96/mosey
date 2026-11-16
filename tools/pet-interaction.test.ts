@@ -11,6 +11,10 @@ import {
   createFooting,
   createMemoryFootingAdapter,
 } from "../src/main/pet/footing.ts";
+import {
+  createMemoryPresenceAdapter,
+  createPresence,
+} from "../src/main/pet/presence.ts";
 import type { createPetInteraction } from "../src/main/pet/interaction.ts";
 
 // Execute the actual adapter with small native-boundary substitutes. No Electron
@@ -78,10 +82,17 @@ function harness(t: TestContext, daily = true) {
   });
   const footing = createFooting(window);
   const pet = new PetWindow(window);
+  // A loaded renderer in a shown window: the pet starts observed.
+  const lifecycle = createMemoryPresenceAdapter();
+  const presence = createPresence(
+    lifecycle,
+    () => {},
+    () => {},
+  );
+  void presence.load();
+  lifecycle.finishLoad();
+  assert.equal(presence.observable, true);
   const environment = {
-    ready: true,
-    visibility: "visible",
-    suspended: false,
     geometryRevision: 1,
     size: 240,
     character: {
@@ -153,7 +164,8 @@ function harness(t: TestContext, daily = true) {
     actor,
     timeline,
     footing,
-    environment as unknown as Parameters<typeof createPetInteraction>[4],
+    presence,
+    environment as unknown as Parameters<typeof createPetInteraction>[5],
   );
   t.after(() => {
     actor.stop();
@@ -190,6 +202,8 @@ function harness(t: TestContext, daily = true) {
     timeline,
     window,
     footing,
+    lifecycle,
+    presence,
     environment,
     interaction,
     menus,
@@ -227,9 +241,10 @@ for (const invalidation of [
     h.openAtBoundary();
     const actionId = h.actor.getSnapshot().context.actionId;
     if (invalidation === "geometry") h.environment.geometryRevision++;
-    if (invalidation === "not-ready") h.environment.ready = false;
-    if (invalidation === "hidden") h.environment.visibility = "hidden";
-    if (invalidation === "suspended") h.environment.suspended = true;
+    // A reload retires the renderer and hides the pet before the new page.
+    if (invalidation === "not-ready") void h.presence.load();
+    if (invalidation === "hidden") h.lifecycle.hide();
+    if (invalidation === "suspended") h.lifecycle.suspend();
     if (invalidation === "action") h.actor.send({ type: "CANCEL" });
     h.input({ type: "frame", geometryRevision: 1, actionId, frame: 0 });
     assert.notEqual(h.actor.getSnapshot().context.loopFrame?.frame, 0);
@@ -239,6 +254,38 @@ for (const invalidation of [
     assert.equal(h.timeline.pausedAt, undefined);
   });
 }
+
+// Quitting keeps the pet shown while Dock capture drains; until the window
+// closes, it still answers the pointer exactly as before the quit began.
+test("a quitting pet still takes a drag while it stays shown", (t) => {
+  const h = harness(t, false);
+  h.presence.beginShutdown();
+  assert.equal(h.presence.observable, false);
+  h.frame(0);
+  const gesture = {
+    geometryRevision: h.environment.geometryRevision,
+    gestureId: 7,
+  };
+  h.input({
+    ...gesture,
+    type: "press",
+    actionId: h.actor.getSnapshot().context.actionId,
+    x: 120,
+    y: 120,
+    screenX: 520,
+    screenY: 680,
+  });
+  h.input({ ...gesture, type: "move", screenX: 620, screenY: 680 });
+  assert.equal(h.actor.getSnapshot().value, "dragging");
+});
+
+// Cancelling a shown pet that is quitting still cancels rather than pauses.
+test("cancelling a quitting pet that stays shown does not pause it", (t) => {
+  const h = harness(t, false);
+  h.presence.beginShutdown();
+  h.interaction.cancel();
+  assert.equal(h.actor.getSnapshot().value, "resting");
+});
 
 test("an old menu callback cannot close a newer menu or replay a handoff", (t) => {
   const h = harness(t);
