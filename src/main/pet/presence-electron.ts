@@ -12,12 +12,14 @@ import type { PresenceAdapter } from "./presence";
 // process report the renderer lifecycle; presence decides what they mean.
 // Presence stays free of Electron and only reads the intent.
 //
-// A missed "unlock-screen" leaves the pet suspended until the next unlock; the
-// next lock and unlock clear it. The adapter does not correct the lock from
-// powerMonitor.getSystemIdleState: on macOS Chromium answers "locked" from the
-// same screen lock notifications that drive these events, never from a direct
-// query, so it misses whatever they miss, and it also answers "locked" while a
-// screen saver runs, which no unlock would ever clear.
+// Because neither event clears the other's reason, a missed one now leaves the
+// pet suspended: a missed "unlock-screen" until the next unlock, a missed
+// "resume" until the next wake. The adapter does not correct the lock from
+// powerMonitor.getSystemIdleState. On macOS, Chromium's CheckIdleStateIsLocked
+// (ui/base/idle/idle_mac.mm) answers from flags cached from the same
+// com.apple.screenIsLocked and screenIsUnlocked notifications behind these
+// events, never from a direct query, so it misses whatever they miss. It also
+// answers "locked" while a screen saver runs, so it could never set the lock.
 export function electronPresenceAdapter(
   pet: BrowserWindow,
   preferences: Pick<PreferencesStore, "visibility">,

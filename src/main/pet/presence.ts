@@ -1,12 +1,13 @@
 // Presence answers whether the pet can be observed right now. It owns native
-// window visibility, suspension, the renderer lifecycle and quitting, so gates ask one judgment instead of rebuilding it
-// from session closures. The module never imports Electron: the native window,
-// the stored display intent, renderer loads and the system events come only
-// through the adapter passed at construction, the Electron adapter in
-// production and the in-memory adapter in tooling tests, so these rules are
-// verified without a desktop. It never sends behavior events and never calls
-// footing, interaction or Dock capture: it reports transitions through one
-// callback and callers act on them.
+// window visibility, suspension, the renderer lifecycle and quitting, so gates
+// ask one judgment instead of rebuilding it from session closures. The module
+// never imports Electron: the native window, the stored display intent,
+// renderer loads and the system events come only through the adapter passed
+// at construction, the Electron adapter in production and the in-memory
+// adapter in tooling tests, so these rules are verified without a desktop.
+// It never sends behavior events and never calls footing, interaction or Dock
+// capture: it reports transitions through one callback and callers act on
+// them.
 //
 // Presence alone shows and hides the window. While the renderer is not ready
 // or the intent is hidden, a visible window is hidden; when the renderer is
@@ -136,10 +137,10 @@ export function createPresence(
   let automaticRecoveryUsed = false;
   let sleeping = false;
   let locked = false;
-  const isSuspended = () => sleeping || locked;
   let quitting = false;
   // Whether the last reported transition was "observed".
   let observed = false;
+  const isSuspended = () => sleeping || locked;
   // Everything observation needs except not quitting, which ends
   // observability without reporting a stop.
   const live = () => renderer === "ready" && visible && !isSuspended();

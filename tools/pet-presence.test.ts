@@ -360,7 +360,12 @@ test("a pet shown after waking behind a locked screen is still prepared as suspe
   presence.intentChanged();
   assert.deepEqual(log, ["rendererReady", "prepare while suspended", "show"]);
   adapter.unlock();
-  assert.deepEqual(log.slice(3), ["observed"]);
+  assert.deepEqual(log, [
+    "rendererReady",
+    "prepare while suspended",
+    "show",
+    "observed",
+  ]);
 });
 
 // Presence decides the renderer lifecycle; the adapter only performs loads and
