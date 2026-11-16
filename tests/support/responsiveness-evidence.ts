@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { ElectronApplication } from "playwright";
 import { DeadlineExceeded, withinDeadline } from "./deadline.ts";
 import { sampleProcess } from "./process-sample-evidence.ts";
 
@@ -43,12 +44,24 @@ async function probeWithinDeadline(
   }
 }
 
+// Inspector evaluation can still be answered between the queued callbacks of a
+// main thread that has stopped routing renderer traffic (#121). Only a
+// completed turn of its event loop shows the main thread is free; the
+// evidence is read after that turn.
+export const afterMainLoopTurn =
+  (app: Pick<ElectronApplication, "evaluate">, evidence?: Probe): Probe =>
+  async () => {
+    await app.evaluate(
+      () => new Promise<void>((resolve) => setImmediate(resolve)),
+    );
+    return evidence?.();
+  };
+
 // A failed poll cannot tell an application that answered wrongly from one that
-// stopped answering. Every CDP command, renderer ones included, is routed by
-// the main process's UI thread, so a stalled main thread silences every probe
-// while a stalled renderer silences only its own. Any silence keeps the main
-// thread's stacks, the only record of what blocked the run. The trace is
-// kept as `<name>-trace.json` beside the stacks.
+// stopped answering. A stalled main thread silences every renderer probe too,
+// since it routes their CDP traffic; a stalled renderer silences only its own.
+// Any silence keeps the main thread's stacks, the only record of what blocked
+// the run. The trace is kept as `<name>-trace.json` beside the stacks.
 export async function recordResponsiveness<R extends Probes>({
   name,
   evidenceDirectory,
@@ -60,6 +73,7 @@ export async function recordResponsiveness<R extends Probes>({
   name: string;
   evidenceDirectory: string;
   // An absent application or page is recorded as unavailable, never skipped.
+  // The main probe must answer only after a main loop turn: afterMainLoopTurn.
   main: { pid: number | undefined; probe: Probe | undefined };
   renderers: R;
   deadlineMs?: number;

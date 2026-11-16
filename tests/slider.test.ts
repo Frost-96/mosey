@@ -9,7 +9,10 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
 import { describeSyntheticDragInterference } from "./support/synthetic-drag-interference";
-import { recordResponsiveness } from "./support/responsiveness-evidence";
+import {
+  afterMainLoopTurn,
+  recordResponsiveness,
+} from "./support/responsiveness-evidence";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
 const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
@@ -367,7 +370,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
         pid: running?.process().pid,
         probe:
           running &&
-          (() =>
+          afterMainLoopTurn(running, () =>
             running.evaluate(({ BrowserWindow }) => ({
               events: Reflect.get(globalThis, "sliderNativeTrace"),
               windows: BrowserWindow.getAllWindows().map((window) => ({
@@ -376,7 +379,8 @@ test("slider previews without saving, commits on release, and persists nonpreset
                 visible: window.isVisible(),
                 focused: window.isFocused(),
               })),
-            }))),
+            })),
+          ),
       },
       renderers: {
         settings:

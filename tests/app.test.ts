@@ -4,7 +4,10 @@ import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
-import { recordResponsiveness } from "./support/responsiveness-evidence";
+import {
+  afterMainLoopTurn,
+  recordResponsiveness,
+} from "./support/responsiveness-evidence";
 import {
   _electron as electron,
   type ElectronApplication,
@@ -1123,7 +1126,7 @@ async function exercisePet() {
         pid: running?.process().pid,
         probe:
           running &&
-          (() =>
+          afterMainLoopTurn(running, () =>
             running.evaluate(({ BrowserWindow }) =>
               BrowserWindow.getAllWindows().map((window) => ({
                 title: window.getTitle(),
@@ -1131,7 +1134,8 @@ async function exercisePet() {
                 visible: window.isVisible(),
                 focused: window.isFocused(),
               })),
-            )),
+            ),
+          ),
       },
       renderers: {
         diagnostic:
