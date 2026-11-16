@@ -1,6 +1,6 @@
 import { createPetInteraction } from "./interaction";
 import { PetMotion } from "./motion";
-import { app, BrowserWindow, screen, ipcMain, powerMonitor } from "electron";
+import { app, BrowserWindow, screen, ipcMain } from "electron";
 import path from "node:path";
 import log from "electron-log/main";
 import { createActor } from "xstate";
@@ -8,16 +8,17 @@ import { Timeline } from "../../behavior/timeline";
 import { petBehavior, autonomy } from "../../behavior/pet-machine";
 import { createFooting, type FootingBody } from "./footing";
 import { electronFootingAdapter } from "./footing-electron";
+import { createPresence } from "./presence";
+import { electronPresenceAdapter } from "./presence-electron";
 import {
   assetErrorSchema,
   channels,
   emptyRequestSchema,
   presentationSchema,
-  type Presentation,
   type Settings,
 } from "../../shared/contract";
 import type { PetSize } from "../../shared/size";
-import type { PreferencesStore } from "../platform/preferences";
+import type { Preferences, PreferencesStore } from "../platform/preferences";
 import type { DockCapture } from "../platform/dock/capture";
 import type { DockObservation } from "../platform/dock/runtime";
 import { CharacterSwitch } from "./character-switch";
@@ -40,26 +41,14 @@ export function createPetSession(
   environment: Environment,
 ) {
   const timeline = new Timeline();
-  let visibility: Presentation["visibility"] = "hidden";
-  let suspended = false;
-  let rendererState: "loading" | "ready" | "failed" = "loading";
-  let automaticRecoveryUsed = false;
-  let rendererGeneration = 0;
-  let quitting = false;
   let commandRevision = 0;
   app.on("will-quit", () => behavior.stop());
-  const setVisibility = (next: "visible" | "hidden") => {
+  // The intent is a preference; presence reads it and shows or hides the pet.
+  const setVisibility = (next: Preferences["visibility"]) => {
     if (!preferences.setVisibility(next)) return;
     commandRevision++;
     interaction.dismissMenu();
-    if (next === "hidden") pet.hide();
-    else if (rendererState === "ready") {
-      behavior.send({ type: "CANCEL" });
-      interaction.invalidate();
-      footing.alignGround(interaction.body());
-      pet.showInactive();
-    }
-    synchronizeVisibility();
+    if (presence.intentChanged()) publish();
     environment.refreshMenus();
     environment.publishSettings();
   };
@@ -91,6 +80,47 @@ export function createPetSession(
   });
   pet.setAlwaysOnTop(true, "floating");
   pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
+    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
+    : undefined;
+  const devOrigin = devURL ? new URL(devURL).origin : undefined;
+  // Every start or stop of observation runs one handler, whatever caused it;
+  // each renderer transition runs its own. Every show, chosen or after a
+  // renderer load, is prepared the same way: a fresh activity, a fresh click
+  // window and grounded feet; a suspended pet stays paused until it wakes, so
+  // it only has its feet grounded. These callbacks reach footing, interaction,
+  // characters and behavior, created below. That is safe: creating presence
+  // only subscribes to system events and reports nothing synchronously, and
+  // no system event arrives before this function returns.
+  const presence = createPresence(
+    electronPresenceAdapter(pet, preferences, devURL),
+    {
+      notify(transition) {
+        switch (transition.type) {
+          case "observed":
+            return startObserving();
+          case "unobserved":
+            return stopObserving();
+          case "rendererRetired":
+            return retireRenderer();
+          case "rendererReady":
+            characters.rendererLoaded();
+            return environment.refreshMenus();
+          case "rendererFailed":
+            if (transition.error !== undefined)
+              log.error("Pet recovery load failed", transition.error);
+            return environment.refreshMenus();
+        }
+      },
+      prepareShow({ suspended }) {
+        if (!suspended) {
+          behavior.send({ type: "CANCEL" });
+          interaction.invalidate();
+        }
+        footing.alignGround(interaction.body());
+      },
+    },
+  );
   const footing = createFooting(electronFootingAdapter(pet, environment.dock), {
     movementClock: timeline.now,
     holdEnded: () => {
@@ -103,7 +133,7 @@ export function createPetSession(
       const bounds = pet.getBounds();
       return {
         posture: behavior.getSnapshot().value,
-        suspended,
+        suspended: presence.suspended,
         gestureActive: interaction.gestureActive,
         menuOpen: interaction.menuOpen,
         dockFramePending: footing.holding,
@@ -124,7 +154,8 @@ export function createPetSession(
         walkDurationMs: characters.current.walk?.durationMs ?? autonomy.walkMs,
         loopTimings: characters.current.loopTimings,
         paintedHandoffs: Boolean(characters.current.loopTimings),
-        paused: visibility !== "visible",
+        // A switch only applies while not suspended, so this is native visibility.
+        paused: !presence.shown,
       });
     },
     changed: environment.publishSettings,
@@ -146,79 +177,71 @@ export function createPetSession(
     const snapshot = behavior.getSnapshot();
     const posture = String(snapshot.value);
     return (
-      !quitting &&
-      rendererState === "ready" &&
-      visibility === "visible" &&
-      !suspended &&
+      presence.observable &&
       !interaction.gestureActive &&
       characters.current.capabilities.includes(definition.capability) &&
       !["paused", "dragging"].includes(posture) &&
       (action !== "standingup" || ["sittingdown", "sitting"].includes(posture))
     );
   };
-  const interaction = createPetInteraction(pet, behavior, timeline, footing, {
-    get ready() {
-      return rendererState === "ready";
+  const interaction = createPetInteraction(
+    pet,
+    behavior,
+    timeline,
+    footing,
+    presence,
+    {
+      get geometryRevision() {
+        return geometryRevision;
+      },
+      get size() {
+        return liveSize;
+      },
+      get character() {
+        return characters.current;
+      },
+      stopMotion: () => motion.stop(),
+      publish: () => publish(),
+      bodyMenu: () => {
+        const character = characters.current;
+        const revision = commandRevision;
+        const ordinary = environment.bodyMenu();
+        return [
+          {
+            id: "daily-actions",
+            label: "动作",
+            submenu: dailyActionDefinitions.map(({ action, label }) => ({
+              id: `daily-action-${action}`,
+              label,
+              enabled: actionAvailable(action),
+              click: () => {
+                // A stale native menu must never command a newly selected resource.
+                if (
+                  revision !== commandRevision ||
+                  characters.current !== character ||
+                  characters.current.resourceVersion !==
+                    character.resourceVersion ||
+                  !actionAvailable(action)
+                )
+                  return;
+                // The behavior owns safe handoffs. In-flight return motion must
+                // continue while the latest valid request waits for landing.
+                behavior.send({ type: "PLAY", action });
+              },
+            })),
+          },
+          { type: "separator" },
+          ...ordinary,
+        ];
+      },
     },
-    get visibility() {
-      return visibility;
-    },
-    get suspended() {
-      return suspended;
-    },
-    get geometryRevision() {
-      return geometryRevision;
-    },
-    get size() {
-      return liveSize;
-    },
-    get character() {
-      return characters.current;
-    },
-    stopMotion: () => motion.stop(),
-    publish: () => publish(),
-    bodyMenu: () => {
-      const character = characters.current;
-      const revision = commandRevision;
-      const ordinary = environment.bodyMenu();
-      return [
-        {
-          id: "daily-actions",
-          label: "动作",
-          submenu: dailyActionDefinitions.map(({ action, label }) => ({
-            id: `daily-action-${action}`,
-            label,
-            enabled: actionAvailable(action),
-            click: () => {
-              // A stale native menu must never command a newly selected resource.
-              if (
-                revision !== commandRevision ||
-                characters.current !== character ||
-                characters.current.resourceVersion !==
-                  character.resourceVersion ||
-                !actionAvailable(action)
-              )
-                return;
-              // The behavior owns safe handoffs. In-flight return motion must
-              // continue while the latest valid request waits for landing.
-              behavior.send({ type: "PLAY", action });
-            },
-          })),
-        },
-        { type: "separator" },
-        ...ordinary,
-      ];
-    },
-  });
-  const motion = new PetMotion(pet, behavior, footing, {
+  );
+  const motion = new PetMotion(pet, behavior, footing, presence, {
     get paused() {
       return timeline.pausedAt !== undefined;
     },
     get gestureActive() {
       return interaction.gestureActive;
-    },
-    get visible() {
-      return visibility === "visible";
     },
     get size() {
       return liveSize;
@@ -253,12 +276,7 @@ export function createPetSession(
     direction: behavior.getSnapshot().context.direction,
   });
   const reconcileDock = () => {
-    if (
-      pet.isDestroyed() ||
-      visibility !== "visible" ||
-      suspended ||
-      interaction.gestureActive
-    )
+    if (pet.isDestroyed() || !presence.observable || interaction.gestureActive)
       return;
     const posture = String(behavior.getSnapshot().value);
     if (
@@ -319,7 +337,7 @@ export function createPetSession(
       actionId: behavior.getSnapshot().context.actionId,
       startedAt: behavior.getSnapshot().context.startedAt + timeline.offset,
       frozenAt: timeline.pausedAt,
-      visibility: suspended ? "hidden" : visibility,
+      visibility: presence.shown ? "visible" : "hidden",
       size: liveSize,
       geometryRevision,
     });
@@ -398,35 +416,32 @@ export function createPetSession(
     publish();
     if (snapshot.value === "resting") reconcileDock();
   });
-  const pause = () => {
+  // A stopped pet holds no footing, pointer polling, hit region, gesture or
+  // running behavior; stale menu commands lapse.
+  const stopObserving = () => {
     commandRevision++;
     interaction.dismissMenu();
-    suspended = true;
     void forgetFooting();
     interaction.stopPolling();
+    // Immediately release any last opaque region, independent of cursor polling.
+    interaction.invalidate({ releaseInput: true });
     interaction.cancel();
     behavior.send({ type: "PAUSE" });
+    publish();
   };
-  const resume = () => {
-    suspended = false;
-    footing.alignGround(interaction.body());
+  const startObserving = () => {
+    commandRevision++;
+    behavior.send({ type: "RESUME" });
     interaction.startPolling();
-    if (visibility === "visible") {
-      behavior.send({ type: "RESUME" });
-      environment.dock.start();
-    }
+    environment.dock.start();
+    publish();
   };
-  powerMonitor.on("suspend", pause);
-  powerMonitor.on("lock-screen", pause);
-  powerMonitor.on("resume", resume);
-  powerMonitor.on("unlock-screen", resume);
   const displayChanged = () => {
     commandRevision++;
     // Cancelling realigns and reconciles, so it must meet forgotten footing,
     // yet still reach behavior before capture's last report ends the hold.
     void forgetFooting(interaction.cancel).then(() => {
-      if (!pet.isDestroyed() && visibility === "visible" && !suspended)
-        environment.dock.start();
+      if (!pet.isDestroyed() && presence.observable) environment.dock.start();
     });
   };
   const displayMetricsChanged = (
@@ -443,10 +458,6 @@ export function createPetSession(
   pet.on("closed", () => {
     interaction.invalidate({ forgetGesture: true });
     motion.stop();
-    powerMonitor.off("suspend", pause);
-    powerMonitor.off("resume", resume);
-    powerMonitor.off("unlock-screen", resume);
-    powerMonitor.off("lock-screen", pause);
     screen.off("display-metrics-changed", displayMetricsChanged);
     screen.off("display-added", displayChanged);
     screen.off("display-removed", displayChanged);
@@ -455,53 +466,21 @@ export function createPetSession(
   app.on("before-quit", interaction.dismissMenu);
   app.on("before-quit", motion.stop);
   app.on("before-quit", footing.endHold);
-  // Some packaged macOS launches update native visibility without delivering
-  // show/hide notifications. Reconcile explicit operations and native state;
-  // duplicate notifications must not reset a running action or click window.
-  const synchronizeVisibility = () => {
-    if (
-      (rendererState !== "ready" || preferences.visibility === "hidden") &&
-      pet.isVisible()
-    )
-      pet.hide();
-    const next = pet.isVisible() ? "visible" : "hidden";
-    if (visibility === next) return;
-    visibility = next;
-    commandRevision++;
-    if (next === "visible") {
-      behavior.send({ type: suspended ? "PAUSE" : "RESUME" });
-      if (!quitting && !suspended) {
-        interaction.startPolling();
-        environment.dock.start();
-      }
-    } else {
-      void forgetFooting();
-      interaction.stopPolling();
-      // Immediately release any last opaque region, independent of cursor polling.
-      interaction.invalidate({ releaseInput: true });
-      interaction.cancel();
-      behavior.send({ type: "PAUSE" });
-    }
-    publish();
-  };
-  pet.on("show", synchronizeVisibility);
-  pet.on("hide", synchronizeVisibility);
-  // Native hide/show and work-area events can be omitted or coalesced. Keep a
-  // bounded lifecycle check even when hidden; expensive pointer polling still
-  // stops while hidden. Idempotent visibility updates preserve active actions.
+  // Native hide/show and work-area events can be omitted or coalesced; some
+  // packaged macOS launches update native visibility without delivering
+  // show/hide notifications. Keep a bounded lifecycle check even when hidden;
+  // expensive pointer polling still stops while hidden. Presence reports each
+  // observation edge once, so duplicate notifications never reset a running
+  // action or click window.
   const nativeStatePoll = setInterval(() => {
     if (pet.isDestroyed()) return;
-    synchronizeVisibility();
-    if (visibility === "visible" && !suspended) reconcileGround();
+    if (presence.reconcile()) publish();
+    if (presence.observable) reconcileGround();
     characters.reconcile();
   }, 50);
   const stopNativeStatePolling = () => clearInterval(nativeStatePoll);
   pet.once("closed", stopNativeStatePolling);
   app.once("before-quit", stopNativeStatePolling);
-  const devURL = MAIN_WINDOW_VITE_DEV_SERVER_URL
-    ? new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL).href
-    : undefined;
-  const devOrigin = devURL ? new URL(devURL).origin : undefined;
   pet.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   pet.webContents.on("will-navigate", (event, url) => {
     // Allow reload of only the exact configured development entry.
@@ -511,20 +490,14 @@ export function createPetSession(
   pet.webContents.on("did-fail-load", (_event, code, description) =>
     log.error("Pet load failed", code, description),
   );
+  // Presence hides the pet and stops its observation before it retires the
+  // renderer, so the stop meets a hidden pet. Presence never writes the
+  // intent, so this operational hide never becomes a preference. What remains
+  // belongs to the retired renderer alone: its prepared character work, any
+  // gesture it captured, and the place it stood.
   const retireRenderer = () => {
-    // Hide and release native hit regions before any reload. Hidden intent is
-    // a preference, so this operational hide must never write PreferencesStore.
-    rendererState = "loading";
-    rendererGeneration++;
-    commandRevision++;
     characters.retireRenderer();
-    interaction.stopPolling();
-    interaction.invalidate({ releaseInput: true, forgetGesture: true });
-    pet.hide();
-    // A shown pet becomes hidden here, which forgets its footing.
-    synchronizeVisibility();
-    interaction.cancel();
-    behavior.send({ type: "PAUSE" });
+    interaction.invalidate({ forgetGesture: true });
     geometryRevision++;
     const area = screen.getPrimaryDisplay().workArea;
     const side = liveSize;
@@ -537,42 +510,9 @@ export function createPetSession(
       },
       false,
     );
-  };
-  const loadPet = async () => {
-    if (quitting || pet.isDestroyed()) return;
-    retireRenderer();
+    publish();
     environment.refreshMenus();
-    const generation = rendererGeneration;
-    try {
-      if (devURL) await pet.loadURL(devURL);
-      else
-        await pet.loadFile(
-          path.join(
-            import.meta.dirname,
-            `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
-          ),
-        );
-    } catch (error) {
-      if (quitting || pet.isDestroyed() || generation !== rendererGeneration)
-        return;
-      log.error("Pet recovery load failed", error);
-      retireRenderer();
-      rendererState = "failed";
-      environment.refreshMenus();
-    }
   };
-  pet.webContents.on("render-process-gone", (_event, details) => {
-    log.error("Pet renderer exited", details.reason, details.exitCode);
-    if (quitting || pet.isDestroyed()) return;
-    if (!automaticRecoveryUsed) {
-      automaticRecoveryUsed = true;
-      void loadPet();
-    } else {
-      retireRenderer();
-      rendererState = "failed";
-      environment.refreshMenus();
-    }
-  });
   pet.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     const allowed =
@@ -584,15 +524,6 @@ export function createPetSession(
           (url.protocol === "ws:" && url.host === new URL(devOrigin).host)));
     callback({ cancel: !allowed });
   });
-  pet.webContents.on("did-finish-load", () => {
-    if (quitting || rendererState !== "loading") return;
-    rendererState = "ready";
-    characters.rendererLoaded();
-    footing.alignGround(interaction.body());
-    if (preferences.visibility === "visible") pet.showInactive();
-    synchronizeVisibility();
-    environment.refreshMenus();
-  });
   return {
     get settings() {
       return {
@@ -603,15 +534,10 @@ export function createPetSession(
       };
     },
     get failed() {
-      return rendererState === "failed";
+      return presence.failed;
     },
     get capturePermitted() {
-      return (
-        !quitting &&
-        rendererState === "ready" &&
-        visibility === "visible" &&
-        !suspended
-      );
+      return presence.observable;
     },
     setVisibility,
     changeSize,
@@ -622,12 +548,12 @@ export function createPetSession(
     },
     commitPreview,
     beginShutdown: () => {
-      quitting = true;
+      presence.beginShutdown();
       commandRevision++;
       behavior.send({ type: "CANCEL_PLAY" });
     },
     observeDock,
-    load: loadPet,
+    load: () => presence.load(),
   };
 }
 

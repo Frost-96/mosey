@@ -449,10 +449,28 @@ test(
 
       await enterSleep();
       await click();
+      // Electron exposes no passthrough getter, so record what the pet window
+      // is told from here on.
+      await app.evaluate(({ BrowserWindow }) => {
+        const pet = BrowserWindow.getAllWindows()[0]!;
+        const calls: [boolean, boolean | undefined][] = [];
+        Reflect.set(globalThis, "passthroughCalls", calls);
+        const original = pet.setIgnoreMouseEvents.bind(pet);
+        pet.setIgnoreMouseEvents = (ignore, options) => {
+          calls.push([ignore, options?.forward]);
+          original(ignore, options);
+        };
+      });
+      const passthrough = () =>
+        app!.evaluate(() => Reflect.get(globalThis, "passthroughCalls"));
       await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
       const suspended = await bounds();
+      // A suspended pet releases its hit region and never takes clicks again
+      // until it wakes.
+      expect((await passthrough()).at(-1)).toEqual([true, true]);
       await new Promise((resolve) => setTimeout(resolve, 1200));
       expect(await bounds()).toEqual(suspended);
+      expect((await passthrough()).at(-1)).toEqual([true, true]);
       await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
       await expect.poll(height).toBeGreaterThan(180);
       expect(await bounds()).toEqual(suspended);
