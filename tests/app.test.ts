@@ -4,6 +4,7 @@ import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
+import { recordResponsiveness } from "./support/responsiveness-evidence";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import {
@@ -1102,6 +1103,34 @@ async function exercisePet() {
     );
   } catch (error) {
     failure = { error };
+    // Menu items are dispatched from inspector evaluation and then polled in a
+    // renderer; the trace tells a wrong answer from no answer. It comes first:
+    // a stall can clear while slower evidence is collected.
+    const pages = app?.windows() ?? [];
+    const diagnostic = pages.find((page) => page.url().startsWith("data:"));
+    const pet = pages.find((page) => !page.url().startsWith("data:"));
+    await recordResponsiveness({
+      name: `failure-${packaged ? "packaged" : "development"}-app`,
+      evidenceDirectory: evidencePath(),
+      main: {
+        pid: app?.process().pid,
+        probe: () =>
+          app?.evaluate(({ BrowserWindow }) =>
+            BrowserWindow.getAllWindows().map((window) => ({
+              title: window.getTitle(),
+              bounds: window.getBounds(),
+              visible: window.isVisible(),
+              focused: window.isFocused(),
+            })),
+          ),
+      },
+      renderers: {
+        diagnostic:
+          diagnostic &&
+          (() => diagnostic.evaluate(() => document.body.innerText)),
+        pet: pet && (() => pet.evaluate(() => document.readyState)),
+      },
+    });
     // Keep bounded native evidence before an isolated profile is removed.
     for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
       const info = await stat(localLog).catch(() => undefined);
