@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { expect, test } from "vitest";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -47,13 +48,17 @@ async function choose(app: ElectronApplication, pet: Page, action: string) {
   await expect
     .poll(() => app.evaluate(() => !!Reflect.get(globalThis, "continuityMenu")))
     .toBe(true);
-  await app.evaluate((_electron, action) => {
-    const menu = Reflect.get(globalThis, "continuityMenu") as Menu;
-    const item = menu.getMenuItemById(`daily-action-${action}`);
-    if (!item?.enabled) throw new Error(`Unavailable ${action}`);
-    item.click();
-    menu.closePopup();
-  }, action);
+  await onMainLoop(
+    app,
+    (_electron, action) => {
+      const menu = Reflect.get(globalThis, "continuityMenu") as Menu;
+      const item = menu.getMenuItemById(`daily-action-${action}`);
+      if (!item?.enabled) throw new Error(`Unavailable ${action}`);
+      item.click();
+      menu.closePopup();
+    },
+    action,
+  );
 }
 
 type Painted = {
@@ -200,12 +205,16 @@ test.each(["whale", "claude", "gemini", "gpt"])(
         Math.random = () => 0.1;
       });
       for (const label of ["Hide Mosey", "Show Mosey"])
-        await app.evaluate(({ Menu }, label) => {
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click();
-        }, label);
+        await onMainLoop(
+          app,
+          ({ Menu }, label) => {
+            Menu.getApplicationMenu()!
+              .items.find((i) => i.label === "Mosey")!
+              .submenu!.items.find((i) => i.label === label)!
+              .click();
+          },
+          label,
+        );
       await waitFor(pet, "walking");
       await waitFor(pet, "resting");
       const beforeQuiet = await state(pet);

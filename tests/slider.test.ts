@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -298,7 +299,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await expect
       .poll(() => settings.getByRole("alert").isVisible())
       .toBe(false);
-    await app.evaluate(({ Menu }) =>
+    await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!
         .submenu!.items.find((item) => item.label === "Hide Mosey")!

@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
@@ -920,13 +921,17 @@ async function exercisePet() {
     }
     // Preserve the actual manual hide choice while the display topology changes.
     const invokeVisibility = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item) throw new Error(`Missing visibility menu item: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Mosey")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+          item.click();
+        },
+        label,
+      );
     await invokeVisibility("Hide Mosey");
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
@@ -942,14 +947,18 @@ async function exercisePet() {
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Dock validation")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item || !item.enabled)
-          throw new Error(`Diagnostic menu item unavailable: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Dock validation")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item || !item.enabled)
+            throw new Error(`Diagnostic menu item unavailable: ${label}`);
+          item.click();
+        },
+        label,
+      );
     const diagnosticWindow = app.waitForEvent("window").catch(() => undefined);
     await invokeDiagnostic("Start Dock validation (120 seconds)");
     const diagnostic = await diagnosticWindow;
@@ -1085,7 +1094,7 @@ async function exercisePet() {
     const closed = new Promise<void>((resolve) =>
       app!.once("close", () => resolve()),
     );
-    await app.evaluate(({ Menu }) => {
+    await onMainLoop(app, ({ Menu }) => {
       const quit = Menu.getApplicationMenu()
         ?.items.find((item) => item.label === "Mosey")
         ?.submenu?.items.find((item) => item.label === "Quit Mosey");

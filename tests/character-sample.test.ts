@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { writeFile } from "node:fs/promises";
@@ -120,13 +121,17 @@ test("selected whale paints one character, walks, yields to dragging and returns
     }
     expect(responseFrames.size).toBe(3);
     const menu = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item) throw new Error(`Missing menu item: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Mosey")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item) throw new Error(`Missing menu item: ${label}`);
+          item.click();
+        },
+        label,
+      );
     // Only shorten the external rest clock; animation and desktop movement stay real-time.
     await controlRest(app, pet, 500);
     await app.evaluate(() => {
@@ -222,14 +227,18 @@ test("selected whale paints one character, walks, yields to dragging and returns
       ["Small", 70],
       ["Large", 240],
     ] as const) {
-      await app.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === "Pet Size")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item) throw new Error(`Missing size: ${label}`);
-        item.click();
-      }, label);
+      await onMainLoop(
+        app,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Mosey")
+            ?.submenu?.items.find((entry) => entry.label === "Pet Size")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item) throw new Error(`Missing size: ${label}`);
+          item.click();
+        },
+        label,
+      );
       await expect
         .poll(async () => (await windowState())[0]!.bounds.width)
         .toBe(size);

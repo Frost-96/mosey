@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { startForge } from "./support/forge";
 import { test, expect, onTestFinished } from "vitest";
@@ -157,13 +158,17 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       );
     const invoke = async (label: string) => {
       mark(label);
-      await app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing menu item: ${label}`);
-        item.click();
-      }, label);
+      await onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((item) => item.label === "Mosey")
+            ?.submenu?.items.find((item) => item.label === label);
+          if (!item) throw new Error(`Missing menu item: ${label}`);
+          item.click();
+        },
+        label,
+      );
       mark(`${label}-complete`);
     };
     // Native visibility can precede the initial renderer document commit.

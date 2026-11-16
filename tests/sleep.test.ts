@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { distanceFromGround } from "./support/ground";
@@ -101,12 +102,16 @@ test(
         Number(scaleFactor),
       );
       const menu = async (label: "Hide Mosey" | "Show Mosey") => {
-        await app!.evaluate(({ Menu }, label) => {
-          Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === label)!
-            .click();
-        }, label);
+        await onMainLoop(
+          app!,
+          ({ Menu }, label) => {
+            Menu.getApplicationMenu()!
+              .items.find((item) => item.label === "Mosey")!
+              .submenu!.items.find((item) => item.label === label)!
+              .click();
+          },
+          label,
+        );
         await waitForPetVisibility(
           app!,
           pet,

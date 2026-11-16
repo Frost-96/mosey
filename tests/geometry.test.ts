@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { expect, test } from "vitest";
 import type { Page } from "playwright";
 import { readFile } from "node:fs/promises";
@@ -409,7 +410,7 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
   expect(
     (await pet.evaluate(() => window.mosey.getPresentation())).direction,
   ).toBe("left");
-  await app.evaluate(({ Menu }) => {
+  await onMainLoop(app, ({ Menu }) => {
     for (const label of ["Hide Mosey", "Show Mosey"])
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!

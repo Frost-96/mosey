@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -144,13 +145,17 @@ test(
           at: performance.now(),
         }));
       const menu = (label: string) =>
-        app!.evaluate(({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing menu ${label}`);
-          item.click();
-        }, label);
+        onMainLoop(
+          app!,
+          ({ Menu }, label) => {
+            const item = Menu.getApplicationMenu()
+              ?.items.find((item) => item.label === "Mosey")
+              ?.submenu?.items.find((item) => item.label === label);
+            if (!item) throw new Error(`Missing menu ${label}`);
+            item.click();
+          },
+          label,
+        );
       await pet
         .context()
         .exposeBinding(
