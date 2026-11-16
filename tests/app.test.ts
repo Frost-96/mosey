@@ -5,7 +5,11 @@ import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import { recordResponsiveness } from "./support/responsiveness-evidence";
-import { _electron as electron, type ElectronApplication } from "playwright";
+import {
+  _electron as electron,
+  type ElectronApplication,
+  type Page,
+} from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import {
   mkdtemp,
@@ -128,6 +132,8 @@ async function exercisePet() {
   const ownedNativeChildren = new Set<number>();
   const ownedDiagnosticLogs = new Set<string>();
   let failure: { error: unknown } | undefined;
+  // Pages whose responsiveness a failure records.
+  const probedPages: { pet?: Page; diagnostic?: Page } = {};
   const fixture = createElectronFixtureCleanup(
     [
       async () => {
@@ -198,6 +204,7 @@ async function exercisePet() {
       profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
+    probedPages.pet = window;
     const menuLabels = await app.evaluate(({ Menu }) =>
       Menu.getApplicationMenu()
         ?.items.find((entry) => entry.label === "Mosey")
@@ -944,6 +951,7 @@ async function exercisePet() {
     await invokeDiagnostic("Start Dock validation (120 seconds)");
     const diagnostic = await diagnosticWindow;
     if (!diagnostic) throw new Error("Diagnostic window did not open");
+    probedPages.diagnostic = diagnostic;
     await diagnostic
       .getByRole("heading", { name: "Dock validation" })
       .waitFor();
@@ -1106,23 +1114,24 @@ async function exercisePet() {
     // Menu items are dispatched from inspector evaluation and then polled in a
     // renderer; the trace tells a wrong answer from no answer. It comes first:
     // a stall can clear while slower evidence is collected.
-    const pages = app?.windows() ?? [];
-    const diagnostic = pages.find((page) => page.url().startsWith("data:"));
-    const pet = pages.find((page) => !page.url().startsWith("data:"));
+    const running = app;
+    const { diagnostic, pet } = probedPages;
     await recordResponsiveness({
       name: `failure-${packaged ? "packaged" : "development"}-app`,
       evidenceDirectory: evidencePath(),
       main: {
-        pid: app?.process().pid,
-        probe: () =>
-          app?.evaluate(({ BrowserWindow }) =>
-            BrowserWindow.getAllWindows().map((window) => ({
-              title: window.getTitle(),
-              bounds: window.getBounds(),
-              visible: window.isVisible(),
-              focused: window.isFocused(),
-            })),
-          ),
+        pid: running?.process().pid,
+        probe:
+          running &&
+          (() =>
+            running.evaluate(({ BrowserWindow }) =>
+              BrowserWindow.getAllWindows().map((window) => ({
+                title: window.getTitle(),
+                bounds: window.getBounds(),
+                visible: window.isVisible(),
+                focused: window.isFocused(),
+              })),
+            )),
       },
       renderers: {
         diagnostic:

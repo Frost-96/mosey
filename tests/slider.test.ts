@@ -351,30 +351,32 @@ test("slider previews without saving, commits on release, and persists nonpreset
     const failedAt = Date.now();
     const failedWhileHeld = holding;
     const evidence = `failure-${packaged ? "packaged" : "development"}-slider`;
-    const pages = app?.windows() ?? [];
+    const running = app;
+    const pages = running?.windows() ?? [];
     const settings = pages.find((page) =>
       new URL(page.url()).searchParams.has("settings"),
     );
     const pet = pages.find(
       (page) => !new URL(page.url()).searchParams.has("settings"),
     );
-    // A poll that follows a menu item dispatched from inspector evaluation
-    // cannot tell a wrong answer from no answer; the trace tells them apart.
+    // Hide Mosey is dispatched from inspector evaluation before a renderer poll.
     const { renderers } = await recordResponsiveness({
       name: evidence,
       evidenceDirectory: evidencePath(),
       main: {
-        pid: app?.process().pid,
-        probe: () =>
-          app?.evaluate(({ BrowserWindow }) => ({
-            events: Reflect.get(globalThis, "sliderNativeTrace"),
-            windows: BrowserWindow.getAllWindows().map((window) => ({
-              title: window.getTitle(),
-              bounds: window.getBounds(),
-              visible: window.isVisible(),
-              focused: window.isFocused(),
-            })),
-          })),
+        pid: running?.process().pid,
+        probe:
+          running &&
+          (() =>
+            running.evaluate(({ BrowserWindow }) => ({
+              events: Reflect.get(globalThis, "sliderNativeTrace"),
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                title: window.getTitle(),
+                bounds: window.getBounds(),
+                visible: window.isVisible(),
+                focused: window.isFocused(),
+              })),
+            }))),
       },
       renderers: {
         settings:

@@ -25,13 +25,17 @@ export type ResponsivenessTrace<R extends Probes = Probes> = {
   renderers: {
     [Page in keyof R]: ProbeResult<Awaited<ReturnType<NonNullable<R[Page]>>>>;
   };
-  sample?: { report?: string; unavailable?: string };
+  sample?: Awaited<ReturnType<typeof sampleProcess>>;
 };
 
-async function answer(label: string, probe: Probe | undefined, ms: number) {
+async function probeWithinDeadline(
+  label: string,
+  probe: Probe | undefined,
+  deadlineMs: number,
+): Promise<ProbeResult> {
   if (!probe) return { unavailable: `${label} is not open` };
   try {
-    return { value: await withinDeadline(label, probe, ms) };
+    return { value: await withinDeadline(label, probe, deadlineMs) };
   } catch (error) {
     return error instanceof DeadlineExceeded
       ? { unresponsive: error.message }
@@ -44,7 +48,7 @@ async function answer(label: string, probe: Probe | undefined, ms: number) {
 // the main process's UI thread, so a stalled main thread silences every probe
 // while a stalled renderer silences only its own. Any silence keeps the main
 // thread's stacks, the only record of what blocked the run. The trace is
-// written to `<name>-trace.json` in the evidence directory and returned.
+// kept as `<name>-trace.json` beside the stacks.
 export async function recordResponsiveness<R extends Probes>({
   name,
   evidenceDirectory,
@@ -55,31 +59,37 @@ export async function recordResponsiveness<R extends Probes>({
 }: {
   name: string;
   evidenceDirectory: string;
-  main: { pid: number | undefined; probe: Probe };
-  // An absent page is recorded as unavailable rather than skipped.
+  // An absent application or page is recorded as unavailable, never skipped.
+  main: { pid: number | undefined; probe: Probe | undefined };
   renderers: R;
   deadlineMs?: number;
   sampleCommand?: string;
 }): Promise<ResponsivenessTrace<R>> {
-  const [mainResult, ...rendererResults] = await Promise.all([
-    answer("Main process probe", main.probe, deadlineMs),
-    ...Object.entries(renderers).map(([page, probe]) =>
-      answer(`${page} renderer probe`, probe, deadlineMs),
+  const [mainResult, rendererEntries] = await Promise.all([
+    probeWithinDeadline("Main process probe", main.probe, deadlineMs),
+    Promise.all(
+      Object.entries(renderers).map(
+        async ([page, probe]) =>
+          [
+            page,
+            await probeWithinDeadline(
+              `${page} renderer probe`,
+              probe,
+              deadlineMs,
+            ),
+          ] as const,
+      ),
     ),
   ]);
-  const rendererTrace = Object.fromEntries(
-    Object.keys(renderers).map((page, index) => [
-      page,
-      rendererResults[index]!,
-    ]),
+  const silentRenderer = rendererEntries.some(
+    ([, result]) => result.unresponsive,
   );
-  const silentRenderer = rendererResults.some((result) => result.unresponsive);
   const verdict = mainResult.unresponsive
     ? "main-unresponsive"
-    : mainResult.unavailable
-      ? "main-unavailable"
-      : silentRenderer
-        ? "renderer-unresponsive"
+    : silentRenderer
+      ? "renderer-unresponsive"
+      : mainResult.unavailable
+        ? "main-unavailable"
         : "responsive";
   const sample =
     main.pid !== undefined && (mainResult.unresponsive || silentRenderer)
@@ -93,7 +103,9 @@ export async function recordResponsiveness<R extends Probes>({
   const trace: ResponsivenessTrace<R> = {
     verdict,
     main: mainResult,
-    renderers: rendererTrace as ResponsivenessTrace<R>["renderers"],
+    renderers: Object.fromEntries(
+      rendererEntries,
+    ) as ResponsivenessTrace<R>["renderers"],
     ...(sample && { sample }),
   };
   await writeFile(
