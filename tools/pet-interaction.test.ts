@@ -44,8 +44,12 @@ class PetWindow extends EventEmitter {
     super();
     this.getBounds = () => window.windowBounds();
   }
+  // Whether clicks pass through the window, as the pointer poll last set it.
+  ignoring = true;
   isDestroyed = () => this.destroyed;
-  setIgnoreMouseEvents() {}
+  setIgnoreMouseEvents(ignore: boolean) {
+    this.ignoring = ignore;
+  }
 }
 class NativeMenu extends EventEmitter {
   callback: (() => void) | undefined;
@@ -84,11 +88,10 @@ function harness(t: TestContext, daily = true) {
   const pet = new PetWindow(window);
   // A loaded renderer in a shown window: the pet starts observed.
   const lifecycle = createMemoryPresenceAdapter();
-  const presence = createPresence(
-    lifecycle,
-    () => {},
-    () => {},
-  );
+  const presence = createPresence(lifecycle, {
+    notify() {},
+    prepareShow() {},
+  });
   void presence.load();
   lifecycle.finishLoad();
   assert.equal(presence.observable, true);
@@ -200,6 +203,7 @@ function harness(t: TestContext, daily = true) {
   return {
     actor,
     timeline,
+    pet,
     window,
     footing,
     lifecycle,
@@ -254,6 +258,37 @@ for (const invalidation of [
     assert.equal(h.timeline.pausedAt, undefined);
   });
 }
+
+// The platform can show the window natively while a reload is under way; until
+// the next poll hides it again, the pet is shown without a ready renderer.
+test("a shown pet whose renderer is not ready takes no input and no hit", (t) => {
+  const h = harness(t, false);
+  h.frame(0);
+  void h.presence.load();
+  h.lifecycle.show();
+  assert.equal(h.presence.shown, true);
+  h.interaction.startPolling();
+  assert.equal(h.pet.ignoring, true);
+  // A paint report from a renderer that is not ready is dropped.
+  h.frame(2);
+  assert.equal(h.interaction.displayed?.frame, 0);
+  const gesture = {
+    geometryRevision: h.environment.geometryRevision,
+    gestureId: 7,
+  };
+  h.input({
+    ...gesture,
+    type: "press",
+    actionId: h.actor.getSnapshot().context.actionId,
+    x: 120,
+    y: 120,
+    screenX: 520,
+    screenY: 680,
+  });
+  h.input({ ...gesture, type: "move", screenX: 620, screenY: 680 });
+  assert.equal(h.interaction.gestureActive, false);
+  assert.equal(h.actor.getSnapshot().value, "resting");
+});
 
 // Quitting keeps the pet shown while Dock capture drains; until the window
 // closes, it still answers the pointer exactly as before the quit began.

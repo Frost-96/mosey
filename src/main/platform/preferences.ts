@@ -19,7 +19,7 @@ const schema = z.strictObject({
   visibility: z.enum(["visible", "hidden"]),
   size: petSizeSchema.default(160),
 });
-type Preferences = z.infer<typeof schema>;
+export type Preferences = z.infer<typeof schema>;
 
 // Only preferences are durable. Actions, motion, screen coordinates and login
 // settings never enter this document. Rename is the commit point of a write.
