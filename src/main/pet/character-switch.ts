@@ -5,8 +5,6 @@ import {
   type IpcMainEvent,
   type WebContents,
 } from "electron";
-import type { SnapshotFrom } from "xstate";
-import type { petBehavior } from "../../behavior/pet-machine";
 import type { PreferencesStore } from "../platform/preferences";
 import type { CharacterId } from "../../shared/character-catalog";
 import { CharacterCatalog } from "../character-catalog";
@@ -24,21 +22,11 @@ type Request = Omit<CharacterPreparation, "assets"> & {
   phase: "loading" | "waiting";
 };
 
-// The application supplies live placement facts and one synchronous apply
-// operation. It never handles a request, preparation phase, timer or failure.
+// The application answers whether a prepared candidate may replace the
+// current character right now, and applies it synchronously. It never handles
+// a request, preparation phase, timer or failure.
 type Application = {
-  placement(candidate: Character): {
-    posture: SnapshotFrom<typeof petBehavior>["value"];
-    suspended: boolean;
-    gestureActive: boolean;
-    menuOpen: boolean;
-    dockFramePending: boolean;
-    footY: number;
-    supports: [
-      { footY: number; shiftX: number },
-      { footY: number; shiftX: number },
-    ];
-  };
+  ready(candidate: Character): boolean;
   apply(): void;
   changed(): void;
 };
@@ -162,28 +150,10 @@ export class CharacterSwitch {
       this.pet.isDestroyed()
     )
       return;
-    const placement = this.application.placement(request.candidate);
-    if (
-      placement.suspended ||
-      placement.gestureActive ||
-      placement.menuOpen ||
-      placement.dockFramePending ||
-      ["dragging", "flutter", "falling", "landing", "climbing"].includes(
-        placement.posture,
-      )
-    )
-      return;
-    // Both characters must already share this support. Never reposition the
-    // window to accommodate the candidate's shape or a different Dock edge.
-    if (
-      placement.supports.some(
-        (support) =>
-          Math.abs(support.footY - placement.footY) > 1 || support.shiftX,
-      )
-    )
-      return;
-    // Native placement reads can reenter application code. Recheck identity
-    // after them, then keep validation, persistence and apply synchronous.
+    if (!this.application.ready(request.candidate)) return;
+    // Native reads behind ready() can reenter application code. Recheck
+    // identity after them, then keep validation, persistence and apply
+    // synchronous.
     if (
       this.pending !== request ||
       request.generation !== this.generation ||

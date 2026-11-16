@@ -142,6 +142,19 @@ export function createFooting(
     return support;
   };
 
+  // Whether every body is already supported where the window stands, with no
+  // vertical or side adjustment. Never moves the window. A pending Dock frame
+  // has invalidated the old edge, so nothing is known to fit until it ends.
+  const fitsInPlace = (bodies: readonly FootingBody[]) => {
+    if (heldAt !== undefined) return false;
+    const bounds = adapter.windowBounds();
+    const footY = bounds.y + bounds.height;
+    return bodies.every((body) => {
+      const support = supportAt(body, { x: bounds.x, y: bounds.y });
+      return Math.abs(support.footY - footY) <= 1 && support.shiftX === 0;
+    });
+  };
+
   // Keep the whole window inside the work area, in whole desktop points.
   const constrain = (x: number, y: number) => {
     const area = adapter.workArea();
@@ -215,6 +228,7 @@ export function createFooting(
     // Motion time, standing still while a pending Dock frame holds movement.
     movementNow: () => (heldAt ?? movementClock()) - heldDuration,
     supportAt,
+    fitsInPlace,
     constrain,
     alignGround,
   };

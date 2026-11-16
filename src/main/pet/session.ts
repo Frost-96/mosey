@@ -129,21 +129,18 @@ export function createPetSession(
     },
   });
   const characters: CharacterSwitch = new CharacterSwitch(pet, preferences, {
-    placement: (candidate) => {
-      const bounds = pet.getBounds();
-      return {
-        posture: behavior.getSnapshot().value,
-        suspended: presence.suspended,
-        gestureActive: interaction.gestureActive,
-        menuOpen: interaction.menuOpen,
-        dockFramePending: footing.holding,
-        footY: bounds.y + bounds.height,
-        supports: [
-          footing.supportAt(interaction.body(), bounds),
-          footing.supportAt(candidateBody(candidate), bounds),
-        ],
-      };
-    },
+    // Commit only while the pet stands still and both characters already share
+    // this support: never reposition the window to fit the candidate's shape
+    // or a different Dock edge. Hidden (paused) pets may still switch, so the
+    // gate is suspension, not observability.
+    ready: (candidate) =>
+      !presence.suspended &&
+      !interaction.gestureActive &&
+      !interaction.menuOpen &&
+      !["dragging", "flutter", "falling", "landing", "climbing"].includes(
+        String(behavior.getSnapshot().value),
+      ) &&
+      footing.fitsInPlace([interaction.body(), candidateBody(candidate)]),
     apply: () => {
       motion.stop();
       geometryRevision++;
@@ -263,8 +260,8 @@ export function createPetSession(
     publishSupportReadiness();
     return stopped;
   };
-  // A candidate character starts at rest; support must fit before that
-  // switch commits.
+  // A candidate character starts at rest (ADR-0004), facing and sized like
+  // the current one; it must fit in place before that switch commits.
   const candidateBody = (
     candidate: CharacterSwitch["current"],
   ): FootingBody => ({

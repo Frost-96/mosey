@@ -53,6 +53,35 @@ function body(overrides: Partial<FootingBody> = {}): FootingBody {
   };
 }
 
+// A differently shaped body: painted between left..right, touching the Dock
+// between the contact offsets, each relative to the window's x.
+function shaped(
+  left: number,
+  right: number,
+  contact: [number, number],
+  overrides: Partial<FootingBody> = {},
+) {
+  const base = body().geometry;
+  return body({
+    ...overrides,
+    geometry: {
+      frame: (pose) => ({
+        ...base.frame(pose)!,
+        boundsAt: (origin) => ({
+          left: origin.x + left,
+          right: origin.x + right,
+          top: origin.y + 20,
+          bottom: origin.y + pose.size,
+        }),
+      }),
+      contactAt: (_size, x) => ({
+        left: x + contact[0],
+        right: x + contact[1],
+      }),
+    },
+  });
+}
+
 const bottomDock = (top: number, from = 300, to = 700): DockSurface => ({
   orientation: "bottom",
   contour: Array.from({ length: (to - from) / 10 + 1 }, (_, index) => ({
@@ -377,6 +406,69 @@ test("reset stops observing only after the state is forgotten", async () => {
   assert.equal(footing.reconcile(standing).move, "stay");
   adapter.advance(1000);
   assert.deepEqual(holdsEnded, []);
+});
+
+test("bodies on the ground fit in place at the current window position", () => {
+  const { footing } = fixture();
+  assert.equal(footing.fitsInPlace([body(), body({ capabilities: [] })]), true);
+});
+
+test("bodies standing on the Dock's top edge fit in place", () => {
+  const { footing } = fixture({ x: 400, y: 640, width: 100, height: 100 });
+  footing.observe(bottomDock(740), false);
+  assert.equal(
+    footing.fitsInPlace([
+      body({ footY: 740 }),
+      shaped(10, 90, [20, 80], { footY: 740, capabilities: [] }),
+    ]),
+    true,
+  );
+});
+
+test("a body that the Dock edge would not support here does not fit", () => {
+  const { footing } = fixture({ x: 400, y: 640, width: 100, height: 100 });
+  // The Dock ends at 450: the current contact (440..460) touches it, the
+  // candidate's contact (470..490) would stand on the floor instead.
+  footing.observe(bottomDock(740, 300, 450), false);
+  const current = body({ footY: 740 });
+  const candidate = shaped(30, 70, [70, 90], { footY: 740 });
+  assert.equal(footing.fitsInPlace([current]), true);
+  assert.equal(footing.fitsInPlace([current, candidate]), false);
+});
+
+test("a body that would need a side shift does not fit", () => {
+  const { adapter, footing } = fixture({
+    x: 0,
+    y: 700,
+    width: 100,
+    height: 100,
+  });
+  // A left Dock reaching 80: a body painted from 85 is clear, one from 30 is not.
+  footing.observe(sideDock("left", 80), false);
+  const clear = shaped(85, 95, [86, 94]);
+  assert.equal(footing.fitsInPlace([clear]), true);
+  assert.equal(footing.fitsInPlace([clear, body()]), false);
+  // The query never applies the shift itself.
+  assert.equal(adapter.windowBounds().x, 0);
+});
+
+test("a raised Dock edge leaves a non-climber fitting on the floor", () => {
+  const { footing } = fixture();
+  // Feet on the floor, Dock edge above them.
+  footing.observe(bottomDock(740), false);
+  const walker = body({ capabilities: [] });
+  assert.equal(footing.fitsInPlace([walker]), true);
+  // A climber at the same place would be pulled up to the edge.
+  assert.equal(footing.fitsInPlace([walker, body()]), false);
+});
+
+test("nothing fits in place while a pending Dock frame holds", () => {
+  const { adapter, footing } = fixture();
+  footing.observe(null, true);
+  assert.equal(footing.fitsInPlace([body()]), false);
+  // The bounded hold ends on its own; the unchanged ground fits again.
+  adapter.advance(250);
+  assert.equal(footing.fitsInPlace([body()]), true);
 });
 
 test("the in-memory adapter runs scheduled work in time order", () => {
