@@ -1,6 +1,5 @@
 // Presence answers whether the pet can be observed right now. It owns native
-// window visibility, suspension (sleep or a locked screen), the renderer
-// lifecycle and quitting, so gates ask one judgment instead of rebuilding it
+// window visibility, suspension, the renderer lifecycle and quitting, so gates ask one judgment instead of rebuilding it
 // from session closures. The module never imports Electron: the native window,
 // the stored display intent, renderer loads and the system events come only
 // through the adapter passed at construction, the Electron adapter in
@@ -19,6 +18,13 @@
 // observed, and a suspended pet is shown but stays paused until it wakes.
 // Native notifications only record visibility; hiding against them waits for
 // the next reconcile.
+//
+// Suspension has two independent reasons: the system is asleep, or the screen
+// is locked. The pet is suspended while either holds, and stops being
+// suspended only once both have cleared. Waking clears only sleep and
+// unlocking only the lock, so the order they arrive in never matters and a pet
+// that wakes behind a locked screen stays suspended. Reporting a reason that
+// already holds, or clearing one that does not, changes nothing.
 //
 // The renderer is loading, ready or failed. Every load, first or retried,
 // retires the current renderer: the pet is hidden first, so a stop of
@@ -80,8 +86,12 @@ export type PresenceTransition =
 // The system events presence consumes. Adapters decide which platform events
 // count as each one.
 export type PresenceInputs = {
-  suspend(): void;
-  resume(): void;
+  // The system sleeps or wakes.
+  sleep(): void;
+  wake(): void;
+  // The screen locks or unlocks.
+  lock(): void;
+  unlock(): void;
   visibilityChanged(): void;
   // The renderer's page finished loading.
   rendererLoaded(): void;
@@ -124,13 +134,15 @@ export function createPresence(
   // A load result belongs to the generation it started in.
   let generation = 0;
   let automaticRecoveryUsed = false;
-  let suspended = false;
+  let sleeping = false;
+  let locked = false;
+  const isSuspended = () => sleeping || locked;
   let quitting = false;
   // Whether the last reported transition was "observed".
   let observed = false;
   // Everything observation needs except not quitting, which ends
   // observability without reporting a stop.
-  const live = () => renderer === "ready" && visible && !suspended;
+  const live = () => renderer === "ready" && visible && !isSuspended();
   // Report the observation edge, if any, since the last report.
   const reportEdge = () => {
     if (observed && !live()) {
@@ -162,7 +174,7 @@ export function createPresence(
   const showIntended = () => {
     const before = visible;
     if (renderer === "ready" && adapter.intent() === "visible") {
-      prepareShow({ suspended });
+      prepareShow({ suspended: isSuspended() });
       adapter.show();
     }
     return hideUnwanted(before);
@@ -196,12 +208,20 @@ export function createPresence(
     }
   };
   adapter.listen({
-    suspend() {
-      suspended = true;
+    sleep() {
+      sleeping = true;
       reportEdge();
     },
-    resume() {
-      suspended = false;
+    wake() {
+      sleeping = false;
+      reportEdge();
+    },
+    lock() {
+      locked = true;
+      reportEdge();
+    },
+    unlock() {
+      locked = false;
       reportEdge();
     },
     visibilityChanged: readNative,
@@ -238,10 +258,10 @@ export function createPresence(
       return !quitting && live();
     },
     get shown() {
-      return visible && !suspended;
+      return visible && !isSuspended();
     },
     get suspended() {
-      return suspended;
+      return isSuspended();
     },
   };
 }
@@ -283,8 +303,10 @@ export function createMemoryPresenceAdapter() {
     load: () =>
       new Promise<void>((resolve, reject) => loads.push({ resolve, reject })),
     loads,
-    suspend: () => inputs?.suspend(),
-    resume: () => inputs?.resume(),
+    sleep: () => inputs?.sleep(),
+    wake: () => inputs?.wake(),
+    lock: () => inputs?.lock(),
+    unlock: () => inputs?.unlock(),
     finishLoad: () => inputs?.rendererLoaded(),
     exitRenderer: () => inputs?.rendererGone(),
   };

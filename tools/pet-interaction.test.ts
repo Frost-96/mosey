@@ -248,7 +248,7 @@ for (const invalidation of [
     // A reload retires the renderer and hides the pet before the new page.
     if (invalidation === "not-ready") void h.presence.load();
     if (invalidation === "hidden") h.lifecycle.hide();
-    if (invalidation === "suspended") h.lifecycle.suspend();
+    if (invalidation === "suspended") h.lifecycle.sleep();
     if (invalidation === "action") h.actor.send({ type: "CANCEL" });
     h.input({ type: "frame", geometryRevision: 1, actionId, frame: 0 });
     assert.notEqual(h.actor.getSnapshot().context.loopFrame?.frame, 0);
