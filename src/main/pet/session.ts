@@ -18,7 +18,7 @@ import {
   type Settings,
 } from "../../shared/contract";
 import type { PetSize } from "../../shared/size";
-import type { PreferencesStore } from "../platform/preferences";
+import type { Preferences, PreferencesStore } from "../platform/preferences";
 import type { DockCapture } from "../platform/dock/capture";
 import type { DockObservation } from "../platform/dock/runtime";
 import { CharacterSwitch } from "./character-switch";
@@ -44,7 +44,7 @@ export function createPetSession(
   let commandRevision = 0;
   app.on("will-quit", () => behavior.stop());
   // The intent is a preference; presence reads it and shows or hides the pet.
-  const setVisibility = (next: "visible" | "hidden") => {
+  const setVisibility = (next: Preferences["visibility"]) => {
     if (!preferences.setVisibility(next)) return;
     commandRevision++;
     interaction.dismissMenu();
@@ -87,30 +87,38 @@ export function createPetSession(
   // Every start or stop of observation runs one handler, whatever caused it;
   // each renderer transition runs its own. Every show, chosen or after a
   // renderer load, is prepared the same way: a fresh activity, a fresh click
-  // window and grounded feet.
+  // window and grounded feet; a suspended pet stays paused until it wakes, so
+  // it only has its feet grounded. These callbacks reach footing, interaction,
+  // characters and behavior, created below. That is safe: creating presence
+  // only subscribes to system events and reports nothing synchronously, and
+  // no system event arrives before this function returns.
   const presence = createPresence(
     electronPresenceAdapter(pet, preferences, devURL),
-    (transition) => {
-      switch (transition.type) {
-        case "observed":
-          return startObserving();
-        case "unobserved":
-          return stopObserving();
-        case "rendererRetired":
-          return retireRenderer();
-        case "rendererReady":
-          characters.rendererLoaded();
-          return environment.refreshMenus();
-        case "rendererFailed":
-          if (transition.error !== undefined)
-            log.error("Pet recovery load failed", transition.error);
-          return environment.refreshMenus();
-      }
-    },
-    () => {
-      behavior.send({ type: "CANCEL" });
-      interaction.invalidate();
-      footing.alignGround(interaction.body());
+    {
+      notify(transition) {
+        switch (transition.type) {
+          case "observed":
+            return startObserving();
+          case "unobserved":
+            return stopObserving();
+          case "rendererRetired":
+            return retireRenderer();
+          case "rendererReady":
+            characters.rendererLoaded();
+            return environment.refreshMenus();
+          case "rendererFailed":
+            if (transition.error !== undefined)
+              log.error("Pet recovery load failed", transition.error);
+            return environment.refreshMenus();
+        }
+      },
+      prepareShow({ suspended }) {
+        if (!suspended) {
+          behavior.send({ type: "CANCEL" });
+          interaction.invalidate();
+        }
+        footing.alignGround(interaction.body());
+      },
     },
   );
   const footing = createFooting(electronFootingAdapter(pet, environment.dock), {

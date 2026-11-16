@@ -14,10 +14,11 @@
 // ready and the intent is visible, an explicit operation shows it without
 // taking focus. The intent belongs to the preferences store and presence only
 // reads it, so an operational hide during a reload never becomes the user's
-// choice. Every show first runs the caller's show preparation, unless the pet
-// is suspended: preparation readies a pet about to be observed, and a
-// suspended pet stays paused until it wakes. Native notifications only record
-// visibility; hiding against them waits for the next reconcile.
+// choice. Every show first runs the caller's show preparation, which learns
+// whether the pet is suspended: preparation readies a pet about to be
+// observed, and a suspended pet is shown but stays paused until it wakes.
+// Native notifications only record visibility; hiding against them waits for
+// the next reconcile.
 //
 // The renderer is loading, ready or failed. Every load, first or retried,
 // retires the current renderer: the pet is hidden first, so a stop of
@@ -35,10 +36,10 @@
 //   reconciliation and the daily action menu.
 // - shown: window natively visible and not suspended. The presentation
 //   published to the renderer reads it, and so do interaction and motion,
-//   which hold presence directly. A shown window holds a ready renderer,
-//   since presence hides any other on every operation and reconcile, so for
-//   them shown differs from observable only while quitting: the pet stays
-//   shown through the quit drain and keeps taking input and moving as before.
+//   which hold presence directly. Shown does not imply a ready renderer: the
+//   platform can show the window natively, and presence hides it again only
+//   at the next operation or reconcile. Quitting leaves the pet shown, so through
+//   the quit drain it keeps moving and taking input.
 //
 // Transitions mark the edges of observation: "observed" when the pet starts
 // being observed, "unobserved" when it stops. Each edge is reported once, so
@@ -49,17 +50,24 @@
 // but never reports "unobserved". During quit the pet stays shown while Dock
 // capture drains; running the stop sequence there would freeze it mid-wait,
 // and its footing reset would stop capture alongside quit's own cleanup. The
-// existing quit handling still owns that cleanup. A pet still observed when
-// quitting begins does report "unobserved" if it is then suspended or hidden.
+// session's before-quit handlers own that cleanup: they dismiss the menu, stop
+// motion, end the footing hold and stop the native state poll. A pet still
+// observed when quitting begins does report "unobserved" if it is then
+// suspended or hidden.
 // Quitting also ends the renderer lifecycle: no load starts, and no page load,
 // exit or load failure is acted on.
 //
 // The session reconciles native visibility from its own state poll. The
-// operations that can change visibility return the new visibility only when it
-// changed, so the caller republishes its presentation.
-// One raw dimension stays readable beside the queries: the character switch
-// reads suspended, which neither query expresses: a hidden pet may still
-// switch character, a sleeping one may not.
+// operations that can change visibility return whether it changed, so the
+// caller republishes its presentation.
+//
+// Three raw dimensions stay readable beside the queries, each for a judgment
+// neither query expresses. The character switch reads suspended: a hidden pet
+// may still switch character, a sleeping one may not. Interaction reads ready
+// beside shown: a pet the platform showed before its renderer is ready takes
+// no input. The session reads failed to offer a manual retry.
+
+import type { Preferences } from "../platform/preferences";
 
 export type PresenceTransition =
   | { type: "observed" }
@@ -87,7 +95,7 @@ export type PresenceAdapter = {
   show(): void;
   hide(): void;
   // The user's display intent, read from the preferences store.
-  intent(): "visible" | "hidden";
+  intent(): Preferences["visibility"];
   // Load the renderer's page; rejects when the load fails.
   load(): Promise<unknown>;
   // The window is gone; nothing more can be loaded into it.
@@ -97,13 +105,22 @@ export type PresenceAdapter = {
   listen(inputs: PresenceInputs): void;
 };
 
+export type PresenceOptions = {
+  // Receives every transition, in order.
+  notify(transition: PresenceTransition): void;
+  // Runs just before presence shows the window. A suspended pet is shown but
+  // stays paused until it wakes, so its preparation must not start it afresh.
+  prepareShow(show: { suspended: boolean }): void;
+};
+
+type RendererState = "loading" | "ready" | "failed";
+
 export function createPresence(
   adapter: PresenceAdapter,
-  notify: (transition: PresenceTransition) => void,
-  prepareShow: () => void,
+  { notify, prepareShow }: PresenceOptions,
 ) {
   let visible = false;
-  let renderer: "loading" | "ready" | "failed" = "loading";
+  let renderer: RendererState = "loading";
   // A load result belongs to the generation it started in.
   let generation = 0;
   let automaticRecoveryUsed = false;
@@ -111,47 +128,51 @@ export function createPresence(
   let quitting = false;
   // Whether the last reported transition was "observed".
   let observed = false;
-  const settle = () => {
-    const live = renderer === "ready" && visible && !suspended;
-    if (observed && !live) {
+  // Everything observation needs except not quitting, which ends
+  // observability without reporting a stop.
+  const live = () => renderer === "ready" && visible && !suspended;
+  // Report the observation edge, if any, since the last report.
+  const reportEdge = () => {
+    if (observed && !live()) {
       observed = false;
       notify({ type: "unobserved" });
-    } else if (!observed && live && !quitting) {
+    } else if (!observed && live() && !quitting) {
       observed = true;
       notify({ type: "observed" });
     }
   };
-  const synchronize = () => {
+  // Record what the window natively is, then report any edge.
+  const readNative = () => {
     visible = adapter.nativelyVisible();
-    settle();
+    reportEdge();
   };
   // Hide a window that must not be shown, then record what the window is.
-  // The window may report its own change while it is shown or hidden, so the
-  // result compares with the visibility before the whole operation.
-  const align = (before = visible) => {
+  // Returns whether visibility changed. The window may report its own change
+  // while it is shown or hidden, so the result compares with the visibility
+  // before the whole operation.
+  const hideUnwanted = (before = visible) => {
     if (
       (renderer !== "ready" || adapter.intent() === "hidden") &&
       adapter.nativelyVisible()
     )
       adapter.hide();
-    synchronize();
-    if (visible === before) return undefined;
-    return visible ? "visible" : "hidden";
+    readNative();
+    return visible !== before;
   };
   const showIntended = () => {
     const before = visible;
     if (renderer === "ready" && adapter.intent() === "visible") {
-      if (!suspended) prepareShow();
+      prepareShow({ suspended });
       adapter.show();
     }
-    return align(before);
+    return hideUnwanted(before);
   };
   // Hide before anything else learns of the reload, so a stop of observation
   // meets a hidden pet.
   const retire = () => {
     renderer = "loading";
     generation++;
-    align();
+    hideUnwanted();
     notify({ type: "rendererRetired" });
   };
   const fail = (error?: unknown) => {
@@ -177,13 +198,13 @@ export function createPresence(
   adapter.listen({
     suspend() {
       suspended = true;
-      settle();
+      reportEdge();
     },
     resume() {
       suspended = false;
-      settle();
+      reportEdge();
     },
-    visibilityChanged: synchronize,
+    visibilityChanged: readNative,
     rendererLoaded() {
       if (quitting || renderer !== "loading") return;
       renderer = "ready";
@@ -202,16 +223,19 @@ export function createPresence(
       quitting = true;
     },
     // Called from the caller's native state poll.
-    reconcile: () => align(),
+    reconcile: () => hideUnwanted(),
     // The stored intent changed.
     intentChanged: showIntended,
     // First load and manual retry alike.
     load,
+    get ready() {
+      return renderer === "ready";
+    },
     get failed() {
       return renderer === "failed";
     },
     get observable() {
-      return !quitting && renderer === "ready" && visible && !suspended;
+      return !quitting && live();
     },
     get shown() {
       return visible && !suspended;
@@ -231,7 +255,7 @@ export type Presence = ReturnType<typeof createPresence>;
 // notifications; show and hide change it and notify.
 export function createMemoryPresenceAdapter() {
   let visible = false;
-  let intent: "visible" | "hidden" = "visible";
+  let intent: Preferences["visibility"] = "visible";
   let inputs: PresenceInputs | undefined;
   // Every load requested, oldest first; each settles when the test says.
   const loads: { resolve(): void; reject(error: unknown): void }[] = [];
@@ -239,7 +263,7 @@ export function createMemoryPresenceAdapter() {
     nativelyVisible: () => visible,
     intent: () => intent,
     destroyed: () => false,
-    setIntent(next: "visible" | "hidden") {
+    setIntent(next: Preferences["visibility"]) {
       intent = next;
     },
     listen(next: PresenceInputs) {

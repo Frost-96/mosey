@@ -26,9 +26,11 @@ type Environment = {
 // tracking. The session observes these facts but never writes gesture internals.
 // Dragging and cancelling place the window through footing directly; the
 // painted pose owned here is also the body footing measures for everyone.
-// Input is gated on presence directly, by whether the pet is shown: a shown
-// window always holds a ready renderer, and a quitting pet stays shown and
-// keeps answering the pointer while Dock capture drains, as it did before.
+// Input is gated on presence directly. The pet must be shown, and paint
+// reports, input and hits also need a ready renderer, since the platform can
+// show the window before its renderer is ready. Quitting is no gate: a
+// quitting pet stays shown and keeps answering the pointer while Dock capture
+// drains.
 export function createPetInteraction(
   pet: BrowserWindow,
   behavior: ActorRefFrom<typeof petBehavior>,
@@ -127,10 +129,12 @@ export function createPetInteraction(
     };
   };
   let ignoring = true;
+  // A shown pet whose renderer can report paint and take input.
+  const answering = () => presence.shown && presence.ready;
   const hit = (x: number, y: number) => {
     // Until the next draw report, the previous pose is still what the user sees.
     // Behavior transitions must not create an ungrabbable frame between poses.
-    if (!presence.shown || !displayed) return false;
+    if (!answering() || !displayed) return false;
     return (
       environment.character.geometry
         .frame({ ...displayed, size: environment.size })
@@ -166,7 +170,7 @@ export function createPetInteraction(
     event.sender === pet?.webContents &&
     event.senderFrame === pet.webContents.mainFrame;
   ipcMain.on(channels.input, (event, value: unknown) => {
-    if (!authorized(event) || !presence.shown) return;
+    if (!authorized(event) || !answering()) return;
     const parsed = inputSchema.safeParse(value);
     if (!parsed.success) return;
     const input = parsed.data;

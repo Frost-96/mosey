@@ -28,11 +28,14 @@ function fixture() {
         adapter.hide();
       },
     },
-    (transition) => {
-      log.push(transition.type);
-      transitions.push(transition.type);
+    {
+      notify(transition) {
+        log.push(transition.type);
+        transitions.push(transition.type);
+      },
+      prepareShow: ({ suspended }) =>
+        log.push(suspended ? "prepare while suspended" : "prepare"),
     },
-    () => log.push("prepare"),
   );
   // The platform shows or hides the window and reports it.
   const show = () => adapter.show();
@@ -127,13 +130,15 @@ test("quitting ends observation but keeps the pet shown through the drain", () =
 test("reconciling reports each silent visibility change once", () => {
   const { adapter, presence, observe } = fixture();
   observe();
-  assert.equal(presence.reconcile(), undefined);
+  assert.equal(presence.reconcile(), false);
   adapter.setVisible(false);
-  assert.equal(presence.reconcile(), "hidden");
-  assert.equal(presence.reconcile(), undefined);
+  assert.equal(presence.reconcile(), true);
+  assert.equal(presence.shown, false);
+  assert.equal(presence.reconcile(), false);
   adapter.setVisible(true);
-  assert.equal(presence.reconcile(), "visible");
-  assert.equal(presence.reconcile(), undefined);
+  assert.equal(presence.reconcile(), true);
+  assert.equal(presence.shown, true);
+  assert.equal(presence.reconcile(), false);
 });
 
 // The character switch reads suspension on its own: a hidden pet may still
@@ -232,7 +237,7 @@ test("a pet still observed while quitting stops observation when it is suspended
 test("the poll hides a window the platform showed before its renderer was ready", () => {
   const { adapter, presence, log } = fixture();
   adapter.setVisible(true);
-  assert.equal(presence.reconcile(), undefined);
+  assert.equal(presence.reconcile(), false);
   assert.equal(adapter.nativelyVisible(), false);
   assert.deepEqual(log, ["hide"]);
   assert.equal(adapter.intent(), "visible");
@@ -260,7 +265,7 @@ test("a hidden intent hides the pet and keeps it hidden through reloads and sile
   const { adapter, presence, observe, log } = fixture();
   observe();
   adapter.setIntent("hidden");
-  assert.equal(presence.intentChanged(), "hidden");
+  assert.equal(presence.intentChanged(), true);
   void presence.load();
   adapter.finishLoad();
   adapter.setVisible(true);
@@ -281,7 +286,7 @@ test("choosing to show prepares the pet before showing it, only once its rendere
   adapter.setIntent("hidden");
   adapter.finishLoad();
   adapter.setIntent("visible");
-  assert.equal(presence.intentChanged(), "visible");
+  assert.equal(presence.intentChanged(), true);
   assert.deepEqual(log, ["rendererReady", "prepare", "show", "observed"]);
   void presence.load();
   log.length = 0;
@@ -290,15 +295,20 @@ test("choosing to show prepares the pet before showing it, only once its rendere
   assert.equal(adapter.nativelyVisible(), false);
 });
 
-// Preparation readies a pet about to be observed. A suspended pet is shown,
-// as before, but stays paused until it wakes.
-test("a pet shown while suspended is not prepared and starts observation when it wakes", () => {
+// Preparation readies a pet about to be observed. A suspended pet is shown
+// but stays paused until it wakes, so its preparation learns it is suspended.
+test("a pet shown while suspended is prepared as suspended and starts observation when it wakes", () => {
   const { adapter, log } = fixture();
   adapter.suspend();
   adapter.finishLoad();
-  assert.deepEqual(log, ["rendererReady", "show"]);
+  assert.deepEqual(log, ["rendererReady", "prepare while suspended", "show"]);
   adapter.resume();
-  assert.deepEqual(log, ["rendererReady", "show", "observed"]);
+  assert.deepEqual(log, [
+    "rendererReady",
+    "prepare while suspended",
+    "show",
+    "observed",
+  ]);
 });
 
 // Presence decides the renderer lifecycle; the adapter only performs loads and
@@ -365,13 +375,12 @@ test("a failed automatic reload fails the renderer and keeps the pet hidden", as
 test("a failure carries the load error so the caller can report it", async () => {
   const adapter = createMemoryPresenceAdapter();
   const failures: PresenceTransition[] = [];
-  const presence = createPresence(
-    adapter,
-    (transition) => {
+  const presence = createPresence(adapter, {
+    notify(transition) {
       if (transition.type === "rendererFailed") failures.push(transition);
     },
-    () => {},
-  );
+    prepareShow() {},
+  });
   const error = new Error("load failed");
   const loading = presence.load();
   adapter.loads[0].reject(error);
