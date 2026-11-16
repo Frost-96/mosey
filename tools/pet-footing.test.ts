@@ -53,6 +53,35 @@ function body(overrides: Partial<FootingBody> = {}): FootingBody {
   };
 }
 
+// A differently shaped body: painted between left..right, touching the Dock
+// between the contact offsets, each relative to the window's x.
+function shaped(
+  left: number,
+  right: number,
+  contact: [number, number],
+  overrides: Partial<FootingBody> = {},
+) {
+  const base = body().geometry;
+  return body({
+    ...overrides,
+    geometry: {
+      frame: (pose) => ({
+        ...base.frame(pose)!,
+        boundsAt: (origin) => ({
+          left: origin.x + left,
+          right: origin.x + right,
+          top: origin.y + 20,
+          bottom: origin.y + pose.size,
+        }),
+      }),
+      contactAt: (_size, x) => ({
+        left: x + contact[0],
+        right: x + contact[1],
+      }),
+    },
+  });
+}
+
 const bottomDock = (top: number, from = 300, to = 700): DockSurface => ({
   orientation: "bottom",
   contour: Array.from({ length: (to - from) / 10 + 1 }, (_, index) => ({
@@ -383,35 +412,6 @@ test("bodies on the ground fit in place at the current window position", () => {
   const { footing } = fixture();
   assert.equal(footing.fitsInPlace([body(), body({ capabilities: [] })]), true);
 });
-
-// A differently shaped body: painted between left..right, touching the Dock
-// between the contact offsets, each relative to the window's x.
-function shaped(
-  left: number,
-  right: number,
-  contact: [number, number],
-  overrides: Partial<FootingBody> = {},
-) {
-  const base = body().geometry;
-  return body({
-    ...overrides,
-    geometry: {
-      frame: (pose) => ({
-        ...base.frame(pose)!,
-        boundsAt: (origin) => ({
-          left: origin.x + left,
-          right: origin.x + right,
-          top: origin.y + 20,
-          bottom: origin.y + pose.size,
-        }),
-      }),
-      contactAt: (_size, x) => ({
-        left: x + contact[0],
-        right: x + contact[1],
-      }),
-    },
-  });
-}
 
 test("bodies standing on the Dock's top edge fit in place", () => {
   const { footing } = fixture({ x: 400, y: 640, width: 100, height: 100 });
