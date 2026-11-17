@@ -16,6 +16,7 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
 import { createPetTestSession } from "./support/pet-session";
+import { menuIds } from "../src/main/menu-ids";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("settings owns presets, reuses its window and preserves hidden intent and failed targets", async () => {
@@ -132,24 +133,19 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .getAttribute("aria-pressed"),
       )
       .toBe("true");
-    await invoke("open-settings");
+    await invoke(menuIds.settings);
     expect(app.windows()).toHaveLength(2);
     expect(await settings.getByText("柯基", { exact: true }).count()).toBe(1);
     expect(await settings.locator("canvas").count()).toBe(0);
-    expect(
-      await app.evaluate(({ Menu }) =>
+    const applicationItems = await app.evaluate(
+      ({ Menu }, id) =>
         Menu.getApplicationMenu()!
-          .getMenuItemById("mosey")!
+          .getMenuItemById(id)!
           .submenu!.items.map((x) => x.id),
-      ),
-    ).not.toContain("login-launch");
-    expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .getMenuItemById("mosey")!
-          .submenu!.items.map((x) => x.id),
-      ),
-    ).toContain("pet-size");
+      menuIds.application,
+    );
+    expect(applicationItems).not.toContain("login-launch");
+    expect(applicationItems).toContain(menuIds.size);
     await stage("validate IPC boundaries");
     expect(
       await settings.evaluate(() =>
@@ -173,7 +169,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("hidden presets and save failure");
     const petId = (await petState()).id;
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     await expect
       .poll(() => settings!.getByText("宠物已隐藏").isVisible())
       .toBe(true);
@@ -217,7 +213,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .getByRole("button", { name: "显示宠物", exact: true })
       .click();
     await expect.poll(async () => (await petState()).visible).toBe(true);
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     await rm(file);
     await mkdir(file);
     await settings.getByRole("button", { name: "小", exact: true }).click();
@@ -259,7 +255,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     settings = undefined;
     expect((await petState()).id).toBe(petId);
     expect((await petState()).visible).toBe(false);
-    await invoke("open-settings");
+    await invoke(menuIds.settings);
     await expect.poll(() => app!.windows().length).toBe(2);
     await stage("quit after reopening settings");
     await fixture.closeApp();
@@ -329,9 +325,13 @@ test.each([
       const child = app.process();
       // Judge the real process exit, not a driver close acknowledgement that
       // can remain pending after the application has already exited.
-      void onMainLoop(app, ({ Menu }) => {
-        Menu.getApplicationMenu()!.getMenuItemById("quit")!.click();
-      }).catch(() => {});
+      void onMainLoop(
+        app,
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
+        },
+        menuIds.quit,
+      ).catch(() => {});
       await expect.poll(() => child.exitCode, { timeout: 10000 }).toBe(0);
     };
     session.mark("migrated-hidden-window");
@@ -378,8 +378,11 @@ test.each([
       await expect
         .poll(() => distanceFromGround(app), { timeout: 4000 })
         .toBe(0);
-      await onMainLoop(app, ({ Menu }) =>
-        Menu.getApplicationMenu()!.getMenuItemById("hide-pet")!.click(),
+      await onMainLoop(
+        app,
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+        menuIds.hidePet,
       );
     }
     session.mark("quit-before-durability-check");

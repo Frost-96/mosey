@@ -17,6 +17,7 @@ import {
 import path from "node:path";
 import os from "node:os";
 import { appendFileSync } from "node:fs";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
@@ -230,7 +231,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       .poll(async () => idleFrames.has(await pixels()), { interval: 30 })
       .toBe(false);
     mark("hide");
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     await expect.poll(visible).toBe(false);
     await new Promise((resolve) => setTimeout(resolve, 150));
     const counts = () =>
@@ -240,7 +241,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     const afterHidden = await counts();
     expect(afterHidden).toEqual(stopped);
     mark("show");
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     // Restoring must remain inactive and return to idle rather than resume the response.
     expect(
@@ -248,7 +249,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
         BrowserWindow.getAllWindows()[0]!.isFocused(),
       ),
     ).toBe(false);
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     await expect.poll(visible).toBe(false);
     mark("restart-hidden");
     await close();
@@ -267,7 +268,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     );
     await expect.poll(() => duplicate!.exitCode, { timeout: 10000 }).toBe(0);
     expect(await visible()).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await expect.poll(visible).toBe(true);
     await expect
       .poll(() =>
@@ -291,7 +292,7 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     app = await launch();
     await waitForDocument();
     expect(await visible()).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await expect.poll(visible).toBe(true);
     await close();
     app = undefined;
@@ -312,10 +313,10 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
     app = await launch();
     await waitForDocument();
     expect(await visible()).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     expect(await visible()).toBe(false);
     // The menu still offers Show because no durable change succeeded.
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await close();
     app = undefined;
     mark("both-invalid");

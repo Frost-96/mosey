@@ -1,16 +1,19 @@
 import { test, expect } from "vitest";
-import { writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ElectronApplication, Page } from "playwright";
 import { createPetTestSession } from "./support/pet-session";
 import { writeCharacterFixture } from "./support/character-fixture";
 import { evidencePath } from "./support/evidence";
 import { onMainLoop } from "./support/main-loop";
+import { readMainLogFromNow } from "./support/main-log";
 import { menuIds } from "../src/main/menu-ids";
 import type { Settings } from "../src/shared/contract";
 import {
   characterCard,
+  chooseCharacter,
   closeSettings,
+  latinInterfaceText,
   openSettings,
   selectedCharacter,
 } from "./support/settings";
@@ -97,29 +100,6 @@ function surfaces(page: Page) {
         });
     }
     return result;
-  });
-}
-
-// Every visible or announced interface string, minus the product name and
-// proper nouns supplied as data (character names, the operating system).
-function latinInterfaceText(page: Page) {
-  return page.evaluate(() => {
-    const names = [...document.querySelectorAll(".character .name")].map(
-      (name) => name.textContent!,
-    );
-    let text = [
-      document.title,
-      document.body.innerText,
-      ...[...document.querySelectorAll("[aria-label]")].map((element) =>
-        element.getAttribute("aria-label"),
-      ),
-      ...[...document.querySelectorAll("[aria-live], [role=alert]")].map(
-        (element) => element.textContent,
-      ),
-    ].join("\n");
-    for (const word of ["Mosey", "macOS", ...names])
-      text = text.replaceAll(word, "");
-    return text.match(/[A-Za-z]+/g) ?? [];
   });
 }
 
@@ -292,6 +272,95 @@ test("settings follows the system theme, speaks Chinese, fits its content and wo
     await settings.keyboard.press("Enter");
     await expect.poll(petVisible).toBe(true);
     await expect.poll(() => settings.getByText("宠物已隐藏").count()).toBe(0);
+  } finally {
+    await session.close();
+  }
+});
+
+// Failures are produced for real, each carrying an English technical message:
+// missing pose names, a filesystem error, the system's login item errors. The
+// window states each in Chinese; the technical message goes to the log.
+test("settings failures speak Chinese and leave their technical detail in the log", async () => {
+  const session = await createPetTestSession({ dock: "empty" });
+  try {
+    await writeCharacterFixture(session.profile, { extra: ["sleeping"] });
+    const { app } = await session.launch();
+    const settings = await openSettings(app);
+    const log = await readMainLogFromNow(app);
+
+    session.mark("character switch failed");
+    await chooseCharacter(settings, "minimal");
+    await expect
+      .poll(() => settings.locator("#character-error").textContent())
+      .toContain("素材加载失败");
+    expect(await latinInterfaceText(settings)).toEqual([]);
+    await expect.poll(log).toContain("settling");
+
+    session.mark("size save failed");
+    const obstacle = path.join(session.profile, "preferences.json.tmp");
+    await mkdir(obstacle);
+    await settings.getByRole("button", { name: "大", exact: true }).click();
+    await expect
+      .poll(() => settings.locator(".error [role=alert]").textContent())
+      .toContain("保存失败");
+    expect(await latinInterfaceText(settings)).toEqual([]);
+    await rm(obstacle, { recursive: true });
+
+    // Controlled results at the operating system's login item boundary.
+    await app.evaluate(({ app }) => {
+      Object.defineProperty(app, "isPackaged", {
+        value: true,
+        configurable: true,
+      });
+      Reflect.set(globalThis, "loginTestStatus", "requires-approval");
+      app.getLoginItemSettings = () => {
+        const status = Reflect.get(globalThis, "loginTestStatus");
+        if (status === "unreadable")
+          throw new Error("controlled status read failure");
+        return {
+          status,
+          openAtLogin: false,
+          openAsHidden: false,
+          wasOpenedAtLogin: false,
+          wasOpenedAsHidden: false,
+          restoreState: false,
+          executableWillLaunchAtLogin: false,
+          launchItems: [],
+        };
+      };
+      app.setLoginItemSettings = () => {
+        throw new Error("controlled registration failure");
+      };
+      app.emit("activate");
+    });
+    const login = settings.getByRole("region", { name: "开机启动" });
+    session.mark("login pending");
+    await expect.poll(() => login.textContent()).toContain("等待批准");
+    expect(await latinInterfaceText(settings)).toEqual([]);
+
+    session.mark("login error");
+    await app.evaluate(({ app }) => {
+      Reflect.set(globalThis, "loginTestStatus", "not-registered");
+      app.emit("activate");
+    });
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
+    await login.getByRole("switch").click();
+    await expect
+      .poll(() => login.getByRole("alert").textContent())
+      .toContain("开机启动更改失败");
+    expect(await latinInterfaceText(settings)).toEqual([]);
+    await expect.poll(log).toContain("controlled registration failure");
+
+    session.mark("login unavailable");
+    await app.evaluate(({ app }) => {
+      Reflect.set(globalThis, "loginTestStatus", "unreadable");
+      app.emit("activate");
+    });
+    await expect
+      .poll(() => login.textContent())
+      .toContain("无法读取系统开机启动状态");
+    expect(await latinInterfaceText(settings)).toEqual([]);
+    await expect.poll(log).toContain("controlled status read failure");
   } finally {
     await session.close();
   }

@@ -8,6 +8,8 @@ import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
 import { closeSettings, openSettings } from "./support/settings";
+import { readMainLogFromNow } from "./support/main-log";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
@@ -88,12 +90,15 @@ test("login settings explain availability and follow system approval, failure an
       expect(await login.getByRole("switch").isDisabled()).toBe(true);
     }
     expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .getMenuItemById("mosey")!
-          .submenu!.items.map((item) => item.id),
+      await app.evaluate(
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!
+            .getMenuItemById(id)!
+            .submenu!.items.map((item) => item.id),
+        menuIds.application,
       ),
     ).not.toContain("login-launch");
+    const log = await readMainLogFromNow(app);
     // Controlled results at the OS boundary; all product paths remain real Electron UI/IPC.
     await app.evaluate(({ app, shell }) => {
       Object.defineProperty(app, "isPackaged", {
@@ -144,8 +149,10 @@ test("login settings explain availability and follow system approval, failure an
     await login.getByRole("switch").click();
     await expect
       .poll(() => login.getByRole("alert").textContent())
-      .toContain("controlled registration failure");
+      .toContain("开机启动更改失败");
     expect(await login.getByRole("switch").isChecked()).toBe(false);
+    // The window states the failure in Chinese; the system's message goes to the log.
+    await expect.poll(log).toContain("controlled registration failure");
     await app.evaluate(({ BrowserWindow }) => {
       Reflect.set(globalThis, "loginTestStatus", "enabled");
       BrowserWindow.getAllWindows()
@@ -159,8 +166,9 @@ test("login settings explain availability and follow system approval, failure an
     });
     await expect
       .poll(() => login.textContent())
-      .toContain("controlled status read failure");
+      .toContain("无法读取系统开机启动状态");
     expect(await login.getByRole("switch").isDisabled()).toBe(true);
+    await expect.poll(log).toContain("controlled status read failure");
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "loginTestReadFailure", false);
       Reflect.set(globalThis, "loginTestFailure", false);

@@ -1,6 +1,7 @@
 import { expect } from "vitest";
 import type { ElectronApplication, Page } from "playwright";
 import { menuIds } from "../../src/main/menu-ids";
+import { sizePresets, type PetSize } from "../../src/shared/size";
 export async function openSettings(
   app: ElectronApplication,
   { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
@@ -98,10 +99,9 @@ export async function closeSettings(app: ElectronApplication) {
   await closed;
 }
 
-export async function chooseSize(
-  app: ElectronApplication,
-  size: 70 | 160 | 240,
-) {
+export async function chooseSize(app: ElectronApplication, size: PetSize) {
+  const preset = sizePresets.find((preset) => preset.size === size);
+  if (!preset) throw new Error(`${size} is not a preset size`);
   const page = await openSettings(app);
   const before = await app.evaluate(({ BrowserWindow }) => {
     const pet = BrowserWindow.getAllWindows().find(
@@ -124,12 +124,7 @@ export async function chooseSize(
     };
     return pet.getBounds();
   });
-  await page
-    .getByRole("button", {
-      name: { 70: "小", 160: "中", 240: "大" }[size],
-      exact: true,
-    })
-    .click();
+  await page.getByRole("button", { name: preset.label, exact: true }).click();
   const after = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
       .find((w) => w.getTitle() === "Mosey")!
@@ -164,4 +159,27 @@ export function selectedCharacterName(page: Page) {
   return page
     .locator('label:has(input[name="character"]:checked) .name')
     .textContent();
+}
+
+// Every visible or announced interface string, minus the product name and
+// proper nouns supplied as data (character names, the operating system).
+export function latinInterfaceText(page: Page) {
+  return page.evaluate(() => {
+    const names = [...document.querySelectorAll(".character .name")].map(
+      (name) => name.textContent!,
+    );
+    let text = [
+      document.title,
+      document.body.innerText,
+      ...[...document.querySelectorAll("[aria-label]")].map((element) =>
+        element.getAttribute("aria-label"),
+      ),
+      ...[...document.querySelectorAll("[aria-live], [role=alert]")].map(
+        (element) => element.textContent,
+      ),
+    ].join("\n");
+    for (const word of ["Mosey", "macOS", ...names])
+      text = text.replaceAll(word, "");
+    return text.match(/[A-Za-z]+/g) ?? [];
+  });
 }

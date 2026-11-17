@@ -12,6 +12,7 @@ import os from "node:os";
 import { chooseSize, closeSettings, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
+import { menuIds } from "../src/main/menu-ids";
 
 // A source PNG scaled then mirrored by Canvas can differ from mirroring the
 // already-resampled Canvas at a few alpha contour pixels. Compare silhouettes
@@ -298,7 +299,7 @@ test(
           Math.random = () => random;
         }, random);
         await restClock(600);
-        await menu("hide-pet");
+        await menu(menuIds.hidePet);
         // Restoring visibility preserves position. Arrange room for the
         // deliberately left-facing walk instead of relying on old recentering.
         await app!.evaluate(({ BrowserWindow, screen }, atLeftEdge) => {
@@ -315,7 +316,7 @@ test(
             false,
           );
         }, atLeftEdge);
-        await menu("show-pet");
+        await menu(menuIds.showPet);
       };
       const visiblePoint = () =>
         pet.evaluate(() => {
@@ -410,14 +411,14 @@ test(
         await grounded();
         // A primary-display DPR change can occur while hidden. The first visible
         // draw must rebuild the backing store without changing CSS/desktop size.
-        await menu("hide-pet");
+        await menu(menuIds.hidePet);
         await displaySession.send("Emulation.setDeviceMetricsOverride", {
           width: side,
           height: side,
           deviceScaleFactor: changedRatio,
           mobile: false,
         });
-        await menu("show-pet");
+        await menu(menuIds.showPet);
         await trace("DPR override " + side);
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
           ratio: changedRatio,

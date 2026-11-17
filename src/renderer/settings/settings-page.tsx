@@ -2,6 +2,8 @@ import { StrictMode, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Settings } from "../../shared/contract";
 import { characterThumbnailUrl } from "../../shared/character-catalog";
+import { paw } from "../../shared/paw";
+import { sizePresets } from "../../shared/size";
 import { LoginSettings } from "./settings-login";
 import { useSettings } from "./use-settings";
 
@@ -87,9 +89,7 @@ function CharacterSettings({
               : `等待宠物站稳后切换为${name(pendingCharacter.target)}…`)}
         </p>
         <div id="character-error" className="status-row" hidden={!failure}>
-          <p role="alert">
-            {failure} {failedCharacter?.detail}
-          </p>
+          <p role="alert">{failure}</p>
           <button id="character-retry" aria-label="重试角色" onClick={retry}>
             重试
           </button>
@@ -100,13 +100,13 @@ function CharacterSettings({
 }
 
 function Paw({ size }: { size: number }) {
+  const { pad, toes, toeRadius } = paw;
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <ellipse cx="12" cy="16" rx="6" ry="5" />
-      <circle cx="5" cy="9" r="2.5" />
-      <circle cx="9.5" cy="5" r="2.5" />
-      <circle cx="14.5" cy="5" r="2.5" />
-      <circle cx="19" cy="9" r="2.5" />
+      <ellipse cx={pad.x} cy={pad.y} rx={pad.rx} ry={pad.ry} />
+      {toes.map((toe) => (
+        <circle key={toe.x} cx={toe.x} cy={toe.y} r={toeRadius} />
+      ))}
     </svg>
   );
 }
@@ -135,16 +135,12 @@ function SizeSettings({
       <h2 id="size-heading">大小</h2>
       <div className="card">
         <div role="group" aria-label="预设大小" className="presets">
-          {[
-            [70, "小"],
-            [160, "中"],
-            [240, "大"],
-          ].map(([value, label]) => (
+          {sizePresets.map(({ size: preset, label }) => (
             <button
-              key={value}
-              data-size={value}
-              aria-pressed={size === value}
-              onClick={() => save(Number(value))}
+              key={preset}
+              data-size={preset}
+              aria-pressed={size === preset}
+              onClick={() => save(preset)}
             >
               {label}
             </button>

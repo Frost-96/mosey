@@ -18,6 +18,7 @@ import { distanceFromGround } from "./support/ground";
 import { evidencePath } from "./support/evidence";
 import { matchPaintedFrames, paintedBodyPoint } from "./support/pixels";
 import { writeCharacterFixture } from "./support/character-fixture";
+import { dailyActionMenuId, menuIds } from "../src/main/menu-ids";
 
 const oneShots = [
   "stretching",
@@ -112,9 +113,9 @@ async function nativeActions(app: ElectronApplication, pet: Page) {
         app.evaluate(() => Reflect.get(globalThis, "dailyMenus").length),
       )
       .toBe(count + 1);
-    return app.evaluate(() => {
+    return app.evaluate((_electron, id) => {
       const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
-      const daily = menu.getMenuItemById("daily-actions");
+      const daily = menu.getMenuItemById(id);
       return (
         daily?.submenu?.items.map((item) => ({
           id: item.id,
@@ -122,7 +123,7 @@ async function nativeActions(app: ElectronApplication, pet: Page) {
           enabled: item.enabled,
         })) ?? []
       );
-    });
+    }, menuIds.dailyActions);
   };
   const close = async () => {
     await app.evaluate(({ BrowserWindow }) => {
@@ -136,18 +137,17 @@ async function nativeActions(app: ElectronApplication, pet: Page) {
   const choose = async (action: DailyAction) => {
     const items = await open();
     expect(
-      items.find((item) => item.id === `daily-action-${action}`)?.enabled,
+      items.find((item) => item.id === dailyActionMenuId(action))?.enabled,
     ).toBe(true);
     await onMainLoop(
       app,
-      (_electron, action) => {
+      (_electron, id) => {
         const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
-        const item = menu.getMenuItemById(`daily-action-${action}`);
-        if (!item?.enabled)
-          throw new Error(`Unavailable daily action: ${action}`);
+        const item = menu.getMenuItemById(id);
+        if (!item?.enabled) throw new Error(`Unavailable daily action: ${id}`);
         item.click();
       },
-      action,
+      dailyActionMenuId(action),
     );
     await close();
   };
@@ -243,10 +243,11 @@ test.each([
       const items = await menu.open();
       expect(items.map((item) => item.label)).toEqual(visibleLabels);
       expect(items.map((item) => item.id)).toEqual(
-        dailyActionDefinitions.map((item) => `daily-action-${item.action}`),
+        dailyActionDefinitions.map((item) => dailyActionMenuId(item.action)),
       );
       expect(
-        items.find((item) => item.id === "daily-action-standingup")?.enabled,
+        items.find((item) => item.id === dailyActionMenuId("standingup"))
+          ?.enabled,
       ).toBe(false);
       await menu.close();
       const evidence: {
@@ -296,7 +297,7 @@ test.each([
         .toBe(true);
       const seatedItems = await menu.open();
       expect(
-        seatedItems.find((item) => item.id === "daily-action-standingup")
+        seatedItems.find((item) => item.id === dailyActionMenuId("standingup"))
           ?.enabled,
       ).toBe(true);
       await menu.close();
@@ -433,12 +434,12 @@ test("daily seated actions continue under menus, queued commands, dragging, hidi
         },
         id,
       );
-    await invokeVisibility("hide-pet");
+    await invokeVisibility(menuIds.hidePet);
     await expect
       .poll(async () => (await presentation(pet)).visibility)
       .toBe("hidden");
     await pause(250);
-    await invokeVisibility("show-pet");
+    await invokeVisibility(menuIds.showPet);
     await waitPosture(pet, "resting");
 
     await menu.choose("sitting");
@@ -552,7 +553,7 @@ test("Corgi can request one stretch and missing actions are explicitly unavailab
     const menu = await nativeActions(app, pet);
     const items = await menu.open();
     expect(
-      items.find((item) => item.id === "daily-action-stretching"),
+      items.find((item) => item.id === dailyActionMenuId("stretching")),
     ).toMatchObject({ label: "伸懒腰", enabled: true });
     expect(
       items.filter((item) => item.enabled).map((item) => item.label),
@@ -561,7 +562,7 @@ test("Corgi can request one stretch and missing actions are explicitly unavailab
       const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
       return menu.items.map((item) => item.id);
     });
-    expect(ids).toContain("daily-actions");
+    expect(ids).toContain(menuIds.dailyActions);
     await menu.close();
     const assets = await pet.evaluate(() => window.mosey.getCharacter());
     expect(assets.atlases).toHaveLength(16);
@@ -678,10 +679,14 @@ test("open menu commands retire on character selection and same-identity resourc
     const before = await presentation(pet);
     await menu.open();
     const clickOld = () =>
-      onMainLoop(app, () => {
-        const menu = Reflect.get(globalThis, "dailyMenus")[0] as Menu;
-        menu.getMenuItemById("daily-action-stretching")!.click();
-      });
+      onMainLoop(
+        app,
+        (_electron, id) => {
+          const menu = Reflect.get(globalThis, "dailyMenus")[0] as Menu;
+          menu.getMenuItemById(id)!.click();
+        },
+        dailyActionMenuId("stretching"),
+      );
     const settings = await openSettings(app);
     await chooseCharacter(settings, "corgi");
     await clickOld();
@@ -707,7 +712,8 @@ test("open menu commands retire on character selection and same-identity resourc
     );
     const items = await menu.open();
     expect(
-      items.find((item) => item.id === "daily-action-stretching")?.enabled,
+      items.find((item) => item.id === dailyActionMenuId("stretching"))
+        ?.enabled,
     ).toBe(false);
     await menu.close();
     await writeFile(
@@ -868,7 +874,7 @@ test("free activity selects and paints all five daily behaviors without action c
         Math.random = () => choice;
       }, choice);
       await clearTransitions(pet);
-      for (const id of ["hide-pet", "show-pet"])
+      for (const id of [menuIds.hidePet, menuIds.showPet])
         await onMainLoop(
           app,
           ({ Menu }, id) => {

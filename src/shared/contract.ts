@@ -145,7 +145,6 @@ export const settingsSchema = z.strictObject({
     .strictObject({
       target: characterSchema,
       reason: z.enum(["load", "save", "recovery"]),
-      detail: z.string().max(500).optional(),
     })
     .optional(),
   size: petSizeSchema,

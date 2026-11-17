@@ -7,6 +7,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
@@ -83,13 +84,13 @@ test("diagnostic status keeps the latest Retry during a native permission query"
         id,
       );
     const created = app.waitForEvent("window");
-    await invoke("dock-validation-status");
+    await invoke(menuIds.dockValidationStatus);
     const diagnostic = await created;
     await expect
       .poll(() => diagnostic.getByRole("status").innerText())
       .toBe("Not started");
     const hooks = await app.evaluateHandle(
-      ({ BrowserWindow, Menu, systemPreferences }) => {
+      ({ BrowserWindow, Menu, systemPreferences }, retryId) => {
         const window = BrowserWindow.getAllWindows().find(
           (window) => window.getTitle() === "Mosey Dock validation",
         )!;
@@ -126,7 +127,7 @@ test("diagnostic status keeps the latest Retry during a native permission query"
           if (mediaType === "screen" && state.armed) {
             state.armed = false;
             state.dispatches++;
-            Menu.getApplicationMenu()!.getMenuItemById("dock-retry")!.click();
+            Menu.getApplicationMenu()!.getMenuItemById(retryId)!.click();
           }
           return value;
         };
@@ -140,12 +141,13 @@ test("diagnostic status keeps the latest Retry during a native permission query"
           },
         };
       },
+      menuIds.dockRetry,
     );
     restore = () => hooks.evaluate((hooks) => hooks.restore());
     await hooks.evaluate((hooks) => {
       hooks.state.armed = true;
     });
-    await invoke("dock-validation-stop");
+    await invoke(menuIds.dockValidationStop);
     expect(await hooks.evaluate((hooks) => hooks.state.dispatches)).toBe(1);
     await expect
       .poll(

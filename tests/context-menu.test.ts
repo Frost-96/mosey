@@ -9,6 +9,10 @@ import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings, closeSettings } from "./support/settings";
+import { menuIds, sizeMenuId } from "../src/main/menu-ids";
+import { sizePresets } from "../src/shared/size";
+
+const sizeIds = sizePresets.map(({ size }) => sizeMenuId(size));
 import { matchPaintedFrames, paintedBodyPoint } from "./support/pixels";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -60,6 +64,33 @@ test("body menus keep the pet active and close without replaying actions", async
     });
     const menuCount = () =>
       app!.evaluate(() => Reflect.get(globalThis, "menus").length);
+    // The latest body menu popped up and the application menu, each addressed
+    // by stable item id.
+    const clickBodyItem = (id: string) =>
+      onMainLoop(
+        app!,
+        (_electron, id) =>
+          Reflect.get(globalThis, "menus").at(-1).getMenuItemById(id).click(),
+        id,
+      );
+    const clickApplicationItem = (id: string) =>
+      onMainLoop(
+        app!,
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+        id,
+      );
+    const checkedSizes = (menu: "body" | "application") =>
+      app!.evaluate(
+        ({ Menu }, { menu, ids }) => {
+          const source: Electron.Menu =
+            menu === "body"
+              ? Reflect.get(globalThis, "menus").at(-1)
+              : Menu.getApplicationMenu()!;
+          return ids.filter((id) => source.getMenuItemById(id)!.checked);
+        },
+        { menu, ids: sizeIds },
+      );
     const pixels = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;
@@ -103,13 +134,8 @@ test("body menus keep the pet active and close without replaying actions", async
         await new Promise((resolve) => setTimeout(resolve, 350));
     };
     const invoke = async (id: string) => {
-      await onMainLoop(
-        app!,
-        ({ Menu }, id) =>
-          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
-        id,
-      );
-      if (id === "show-pet") {
+      await clickApplicationItem(id);
+      if (id === menuIds.showPet) {
         // Wait for actual new canvas work, including when stale pre-hide pixels
         // already resemble idle. Physical first-input acceptance is separate.
         const initial = await pixels();
@@ -165,22 +191,15 @@ test("body menus keep the pet active and close without replaying actions", async
         (item: { id: string }) => item.id,
       ),
     );
-    expect(ids).toContain("pet-size");
-    expect(ids).not.toContain("dock-validation");
+    expect(ids).toContain(menuIds.size);
     expect(
-      await app.evaluate(() =>
-        Reflect.get(globalThis, "menus")[0]
-          .items.find((item: { id: string }) => item.id === "pet-size")
-          .submenu.items.map((item: { id: string; checked: boolean }) => ({
-            id: item.id,
-            checked: item.checked,
-          })),
+      await app.evaluate(
+        (_electron, id) =>
+          Boolean(Reflect.get(globalThis, "menus")[0].getMenuItemById(id)),
+        menuIds.dockValidation,
       ),
-    ).toEqual([
-      { id: "pet-size-70", checked: false },
-      { id: "pet-size-160", checked: false },
-      { id: "pet-size-240", checked: true },
-    ]);
+    ).toBe(false);
+    expect(await checkedSizes("body")).toEqual([sizeMenuId(240)]);
     await closeMenu();
     await expect.poll(pixels, { timeout: 2000 }).not.toBe(await pixels());
     const current = () => pet.evaluate(() => window.mosey.getPresentation());
@@ -225,48 +244,20 @@ test("body menus keep the pet active and close without replaying actions", async
     await pet.mouse.click(5, 5, { button: "right" });
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(await menuCount()).toBe(2);
-    for (const [id, side] of [
-      ["pet-size-70", 70],
-      ["pet-size-160", 160],
-      ["pet-size-240", 240],
-    ] as const) {
+    for (const side of [70, 160, 240] as const) {
+      const id = sizeMenuId(side);
       await openMenu();
       const before = await bounds();
-      await onMainLoop(
-        app,
-        (_electron, id) => {
-          Reflect.get(globalThis, "menus")
-            .at(-1)
-            .items.find((item: { id: string }) => item.id === "pet-size")
-            .submenu.items.find((item: { id: string }) => item.id === id)
-            .click();
-        },
-        id,
-      );
+      await clickBodyItem(id);
       await closeMenu();
       await expect.poll(async () => (await bounds()).width).toBe(side);
       const after = await bounds();
       expect(after.x + side / 2).toBe(before.x + before.width / 2);
       expect(after.y + side).toBe(before.y + before.height);
-      expect(
-        await app.evaluate(({ Menu }) =>
-          Menu.getApplicationMenu()!
-            .getMenuItemById("pet-size")!
-            .submenu!.items.filter((item) => item.checked)
-            .map((item) => item.id),
-        ),
-      ).toEqual([id]);
+      expect(await checkedSizes("application")).toEqual([id]);
       await expect.poll(pixels).not.toBe(await pixels());
       await openMenu();
-      expect(
-        await app.evaluate(() =>
-          Reflect.get(globalThis, "menus")
-            .at(-1)
-            .items.find((item: { id: string }) => item.id === "pet-size")
-            .submenu.items.filter((item: { checked: boolean }) => item.checked)
-            .map((item: { id: string }) => item.id),
-        ),
-      ).toEqual([id]);
+      expect(await checkedSizes("body")).toEqual([id]);
       await closeMenu();
     }
     const settings = await openSettings(app);
@@ -279,23 +270,11 @@ test("body menus keep the pet active and close without replaying actions", async
     await expect.poll(() => slider.inputValue()).toBe("110");
     await closeSettings(app);
     await openMenu();
-    expect(
-      await app.evaluate(() =>
-        Reflect.get(globalThis, "menus")
-          .at(-1)
-          .items.find((item: { id: string }) => item.id === "pet-size")
-          .submenu.items.some((item: { checked: boolean }) => item.checked),
-      ),
-    ).toBe(false);
+    expect(await checkedSizes("body")).toEqual([]);
     await closeMenu();
-    await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!
-        .getMenuItemById("pet-size")!
-        .submenu!.items.find((item) => item.id === "pet-size-240")!
-        .click(),
-    );
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await clickApplicationItem(sizeMenuId(240));
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     // A native Control-click must not enter the ordinary left-button gesture.
     await openMenu(true);
     await closeMenu();
@@ -411,8 +390,8 @@ test("body menus keep the pet active and close without replaying actions", async
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     const walkOrigin = await bounds();
     await expect
       .poll(async () => Math.abs((await bounds()).x - walkOrigin.x), {
@@ -434,20 +413,18 @@ test("body menus keep the pet active and close without replaying actions", async
       .not.toBe(walking.pixels);
     // Walking continues between driver calls. Observe the synchronous menu
     // resize itself so normal movement is not counted as a resize jump.
-    const resized = await onMainLoop(app, ({ BrowserWindow }) => {
-      const pet = BrowserWindow.getAllWindows().find(
-        (window) => window.getTitle() === "Mosey",
-      )!;
-      const before = pet.getBounds();
-      Reflect.get(globalThis, "menus")
-        .at(-1)
-        .items.find((item: { id: string }) => item.id === "pet-size")
-        .submenu.items.find(
-          (item: { id: string }) => item.id === "pet-size-160",
-        )
-        .click();
-      return { before, after: pet.getBounds() };
-    });
+    const resized = await onMainLoop(
+      app,
+      ({ BrowserWindow }, id) => {
+        const pet = BrowserWindow.getAllWindows().find(
+          (window) => window.getTitle() === "Mosey",
+        )!;
+        const before = pet.getBounds();
+        Reflect.get(globalThis, "menus").at(-1).getMenuItemById(id).click();
+        return { before, after: pet.getBounds() };
+      },
+      sizeMenuId(160),
+    );
     expect(resized.after).toMatchObject({ width: 160, height: 160 });
     expect(resized.after.x + resized.after.width / 2).toBe(
       resized.before.x + resized.before.width / 2,
@@ -458,12 +435,7 @@ test("body menus keep the pet active and close without replaying actions", async
     await closeMenu();
     const justResumed = await bounds();
     expect(justResumed.width).toBe(160);
-    await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!
-        .getMenuItemById("pet-size")!
-        .submenu!.items.find((item) => item.id === "pet-size-240")!
-        .click(),
-    );
+    await clickApplicationItem(sizeMenuId(240));
     await expect
       .poll(async () => Math.abs((await bounds()).x - walkOrigin.x), {
         timeout: 3000,
@@ -495,8 +467,8 @@ test("body menus keep the pet active and close without replaying actions", async
       await app.evaluate((_electron, choice) => {
         Math.random = () => choice;
       }, choice);
-      await invoke("hide-pet");
-      await invoke("show-pet");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       const expectedLabel = choice === 0.6 ? "柯基 · 伸展" : "柯基 · 玩耍";
       const started = performance.now();
       await expect
@@ -533,8 +505,8 @@ test("body menus keep the pet active and close without replaying actions", async
     await pet.evaluate(() => Reflect.get(window, "restoreMenuFrames")());
     await rest.evaluate((control) => control.restore());
     await rest.dispose();
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     await expect
       .poll(async () => matchesIdle(await pixels()), { timeout: 2000 })
       .toBe(true);
@@ -561,12 +533,7 @@ test("body menus keep the pet active and close without replaying actions", async
     });
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
-    await onMainLoop(app, () =>
-      Reflect.get(globalThis, "menus")
-        .at(-1)
-        .items.find((item: { id: string }) => item.id === "hide-pet")
-        .click(),
-    );
+    await clickBodyItem(menuIds.hidePet);
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
@@ -580,7 +547,7 @@ test("body menus keep the pet active and close without replaying actions", async
       ).visibility,
     ).toBe("hidden");
     await releaseSecondary();
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
@@ -590,38 +557,18 @@ test("body menus keep the pet active and close without replaying actions", async
       .toBe(true);
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
-    await onMainLoop(app, () =>
-      Reflect.get(globalThis, "menus")
-        .at(-1)
-        .items.find((item: { id: string }) => item.id === "pet-size")
-        .submenu.items.find(
-          (item: { id: string }) => item.id === "pet-size-160",
-        )
-        .click(),
-    );
+    await clickBodyItem(sizeMenuId(160));
     await closeMenu();
     await expect.poll(pixels).not.toBe(await pixels());
     await openMenu();
     session.mark("quit-from-native-menu");
     const exited = app.waitForEvent("close");
-    await onMainLoop(app, () => {
-      Reflect.get(globalThis, "menus")
-        .at(-1)
-        .items.find((item: { id: string }) => item.id === "quit")
-        .click();
-    }).catch(() => {});
+    await clickBodyItem(menuIds.quit).catch(() => {});
     await exited;
     app = (await session.restart()).app;
     session.mark("persisted-size-after-relaunch");
     expect((await bounds()).width).toBe(160);
-    expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .getMenuItemById("pet-size")!
-          .submenu!.items.filter((item) => item.checked)
-          .map((item) => item.id),
-      ),
-    ).toEqual(["pet-size-160"]);
+    expect(await checkedSizes("application")).toEqual([sizeMenuId(160)]);
 
     await writeFile(
       evidencePath(`${packaged ? "packaged" : "development"}-menu.json`),

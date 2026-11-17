@@ -1,5 +1,5 @@
 import type { MenuItemConstructorOptions as Item } from "electron";
-import type { PetSize } from "../shared/size.ts";
+import { sizePresets, type PetSize } from "../shared/size.ts";
 import { menuIds, sizeMenuId } from "./menu-ids.ts";
 import {
   dockNeedsAttention,
@@ -14,7 +14,7 @@ import {
 export type MenuState = {
   visibility: "visible" | "hidden";
   size: PetSize;
-  failed: boolean;
+  petRendererFailed: boolean;
   dock: DockStatus;
 };
 
@@ -32,13 +32,7 @@ const separator: Item = { type: "separator" };
 const sizeItem = (state: MenuState, commands: MenuCommands): Item => ({
   id: menuIds.size,
   label: "大小",
-  submenu: (
-    [
-      ["小", 70],
-      ["中", 160],
-      ["大", 240],
-    ] as const
-  ).map(([label, size]) => ({
+  submenu: sizePresets.map(({ size, label }) => ({
     id: sizeMenuId(size),
     label,
     type: "checkbox",
@@ -79,7 +73,7 @@ export function statusMenu(
           separator,
         ]
       : []),
-    ...(state.failed
+    ...(state.petRendererFailed
       ? [
           {
             id: menuIds.retryPet,

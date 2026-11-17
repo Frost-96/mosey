@@ -9,6 +9,7 @@ import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
+import { menuIds } from "../src/main/menu-ids";
 import { describeSyntheticDragInterference } from "./support/synthetic-drag-interference";
 import {
   afterMainLoopTurn,
@@ -299,8 +300,10 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await expect
       .poll(() => settings.getByRole("alert").isVisible())
       .toBe(false);
-    await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!.getMenuItemById("hide-pet")!.click(),
+    await onMainLoop(
+      app,
+      ({ Menu }, id) => Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+      menuIds.hidePet,
     );
     await expect
       .poll(() => settings.getByText("宠物已隐藏").isVisible())

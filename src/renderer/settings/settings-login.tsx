@@ -14,12 +14,12 @@ export function LoginSettings({
 }: LoginSettingsProps) {
   const awaitingApproval = login.status === "requires-approval";
   const unavailable = login.status === "unavailable";
-  const reason = awaitingApproval
+  const hint = awaitingApproval
     ? "请在 系统设置 › 通用 › 登录项 中允许 Mosey。"
     : login.reason;
   // On and off are told by the switch itself; the status stays in the live
   // region for assistive technology and only the other states are shown.
-  const quiet = !awaitingApproval && !unavailable && !login.error;
+  const announcedOnly = !awaitingApproval && !unavailable && !login.error;
   return (
     <section aria-labelledby="login-heading">
       <h2 id="login-heading">开机启动</h2>
@@ -36,7 +36,9 @@ export function LoginSettings({
           />
         </label>
         <div
-          className={quiet ? "login-detail visually-hidden" : "login-detail"}
+          className={
+            announcedOnly ? "login-detail visually-hidden" : "login-detail"
+          }
           data-tone={awaitingApproval ? "warning" : undefined}
         >
           <p id="login-status" aria-live="polite">
@@ -49,8 +51,8 @@ export function LoginSettings({
               }[login.status]
             }
           </p>
-          <p id="login-reason" className="hint" hidden={!reason}>
-            {reason}
+          <p id="login-reason" className="hint" hidden={!hint}>
+            {hint}
           </p>
           <p id="login-error" role="alert" hidden={!login.error}>
             {login.error}

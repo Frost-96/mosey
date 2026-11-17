@@ -13,6 +13,7 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 import { waitForPetVisibility } from "./support/visibility";
 import { paintedBodyPoint } from "./support/pixels";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
@@ -101,7 +102,9 @@ test(
       expect(await pet.evaluate(() => devicePixelRatio)).toBe(
         Number(scaleFactor),
       );
-      const menu = async (id: "hide-pet" | "show-pet") => {
+      const menu = async (
+        id: typeof menuIds.hidePet | typeof menuIds.showPet,
+      ) => {
         await onMainLoop(
           app!,
           ({ Menu }, id) => {
@@ -112,7 +115,7 @@ test(
         await waitForPetVisibility(
           app!,
           pet,
-          id === "hide-pet" ? "hidden" : "visible",
+          id === menuIds.hidePet ? "hidden" : "visible",
         );
       };
       const pixels = () =>
@@ -197,8 +200,8 @@ test(
       await app.evaluate(() => {
         Math.random = () => 0.6;
       });
-      await menu("hide-pet");
-      await menu("show-pet");
+      await menu(menuIds.hidePet);
+      await menu(menuIds.showPet);
       await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
       await app.evaluate(() => {
@@ -222,8 +225,8 @@ test(
           BrowserWindow.getAllWindows()[0]!.getBounds(),
         );
       const enterSleep = async () => {
-        await menu("hide-pet");
-        await menu("show-pet");
+        await menu(menuIds.hidePet);
+        await menu(menuIds.showPet);
         await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
@@ -438,11 +441,11 @@ test(
       });
       const beforeHide = await bounds();
       await click();
-      await menu("hide-pet");
+      await menu(menuIds.hidePet);
       const hidden = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
       expect(await bounds()).toEqual(hidden);
-      await menu("show-pet");
+      await menu(menuIds.showPet);
       await expect.poll(height).toBeGreaterThan(180);
       const restored = await bounds();
       expect(restored).toEqual(beforeHide);

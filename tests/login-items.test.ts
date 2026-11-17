@@ -10,6 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { openSettings } from "./support/settings";
+import { menuIds } from "../src/main/menu-ids";
 
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
 const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
@@ -89,9 +90,13 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
     const quit = async () => {
       const child = app!.process();
       const closed = app!.waitForEvent("close");
-      await onMainLoop(app!, ({ Menu }) => {
-        Menu.getApplicationMenu()?.getMenuItemById("quit")?.click();
-      });
+      await onMainLoop(
+        app!,
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()?.getMenuItemById(id)?.click();
+        },
+        menuIds.quit,
+      );
       await closed;
       app = undefined;
       await expect.poll(() => child.exitCode).toBe(0);

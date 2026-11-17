@@ -22,7 +22,7 @@ import type { Preferences, PreferencesStore } from "../platform/preferences";
 import type { DockCapture } from "../platform/dock/capture";
 import type { DockObservation } from "../platform/dock/runtime";
 import { CharacterSwitch } from "./character-switch";
-import { menuIds } from "../menu-ids";
+import { dailyActionMenuId, menuIds } from "../menu-ids";
 import {
   dailyActionDefinitions,
   type DailyAction,
@@ -209,7 +209,7 @@ export function createPetSession(
             id: menuIds.dailyActions,
             label: "动作",
             submenu: dailyActionDefinitions.map(({ action, label }) => ({
-              id: `daily-action-${action}`,
+              id: dailyActionMenuId(action),
               label,
               enabled: actionAvailable(action),
               click: () => {

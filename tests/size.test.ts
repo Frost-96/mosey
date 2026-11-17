@@ -18,6 +18,7 @@ import path from "node:path";
 import os from "node:os";
 import { chooseSize, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
@@ -366,7 +367,7 @@ setTimeout(()=>process.exit(0),120000);
     ).toBeLessThan(30);
     await expect.poll(groundDistance, { timeout: 4000 }).toBe(0);
     // A size write while hidden must retain hidden intent across restart.
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     await choose(240);
     await fixture.closeApp();
     app = await launch();
@@ -380,7 +381,7 @@ setTimeout(()=>process.exit(0),120000);
           .isVisible(),
       ),
     ).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await expect
       .poll(
         () =>
@@ -416,7 +417,7 @@ setTimeout(()=>process.exit(0),120000);
           .isVisible(),
       ),
     ).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await fixture.closeApp();
     app = undefined;
     await rm(path.join(profile, "preferences.json"));

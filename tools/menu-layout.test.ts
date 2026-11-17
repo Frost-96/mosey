@@ -33,7 +33,7 @@ const diagnostics: MenuItemConstructorOptions = {
 const state = (overrides: Partial<MenuState> = {}): MenuState => ({
   visibility: "visible",
   size: 160,
-  failed: false,
+  petRendererFailed: false,
   dock: "active",
   ...overrides,
 });
@@ -60,7 +60,7 @@ const menus = (overrides: Partial<MenuState> = {}) => [
 ];
 const everyState = [
   ...dockStatuses.map((dock) => state({ dock })),
-  state({ failed: true }),
+  state({ petRendererFailed: true }),
   state({ visibility: "hidden" }),
 ];
 
@@ -95,7 +95,7 @@ test("the status menu lists pet controls, settings, Dock interaction and quit", 
 test("the status menu offers Retry Mosey only after the pet failed, and Show Mosey while hidden", () => {
   assert.deepEqual(
     ids(
-      statusMenu(state({ failed: true }), commands, diagnostics, {
+      statusMenu(state({ petRendererFailed: true }), commands, diagnostics, {
         accelerators: false,
       }),
     ).slice(0, 2),
@@ -154,9 +154,14 @@ test("a Dock that needs the user adds an unclickable warning on top; transient s
   const needsUser: DockStatus[] = ["needs-permission", "retry-required"];
   for (const dock of dockStatuses) {
     const [tray, application] = [false, true].map((accelerators) =>
-      statusMenu(state({ dock, failed: true }), commands, diagnostics, {
-        accelerators,
-      }),
+      statusMenu(
+        state({ dock, petRendererFailed: true }),
+        commands,
+        diagnostics,
+        {
+          accelerators,
+        },
+      ),
     );
     for (const menu of [tray!, application!])
       if (needsUser.includes(dock)) {
