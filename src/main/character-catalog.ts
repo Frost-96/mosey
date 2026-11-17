@@ -1,8 +1,14 @@
 import { characterCapabilities } from "../shared/character-capabilities";
 import { app, protocol } from "electron";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, realpathSync } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import {
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+  type Stats,
+} from "node:fs";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import log from "electron-log/main";
 import {
@@ -17,6 +23,7 @@ import {
   characterWalk,
   type PreparedCharacter,
 } from "../shared/characters";
+import { atlasSchema } from "../shared/assets";
 import { characterGeometry } from "../shared/character-geometry";
 import { restingThumbnail } from "./character-thumbnail";
 
@@ -28,10 +35,20 @@ export class CharacterCatalog {
     { id: string; name: string; directory: string }
   >();
   private readonly resources = new Map<string, Map<string, Buffer>>();
-  // Thumbnails are derived on demand, one per character. Each remembers the
-  // size and modification time of the package files it came from, so an
-  // updated installed package yields a new image under the same address
-  // without reading and hashing every atlas on each request.
+  // Thumbnails are derived on demand, one per character, from the first frame
+  // of the resting atlas alone. Settings requests every card as it opens, on
+  // the main thread that also serves both windows and their inspector. Parsing
+  // and validating each whole description there (about a megabyte of hit rows
+  // per built-in character) held that thread for every open. Discovery already
+  // parses each description once, so it keeps the resting atlas; a request
+  // reads only file metadata and the resting image. Each entry remembers the
+  // size and modification time of the description it came from, and each
+  // thumbnail those of the description and image, so an updated installed
+  // package yields a new image under the same address.
+  private readonly restingAtlases = new Map<
+    string,
+    { stamp: string; atlas: unknown }
+  >();
   private readonly thumbnails = new Map<
     string,
     { stamp: string; pixels: Buffer }
@@ -95,9 +112,10 @@ export class CharacterCatalog {
       if (!directory.isDirectory()) continue;
       try {
         const location = path.join(root, directory.name);
-        const raw = JSON.parse(
-          readFileSync(path.join(location, "character.json"), "utf8"),
-        );
+        const manifest = path.join(location, "character.json");
+        // Stamped before reading: a later change only causes a fresh read.
+        const stamp = fileStamp(manifest, statSync(manifest));
+        const raw = JSON.parse(readFileSync(manifest, "utf8"));
         const identity = characterIdentitySchema.parse({
           id: raw.id,
           name: raw.name,
@@ -105,6 +123,10 @@ export class CharacterCatalog {
         if (this.entries.has(identity.id))
           throw new Error(`Duplicate character: ${identity.id}`);
         this.entries.set(identity.id, { ...identity, directory: location });
+        this.restingAtlases.set(identity.id, {
+          stamp,
+          atlas: restingAtlasOf(raw),
+        });
       } catch (error) {
         log.error("Invalid installed character", directory.name, String(error));
       }
@@ -158,30 +180,24 @@ export class CharacterCatalog {
   // while the pet moves.
   private async thumbnail(id: string) {
     try {
-      const { directory, character } = this.read(id);
-      const files = [
-        path.join(directory, "character.json"),
-        ...atlasFiles(character).map((filename) =>
-          confined(directory, filename),
-        ),
-      ];
-      const stamp = (
-        await Promise.all(
-          files.map(async (file) => {
-            const { size, mtimeMs } = await stat(file);
-            return `${file}:${size}:${mtimeMs}`;
-          }),
-        )
-      ).join("\n");
+      const entry = this.entries.get(id);
+      if (!entry) throw new Error(`Unknown character: ${id}`);
+      const directory = await realpath(entry.directory);
+      const manifest = path.join(directory, "character.json");
+      const manifestStamp = fileStamp(manifest, await stat(manifest));
+      let resting = this.restingAtlases.get(id);
+      if (resting?.stamp !== manifestStamp) {
+        const raw = JSON.parse(await readFile(manifest, "utf8"));
+        if (raw?.id !== id) throw new Error("Character identity changed");
+        resting = { stamp: manifestStamp, atlas: restingAtlasOf(raw) };
+        this.restingAtlases.set(id, resting);
+      }
+      const atlas = atlasSchema.parse(resting.atlas);
+      const image = confined(directory, atlas.image);
+      const stamp = `${manifestStamp}\n${fileStamp(image, await stat(image))}`;
       const cached = this.thumbnails.get(id);
       if (cached?.stamp === stamp) return cached.pixels;
-      const atlas = character.atlases.find(
-        (atlas) => atlas.action === "resting",
-      )!;
-      const pixels = restingThumbnail(
-        atlas,
-        await readFile(confined(directory, atlas.image)),
-      );
+      const pixels = restingThumbnail(atlas, await readFile(image));
       this.thumbnails.set(id, { stamp, pixels });
       return pixels;
     } catch (error) {
@@ -212,6 +228,19 @@ function atlasFiles(character: CharacterPackage) {
       ),
     ),
   ];
+}
+
+// Unvalidated: a thumbnail validates the one atlas it draws from. Selection
+// still validates the whole package before it replaces the pet.
+function restingAtlasOf(raw: unknown): unknown {
+  const atlases = (raw as { atlases?: unknown } | null)?.atlases;
+  return Array.isArray(atlases)
+    ? atlases.find((atlas) => atlas?.action === "resting")
+    : undefined;
+}
+
+function fileStamp(file: string, { size, mtimeMs }: Stats) {
+  return `${file}:${size}:${mtimeMs}`;
 }
 
 function confined(directory: string, filename: string) {
