@@ -192,10 +192,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     ).toBe("auto");
     const loginNote = settings.getByRole("region", { name: "开机启动" });
     await loginNote.scrollIntoViewIfNeeded();
+    // Layout is fractional (13px text at 1.4 line height) while scrolling
+    // snaps to device pixels, so compare the device pixels the edges paint on.
     expect(
       await loginNote.evaluate((element) => {
         const bounds = element.getBoundingClientRect();
-        return bounds.top >= 0 && bounds.bottom <= innerHeight;
+        const pixel = (value: number) => Math.round(value * devicePixelRatio);
+        return (
+          pixel(bounds.top) >= 0 && pixel(bounds.bottom) <= pixel(innerHeight)
+        );
       }),
     ).toBe(true);
     await stage("save-error screenshot");

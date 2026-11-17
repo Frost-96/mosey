@@ -187,6 +187,9 @@ test("settings follows the system theme, speaks Chinese, fits its content and wo
       nativeTheme.themeSource = "light";
     });
     const settings = await openSettings(app);
+    // Playwright's Electron launch pins prefers-color-scheme to light; release
+    // it so the page follows nativeTheme as it does for a user.
+    await settings.emulateMedia({ colorScheme: null });
     session.mark("light theme");
     for (const surface of (await surfaces(settings)).filter(({ element }) =>
       /^(body|div\.card)/.test(element),
