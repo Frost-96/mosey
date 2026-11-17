@@ -85,26 +85,26 @@ export class DockValidation {
     return [
       {
         id: menuIds.dockValidationStart,
-        label: "Start Dock validation (120 seconds)",
+        label: "开始 Dock 验证（120 秒）",
         enabled: !this.child,
         click: capture.start,
       },
       {
         id: menuIds.dockValidationStop,
-        label: "Stop Dock validation",
+        label: "停止 Dock 验证",
         click: capture.stop,
       },
       {
         id: menuIds.dockValidationStatus,
-        label: "Show Dock validation status",
+        label: "显示 Dock 验证状态",
         click: () => this.show(),
       },
       {
         id: menuIds.dockValidationOrientation,
-        label: "Operator Dock orientation",
+        label: "Dock 位置（操作员确认）",
         submenu: (["bottom", "left", "right"] as const).map((orientation) => ({
           id: `${menuIds.dockValidationOrientation}-${orientation}`,
-          label: orientation,
+          label: { bottom: "底部", left: "左侧", right: "右侧" }[orientation],
           type: "radio",
           checked: this.orientation === orientation,
           enabled: !this.child,

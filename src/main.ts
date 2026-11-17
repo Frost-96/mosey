@@ -38,13 +38,11 @@ async function start() {
     showPet: () => pet.setVisibility("visible"),
     setLoginLaunch: (enabled) => {
       loginLaunch.setEnabled(enabled);
-      menus.refresh();
       settings.publish();
     },
     openLoginSettings: async () => {
       await loginLaunch.openSettings();
       settings.publish();
-      menus.refresh();
     },
     commitPreview: () => pet.commitPreview(),
   });
@@ -83,7 +81,6 @@ async function start() {
       retry: () => pet.load(),
     },
     settings,
-    loginLaunch,
     dockCapture,
   );
   app.on("activate", () => {

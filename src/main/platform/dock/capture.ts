@@ -67,7 +67,7 @@ export class DockCapture {
   menu(): MenuItemConstructorOptions {
     return {
       id: menuIds.dockValidation,
-      label: "Dock validation",
+      label: "诊断",
       submenu: this.validation.menu({
         start: () => {
           const revision = this.reserve("diagnostic");
