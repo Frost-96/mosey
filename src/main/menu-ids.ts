@@ -1,4 +1,4 @@
-import type { PetSize } from "../shared/size";
+import type { PetSize } from "../shared/size.ts";
 
 // Stable menu item identities. Labels are presentation and may change freely;
 // tests, tools and menu lookups address items only through these ids.

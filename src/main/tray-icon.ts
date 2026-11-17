@@ -1,14 +1,15 @@
 import { nativeImage, type NativeImage } from "electron";
 
-// A paw drawn in a 24-unit square: one pad and four toes.
-const pad = { x: 12, y: 16, rx: 6, ry: 5 };
+// A paw drawn in a 24-unit square: one pad and four toes, spaced so the toes
+// stay apart at 16 pixels.
+const pad = { x: 12, y: 16.2, rx: 5.6, ry: 4.8 };
 const toes = [
-  { x: 5, y: 9 },
-  { x: 9.5, y: 5 },
-  { x: 14.5, y: 5 },
-  { x: 19, y: 9 },
+  { x: 4.3, y: 9.6 },
+  { x: 8.8, y: 5.2 },
+  { x: 15.2, y: 5.2 },
+  { x: 19.7, y: 9.6 },
 ];
-const toeRadius = 2.5;
+const toeRadius = 2.3;
 
 const inside = (x: number, y: number) =>
   ((x - pad.x) / pad.rx) ** 2 + ((y - pad.y) / pad.ry) ** 2 <= 1 ||

@@ -72,10 +72,13 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
         ({ app }) =>
           app.getLoginItemSettings({ type: "mainAppService" }).status,
       );
-      await settings!
+      const checkbox = settings!
         .getByRole("region", { name: "开机启动" })
-        .getByRole("checkbox")
-        .click();
+        .getByRole("checkbox");
+      await expect
+        .poll(() => checkbox.isChecked())
+        .toBe(previous === "enabled");
+      await checkbox.click();
       await expect
         .poll(() =>
           app!.evaluate(

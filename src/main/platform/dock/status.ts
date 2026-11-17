@@ -1,4 +1,5 @@
-// Dock runtime states. The runtime records a code; menus present its wording.
+// Dock runtime states. The runtime records and logs a code; menus present its
+// wording, and tests read the code back instead of comparing wording.
 const wording = {
   stopped: "已停止",
   stopping: "正在停止",
@@ -22,8 +23,14 @@ const wording = {
 
 export type DockStatus = keyof typeof wording;
 
+export const dockStatuses = Object.keys(wording) as DockStatus[];
+
 export const dockStatusLabel = (status: DockStatus) =>
   `状态：${wording[status]}`;
+
+// Tests and tools read the status menu item back as a code.
+export const dockStatusCode = (label: string) =>
+  dockStatuses.find((status) => dockStatusLabel(status) === label);
 
 // States that only the user can resolve: missing permission or an exhausted
 // recovery budget. Transient states recover on their own and stay quiet.
