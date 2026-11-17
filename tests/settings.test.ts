@@ -142,7 +142,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .getMenuItemById("mosey")!
           .submenu!.items.map((x) => x.id),
       ),
-    ).toContain("login-launch");
+    ).not.toContain("login-launch");
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!

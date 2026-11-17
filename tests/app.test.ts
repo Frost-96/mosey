@@ -215,7 +215,7 @@ async function exercisePet() {
         ?.submenu?.items.map((entry) => entry.id),
     );
     expect(menuIds).toContain("open-settings");
-    expect(menuIds).toContain("login-launch");
+    expect(menuIds).not.toContain("login-launch");
     expect(menuIds).toContain("pet-size");
 
     window.on("pageerror", (error) => {

@@ -13,6 +13,10 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
+import {
+  dockStatusCode,
+  type DockStatus,
+} from "../src/main/platform/dock/status.ts";
 
 // Opt-in observation of the shipped app. No thresholds, fake clocks, native
 // substitutes, or product hooks. Playwright input is not physical input evidence.
@@ -90,7 +94,7 @@ interface Sample {
   actionId: number;
   stablePosture: boolean;
   visibility: string;
-  dockStatus: string | undefined;
+  dockStatus: DockStatus | undefined;
   stableDockStatus: boolean;
   cpuPercentOneCore: number;
   rssMiB: number;
@@ -308,12 +312,14 @@ try {
       item.click();
     }, id);
   const started = performance.now();
-  const dockStatus = () =>
-    app!.evaluate(
+  const dockStatus = async () => {
+    const label = await app!.evaluate(
       ({ Menu }) =>
         Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
           ?.label,
     );
+    return label === undefined ? undefined : dockStatusCode(label);
+  };
   let previousAt = started;
   let previous = processTree(pid);
   for (const [phase, duration] of [
@@ -485,7 +491,7 @@ try {
     ]),
   );
   const activeDockSamples = stableDockSamples.filter(
-    (sample) => sample.dockStatus === "Dock interaction active",
+    (sample) => sample.dockStatus === "active",
   );
   report.dockCoverage = {
     activeStatusSamples: activeDockSamples.length,
