@@ -102,16 +102,16 @@ test("suspension hides a shown pet from both queries until it resumes", () => {
   const { adapter, presence, show, hide } = fixture();
   adapter.finishLoad();
   show();
-  adapter.suspend();
+  adapter.sleep();
   assert.deepEqual(queries(presence), { observable: false, shown: false });
-  adapter.resume();
+  adapter.wake();
   assert.deepEqual(queries(presence), { observable: true, shown: true });
-  // Suspended while hidden, then shown, then resumed.
+  // Locked while hidden, then shown, then unlocked.
   hide();
-  adapter.suspend();
+  adapter.lock();
   show();
   assert.deepEqual(queries(presence), { observable: false, shown: false });
-  adapter.resume();
+  adapter.unlock();
   assert.deepEqual(queries(presence), { observable: true, shown: true });
 });
 
@@ -121,8 +121,8 @@ test("quitting ends observation but keeps the pet shown through the drain", () =
   show();
   presence.beginShutdown();
   assert.deepEqual(queries(presence), { observable: false, shown: true });
-  adapter.suspend();
-  adapter.resume();
+  adapter.sleep();
+  adapter.wake();
   adapter.finishLoad();
   assert.deepEqual(queries(presence), { observable: false, shown: true });
 });
@@ -146,33 +146,71 @@ test("reconciling reports each silent visibility change once", () => {
 test("suspension stays readable apart from visibility", () => {
   const { adapter, presence, observe, hide } = fixture();
   observe();
-  adapter.suspend();
+  adapter.sleep();
   hide();
   assert.equal(presence.suspended, true);
-  adapter.resume();
+  adapter.wake();
   assert.equal(presence.suspended, false);
 });
 
-test("suspending an observed pet stops observation once, and waking starts it once", () => {
-  const { adapter, observe, transitions } = fixture();
+test("sleeping or locking an observed pet stops observation once, and waking or unlocking starts it once", () => {
+  for (const [suspend, resume] of [
+    ["sleep", "wake"],
+    ["lock", "unlock"],
+  ] as const) {
+    const { adapter, observe, transitions } = fixture();
+    observe();
+    adapter[suspend]();
+    // A repeated report of the same reason changes nothing.
+    adapter[suspend]();
+    assert.deepEqual(transitions, ["unobserved"], suspend);
+    adapter[resume]();
+    adapter[resume]();
+    assert.deepEqual(transitions, ["unobserved", "observed"], resume);
+  }
+});
+
+test("waking without sleep or unlocking without a lock never reports a transition", () => {
+  const { adapter, presence, observe, transitions } = fixture();
   observe();
-  adapter.suspend();
-  // Sleep and a locked screen both report suspension.
-  adapter.suspend();
+  adapter.wake();
+  adapter.unlock();
+  assert.deepEqual(transitions, []);
+  assert.equal(presence.observable, true);
+  // Clearing the reason that is not set leaves the one that is.
+  adapter.lock();
+  adapter.wake();
   assert.deepEqual(transitions, ["unobserved"]);
-  adapter.resume();
-  adapter.resume();
-  assert.deepEqual(transitions, ["unobserved", "observed"]);
+  assert.equal(presence.suspended, true);
+});
+
+// Sleep and a locked screen are separate reasons: waking clears only sleep
+// and unlocking only the lock, whichever order they arrive in.
+test("waking behind a locked screen keeps the pet suspended until it unlocks", () => {
+  for (const order of [
+    ["lock", "sleep", "wake"],
+    ["sleep", "lock", "wake"],
+  ] as const) {
+    const { adapter, presence, observe, transitions } = fixture();
+    observe();
+    for (const input of order) adapter[input]();
+    assert.equal(presence.suspended, true, order.join());
+    assert.equal(presence.observable, false, order.join());
+    assert.deepEqual(transitions, ["unobserved"], order.join());
+    adapter.unlock();
+    assert.deepEqual(transitions, ["unobserved", "observed"], order.join());
+    assert.equal(presence.suspended, false, order.join());
+  }
 });
 
 test("a pet suspended while hidden starts observation only after it is shown and wakes", () => {
   const { adapter, presence, show, hide, observe, transitions } = fixture();
   observe();
   hide();
-  adapter.suspend();
+  adapter.sleep();
   show();
   assert.deepEqual(transitions, ["unobserved"]);
-  adapter.resume();
+  adapter.wake();
   assert.deepEqual(transitions, ["unobserved", "observed"]);
   assert.equal(presence.observable, true);
 });
@@ -217,14 +255,14 @@ test("beginning to quit never stops observation", () => {
 test("waking while quitting never starts observation", () => {
   const { adapter, presence, observe, transitions } = fixture();
   observe();
-  adapter.suspend();
+  adapter.sleep();
   presence.beginShutdown();
-  adapter.resume();
+  adapter.wake();
   assert.deepEqual(transitions, ["unobserved"]);
 });
 
 test("a pet still observed while quitting stops observation when it is suspended or hidden", () => {
-  for (const end of ["suspend", "hide"] as const) {
+  for (const end of ["sleep", "lock", "hide"] as const) {
     const { adapter, presence, observe, transitions } = fixture();
     observe();
     presence.beginShutdown();
@@ -299,10 +337,29 @@ test("choosing to show prepares the pet before showing it, only once its rendere
 // but stays paused until it wakes, so its preparation learns it is suspended.
 test("a pet shown while suspended is prepared as suspended and starts observation when it wakes", () => {
   const { adapter, log } = fixture();
-  adapter.suspend();
+  adapter.sleep();
   adapter.finishLoad();
   assert.deepEqual(log, ["rendererReady", "prepare while suspended", "show"]);
-  adapter.resume();
+  adapter.wake();
+  assert.deepEqual(log, [
+    "rendererReady",
+    "prepare while suspended",
+    "show",
+    "observed",
+  ]);
+});
+
+test("a pet shown after waking behind a locked screen is still prepared as suspended", () => {
+  const { adapter, presence, log } = fixture();
+  adapter.setIntent("hidden");
+  adapter.finishLoad();
+  adapter.lock();
+  adapter.sleep();
+  adapter.wake();
+  adapter.setIntent("visible");
+  presence.intentChanged();
+  assert.deepEqual(log, ["rendererReady", "prepare while suspended", "show"]);
+  adapter.unlock();
   assert.deepEqual(log, [
     "rendererReady",
     "prepare while suspended",
