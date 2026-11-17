@@ -16,6 +16,7 @@ import fs from "node:fs";
 import { StringDecoder } from "node:string_decoder";
 import path from "node:path";
 import { dockRecordSchema, helperReceiptSchema } from "./validation-protocol";
+import { menuIds } from "../../menu-ids";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_LINE = 64 * 1024;
@@ -83,18 +84,26 @@ export class DockValidation {
   menu(capture: { start(): void; stop(): void }): MenuItemConstructorOptions[] {
     return [
       {
+        id: menuIds.dockValidationStart,
         label: "Start Dock validation (120 seconds)",
         enabled: !this.child,
         click: capture.start,
       },
       {
+        id: menuIds.dockValidationStop,
         label: "Stop Dock validation",
         click: capture.stop,
       },
-      { label: "Show Dock validation status", click: () => this.show() },
       {
+        id: menuIds.dockValidationStatus,
+        label: "Show Dock validation status",
+        click: () => this.show(),
+      },
+      {
+        id: menuIds.dockValidationOrientation,
         label: "Operator Dock orientation",
         submenu: (["bottom", "left", "right"] as const).map((orientation) => ({
+          id: `${menuIds.dockValidationOrientation}-${orientation}`,
           label: orientation,
           type: "radio",
           checked: this.orientation === orientation,

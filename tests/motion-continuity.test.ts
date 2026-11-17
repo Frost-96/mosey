@@ -204,16 +204,13 @@ test.each(["whale", "claude", "gemini", "gpt"])(
           )) as typeof setTimeout;
         Math.random = () => 0.1;
       });
-      for (const label of ["Hide Mosey", "Show Mosey"])
+      for (const id of ["hide-pet", "show-pet"])
         await onMainLoop(
           app,
-          ({ Menu }, label) => {
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => i.label === label)!
-              .click();
+          ({ Menu }, id) => {
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
           },
-          label,
+          id,
         );
       await waitFor(pet, "walking");
       await waitFor(pet, "resting");

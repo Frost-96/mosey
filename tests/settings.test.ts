@@ -97,17 +97,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
             : { args: [".", ...args], timeout: 30000 },
         );
       });
-    const invoke = (label: string) =>
+    const invoke = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((x) => x.label === "Mosey")
-            ?.submenu?.items.find((x) => x.label === label);
-          if (!item) throw new Error(`Missing menu ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing menu ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     const petState = () =>
       app!.evaluate(({ BrowserWindow }) => {
@@ -134,24 +132,24 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
           .getAttribute("aria-pressed"),
       )
       .toBe("true");
-    await invoke("设置…");
+    await invoke("open-settings");
     expect(app.windows()).toHaveLength(2);
     expect(await settings.getByText("柯基", { exact: true }).count()).toBe(1);
     expect(await settings.locator("canvas").count()).toBe(0);
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.map((x) => x.label),
+          .getMenuItemById("mosey")!
+          .submenu!.items.map((x) => x.id),
       ),
-    ).toContain("Launch at Login");
+    ).toContain("login-launch");
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.map((x) => x.label),
+          .getMenuItemById("mosey")!
+          .submenu!.items.map((x) => x.id),
       ),
-    ).toContain("Pet Size");
+    ).toContain("pet-size");
     await stage("validate IPC boundaries");
     expect(
       await settings.evaluate(() =>
@@ -175,7 +173,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("hidden presets and save failure");
     const petId = (await petState()).id;
-    await invoke("Hide Mosey");
+    await invoke("hide-pet");
     await expect
       .poll(() => settings!.getByText("宠物已隐藏").isVisible())
       .toBe(true);
@@ -219,7 +217,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .getByRole("button", { name: "显示宠物", exact: true })
       .click();
     await expect.poll(async () => (await petState()).visible).toBe(true);
-    await invoke("Hide Mosey");
+    await invoke("hide-pet");
     await rm(file);
     await mkdir(file);
     await settings.getByRole("button", { name: "小", exact: true }).click();
@@ -270,7 +268,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     settings = undefined;
     expect((await petState()).id).toBe(petId);
     expect((await petState()).visible).toBe(false);
-    await invoke("设置…");
+    await invoke("open-settings");
     await expect.poll(() => app!.windows().length).toBe(2);
     await stage("quit after reopening settings");
     await fixture.closeApp();
@@ -341,10 +339,7 @@ test.each([
       // Judge the real process exit, not a driver close acknowledgement that
       // can remain pending after the application has already exited.
       void onMainLoop(app, ({ Menu }) => {
-        Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.find((item) => item.label === "Quit Mosey")!
-          .click();
+        Menu.getApplicationMenu()!.getMenuItemById("quit")!.click();
       }).catch(() => {});
       await expect.poll(() => child.exitCode, { timeout: 10000 }).toBe(0);
     };
@@ -393,10 +388,7 @@ test.each([
         .poll(() => distanceFromGround(app), { timeout: 4000 })
         .toBe(0);
       await onMainLoop(app, ({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.find((x) => x.label === "Hide Mosey")!
-          .click(),
+        Menu.getApplicationMenu()!.getMenuItemById("hide-pet")!.click(),
       );
     }
     session.mark("quit-before-durability-check");

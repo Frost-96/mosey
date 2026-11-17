@@ -1,26 +1,25 @@
 import { expect } from "vitest";
 import type { ElectronApplication, Page } from "playwright";
+import { menuIds } from "../../src/main/menu-ids";
 export async function openSettings(
   app: ElectronApplication,
   { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
 ) {
   await app.evaluate(
-    ({ Menu }) =>
+    ({ Menu }, id) =>
       new Promise<void>((resolve, reject) => {
         // Inspector evaluation can interrupt a native window callback. Dispatch
         // user input on the ordinary main loop, as the real menu does.
         setImmediate(() => {
           try {
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === "设置…")!
-              .click();
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
             resolve();
           } catch (error) {
             reject(error);
           }
         });
       }),
+    menuIds.settings,
   );
   let page: Page | undefined;
   await expect
@@ -99,7 +98,10 @@ export async function closeSettings(app: ElectronApplication) {
   await closed;
 }
 
-export async function chooseSize(app: ElectronApplication, label: string) {
+export async function chooseSize(
+  app: ElectronApplication,
+  size: 70 | 160 | 240,
+) {
   const page = await openSettings(app);
   const before = await app.evaluate(({ BrowserWindow }) => {
     const pet = BrowserWindow.getAllWindows().find(
@@ -124,12 +126,7 @@ export async function chooseSize(app: ElectronApplication, label: string) {
   });
   await page
     .getByRole("button", {
-      name: (
-        { Small: "小", Medium: "中（默认）", Large: "大" } as Record<
-          string,
-          string
-        >
-      )[label]!,
+      name: { 70: "小", 160: "中（默认）", 240: "大" }[size],
       exact: true,
     })
     .click();

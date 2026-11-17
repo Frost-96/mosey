@@ -95,17 +95,15 @@ test.each([
     const matchesIdle = matchPaintedFrames(idleFrames, {
       maxChannelDifference: phase === "preview" ? 24 : 2,
     });
-    const invoke = (label: string) =>
+    const invoke = (id: string) =>
       onMainLoop(
         app,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing menu: ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()!.getMenuItemById(id);
+          if (!item) throw new Error(`Missing menu: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     const visible = () =>
       app.evaluate(({ BrowserWindow }) =>
@@ -115,7 +113,7 @@ test.each([
       );
     session.mark(`prepare-${phase}`);
     // Exercise real held and released gestures, plus a hidden renderer.
-    if (phase === "hidden") await invoke("Hide Mosey");
+    if (phase === "hidden") await invoke("hide-pet");
     else if (phase === "walking" || phase === "sleeping") {
       // Control time/randomness at the system boundary; never set behavior
       // states or recovery counters. Restore these before the actual fault.
@@ -129,8 +127,8 @@ test.each([
         });
         Math.random = () => 0.1;
       });
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke("hide-pet");
+      await invoke("show-pet");
       if (phase === "sleeping") {
         await app.evaluate(() => {
           const now = Date.now;
@@ -187,7 +185,7 @@ test.each([
             ),
           ).visibility,
         ).toBe("hidden");
-        await invoke("Show Mosey");
+        await invoke("show-pet");
         const shown = await renderer.waitUntilReady({ paintedPixels: 1500 });
         expect(matchesIdle(shown.pixels)).toBe(true);
       } else expect(matchesIdle(recovered.pixels)).toBe(true);
@@ -238,15 +236,13 @@ test.each([
     });
     // No old capture/movement survives the recovered renderer.
     await expect.poll(() => distanceFromGround(app)).toBe(0);
-    await invoke("Hide Mosey");
+    await invoke("hide-pet");
     session.mark("second-renderer-failure");
     await renderer.crash();
     await expect
       .poll(() =>
         app.evaluate(({ Menu }) =>
-          Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.some((item) => item.label === "Retry Mosey"),
+          Boolean(Menu.getApplicationMenu()!.getMenuItemById("retry-pet")),
         ),
       )
       .toBe(true);
@@ -261,7 +257,7 @@ test.each([
     ).toBe(true);
     const retry = async () => {
       session.mark("manual-retry-hidden");
-      await invoke("Retry Mosey");
+      await invoke("retry-pet");
       // Keep the original cold-load ordering: show the new document before
       // atlas decode completes, then judge its first painted observation.
       const recovered = await renderer.waitForDocument();
@@ -275,7 +271,7 @@ test.each([
           ),
         ).visibility,
       ).toBe("hidden");
-      await invoke("Show Mosey");
+      await invoke("show-pet");
       session.mark("manual-retry-first-paint");
       const shown = await renderer.waitUntilReady({ paintedPixels: 1500 });
       expect(shown.visible).toBe(true);
@@ -313,7 +309,7 @@ test.each([
     session.mark("explicit-quit");
     const processHandle = app.process();
     const exited = app.waitForEvent("close");
-    await invoke("Quit Mosey");
+    await invoke("quit");
     await exited;
     expect(processHandle.exitCode).toBe(0);
   },
