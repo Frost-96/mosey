@@ -118,7 +118,7 @@ test("Dock interaction holds its status, Retry Dock interaction and the diagnost
     }),
     "dock-interaction",
   );
-  assert.equal(dock.label, "Dock 交互");
+  assert.equal(dock.label, "程序坞交互");
   assert.deepEqual(ids(submenu(dock)), [
     "dock-runtime-status",
     "dock-retry",
@@ -170,7 +170,7 @@ test("a Dock that needs the user adds an unclickable warning on top; transient s
           "—",
           "retry-pet",
         ]);
-        assert.equal(menu[0]!.label, "⚠ Dock 交互不可用");
+        assert.equal(menu[0]!.label, "⚠ 程序坞交互不可用");
         assert.equal(menu[0]!.enabled, false);
       } else assert.ok(!ids(menu).includes("dock-attention"), dock);
   }
@@ -196,13 +196,13 @@ test("no menu offers launch at login", () => {
       }
 });
 
-test("menu text is Chinese apart from the names Mosey and Dock", () => {
+test("menu text is Chinese apart from the product name Mosey", () => {
   for (const each of everyState)
     for (const menu of menus(each))
       for (const { label } of walk(menu))
         if (label !== undefined)
           assert.doesNotMatch(
-            label.replaceAll(/\b(?:Mosey|Dock)\b/g, ""),
+            label.replaceAll(/\bMosey\b/g, ""),
             /[A-Za-z]/,
             label,
           );

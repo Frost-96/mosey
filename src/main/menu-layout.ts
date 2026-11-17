@@ -67,7 +67,7 @@ export function statusMenu(
       ? [
           {
             id: menuIds.dockAttention,
-            label: "⚠ Dock 交互不可用",
+            label: "⚠ 程序坞交互不可用",
             enabled: false,
           },
           separator,
@@ -92,7 +92,7 @@ export function statusMenu(
     settingsItem(commands, accelerators),
     {
       id: menuIds.dockSection,
-      label: "Dock 交互",
+      label: "程序坞交互",
       submenu: [
         {
           id: menuIds.dockStatus,
@@ -101,7 +101,7 @@ export function statusMenu(
         },
         {
           id: menuIds.dockRetry,
-          label: "重试 Dock 交互",
+          label: "重试程序坞交互",
           click: () => commands.retryDock(),
         },
         separator,
