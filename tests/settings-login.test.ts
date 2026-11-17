@@ -1,4 +1,3 @@
-import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -94,7 +93,7 @@ test("login settings explain availability and follow system approval, failure an
           .getMenuItemById("mosey")!
           .submenu!.items.map((item) => item.id),
       ),
-    ).toContain("login-launch");
+    ).not.toContain("login-launch");
     // Controlled results at the OS boundary; all product paths remain real Electron UI/IPC.
     await app.evaluate(({ app, shell }) => {
       Object.defineProperty(app, "isPackaged", {
@@ -131,10 +130,10 @@ test("login settings explain availability and follow system approval, failure an
       };
       app.emit("activate");
     });
-    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
-    await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!.getMenuItemById("login-launch")!.click(),
-    );
+    await expect
+      .poll(() => login.getByRole("switch").isDisabled())
+      .toBe(false);
+    await login.getByRole("switch").click();
     await expect.poll(() => login.textContent()).toContain("等待批准");
     expect(await login.getByRole("switch").isChecked()).toBe(false);
     await login.getByRole("button", { name: "打开系统设置" }).click();

@@ -1,5 +1,9 @@
 import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
+import {
+  dockStatusCode,
+  type DockStatus,
+} from "../src/main/platform/dock/status";
 import { test, expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -1284,7 +1288,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
       ).catch(() => {});
     await finishFixture(close, task.result?.state === "fail");
   });
-  const readiness: { status: string; pid?: number }[] = [];
+  const readiness: { status?: DockStatus; pid?: number }[] = [];
   const alive = (pid: number) => {
     try {
       process.kill(pid, 0);
@@ -1341,11 +1345,13 @@ test("real Dock helper clears its capability and exits when transport stops or t
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     stage = "native-capability";
-    const menuStatus = () =>
-      app!.evaluate(
-        ({ Menu }) =>
-          Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
-            .label,
+    const menuStatus = async () =>
+      dockStatusCode(
+        await app!.evaluate(
+          ({ Menu }) =>
+            Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
+              .label,
+        ),
       );
     const invoke = (id: string) =>
       onMainLoop(
@@ -1355,7 +1361,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
         id,
       );
     const waitForCapability = async () => {
-      let observed: { status: string; pid?: number } = { status: "" };
+      let observed: { status?: DockStatus; pid?: number } = {};
       await expect
         .poll(
           async () => {
@@ -1371,15 +1377,12 @@ test("real Dock helper clears its capability and exits when transport stops or t
             // not a capability: require a native result and, unless refused,
             // the actual direct child before injecting a transport fault.
             return (
-              (observed.status ===
-                "Dock interaction needs Screen Recording permission" &&
+              (observed.status === "needs-permission" &&
                 observed.pid === undefined) ||
-              ([
-                "Dock interaction active",
-                "Dock interaction waiting for visible Dock",
-                "Dock source suspended; waiting for updates",
-                "Updating Dock edge",
-              ].includes(observed.status) &&
+              (observed.status !== undefined &&
+                ["active", "waiting", "suspended", "updating"].includes(
+                  observed.status,
+                ) &&
                 observed.pid !== undefined)
             );
           },
@@ -1391,9 +1394,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
     const initial = await waitForCapability();
     const initialStatus = initial.status;
     helperPID = initial.pid;
-    const permissionBlocked = initialStatus.includes(
-      "needs Screen Recording permission",
-    );
+    const permissionBlocked = initialStatus === "needs-permission";
     let faultInjected = false;
     if (permissionBlocked) {
       expect(helperPID).toBeUndefined();
@@ -1403,7 +1404,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
       faultInjected = true;
       await expect
         .poll(menuStatus, { timeout: 4000, interval: 30 })
-        .toBe("Dock capture heartbeat unavailable");
+        .toBe("heartbeat-lost");
     }
     await invoke("hide-pet");
     if (helperPID)

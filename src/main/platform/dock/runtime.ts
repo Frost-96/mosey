@@ -8,11 +8,12 @@ import {
   type DockObservation,
 } from "./runtime-protocol";
 export type { DockObservation } from "./runtime-protocol";
+import type { DockStatus } from "./status";
 
 // Pixels stay in the helper. Only its bounded, validated numeric silhouette crosses
 // this boundary. Unavailable geometry is never replaced by workArea or a Dock setting.
 export class DockRuntime {
-  status = "Stopped";
+  status: DockStatus = "stopped";
   private reason = "";
   get processingFrame() {
     return this.reason === "new_complete_pending";
@@ -41,7 +42,7 @@ export class DockRuntime {
   start() {
     this.active = true;
     if (this.silenceRecoveryExhausted) {
-      this.status = "Dock capture unavailable; Retry Dock interaction";
+      this.status = "retry-required";
       this.changed(null);
       return;
     }
@@ -56,7 +57,7 @@ export class DockRuntime {
     this.child = child;
     this.stopping = false;
     this.reason = "";
-    this.status = "Checking Dock capture permission";
+    this.status = "checking";
     this.changed(null);
     let receivedEnvironment = false;
     let failed = false;
@@ -77,7 +78,7 @@ export class DockRuntime {
       return JSON.stringify([display.id, display.bounds, display.scaleFactor]);
     };
     const initialDisplay = signature();
-    const fail = (reason: string) => {
+    const fail = (reason: DockStatus) => {
       if (failed) return;
       failed = true;
       this.reason = "";
@@ -191,32 +192,32 @@ export class DockRuntime {
             }
           }
           this.status = observation
-            ? "Dock interaction active"
+            ? "active"
             : permissionBlocked
-              ? "Dock interaction needs Screen Recording permission"
+              ? "needs-permission"
               : record.reason === "source_suspended"
-                ? "Dock source suspended; waiting for updates"
+                ? "suspended"
                 : record.reason === "new_complete_pending"
-                  ? "Updating Dock edge"
+                  ? "updating"
                   : [
                         "alpha_empty",
                         "callback_silence",
                         "incomplete_frame",
                         "waiting_for_complete_frame",
                       ].includes(record.reason)
-                    ? "Dock interaction waiting for visible Dock"
-                    : "Dock interaction unavailable";
+                    ? "waiting"
+                    : "unavailable";
           this.changed(observation);
         }
       } catch {
-        fail("Dock protocol invalid or stale");
+        fail("protocol-invalid");
       }
     });
     child.stderr.on("data", (data: Buffer) => {
       stderrBytes += data.length;
-      if (stderrBytes > 32768) fail("Dock stderr exceeded limit");
+      if (stderrBytes > 32768) fail("stderr-limit");
     });
-    child.once("error", () => fail("Dock helper could not start"));
+    child.once("error", () => fail("helper-failed"));
     this.closing = new Promise<void>((resolve) =>
       child.once("close", () => {
         clearInterval(this.timer);
@@ -226,13 +227,9 @@ export class DockRuntime {
         this.child = undefined;
         this.closing = undefined;
         if (!failed && this.active && buffer.length !== 0)
-          this.status = "Dock output truncated";
-        else if (
-          !failed &&
-          this.active &&
-          this.status === "Dock interaction active"
-        )
-          this.status = "Dock capture ended";
+          this.status = "truncated";
+        else if (!failed && this.active && this.status === "active")
+          this.status = "ended";
         this.reason = "";
         this.changed(null);
         resolve();
@@ -252,22 +249,22 @@ export class DockRuntime {
     this.timer = setInterval(() => {
       if (!this.active || failed || this.stopping) return;
       if (signature() !== initialDisplay) {
-        fail("Dock display changed");
+        fail("display-changed");
       } else if (
         performance.now() - lastReceivedAt >
         (receivedEnvironment ? 1500 : 10000)
       )
-        fail("Dock capture heartbeat unavailable");
+        fail("heartbeat-lost");
       else if (
         silentSince !== undefined &&
         performance.now() - silentSince >= 5000
       ) {
         if (this.silenceRestarts < 3) {
           this.silenceRestarts += 1;
-          fail("Dock capture callbacks unavailable; restarting");
+          fail("restarting");
         } else {
           this.silenceRecoveryExhausted = true;
-          fail("Dock capture unavailable; Retry Dock interaction");
+          fail("retry-required");
         }
       }
     }, 250);
@@ -281,14 +278,14 @@ export class DockRuntime {
     this.restartTimer = undefined;
     const child = this.child;
     this.reason = "";
-    this.status = child ? "Stopping Dock capture" : "Stopped";
+    this.status = child ? "stopping" : "stopped";
     this.changed(null);
     if (!child) return;
     child.kill("SIGTERM");
     this.killTimer ??= setTimeout(() => child.kill("SIGKILL"), 1500);
     await this.closing;
     if (!this.active) {
-      this.status = "Stopped";
+      this.status = "stopped";
       this.changed(null);
     }
   }

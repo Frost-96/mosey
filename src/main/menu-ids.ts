@@ -1,4 +1,4 @@
-import type { PetSize } from "../shared/size";
+import type { PetSize } from "../shared/size.ts";
 
 // Stable menu item identities. Labels are presentation and may change freely;
 // tests, tools and menu lookups address items only through these ids.
@@ -8,10 +8,9 @@ export const menuIds = {
   hidePet: "hide-pet",
   showPet: "show-pet",
   size: "pet-size",
-  loginLaunch: "login-launch",
-  loginOpenSystemSettings: "login-open-system-settings",
-  loginCancelApproval: "login-cancel-approval",
   settings: "open-settings",
+  dockAttention: "dock-attention",
+  dockSection: "dock-interaction",
   dockStatus: "dock-runtime-status",
   dockRetry: "dock-retry",
   dockValidation: "dock-validation",
