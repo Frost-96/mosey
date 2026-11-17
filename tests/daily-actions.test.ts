@@ -419,24 +419,22 @@ test("daily seated actions continue under menus, queued commands, dragging, hidi
 
     await menu.choose("celebrating");
     await waitPosture(pet, "celebrating");
-    const invokeVisibility = (label: string) =>
+    const invokeVisibility = (id: string) =>
       onMainLoop(
         app,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing visibility command ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing visibility command ${id}`);
           item.click();
         },
-        label,
+        id,
       );
-    await invokeVisibility("Hide Mosey");
+    await invokeVisibility("hide-pet");
     await expect
       .poll(async () => (await presentation(pet)).visibility)
       .toBe("hidden");
     await pause(250);
-    await invokeVisibility("Show Mosey");
+    await invokeVisibility("show-pet");
     await waitPosture(pet, "resting");
 
     await menu.choose("sitting");
@@ -872,17 +870,15 @@ test("free activity selects and paints all five daily behaviors without action c
         Math.random = () => choice;
       }, choice);
       await clearTransitions(pet);
-      for (const label of ["Hide Mosey", "Show Mosey"])
+      for (const id of ["hide-pet", "show-pet"])
         await onMainLoop(
           app,
-          ({ Menu }, label) => {
-            const item = Menu.getApplicationMenu()
-              ?.items.find((entry) => entry.label === "Mosey")
-              ?.submenu?.items.find((entry) => entry.label === label);
-            if (!item) throw new Error(`Missing visibility item ${label}`);
+          ({ Menu }, id) => {
+            const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+            if (!item) throw new Error(`Missing visibility item ${id}`);
             item.click();
           },
-          label,
+          id,
         );
       // The shortened wait drops the neutral alignment, so leaving rest can
       // still take up to two idle cycles. Far below the real 18s rest wait.

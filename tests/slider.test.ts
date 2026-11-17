@@ -300,10 +300,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
       .poll(() => settings.getByRole("alert").isVisible())
       .toBe(false);
     await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === "Hide Mosey")!
-        .click(),
+      Menu.getApplicationMenu()!.getMenuItemById("hide-pet")!.click(),
     );
     await expect
       .poll(() => settings.getByText("宠物已隐藏").isVisible())

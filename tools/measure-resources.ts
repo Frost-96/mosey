@@ -301,14 +301,12 @@ try {
       },
     );
   });
-  const menu = (label: string) =>
-    app!.evaluate(({ Menu }, label) => {
-      const item = Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === label);
-      if (!item) throw new Error(`Missing menu item: ${label}`);
+  const menu = (id: string) =>
+    app!.evaluate(({ Menu }, id) => {
+      const item = Menu.getApplicationMenu()!.getMenuItemById(id);
+      if (!item) throw new Error(`Missing menu item: ${id}`);
       item.click();
-    }, label);
+    }, id);
   const started = performance.now();
   const dockStatus = () =>
     app!.evaluate(
@@ -329,8 +327,8 @@ try {
     console.log(`Resource phase: ${phase}, ${duration}s`);
     if (phase === "dragging") {
       // Begin on a fresh resting frame, not a moving reaction's transparent area.
-      await menu("Hide Mosey");
-      await menu("Show Mosey");
+      await menu("hide-pet");
+      await menu("show-pet");
       await pause(600);
       await pet.mouse.move(80, 120);
       await pet.mouse.down();
@@ -340,8 +338,8 @@ try {
       await pet.mouse.move(80, -80, { steps: 6 });
     } else if (phase === "hidden") {
       await pet.mouse.up();
-      await menu("Hide Mosey");
-    } else if (phase === "growth") await menu("Show Mosey");
+      await menu("hide-pet");
+    } else if (phase === "growth") await menu("show-pet");
     // Exclude menu/gesture setup from the next phase's CPU and draw counters.
     await pet.evaluate(() => {
       const probe = Reflect.get(window, "resourceProbe") as Sample["drawing"];

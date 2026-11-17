@@ -4,6 +4,7 @@ import type { PetSize } from "../shared/size";
 import type { SettingsWindow } from "./settings-window";
 import type { LoginLaunch } from "./platform/login-launch";
 import type { DockCapture } from "./platform/dock/capture";
+import { menuIds, sizeMenuId } from "./menu-ids";
 
 type PetMenu = {
   state(): Pick<Settings, "size" | "visibility"> & { failed: boolean };
@@ -34,11 +35,16 @@ export class ApplicationMenus {
     tray.on("right-click", openTrayMenu);
   }
   private settingsItem = (): Electron.MenuItemConstructorOptions => ({
+    id: menuIds.settings,
     label: "设置…",
     accelerator: "CommandOrControl+,",
     click: this.settings.open,
   });
   private visibilityItem = (): Electron.MenuItemConstructorOptions => ({
+    id:
+      this.pet.state().visibility === "visible"
+        ? menuIds.hidePet
+        : menuIds.showPet,
     label:
       this.pet.state().visibility === "visible" ? "Hide Mosey" : "Show Mosey",
     click: () =>
@@ -47,14 +53,25 @@ export class ApplicationMenus {
       ),
   });
   private dockItems = (): Electron.MenuItemConstructorOptions[] => [
-    { id: "dock-runtime-status", label: this.dock.status, enabled: false },
-    { label: "Retry Dock interaction", click: this.dock.retry },
+    { id: menuIds.dockStatus, label: this.dock.status, enabled: false },
+    {
+      id: menuIds.dockRetry,
+      label: "Retry Dock interaction",
+      click: this.dock.retry,
+    },
   ];
   private recoveryItems = (): Electron.MenuItemConstructorOptions[] =>
     this.pet.state().failed
-      ? [{ label: "Retry Mosey", click: () => void this.pet.retry() }]
+      ? [
+          {
+            id: menuIds.retryPet,
+            label: "Retry Mosey",
+            click: () => void this.pet.retry(),
+          },
+        ]
       : [];
   private sizeItem = (): Electron.MenuItemConstructorOptions => ({
+    id: menuIds.size,
     label: "Pet Size",
     submenu: (
       [
@@ -63,6 +80,7 @@ export class ApplicationMenus {
         ["Large", 240],
       ] as const
     ).map(([label, size]) => ({
+      id: sizeMenuId(size),
       label,
       type: "checkbox",
       checked: this.pet.state().size === size,
@@ -73,6 +91,7 @@ export class ApplicationMenus {
     const login = this.loginLaunch.read();
     return [
       {
+        id: menuIds.loginLaunch,
         label: "Launch at Login",
         type: "checkbox",
         checked: login.status === "enabled",
@@ -87,10 +106,12 @@ export class ApplicationMenus {
         ? [
             { label: "开机启动等待系统批准", enabled: false },
             {
+              id: menuIds.loginOpenSystemSettings,
               label: "打开系统设置…",
               click: () => void this.openLoginSettings(),
             },
             {
+              id: menuIds.loginCancelApproval,
               label: "取消待批准请求",
               click: () => {
                 this.loginLaunch.setEnabled(false);
@@ -113,6 +134,7 @@ export class ApplicationMenus {
       const diagnostic = this.dock.menu();
       const applicationMenu = Menu.buildFromTemplate([
         {
+          id: menuIds.application,
           label: "Mosey",
           submenu: [
             ...this.recoveryItems(),
@@ -122,6 +144,7 @@ export class ApplicationMenus {
             this.settingsItem(),
             ...this.dockItems(),
             {
+              id: menuIds.quit,
               label: "Quit Mosey",
               accelerator: "CommandOrControl+Q",
               click: () => app.quit(),
@@ -138,7 +161,7 @@ export class ApplicationMenus {
         this.settingsItem(),
         ...this.dockItems(),
         diagnostic,
-        { label: "Quit Mosey", click: () => app.quit() },
+        { id: menuIds.quit, label: "Quit Mosey", click: () => app.quit() },
       ]);
       // Native menu construction and installation can admit newer commands.
       // Rebuild from the latest choices if a nested refresh superseded this one;
@@ -157,10 +180,14 @@ export class ApplicationMenus {
 
   bodyTemplate(): Electron.MenuItemConstructorOptions[] {
     return [
-      { label: "Hide Mosey", click: () => this.pet.setVisibility("hidden") },
+      {
+        id: menuIds.hidePet,
+        label: "Hide Mosey",
+        click: () => this.pet.setVisibility("hidden"),
+      },
       this.sizeItem(),
       ...this.loginItems(),
-      { label: "Quit Mosey", click: () => app.quit() },
+      { id: menuIds.quit, label: "Quit Mosey", click: () => app.quit() },
     ];
   }
 }

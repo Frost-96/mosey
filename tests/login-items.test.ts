@@ -119,14 +119,14 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       const checked = await app!.evaluate(
         () =>
           Reflect.get(globalThis, "loginBodyMenu").items.find(
-            (item: { label: string }) => item.label === "Launch at Login",
+            (item: { id: string }) => item.id === "login-launch",
           ).checked,
       );
       expect(checked).toBe(previous === "enabled");
       await onMainLoop(app!, () => {
         const menu = Reflect.get(globalThis, "loginBodyMenu");
         menu.items
-          .find((item: { label: string }) => item.label === "Launch at Login")
+          .find((item: { id: string }) => item.id === "login-launch")
           .click();
         Reflect.get(menu, "trackingCallback")?.();
         Reflect.set(globalThis, "loginBodyMenu", undefined);
@@ -144,10 +144,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       const child = app!.process();
       const closed = app!.waitForEvent("close");
       await onMainLoop(app!, ({ Menu }) => {
-        Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Quit Mosey")
-          ?.click();
+        Menu.getApplicationMenu()?.getMenuItemById("quit")?.click();
       });
       await closed;
       app = undefined;

@@ -9,14 +9,14 @@ const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
 test.each([
-  ["build", "Show Mosey"],
-  ["build", "Hide Mosey"],
-  ["install", "Show Mosey"],
-  ["install", "Hide Mosey"],
+  ["build", "show-pet"],
+  ["build", "hide-pet"],
+  ["install", "show-pet"],
+  ["install", "hide-pet"],
 ] as const)(
   "menu %s preserves the newer %s choice",
   async (boundary, command) => {
-    const visible = command === "Show Mosey";
+    const visible = command === "show-pet";
     // The controlled interleaving concerns menu updates. Native capture and its
     // menu status are exercised by the Dock acceptance suite.
     const session = await createPetTestSession({
@@ -45,9 +45,11 @@ test.each([
           let armed = true;
           let inputs = 0;
           const input = (menu: Electron.Menu | null) => {
-            const item = menu?.items
-              .find((item) => item.label === "Mosey")
-              ?.submenu?.items.find((item) => item.label === command);
+            // Only the application menu carries the "mosey" section; the tray
+            // menu built alongside it must not receive the injected command.
+            const item = menu
+              ?.getMenuItemById("mosey")
+              ?.submenu?.getMenuItemById(command);
             if (!armed || !item) return;
             armed = false;
             inputs++;
@@ -84,14 +86,12 @@ test.each([
           // The controlled reentry inside the native menu boundary remains intact.
           await new Promise<void>((resolve) => setImmediate(resolve));
           const items = () =>
-            Menu.getApplicationMenu()!.items.find(
-              (item) => item.label === "Mosey",
-            )!.submenu!.items;
+            Menu.getApplicationMenu()!.getMenuItemById("mosey")!.submenu!.items;
           // Activation refreshes the menu from the previous choice. A newer
           // command arrives while that native refresh is still in progress.
           app.emit("activate");
           return {
-            menu: items().map((item) => item.label),
+            menu: items().map((item) => item.id),
             visible: BrowserWindow.getAllWindows()
               .find((window) => window.getTitle() === "Mosey")!
               .isVisible(),
@@ -124,7 +124,7 @@ test.each([
         visibility: visible ? "visible" : "hidden",
       });
       expect(observed.visible).toBe(visible);
-      expect(observed.menu).toContain(visible ? "Hide Mosey" : "Show Mosey");
+      expect(observed.menu).toContain(visible ? "hide-pet" : "show-pet");
       expect(observed.menu).not.toContain(command);
     } catch (error) {
       await app

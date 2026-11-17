@@ -102,17 +102,14 @@ test("body menus keep the pet active and close without replaying actions", async
       )
         await new Promise((resolve) => setTimeout(resolve, 350));
     };
-    const invoke = async (label: string) => {
+    const invoke = async (id: string) => {
       await onMainLoop(
         app!,
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === label)!
-            .click(),
-        label,
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+        id,
       );
-      if (label === "Show Mosey") {
+      if (id === "show-pet") {
         // Wait for actual new canvas work, including when stale pre-hide pixels
         // already resemble idle. Physical first-input acceptance is separate.
         const initial = await pixels();
@@ -163,26 +160,26 @@ test("body menus keep the pet active and close without replaying actions", async
     const matchesIdle = matchPaintedFrames(idleFrames);
     await openMenu();
     await expect.poll(menuCount).toBe(1);
-    const labels = await app.evaluate(() =>
+    const ids = await app.evaluate(() =>
       Reflect.get(globalThis, "menus")[0].items.map(
-        (item: { label: string }) => item.label,
+        (item: { id: string }) => item.id,
       ),
     );
-    expect(labels).toContain("Pet Size");
-    expect(labels).not.toContain("Dock validation");
+    expect(ids).toContain("pet-size");
+    expect(ids).not.toContain("dock-validation");
     expect(
       await app.evaluate(() =>
         Reflect.get(globalThis, "menus")[0]
-          .items.find((item: { label: string }) => item.label === "Pet Size")
-          .submenu.items.map((item: { label: string; checked: boolean }) => ({
-            label: item.label,
+          .items.find((item: { id: string }) => item.id === "pet-size")
+          .submenu.items.map((item: { id: string; checked: boolean }) => ({
+            id: item.id,
             checked: item.checked,
           })),
       ),
     ).toEqual([
-      { label: "Small", checked: false },
-      { label: "Medium", checked: false },
-      { label: "Large", checked: true },
+      { id: "pet-size-70", checked: false },
+      { id: "pet-size-160", checked: false },
+      { id: "pet-size-240", checked: true },
     ]);
     await closeMenu();
     await expect.poll(pixels, { timeout: 2000 }).not.toBe(await pixels());
@@ -228,25 +225,23 @@ test("body menus keep the pet active and close without replaying actions", async
     await pet.mouse.click(5, 5, { button: "right" });
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(await menuCount()).toBe(2);
-    for (const [label, side] of [
-      ["Small", 70],
-      ["Medium", 160],
-      ["Large", 240],
+    for (const [id, side] of [
+      ["pet-size-70", 70],
+      ["pet-size-160", 160],
+      ["pet-size-240", 240],
     ] as const) {
       await openMenu();
       const before = await bounds();
       await onMainLoop(
         app,
-        (_electron, label) => {
+        (_electron, id) => {
           Reflect.get(globalThis, "menus")
             .at(-1)
-            .items.find((item: { label: string }) => item.label === "Pet Size")
-            .submenu.items.find(
-              (item: { label: string }) => item.label === label,
-            )
+            .items.find((item: { id: string }) => item.id === "pet-size")
+            .submenu.items.find((item: { id: string }) => item.id === id)
             .click();
         },
-        label,
+        id,
       );
       await closeMenu();
       await expect.poll(async () => (await bounds()).width).toBe(side);
@@ -256,23 +251,22 @@ test("body menus keep the pet active and close without replaying actions", async
       expect(
         await app.evaluate(({ Menu }) =>
           Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === "Pet Size")!
+            .getMenuItemById("pet-size")!
             .submenu!.items.filter((item) => item.checked)
-            .map((item) => item.label),
+            .map((item) => item.id),
         ),
-      ).toEqual([label]);
+      ).toEqual([id]);
       await expect.poll(pixels).not.toBe(await pixels());
       await openMenu();
       expect(
         await app.evaluate(() =>
           Reflect.get(globalThis, "menus")
             .at(-1)
-            .items.find((item: { label: string }) => item.label === "Pet Size")
+            .items.find((item: { id: string }) => item.id === "pet-size")
             .submenu.items.filter((item: { checked: boolean }) => item.checked)
-            .map((item: { label: string }) => item.label),
+            .map((item: { id: string }) => item.id),
         ),
-      ).toEqual([label]);
+      ).toEqual([id]);
       await closeMenu();
     }
     const settings = await openSettings(app);
@@ -289,20 +283,19 @@ test("body menus keep the pet active and close without replaying actions", async
       await app.evaluate(() =>
         Reflect.get(globalThis, "menus")
           .at(-1)
-          .items.find((item: { label: string }) => item.label === "Pet Size")
+          .items.find((item: { id: string }) => item.id === "pet-size")
           .submenu.items.some((item: { checked: boolean }) => item.checked),
       ),
     ).toBe(false);
     await closeMenu();
     await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === "Pet Size")!
-        .submenu!.items.find((item) => item.label === "Large")!
+        .getMenuItemById("pet-size")!
+        .submenu!.items.find((item) => item.id === "pet-size-240")!
         .click(),
     );
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
+    await invoke("hide-pet");
+    await invoke("show-pet");
     // A native Control-click must not enter the ordinary left-button gesture.
     await openMenu(true);
     await closeMenu();
@@ -418,8 +411,8 @@ test("body menus keep the pet active and close without replaying actions", async
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
+    await invoke("hide-pet");
+    await invoke("show-pet");
     const walkOrigin = await bounds();
     await expect
       .poll(async () => Math.abs((await bounds()).x - walkOrigin.x), {
@@ -448,9 +441,9 @@ test("body menus keep the pet active and close without replaying actions", async
       const before = pet.getBounds();
       Reflect.get(globalThis, "menus")
         .at(-1)
-        .items.find((item: { label: string }) => item.label === "Pet Size")
+        .items.find((item: { id: string }) => item.id === "pet-size")
         .submenu.items.find(
-          (item: { label: string }) => item.label === "Medium",
+          (item: { id: string }) => item.id === "pet-size-160",
         )
         .click();
       return { before, after: pet.getBounds() };
@@ -467,9 +460,8 @@ test("body menus keep the pet active and close without replaying actions", async
     expect(justResumed.width).toBe(160);
     await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === "Pet Size")!
-        .submenu!.items.find((item) => item.label === "Large")!
+        .getMenuItemById("pet-size")!
+        .submenu!.items.find((item) => item.id === "pet-size-240")!
         .click(),
     );
     await expect
@@ -503,8 +495,8 @@ test("body menus keep the pet active and close without replaying actions", async
       await app.evaluate((_electron, choice) => {
         Math.random = () => choice;
       }, choice);
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke("hide-pet");
+      await invoke("show-pet");
       const expectedLabel = choice === 0.6 ? "柯基 · 伸展" : "柯基 · 玩耍";
       const started = performance.now();
       await expect
@@ -541,8 +533,8 @@ test("body menus keep the pet active and close without replaying actions", async
     await pet.evaluate(() => Reflect.get(window, "restoreMenuFrames")());
     await rest.evaluate((control) => control.restore());
     await rest.dispose();
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
+    await invoke("hide-pet");
+    await invoke("show-pet");
     await expect
       .poll(async () => matchesIdle(await pixels()), { timeout: 2000 })
       .toBe(true);
@@ -572,7 +564,7 @@ test("body menus keep the pet active and close without replaying actions", async
     await onMainLoop(app, () =>
       Reflect.get(globalThis, "menus")
         .at(-1)
-        .items.find((item: { label: string }) => item.label === "Hide Mosey")
+        .items.find((item: { id: string }) => item.id === "hide-pet")
         .click(),
     );
     await expect
@@ -588,7 +580,7 @@ test("body menus keep the pet active and close without replaying actions", async
       ).visibility,
     ).toBe("hidden");
     await releaseSecondary();
-    await invoke("Show Mosey");
+    await invoke("show-pet");
     await expect
       .poll(() =>
         app!.evaluate(({ BrowserWindow }) =>
@@ -601,9 +593,9 @@ test("body menus keep the pet active and close without replaying actions", async
     await onMainLoop(app, () =>
       Reflect.get(globalThis, "menus")
         .at(-1)
-        .items.find((item: { label: string }) => item.label === "Pet Size")
+        .items.find((item: { id: string }) => item.id === "pet-size")
         .submenu.items.find(
-          (item: { label: string }) => item.label === "Medium",
+          (item: { id: string }) => item.id === "pet-size-160",
         )
         .click(),
     );
@@ -615,7 +607,7 @@ test("body menus keep the pet active and close without replaying actions", async
     await onMainLoop(app, () => {
       Reflect.get(globalThis, "menus")
         .at(-1)
-        .items.find((item: { label: string }) => item.label === "Quit Mosey")
+        .items.find((item: { id: string }) => item.id === "quit")
         .click();
     }).catch(() => {});
     await exited;
@@ -625,12 +617,11 @@ test("body menus keep the pet active and close without replaying actions", async
     expect(
       await app.evaluate(({ Menu }) =>
         Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.find((item) => item.label === "Pet Size")!
+          .getMenuItemById("pet-size")!
           .submenu!.items.filter((item) => item.checked)
-          .map((item) => item.label),
+          .map((item) => item.id),
       ),
-    ).toEqual(["Medium"]);
+    ).toEqual(["pet-size-160"]);
 
     await writeFile(
       evidencePath(`${packaged ? "packaged" : "development"}-menu.json`),

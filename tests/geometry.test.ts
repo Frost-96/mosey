@@ -411,11 +411,8 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
     (await pet.evaluate(() => window.mosey.getPresentation())).direction,
   ).toBe("left");
   await onMainLoop(app, ({ Menu }) => {
-    for (const label of ["Hide Mosey", "Show Mosey"])
-      Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === label)!
-        .click();
+    for (const id of ["hide-pet", "show-pet"])
+      Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
   });
   await expect
     .poll(
