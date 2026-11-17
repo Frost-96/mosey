@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -297,7 +298,7 @@ setInterval(()=>{
       );
       // Exactly one public Show; a later display interruption still fails the
       // original first-PID, five-second and uninterrupted-lifecycle assertions.
-      await app.evaluate(({ Menu }) => {
+      await onMainLoop(app, ({ Menu }) => {
         Menu.getApplicationMenu()!
           .items.find((item) => item.label === "Mosey")!
           .submenu!.items.find((item) => item.label === "Show Mosey")!
@@ -417,12 +418,16 @@ setInterval(()=>{
             .label,
       );
     const invoke = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        Menu.getApplicationMenu()!
-          .items.find((i) => i.label === "Mosey")!
-          .submenu!.items.find((i) => i.label === label)!
-          .click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          Menu.getApplicationMenu()!
+            .items.find((i) => i.label === "Mosey")!
+            .submenu!.items.find((i) => i.label === label)!
+            .click();
+        },
+        label,
+      );
     if (initial.startupSilence) {
       // A spawned OS process can be visible to ps before its JS entry writes
       // the first ledger record. Wait for that observable fixture boundary.
@@ -965,12 +970,16 @@ test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without 
   await withRuntime(
     async ({ publish, children, spawnedPIDs, invoke, app, status }) => {
       const diagnostic = (label: string) =>
-        app.evaluate(({ Menu }, label) => {
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Dock validation")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click();
-        }, label);
+        onMainLoop(
+          app,
+          ({ Menu }, label) => {
+            Menu.getApplicationMenu()!
+              .items.find((i) => i.label === "Dock validation")!
+              .submenu!.items.find((i) => i.label === label)!
+              .click();
+          },
+          label,
+        );
       const pauses = ["hidden", "suspended", "diagnostic"] as const;
       await publish({ reason: "callback_silence", ignoreTerm: true });
       for (const [index, pause] of pauses.entries()) {

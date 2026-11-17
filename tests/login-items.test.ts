@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import {
@@ -122,7 +123,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
           ).checked,
       );
       expect(checked).toBe(previous === "enabled");
-      await app!.evaluate(() => {
+      await onMainLoop(app!, () => {
         const menu = Reflect.get(globalThis, "loginBodyMenu");
         menu.items
           .find((item: { label: string }) => item.label === "Launch at Login")
@@ -142,7 +143,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
     const quit = async () => {
       const child = app!.process();
       const closed = app!.waitForEvent("close");
-      await app!.evaluate(({ Menu }) => {
+      await onMainLoop(app!, ({ Menu }) => {
         Menu.getApplicationMenu()
           ?.items.find((item) => item.label === "Mosey")
           ?.submenu?.items.find((item) => item.label === "Quit Mosey")

@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { controlRest } from "./support/rest-clock";
 import { test, expect } from "vitest";
@@ -95,13 +96,17 @@ test.each([
       maxChannelDifference: phase === "preview" ? 24 : 2,
     });
     const invoke = (label: string) =>
-      app.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing menu: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()!
+            .items.find((item) => item.label === "Mosey")!
+            .submenu!.items.find((item) => item.label === label);
+          if (!item) throw new Error(`Missing menu: ${label}`);
+          item.click();
+        },
+        label,
+      );
     const visible = () =>
       app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()

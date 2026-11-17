@@ -1,10 +1,19 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { emptyDockCapture } from "./support/empty-dock";
 import { startForge } from "./support/forge";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
-import { _electron as electron, type ElectronApplication } from "playwright";
+import {
+  afterMainLoopTurn,
+  recordResponsiveness,
+} from "./support/responsiveness-evidence";
+import {
+  _electron as electron,
+  type ElectronApplication,
+  type Page,
+} from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import {
   mkdtemp,
@@ -127,6 +136,8 @@ async function exercisePet() {
   const ownedNativeChildren = new Set<number>();
   const ownedDiagnosticLogs = new Set<string>();
   let failure: { error: unknown } | undefined;
+  // Pages whose responsiveness a failure records.
+  const probedPages: { pet?: Page; diagnostic?: Page } = {};
   const fixture = createElectronFixtureCleanup(
     [
       async () => {
@@ -197,6 +208,7 @@ async function exercisePet() {
       profile,
     );
     const window = await app.firstWindow({ timeout: 15000 });
+    probedPages.pet = window;
     const menuLabels = await app.evaluate(({ Menu }) =>
       Menu.getApplicationMenu()
         ?.items.find((entry) => entry.label === "Mosey")
@@ -909,13 +921,17 @@ async function exercisePet() {
     }
     // Preserve the actual manual hide choice while the display topology changes.
     const invokeVisibility = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item) throw new Error(`Missing visibility menu item: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Mosey")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+          item.click();
+        },
+        label,
+      );
     await invokeVisibility("Hide Mosey");
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
@@ -931,18 +947,23 @@ async function exercisePet() {
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
     const invokeDiagnostic = async (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((entry) => entry.label === "Dock validation")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item || !item.enabled)
-          throw new Error(`Diagnostic menu item unavailable: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((entry) => entry.label === "Dock validation")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item || !item.enabled)
+            throw new Error(`Diagnostic menu item unavailable: ${label}`);
+          item.click();
+        },
+        label,
+      );
     const diagnosticWindow = app.waitForEvent("window").catch(() => undefined);
     await invokeDiagnostic("Start Dock validation (120 seconds)");
     const diagnostic = await diagnosticWindow;
     if (!diagnostic) throw new Error("Diagnostic window did not open");
+    probedPages.diagnostic = diagnostic;
     await diagnostic
       .getByRole("heading", { name: "Dock validation" })
       .waitFor();
@@ -1073,7 +1094,7 @@ async function exercisePet() {
     const closed = new Promise<void>((resolve) =>
       app!.once("close", () => resolve()),
     );
-    await app.evaluate(({ Menu }) => {
+    await onMainLoop(app, ({ Menu }) => {
       const quit = Menu.getApplicationMenu()
         ?.items.find((item) => item.label === "Mosey")
         ?.submenu?.items.find((item) => item.label === "Quit Mosey");
@@ -1102,6 +1123,36 @@ async function exercisePet() {
     );
   } catch (error) {
     failure = { error };
+    // Menu items are dispatched from inspector evaluation and then polled in a
+    // renderer; the trace tells a wrong answer from no answer. It comes first:
+    // a stall can clear while slower evidence is collected.
+    const running = app;
+    const { diagnostic, pet } = probedPages;
+    await recordResponsiveness({
+      name: `failure-${packaged ? "packaged" : "development"}-app`,
+      evidenceDirectory: evidencePath(),
+      main: {
+        pid: running?.process().pid,
+        probe:
+          running &&
+          afterMainLoopTurn(running, () =>
+            running.evaluate(({ BrowserWindow }) =>
+              BrowserWindow.getAllWindows().map((window) => ({
+                title: window.getTitle(),
+                bounds: window.getBounds(),
+                visible: window.isVisible(),
+                focused: window.isFocused(),
+              })),
+            ),
+          ),
+      },
+      renderers: {
+        diagnostic:
+          diagnostic &&
+          (() => diagnostic.evaluate(() => document.body.innerText)),
+        pet: pet && (() => pet.evaluate(() => document.readyState)),
+      },
+    });
     // Keep bounded native evidence before an isolated profile is removed.
     for (const [index, localLog] of [...ownedDiagnosticLogs].entries()) {
       const info = await stat(localLog).catch(() => undefined);

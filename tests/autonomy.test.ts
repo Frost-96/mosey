@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { createPetTestSession } from "./support/pet-session";
@@ -101,32 +102,36 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         BrowserWindow.getAllWindows()[0]!.getBounds(),
       );
     const invoke = async (label: string) => {
-      await app!.evaluate(({ Menu, BrowserWindow, app }, label) => {
-        const menu = Menu.getApplicationMenu();
-        const item = menu?.items
-          .find((entry) => entry.label === "Mosey")
-          ?.submenu?.items.find((entry) => entry.label === label);
-        if (!item)
-          throw new Error(
-            JSON.stringify({
-              requested: label,
-              menus: menu?.items.map((entry) => ({
-                label: entry.label,
-                role: entry.role,
-                items: entry.submenu?.items.map((child) => ({
-                  label: child.label,
-                  role: child.role,
+      await onMainLoop(
+        app!,
+        ({ Menu, BrowserWindow, app }, label) => {
+          const menu = Menu.getApplicationMenu();
+          const item = menu?.items
+            .find((entry) => entry.label === "Mosey")
+            ?.submenu?.items.find((entry) => entry.label === label);
+          if (!item)
+            throw new Error(
+              JSON.stringify({
+                requested: label,
+                menus: menu?.items.map((entry) => ({
+                  label: entry.label,
+                  role: entry.role,
+                  items: entry.submenu?.items.map((child) => ({
+                    label: child.label,
+                    role: child.role,
+                  })),
                 })),
-              })),
-              hidden: app.isHidden(),
-              windows: BrowserWindow.getAllWindows().map((window) => ({
-                visible: window.isVisible(),
-                bounds: window.getBounds(),
-              })),
-            }),
-          );
-        item.click();
-      }, label);
+                hidden: app.isHidden(),
+                windows: BrowserWindow.getAllWindows().map((window) => ({
+                  visible: window.isVisible(),
+                  bounds: window.getBounds(),
+                })),
+              }),
+            );
+          item.click();
+        },
+        label,
+      );
       if (label === "Hide Mosey" || label === "Show Mosey")
         await waitForPetVisibility(
           app!,

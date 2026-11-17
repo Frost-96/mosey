@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { controlRest } from "./support/rest-clock";
 import { distanceFromGround } from "./support/ground";
@@ -102,7 +103,8 @@ test("body menus keep the pet active and close without replaying actions", async
         await new Promise((resolve) => setTimeout(resolve, 350));
     };
     const invoke = async (label: string) => {
-      await app!.evaluate(
+      await onMainLoop(
+        app!,
         ({ Menu }, label) =>
           Menu.getApplicationMenu()!
             .items.find((item) => item.label === "Mosey")!
@@ -233,13 +235,19 @@ test("body menus keep the pet active and close without replaying actions", async
     ] as const) {
       await openMenu();
       const before = await bounds();
-      await app.evaluate((_electron, label) => {
-        Reflect.get(globalThis, "menus")
-          .at(-1)
-          .items.find((item: { label: string }) => item.label === "Pet Size")
-          .submenu.items.find((item: { label: string }) => item.label === label)
-          .click();
-      }, label);
+      await onMainLoop(
+        app,
+        (_electron, label) => {
+          Reflect.get(globalThis, "menus")
+            .at(-1)
+            .items.find((item: { label: string }) => item.label === "Pet Size")
+            .submenu.items.find(
+              (item: { label: string }) => item.label === label,
+            )
+            .click();
+        },
+        label,
+      );
       await closeMenu();
       await expect.poll(async () => (await bounds()).width).toBe(side);
       const after = await bounds();
@@ -286,7 +294,7 @@ test("body menus keep the pet active and close without replaying actions", async
       ),
     ).toBe(false);
     await closeMenu();
-    await app.evaluate(({ Menu }) =>
+    await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!
         .submenu!.items.find((item) => item.label === "Pet Size")!
@@ -433,7 +441,7 @@ test("body menus keep the pet active and close without replaying actions", async
       .not.toBe(walking.pixels);
     // Walking continues between driver calls. Observe the synchronous menu
     // resize itself so normal movement is not counted as a resize jump.
-    const resized = await app.evaluate(({ BrowserWindow }) => {
+    const resized = await onMainLoop(app, ({ BrowserWindow }) => {
       const pet = BrowserWindow.getAllWindows().find(
         (window) => window.getTitle() === "Mosey",
       )!;
@@ -457,7 +465,7 @@ test("body menus keep the pet active and close without replaying actions", async
     await closeMenu();
     const justResumed = await bounds();
     expect(justResumed.width).toBe(160);
-    await app.evaluate(({ Menu }) =>
+    await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!
         .submenu!.items.find((item) => item.label === "Pet Size")!
@@ -561,7 +569,7 @@ test("body menus keep the pet active and close without replaying actions", async
     });
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
-    await app.evaluate(() =>
+    await onMainLoop(app, () =>
       Reflect.get(globalThis, "menus")
         .at(-1)
         .items.find((item: { label: string }) => item.label === "Hide Mosey")
@@ -590,7 +598,7 @@ test("body menus keep the pet active and close without replaying actions", async
       .toBe(true);
     await expect.poll(async () => matchesIdle(await pixels())).toBe(true);
     await openMenu();
-    await app.evaluate(() =>
+    await onMainLoop(app, () =>
       Reflect.get(globalThis, "menus")
         .at(-1)
         .items.find((item: { label: string }) => item.label === "Pet Size")
@@ -604,14 +612,12 @@ test("body menus keep the pet active and close without replaying actions", async
     await openMenu();
     session.mark("quit-from-native-menu");
     const exited = app.waitForEvent("close");
-    await app
-      .evaluate(() => {
-        Reflect.get(globalThis, "menus")
-          .at(-1)
-          .items.find((item: { label: string }) => item.label === "Quit Mosey")
-          .click();
-      })
-      .catch(() => {});
+    await onMainLoop(app, () => {
+      Reflect.get(globalThis, "menus")
+        .at(-1)
+        .items.find((item: { label: string }) => item.label === "Quit Mosey")
+        .click();
+    }).catch(() => {});
     await exited;
     app = (await session.restart()).app;
     session.mark("persisted-size-after-relaunch");
