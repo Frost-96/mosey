@@ -128,7 +128,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await expect
       .poll(() =>
         settings!
-          .getByRole("button", { name: "中（默认）" })
+          .getByRole("button", { name: "中", exact: true })
           .getAttribute("aria-pressed"),
       )
       .toBe("true");
@@ -236,7 +236,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("new presets");
     await settings.getByRole("button", { name: "小", exact: true }).click();
-    await settings.getByRole("button", { name: "中（默认）" }).click();
+    await settings.getByRole("button", { name: "中", exact: true }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
 
     expect(

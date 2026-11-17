@@ -17,3 +17,8 @@ export function characterResourceKey(
 ) {
   return `${value.character}:${value.resourceVersion}`;
 }
+// Settings asks for a thumbnail by identity alone; the main process resolves the
+// current resource version and owns generation and caching behind this address.
+export function characterThumbnailUrl(character: CharacterId) {
+  return `mosey-asset://thumbnail/${character}`;
+}

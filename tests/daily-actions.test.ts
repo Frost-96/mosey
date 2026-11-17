@@ -9,7 +9,11 @@ import {
 } from "../src/shared/character-capabilities";
 import type { Presentation } from "../src/shared/contract";
 import { createPetTestSession } from "./support/pet-session";
-import { openSettings, closeSettings } from "./support/settings";
+import {
+  openSettings,
+  closeSettings,
+  chooseCharacter,
+} from "./support/settings";
 import { distanceFromGround } from "./support/ground";
 import { evidencePath } from "./support/evidence";
 import { matchPaintedFrames, paintedBodyPoint } from "./support/pixels";
@@ -468,9 +472,7 @@ test("daily seated actions continue under menus, queued commands, dragging, hidi
       });
     });
     try {
-      await settings
-        .getByRole("combobox", { name: "角色" })
-        .selectOption("gemini");
+      await chooseCharacter(settings, "gemini");
       await expect
         .poll(
           () =>
@@ -681,17 +683,13 @@ test("open menu commands retire on character selection and same-identity resourc
         menu.getMenuItemById("daily-action-stretching")!.click();
       });
     const settings = await openSettings(app);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await clickOld();
     await menu.close();
     await expect
       .poll(async () => (await presentation(pet)).character)
       .toBe("corgi");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(async () => (await presentation(pet)).character)
       .toBe("minimal");

@@ -1,13 +1,22 @@
-import { BrowserWindow, ipcMain, type IpcMainInvokeEvent } from "electron";
+import {
+  BrowserWindow,
+  ipcMain,
+  screen,
+  type IpcMainEvent,
+  type IpcMainInvokeEvent,
+} from "electron";
 import path from "node:path";
 import {
   channels,
   characterSchema,
   emptyRequestSchema,
   loginLaunchRequestSchema,
+  settingsHeightSchema,
   type Settings,
 } from "../shared/contract";
 import { petSizeSchema, type PetSize } from "../shared/size";
+
+const width = 460;
 
 type Controls = {
   read(): Omit<Settings, "revision">;
@@ -71,9 +80,22 @@ export class SettingsWindow {
       controls.showPet();
       return this.snapshot();
     });
+    ipcMain.on(channels.fitSettings, (event, value: unknown) => {
+      const height = settingsHeightSchema.safeParse(value);
+      if (!this.authorized(event) || !height.success) return;
+      // Fit the content, but keep the window within the screen; the page
+      // scrolls when a long character list needs more height.
+      const window = this.window!;
+      const { workArea } = screen.getDisplayMatching(window.getBounds());
+      const frame = window.getSize()[1]! - window.getContentSize()[1]!;
+      window.setContentSize(
+        width,
+        Math.min(height.data, workArea.height - frame),
+      );
+    });
   }
 
-  private authorized(event: IpcMainInvokeEvent) {
+  private authorized(event: IpcMainInvokeEvent | IpcMainEvent) {
     return (
       this.window &&
       event.sender === this.window.webContents &&
@@ -98,8 +120,9 @@ export class SettingsWindow {
     }
     const window = new BrowserWindow({
       title: "Mosey 设置",
-      width: 460,
-      height: 680,
+      width,
+      height: 560,
+      useContentSize: true,
       resizable: false,
       show: false,
       webPreferences: {
