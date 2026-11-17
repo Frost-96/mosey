@@ -10,6 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { openSettings } from "./support/settings";
+import { menuIds } from "../src/main/menu-ids";
 
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
 const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
@@ -39,7 +40,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       // together so a pending read cannot masquerade as confirmed system state.
       await expect
         .poll(() =>
-          login.getByRole("checkbox").evaluate((input: HTMLInputElement) => ({
+          login.getByRole("switch").evaluate((input: HTMLInputElement) => ({
             checked: input.checked,
             disabled: input.disabled,
           })),
@@ -66,71 +67,17 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       await app.context().setOffline(true);
       settings = await openSettings(app);
     };
+    // Login launch is a settings-only control; no menu offers it.
     const click = async () => {
       const previous = await app!.evaluate(
         ({ app }) =>
           app.getLoginItemSettings({ type: "mainAppService" }).status,
       );
-      const pet = app!
-        .windows()
-        .find((page) => !new URL(page.url()).searchParams.has("settings"))!;
-      await app!.evaluate(({ Menu }) => {
-        // Keep native tracking deterministic; the real system service is untouched.
-        Menu.prototype.popup = function (options) {
-          Reflect.set(globalThis, "loginBodyMenu", this);
-          Reflect.set(this, "trackingCallback", options?.callback);
-        };
-      });
-      // Settings readiness can precede pet atlas decoding and the first frame.
-      // Wait for the same opaque body area that the click must actually hit.
-      await pet.waitForLoadState("load");
-      const body = await pet.waitForFunction(
-        () => {
-          const canvas = document.querySelector("canvas")!;
-          const { data, width, height } = canvas
-            .getContext("2d")!
-            .getImageData(0, 0, canvas.width, canvas.height);
-          for (let y = Math.floor(height * 0.65); y < height - 8; y++)
-            for (let x = Math.floor(width * 0.4); x < width - 8; x++)
-              if (
-                [0, -4, 4].every((dy) =>
-                  [0, -4, 4].every(
-                    (dx) => data[((y + dy) * width + x + dx) * 4 + 3]! > 250,
-                  ),
-                )
-              )
-                return {
-                  x: (x + 0.5) / devicePixelRatio,
-                  y: (y + 0.5) / devicePixelRatio,
-                };
-          return undefined;
-        },
-        undefined,
-        { timeout: 10000 },
-      );
-      const point = (await body.jsonValue())!;
-      await body.dispose();
-      await pet.mouse.click(point.x, point.y, { button: "right" });
-      await expect
-        .poll(() =>
-          app!.evaluate(() => !!Reflect.get(globalThis, "loginBodyMenu")),
-        )
-        .toBe(true);
-      const checked = await app!.evaluate(
-        () =>
-          Reflect.get(globalThis, "loginBodyMenu").items.find(
-            (item: { label: string }) => item.label === "Launch at Login",
-          ).checked,
-      );
-      expect(checked).toBe(previous === "enabled");
-      await onMainLoop(app!, () => {
-        const menu = Reflect.get(globalThis, "loginBodyMenu");
-        menu.items
-          .find((item: { label: string }) => item.label === "Launch at Login")
-          .click();
-        Reflect.get(menu, "trackingCallback")?.();
-        Reflect.set(globalThis, "loginBodyMenu", undefined);
-      });
+      const toggle = settings!
+        .getByRole("region", { name: "开机启动" })
+        .getByRole("switch");
+      await expect.poll(() => toggle.isChecked()).toBe(previous === "enabled");
+      await toggle.click();
       await expect
         .poll(() =>
           app!.evaluate(
@@ -143,12 +90,13 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
     const quit = async () => {
       const child = app!.process();
       const closed = app!.waitForEvent("close");
-      await onMainLoop(app!, ({ Menu }) => {
-        Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === "Quit Mosey")
-          ?.click();
-      });
+      await onMainLoop(
+        app!,
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()?.getMenuItemById(id)?.click();
+        },
+        menuIds.quit,
+      );
       await closed;
       app = undefined;
       await expect.poll(() => child.exitCode).toBe(0);
@@ -202,7 +150,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       await click();
       const reenabled = await read();
       if (reenabled.system.status === "requires-approval") {
-        await settings!.getByRole("button", { name: "取消待批准请求" }).click();
+        await settings!.getByRole("button", { name: "取消请求" }).click();
       } else await click();
       expect((await read()).system.openAtLogin).toBe(false);
       await quit();

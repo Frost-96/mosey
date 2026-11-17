@@ -1,26 +1,26 @@
 import { expect } from "vitest";
 import type { ElectronApplication, Page } from "playwright";
+import { menuIds } from "../../src/main/menu-ids";
+import { sizePresets, type PetSize } from "../../src/shared/size";
 export async function openSettings(
   app: ElectronApplication,
   { waitForInitialState = true }: { waitForInitialState?: boolean } = {},
 ) {
   await app.evaluate(
-    ({ Menu }) =>
+    ({ Menu }, id) =>
       new Promise<void>((resolve, reject) => {
         // Inspector evaluation can interrupt a native window callback. Dispatch
         // user input on the ordinary main loop, as the real menu does.
         setImmediate(() => {
           try {
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === "设置…")!
-              .click();
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
             resolve();
           } catch (error) {
             reject(error);
           }
         });
       }),
+    menuIds.settings,
   );
   let page: Page | undefined;
   await expect
@@ -36,7 +36,7 @@ export async function openSettings(
         if (!candidate) return false;
         try {
           await candidate
-            .getByRole("button", { name: "中（默认）" })
+            .getByRole("button", { name: "中", exact: true })
             .waitFor({ timeout: 1000 });
         } catch (error) {
           if (candidate.isClosed()) return false;
@@ -99,7 +99,9 @@ export async function closeSettings(app: ElectronApplication) {
   await closed;
 }
 
-export async function chooseSize(app: ElectronApplication, label: string) {
+export async function chooseSize(app: ElectronApplication, size: PetSize) {
+  const preset = sizePresets.find((preset) => preset.size === size);
+  if (!preset) throw new Error(`${size} is not a preset size`);
   const page = await openSettings(app);
   const before = await app.evaluate(({ BrowserWindow }) => {
     const pet = BrowserWindow.getAllWindows().find(
@@ -122,17 +124,7 @@ export async function chooseSize(app: ElectronApplication, label: string) {
     };
     return pet.getBounds();
   });
-  await page
-    .getByRole("button", {
-      name: (
-        { Small: "小", Medium: "中（默认）", Large: "大" } as Record<
-          string,
-          string
-        >
-      )[label]!,
-      exact: true,
-    })
-    .click();
+  await page.getByRole("button", { name: preset.label, exact: true }).click();
   const after = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
       .find((w) => w.getTitle() === "Mosey")!
@@ -148,4 +140,46 @@ export async function chooseSize(app: ElectronApplication, label: string) {
   // exercised separately; keep its focused controls out of subsequent input.
   await closeSettings(app);
   return observation;
+}
+
+// Character cards are radios labelled by display name; tests address them by
+// stable identity, as the selector previously did with option values.
+export function characterCard(page: Page, id: string) {
+  return page.locator(`label[data-character="${id}"]`);
+}
+export async function chooseCharacter(page: Page, id: string) {
+  await characterCard(page, id).click();
+}
+export function selectedCharacter(page: Page) {
+  return page
+    .locator('input[name="character"]:checked')
+    .evaluate((input: HTMLInputElement) => input.value);
+}
+export function selectedCharacterName(page: Page) {
+  return page
+    .locator('label:has(input[name="character"]:checked) .name')
+    .textContent();
+}
+
+// Every visible or announced interface string, minus the product name and
+// proper nouns supplied as data (character names, the operating system).
+export function latinInterfaceText(page: Page) {
+  return page.evaluate(() => {
+    const names = [...document.querySelectorAll(".character .name")].map(
+      (name) => name.textContent!,
+    );
+    let text = [
+      document.title,
+      document.body.innerText,
+      ...[...document.querySelectorAll("[aria-label]")].map((element) =>
+        element.getAttribute("aria-label"),
+      ),
+      ...[...document.querySelectorAll("[aria-live], [role=alert]")].map(
+        (element) => element.textContent,
+      ),
+    ].join("\n");
+    for (const word of ["Mosey", "macOS", ...names])
+      text = text.replaceAll(word, "");
+    return text.match(/[A-Za-z]+/g) ?? [];
+  });
 }

@@ -38,13 +38,11 @@ async function start() {
     showPet: () => pet.setVisibility("visible"),
     setLoginLaunch: (enabled) => {
       loginLaunch.setEnabled(enabled);
-      menus.refresh();
       settings.publish();
     },
     openLoginSettings: async () => {
       await loginLaunch.openSettings();
       settings.publish();
-      menus.refresh();
     },
     commitPreview: () => pet.commitPreview(),
   });
@@ -76,14 +74,13 @@ async function start() {
     {
       state: () => {
         const { size, visibility } = pet.settings;
-        return { size, visibility, failed: pet.failed };
+        return { size, visibility, petRendererFailed: pet.failed };
       },
       setVisibility: (next) => pet.setVisibility(next),
       changeSize: (size) => pet.changeSize(size),
       retry: () => pet.load(),
     },
     settings,
-    loginLaunch,
     dockCapture,
   );
   app.on("activate", () => {

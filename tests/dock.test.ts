@@ -1,5 +1,9 @@
 import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
+import {
+  dockStatusCode,
+  type DockStatus,
+} from "../src/main/platform/dock/status";
 import { test, expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { execFileSync } from "node:child_process";
@@ -18,6 +22,7 @@ import os from "node:os";
 import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 import { closeOwnedElectron } from "./support/owned-electron";
+import { menuIds } from "../src/main/menu-ids";
 
 async function bounded<T>(operation: Promise<T>, timeoutMs: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -301,44 +306,37 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       screen.getPrimaryDisplay(),
     );
     const floor = display.workArea.y + display.workArea.height;
-    const invokeMenu = async (section: string, label: string) => {
+    const invokeMenu = async (id: string) => {
       // Input requires a currently available public menu item. Native menu
       // replacement can finish after a prior show/hide operation returns.
       await expect
         .poll(
           () =>
             app!.evaluate(
-              ({ Menu }, { section, label }) =>
-                Menu.getApplicationMenu()
-                  ?.items.find((item) => item.label === section)
-                  ?.submenu?.items.some(
-                    (item) => item.label === label && item.enabled,
-                  ) ?? false,
-              { section, label },
+              ({ Menu }, id) =>
+                Menu.getApplicationMenu()?.getMenuItemById(id)?.enabled ??
+                false,
+              id,
             ),
           { timeout: 1000 },
         )
         .toBe(true);
       return app!.evaluate(
-        ({ Menu }, { section, label }) =>
+        ({ Menu }, id) =>
           new Promise<void>((resolve, reject) => {
             // Dispatch on an application turn instead of executing user input
             // inside the inspector evaluation's interrupted native callback.
             setImmediate(() => {
               try {
-                const item = Menu.getApplicationMenu()!
-                  .items.find((item) => item.label === section)!
-                  .submenu!.items.find((item) => item.label === label);
+                const item = Menu.getApplicationMenu()!.getMenuItemById(id);
                 if (!item || !item.enabled)
-                  throw new Error(
-                    `Menu item unavailable: ${section} / ${label}`,
-                  );
+                  throw new Error(`Menu item unavailable: ${id}`);
                 const trace = Reflect.get(globalThis, "dockNavigationTrace");
                 const record = (event: string, error?: unknown) => {
                   if (!trace) return;
                   trace.menuEvents.push({
                     event,
-                    label,
+                    id,
                     enabled: item.enabled,
                     at: performance.now(),
                     wall: Date.now(),
@@ -360,10 +358,10 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
               }
             });
           }),
-        { section, label },
+        id,
       );
     };
-    const invoke = (label: string) => invokeMenu("Mosey", label);
+    const invoke = invokeMenu;
     const setDock = async (
       orientation: "bottom" | "left" | "right",
       start: number,
@@ -485,8 +483,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
           (parts) => parts && Number(parts[2]) === applicationProcess!.pid,
         )
         .map((parts) => ({ pid: Number(parts![1]), command: parts![3]! }));
-    const invokeDiagnostic = (label: string) =>
-      invokeMenu("Dock validation", label);
+    const invokeDiagnostic = invokeMenu;
     // Keep the owned product helper alive but stopped while the user selects
     // diagnostics then rapidly hides/shows. Capture ownership must be reserved
     // before its SIGKILL cleanup deadline, not after diagnostic startup.
@@ -688,9 +685,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       },
     );
     const diagnosticWindow = app.waitForEvent("window");
-    await invokeDiagnostic("Start Dock validation (120 seconds)");
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
+    await invokeDiagnostic(menuIds.dockValidationStart);
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     const diagnostic = await diagnosticWindow;
     await diagnostic
       .getByRole("heading", { name: "Dock validation" })
@@ -704,8 +701,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     expect(
       children().filter((item) => item.command.endsWith("/dock-runtime")),
     ).toEqual([]);
-    await invokeDiagnostic("Stop Dock validation");
-    await invoke("Retry Dock interaction");
+    await invokeDiagnostic(menuIds.dockValidationStop);
+    await invoke(menuIds.dockRetry);
     await expect
       .poll(
         () => children().some((item) => item.command.endsWith("/dock-runtime")),
@@ -785,19 +782,15 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         timeout: 5000,
       })
       .toBe(floor);
-    const size = (label: string) => chooseSize(app!, label);
-    for (const [label, side] of [
-      ["Small", 70],
-      ["Medium", 160],
-      ["Large", 240],
-    ] as const) {
+    const size = (side: 70 | 160 | 240) => chooseSize(app!, side);
+    for (const side of [70, 160, 240] as const) {
       await setDock(
         "bottom",
         display.bounds.x,
         display.bounds.x + display.bounds.width,
         floor - 60,
       );
-      await size(label);
+      await size(side);
       await expect.poll(async () => (await bounds()).width).toBe(side);
       await expect
         .poll(async () => (await bounds()).y + (await bounds()).height, {
@@ -805,7 +798,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
         })
         .toBe(floor - 60);
     }
-    await size("Medium");
+    await size(160);
     await setDock(
       "bottom",
       display.bounds.x,
@@ -904,7 +897,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       .poll(async () => (await bounds()).x, { timeout: 3000 })
       .toBeGreaterThan(origin.x + 50);
     expect((await bounds()).y + (await bounds()).height).toBe(floor);
-    await invoke("Hide Mosey");
+    await invoke(menuIds.hidePet);
     const hidden = await bounds();
     await setDock(
       "bottom",
@@ -920,12 +913,12 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       ),
     ).toBe(false);
     expect(await bounds()).toEqual(hidden);
-    await invoke("Show Mosey");
+    await invoke(menuIds.showPet);
     // The previous helper may still be closing when show arrives.
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
-    await invoke("Hide Mosey");
-    await invoke("Show Mosey");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     await expect
       .poll(async () => (await bounds()).y + (await bounds()).height, {
         timeout: 5000,
@@ -964,8 +957,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       }
     };
     for (const orientation of ["left", "right"] as const) {
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       const start = await bounds();
       await expect
         .poll(async () => Math.abs((await bounds()).x - start.x), {
@@ -992,8 +985,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       await noSnapback();
     }
     for (const orientation of ["left", "right"] as const) {
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       // Establish a fresh rendered pose after show, and keep this directed
       // drag out of the physical cursor's column. Real buttons=0 events from
       // that cursor otherwise cancel synthetic capture while the window moves.
@@ -1296,7 +1289,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
       ).catch(() => {});
     await finishFixture(close, task.result?.state === "fail");
   });
-  const readiness: { status: string; pid?: number }[] = [];
+  const readiness: { status?: DockStatus; pid?: number }[] = [];
   const alive = (pid: number) => {
     try {
       process.kill(pid, 0);
@@ -1353,24 +1346,23 @@ test("real Dock helper clears its capability and exits when transport stops or t
     await pet.locator("canvas").waitFor();
     await pet.waitForLoadState("networkidle");
     stage = "native-capability";
-    const menuStatus = () =>
-      app!.evaluate(
-        ({ Menu }) =>
-          Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
-            .label,
+    const menuStatus = async () =>
+      dockStatusCode(
+        await app!.evaluate(
+          ({ Menu }, id) =>
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.label,
+          menuIds.dockStatus,
+        ),
       );
-    const invoke = (label: string) =>
+    const invoke = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) =>
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click(),
-        label,
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+        id,
       );
     const waitForCapability = async () => {
-      let observed: { status: string; pid?: number } = { status: "" };
+      let observed: { status?: DockStatus; pid?: number } = {};
       await expect
         .poll(
           async () => {
@@ -1386,15 +1378,12 @@ test("real Dock helper clears its capability and exits when transport stops or t
             // not a capability: require a native result and, unless refused,
             // the actual direct child before injecting a transport fault.
             return (
-              (observed.status ===
-                "Dock interaction needs Screen Recording permission" &&
+              (observed.status === "needs-permission" &&
                 observed.pid === undefined) ||
-              ([
-                "Dock interaction active",
-                "Dock interaction waiting for visible Dock",
-                "Dock source suspended; waiting for updates",
-                "Updating Dock edge",
-              ].includes(observed.status) &&
+              (observed.status !== undefined &&
+                ["active", "waiting", "suspended", "updating"].includes(
+                  observed.status,
+                ) &&
                 observed.pid !== undefined)
             );
           },
@@ -1406,9 +1395,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
     const initial = await waitForCapability();
     const initialStatus = initial.status;
     helperPID = initial.pid;
-    const permissionBlocked = initialStatus.includes(
-      "needs Screen Recording permission",
-    );
+    const permissionBlocked = initialStatus === "needs-permission";
     let faultInjected = false;
     if (permissionBlocked) {
       expect(helperPID).toBeUndefined();
@@ -1418,9 +1405,9 @@ test("real Dock helper clears its capability and exits when transport stops or t
       faultInjected = true;
       await expect
         .poll(menuStatus, { timeout: 4000, interval: 30 })
-        .toBe("Dock capture heartbeat unavailable");
+        .toBe("heartbeat-lost");
     }
-    await invoke("Hide Mosey");
+    await invoke(menuIds.hidePet);
     if (helperPID)
       await expect.poll(() => alive(helperPID!), { timeout: 4000 }).toBe(false);
     await new Promise((resolve) => setTimeout(resolve, 1300));
@@ -1430,7 +1417,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
         BrowserWindow.getAllWindows()[0]!.isVisible(),
       ),
     ).toBe(false);
-    await invoke("Show Mosey");
+    await invoke(menuIds.showPet);
     const resumed = await waitForCapability();
     const restarted = resumed.pid;
     const shutdown = await closeOwnedElectron(app, applicationProcess);

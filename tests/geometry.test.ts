@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
 import { openSettings } from "./support/settings";
 import { observeGeometry } from "./support/geometry-observer";
+import { menuIds } from "../src/main/menu-ids";
 
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
@@ -410,13 +411,14 @@ test("left-facing sleep retains authored lettering and mirrored alpha geometry",
   expect(
     (await pet.evaluate(() => window.mosey.getPresentation())).direction,
   ).toBe("left");
-  await onMainLoop(app, ({ Menu }) => {
-    for (const label of ["Hide Mosey", "Show Mosey"])
-      Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === label)!
-        .click();
-  });
+  await onMainLoop(
+    app,
+    ({ Menu }, ids) => {
+      for (const id of ids)
+        Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
+    },
+    [menuIds.hidePet, menuIds.showPet],
+  );
   await expect
     .poll(
       async () =>

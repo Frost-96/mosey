@@ -27,7 +27,7 @@ export class LoginLaunch {
       log.warn("Unable to read login item settings", error);
       return {
         status: "unavailable",
-        reason: `无法读取系统开机启动状态：${error instanceof Error ? error.message : String(error)}`,
+        reason: "无法读取系统开机启动状态。",
         error: this.error,
       };
     }
@@ -43,7 +43,7 @@ export class LoginLaunch {
       if (actual.status === "unavailable" || registered !== openAtLogin)
         this.error = "系统未完成开机启动更改，请重试或检查系统设置。";
     } catch (error) {
-      this.error = `开机启动更改失败：${error instanceof Error ? error.message : String(error)}`;
+      this.error = "开机启动更改失败，请重试或检查系统设置。";
       log.warn("Unable to change login item settings", error);
     }
   }
@@ -55,7 +55,8 @@ export class LoginLaunch {
         "x-apple.systempreferences:com.apple.LoginItems-Settings.extension",
       );
     } catch (error) {
-      this.error = `无法打开系统设置：${error instanceof Error ? error.message : String(error)}`;
+      this.error = "无法打开系统设置。";
+      log.warn("Unable to open login item settings", error);
     }
   }
 }

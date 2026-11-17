@@ -5,6 +5,7 @@ import { writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
 import { controlRest } from "./support/rest-clock";
 import { distanceFromGround } from "./support/ground";
+import { menuIds, sizeMenuId } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
@@ -120,28 +121,26 @@ test("selected whale paints one character, walks, yields to dragging and returns
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
     expect(responseFrames.size).toBe(3);
-    const menu = (label: string) =>
+    const menu = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Mosey")
-            ?.submenu?.items.find((entry) => entry.label === label);
-          if (!item) throw new Error(`Missing menu item: ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing menu item: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     // Only shorten the external rest clock; animation and desktop movement stay real-time.
     await controlRest(app, pet, 500);
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await menu("Hide Mosey");
+    await menu(menuIds.hidePet);
     await expect
       .poll(async () => (await windowState())[0]!.visible)
       .toBe(false);
-    await menu("Show Mosey");
+    await menu(menuIds.showPet);
     await expect.poll(async () => (await windowState())[0]!.visible).toBe(true);
     const origin = (await windowState())[0]!.bounds;
     await expect
@@ -223,21 +222,18 @@ test("selected whale paints one character, walks, yields to dragging and returns
     await expect
       .poll(() => distanceFromGround(app!), { timeout: 5000 })
       .toBe(0);
-    for (const [label, size] of [
-      ["Small", 70],
-      ["Large", 240],
+    for (const [id, size] of [
+      [sizeMenuId(70), 70],
+      [sizeMenuId(240), 240],
     ] as const) {
       await onMainLoop(
         app,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Mosey")
-            ?.submenu?.items.find((entry) => entry.label === "Pet Size")
-            ?.submenu?.items.find((entry) => entry.label === label);
-          if (!item) throw new Error(`Missing size: ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing size: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
       await expect
         .poll(async () => (await windowState())[0]!.bounds.width)

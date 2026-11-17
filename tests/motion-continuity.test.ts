@@ -8,6 +8,8 @@ import type { Presentation } from "../src/shared/contract";
 import { createPetTestSession } from "./support/pet-session";
 import { evidencePath } from "./support/evidence";
 import { matchPaintedFrames } from "./support/pixels";
+import { dailyActionMenuId, menuIds } from "../src/main/menu-ids";
+import type { DailyAction } from "../src/shared/character-capabilities";
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const state = (pet: Page) => pet.evaluate(() => window.mosey.getPresentation());
@@ -39,7 +41,11 @@ async function bodyPoint(pet: Page) {
     throw new Error("No solid body point");
   });
 }
-async function choose(app: ElectronApplication, pet: Page, action: string) {
+async function choose(
+  app: ElectronApplication,
+  pet: Page,
+  action: DailyAction,
+) {
   const point = await bodyPoint(pet);
   await app.evaluate(() =>
     Reflect.set(globalThis, "continuityMenu", undefined),
@@ -50,14 +56,14 @@ async function choose(app: ElectronApplication, pet: Page, action: string) {
     .toBe(true);
   await onMainLoop(
     app,
-    (_electron, action) => {
+    (_electron, id) => {
       const menu = Reflect.get(globalThis, "continuityMenu") as Menu;
-      const item = menu.getMenuItemById(`daily-action-${action}`);
-      if (!item?.enabled) throw new Error(`Unavailable ${action}`);
+      const item = menu.getMenuItemById(id);
+      if (!item?.enabled) throw new Error(`Unavailable ${id}`);
       item.click();
       menu.closePopup();
     },
-    action,
+    dailyActionMenuId(action),
   );
 }
 
@@ -204,16 +210,13 @@ test.each(["whale", "claude", "gemini", "gpt"])(
           )) as typeof setTimeout;
         Math.random = () => 0.1;
       });
-      for (const label of ["Hide Mosey", "Show Mosey"])
+      for (const id of [menuIds.hidePet, menuIds.showPet])
         await onMainLoop(
           app,
-          ({ Menu }, label) => {
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.find((i) => i.label === label)!
-              .click();
+          ({ Menu }, id) => {
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
           },
-          label,
+          id,
         );
       await waitFor(pet, "walking");
       await waitFor(pet, "resting");

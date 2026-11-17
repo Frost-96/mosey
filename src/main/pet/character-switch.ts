@@ -5,6 +5,7 @@ import {
   type IpcMainEvent,
   type WebContents,
 } from "electron";
+import log from "electron-log/main";
 import type { PreferencesStore } from "../platform/preferences";
 import type { CharacterId } from "../../shared/character-catalog";
 import { CharacterCatalog } from "../character-catalog";
@@ -55,12 +56,13 @@ export class CharacterSwitch {
     try {
       this.selected = this.catalog.load(preferences.character);
     } catch (error) {
+      log.warn(
+        "Unable to load the saved character",
+        preferences.character,
+        error,
+      );
       this.selected = this.catalog.load("whale");
-      this.failure = {
-        target: preferences.character,
-        reason: "load",
-        detail: String(error).slice(0, 500),
-      };
+      this.failure = { target: preferences.character, reason: "load" };
     }
     this.catalog.commit(this.selected);
     ipcMain.handle(channels.getCharacter, (event, value: unknown) => {
@@ -123,12 +125,11 @@ export class CharacterSwitch {
         this.prepare();
       }
     } catch (error) {
+      // The settings window explains the failure in its own words; the
+      // technical detail, such as missing pose names, stays in the log.
+      log.warn("Unable to load the selected character", target, error);
       this.clearPending();
-      this.failure = {
-        target,
-        reason: "load",
-        detail: String(error).slice(0, 500),
-      };
+      this.failure = { target, reason: "load" };
     }
     this.catalog.retain(
       this.selected,

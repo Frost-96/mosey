@@ -1,12 +1,21 @@
-import { app, Menu, Tray, nativeImage } from "electron";
+import { app, Menu, Tray } from "electron";
 import type { Settings } from "../shared/contract";
 import type { PetSize } from "../shared/size";
 import type { SettingsWindow } from "./settings-window";
-import type { LoginLaunch } from "./platform/login-launch";
 import type { DockCapture } from "./platform/dock/capture";
+import { menuIds } from "./menu-ids";
+import {
+  petMenu,
+  statusMenu,
+  type MenuCommands,
+  type MenuState,
+} from "./menu-layout";
+import { pawTemplateImage } from "./tray-icon";
 
 type PetMenu = {
-  state(): Pick<Settings, "size" | "visibility"> & { failed: boolean };
+  state(): Pick<Settings, "size" | "visibility"> & {
+    petRendererFailed: boolean;
+  };
   setVisibility(next: "visible" | "hidden"): void;
   changeSize(size: PetSize): void;
   retry(): Promise<void>;
@@ -14,132 +23,55 @@ type PetMenu = {
 
 // Read current state on every native menu opening and rebuild after reentry.
 export class ApplicationMenus {
+  private readonly commands: MenuCommands;
+
   constructor(
     private readonly pet: PetMenu,
-    private readonly settings: SettingsWindow,
-    private readonly loginLaunch: LoginLaunch,
+    settings: SettingsWindow,
     private readonly dock: DockCapture,
   ) {
-    const icon = nativeImage.createFromDataURL(
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==",
-    );
-    const tray = new Tray(icon);
+    this.commands = {
+      retryPet: () => void pet.retry(),
+      setVisibility: (next) => pet.setVisibility(next),
+      changeSize: (size) => pet.changeSize(size),
+      openSettings: () => settings.open(),
+      retryDock: () => dock.retry(),
+      quit: () => app.quit(),
+    };
+    const tray = new Tray(pawTemplateImage());
     app.on("will-quit", () => tray.destroy());
-    tray.setTitle("🐾");
     tray.setToolTip("Mosey");
     // macOS's cached native context menu does not provide a reliable pre-open
-    // callback. Open explicitly so every click reads the current system setting.
+    // callback. Open explicitly so every click reads the current state.
     const openTrayMenu = () => tray.popUpContextMenu(this.refresh());
     tray.on("click", openTrayMenu);
     tray.on("right-click", openTrayMenu);
   }
-  private settingsItem = (): Electron.MenuItemConstructorOptions => ({
-    label: "设置…",
-    accelerator: "CommandOrControl+,",
-    click: this.settings.open,
+
+  private state = (): MenuState => ({
+    ...this.pet.state(),
+    dock: this.dock.status,
   });
-  private visibilityItem = (): Electron.MenuItemConstructorOptions => ({
-    label:
-      this.pet.state().visibility === "visible" ? "Hide Mosey" : "Show Mosey",
-    click: () =>
-      this.pet.setVisibility(
-        this.pet.state().visibility === "visible" ? "hidden" : "visible",
-      ),
-  });
-  private dockItems = (): Electron.MenuItemConstructorOptions[] => [
-    { id: "dock-runtime-status", label: this.dock.status, enabled: false },
-    { label: "Retry Dock interaction", click: this.dock.retry },
-  ];
-  private recoveryItems = (): Electron.MenuItemConstructorOptions[] =>
-    this.pet.state().failed
-      ? [{ label: "Retry Mosey", click: () => void this.pet.retry() }]
-      : [];
-  private sizeItem = (): Electron.MenuItemConstructorOptions => ({
-    label: "Pet Size",
-    submenu: (
-      [
-        ["Small", 70],
-        ["Medium", 160],
-        ["Large", 240],
-      ] as const
-    ).map(([label, size]) => ({
-      label,
-      type: "checkbox",
-      checked: this.pet.state().size === size,
-      click: () => this.pet.changeSize(size),
-    })),
-  });
-  private loginItems = (): Electron.MenuItemConstructorOptions[] => {
-    const login = this.loginLaunch.read();
-    return [
-      {
-        label: "Launch at Login",
-        type: "checkbox",
-        checked: login.status === "enabled",
-        enabled: login.status === "enabled" || login.status === "disabled",
-        click: (item) => {
-          this.loginLaunch.setEnabled(item.checked);
-          this.refresh();
-          this.settings.publish();
-        },
-      },
-      ...(login.status === "requires-approval"
-        ? [
-            { label: "开机启动等待系统批准", enabled: false },
-            {
-              label: "打开系统设置…",
-              click: () => void this.openLoginSettings(),
-            },
-            {
-              label: "取消待批准请求",
-              click: () => {
-                this.loginLaunch.setEnabled(false);
-                this.refresh();
-                this.settings.publish();
-              },
-            },
-          ]
-        : []),
-      ...(login.status === "unavailable"
-        ? [{ label: login.reason, enabled: false }]
-        : []),
-      ...(login.error ? [{ label: login.error, enabled: false }] : []),
-    ];
-  };
+
   private menuRevision = 0;
   refresh = (): Menu => {
     for (;;) {
       const revision = ++this.menuRevision;
-      const diagnostic = this.dock.menu();
+      const state = this.state();
       const applicationMenu = Menu.buildFromTemplate([
         {
+          id: menuIds.application,
           label: "Mosey",
-          submenu: [
-            ...this.recoveryItems(),
-            this.visibilityItem(),
-            this.sizeItem(),
-            ...this.loginItems(),
-            this.settingsItem(),
-            ...this.dockItems(),
-            {
-              label: "Quit Mosey",
-              accelerator: "CommandOrControl+Q",
-              click: () => app.quit(),
-            },
-          ],
+          submenu: statusMenu(state, this.commands, this.dock.menu(), {
+            accelerators: true,
+          }),
         },
-        diagnostic,
       ]);
-      const trayMenu = Menu.buildFromTemplate([
-        ...this.recoveryItems(),
-        this.visibilityItem(),
-        this.sizeItem(),
-        ...this.loginItems(),
-        this.settingsItem(),
-        ...this.dockItems(),
-        diagnostic,
-        { label: "Quit Mosey", click: () => app.quit() },
-      ]);
+      const trayMenu = Menu.buildFromTemplate(
+        statusMenu(state, this.commands, this.dock.menu(), {
+          accelerators: false,
+        }),
+      );
       // Native menu construction and installation can admit newer commands.
       // Rebuild from the latest choices if a nested refresh superseded this one;
       // neither the application menu nor the returned tray menu may go stale.
@@ -149,18 +81,8 @@ export class ApplicationMenus {
       return trayMenu;
     }
   };
-  private async openLoginSettings() {
-    await this.loginLaunch.openSettings();
-    this.settings.publish();
-    this.refresh();
-  }
 
   bodyTemplate(): Electron.MenuItemConstructorOptions[] {
-    return [
-      { label: "Hide Mosey", click: () => this.pet.setVisibility("hidden") },
-      this.sizeItem(),
-      ...this.loginItems(),
-      { label: "Quit Mosey", click: () => app.quit() },
-    ];
+    return petMenu(this.state(), this.commands);
   }
 }

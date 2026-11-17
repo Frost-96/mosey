@@ -13,6 +13,7 @@ import path from "node:path";
 import { startForge } from "./support/forge";
 import { waitForPetVisibility } from "./support/visibility";
 import { paintedBodyPoint } from "./support/pixels";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
@@ -101,21 +102,20 @@ test(
       expect(await pet.evaluate(() => devicePixelRatio)).toBe(
         Number(scaleFactor),
       );
-      const menu = async (label: "Hide Mosey" | "Show Mosey") => {
+      const menu = async (
+        id: typeof menuIds.hidePet | typeof menuIds.showPet,
+      ) => {
         await onMainLoop(
           app!,
-          ({ Menu }, label) => {
-            Menu.getApplicationMenu()!
-              .items.find((item) => item.label === "Mosey")!
-              .submenu!.items.find((item) => item.label === label)!
-              .click();
+          ({ Menu }, id) => {
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
           },
-          label,
+          id,
         );
         await waitForPetVisibility(
           app!,
           pet,
-          label === "Hide Mosey" ? "hidden" : "visible",
+          id === menuIds.hidePet ? "hidden" : "visible",
         );
       };
       const pixels = () =>
@@ -200,8 +200,8 @@ test(
       await app.evaluate(() => {
         Math.random = () => 0.6;
       });
-      await menu("Hide Mosey");
-      await menu("Show Mosey");
+      await menu(menuIds.hidePet);
+      await menu(menuIds.showPet);
       await waitForVisibleRest();
       await new Promise((resolve) => setTimeout(resolve, 150));
       await app.evaluate(() => {
@@ -225,8 +225,8 @@ test(
           BrowserWindow.getAllWindows()[0]!.getBounds(),
         );
       const enterSleep = async () => {
-        await menu("Hide Mosey");
-        await menu("Show Mosey");
+        await menu(menuIds.hidePet);
+        await menu(menuIds.showPet);
         await waitForVisibleRest();
         await expect.poll(height).toBeGreaterThan(180);
         await new Promise((resolve) => setTimeout(resolve, 150));
@@ -441,11 +441,11 @@ test(
       });
       const beforeHide = await bounds();
       await click();
-      await menu("Hide Mosey");
+      await menu(menuIds.hidePet);
       const hidden = await bounds();
       await new Promise((resolve) => setTimeout(resolve, 1200));
       expect(await bounds()).toEqual(hidden);
-      await menu("Show Mosey");
+      await menu(menuIds.showPet);
       await expect.poll(height).toBeGreaterThan(180);
       const restored = await bounds();
       expect(restored).toEqual(beforeHide);

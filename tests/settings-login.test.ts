@@ -1,4 +1,3 @@
-import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -9,6 +8,8 @@ import path from "node:path";
 import os from "node:os";
 import { startForge } from "./support/forge";
 import { closeSettings, openSettings } from "./support/settings";
+import { readMainLogFromNow } from "./support/main-log";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
@@ -86,15 +87,18 @@ test("login settings explain availability and follow system approval, failure an
     await login.waitFor();
     if (!packaged) {
       expect(await login.textContent()).toContain("打包后的 macOS 应用");
-      expect(await login.getByRole("checkbox").isDisabled()).toBe(true);
+      expect(await login.getByRole("switch").isDisabled()).toBe(true);
     }
     expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.map((item) => item.label),
+      await app.evaluate(
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!
+            .getMenuItemById(id)!
+            .submenu!.items.map((item) => item.id),
+        menuIds.application,
       ),
-    ).toContain("Launch at Login");
+    ).not.toContain("login-launch");
+    const log = await readMainLogFromNow(app);
     // Controlled results at the OS boundary; all product paths remain real Electron UI/IPC.
     await app.evaluate(({ app, shell }) => {
       Object.defineProperty(app, "isPackaged", {
@@ -131,53 +135,47 @@ test("login settings explain availability and follow system approval, failure an
       };
       app.emit("activate");
     });
-    await expect
-      .poll(() => login.getByRole("checkbox").isDisabled())
-      .toBe(false);
-    await onMainLoop(app, ({ Menu }) =>
-      Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === "Launch at Login")!
-        .click(),
-    );
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
+    await login.getByRole("switch").click();
     await expect.poll(() => login.textContent()).toContain("等待批准");
-    expect(await login.getByRole("checkbox").isChecked()).toBe(false);
+    expect(await login.getByRole("switch").isChecked()).toBe(false);
     await login.getByRole("button", { name: "打开系统设置" }).click();
     expect(
       await app.evaluate(() => Reflect.get(globalThis, "loginTestURL")),
     ).toBe("x-apple.systempreferences:com.apple.LoginItems-Settings.extension");
-    await login.getByRole("button", { name: "取消待批准请求" }).click();
+    await login.getByRole("button", { name: "取消请求" }).click();
     await expect.poll(() => login.textContent()).toContain("已关闭");
     await app.evaluate(() => Reflect.set(globalThis, "loginTestFailure", true));
-    await login.getByRole("checkbox").click();
+    await login.getByRole("switch").click();
     await expect
       .poll(() => login.getByRole("alert").textContent())
-      .toContain("controlled registration failure");
-    expect(await login.getByRole("checkbox").isChecked()).toBe(false);
+      .toContain("开机启动更改失败");
+    expect(await login.getByRole("switch").isChecked()).toBe(false);
+    // The window states the failure in Chinese; the system's message goes to the log.
+    await expect.poll(log).toContain("controlled registration failure");
     await app.evaluate(({ BrowserWindow }) => {
       Reflect.set(globalThis, "loginTestStatus", "enabled");
       BrowserWindow.getAllWindows()
         .find((window) => window.getTitle() === "Mosey 设置")!
         .emit("focus");
     });
-    await expect.poll(() => login.getByRole("checkbox").isChecked()).toBe(true);
+    await expect.poll(() => login.getByRole("switch").isChecked()).toBe(true);
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "loginTestReadFailure", true);
       app.emit("activate");
     });
     await expect
       .poll(() => login.textContent())
-      .toContain("controlled status read failure");
-    expect(await login.getByRole("checkbox").isDisabled()).toBe(true);
+      .toContain("无法读取系统开机启动状态");
+    expect(await login.getByRole("switch").isDisabled()).toBe(true);
+    await expect.poll(log).toContain("controlled status read failure");
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "loginTestReadFailure", false);
       Reflect.set(globalThis, "loginTestFailure", false);
       app.emit("activate");
     });
-    await expect
-      .poll(() => login.getByRole("checkbox").isDisabled())
-      .toBe(false);
-    await login.getByRole("checkbox").click();
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
+    await login.getByRole("switch").click();
     await expect.poll(() => login.textContent()).toContain("已关闭");
     expect(await login.getByRole("alert").isVisible()).toBe(false);
     // Hold the IPC response while newer system notifications reach the UI.
@@ -197,10 +195,8 @@ test("login settings explain availability and follow system approval, failure an
         });
       });
     });
-    await login.getByRole("checkbox").click();
-    await expect
-      .poll(() => login.getByRole("checkbox").isDisabled())
-      .toBe(true);
+    await login.getByRole("switch").click();
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(true);
     // Real pointer activation through the label must not submit again while
     // its checkbox is disabled (React checkbox changes are click-driven).
     await login.locator("label").click({ force: true });
@@ -215,11 +211,9 @@ test("login settings explain availability and follow system approval, failure an
       Reflect.set(globalThis, "loginTestStatus", "enabled");
       app.emit("activate");
     });
-    await expect.poll(() => login.getByRole("checkbox").isChecked()).toBe(true);
+    await expect.poll(() => login.getByRole("switch").isChecked()).toBe(true);
     await app.evaluate(() => Reflect.get(globalThis, "rejectLoginRequest")());
-    await expect
-      .poll(() => login.getByRole("checkbox").isDisabled())
-      .toBe(false);
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
     expect(await login.getByRole("alert").isVisible()).toBe(false);
     // A delayed successful response and delayed initial reads are also stale
     // after a newer notification, including across window close/reopen.
@@ -251,9 +245,9 @@ test("login settings explain availability and follow system approval, failure an
       app.emit("activate");
     });
     await expect.poll(() => reopenedLogin.textContent()).toContain("已关闭");
-    await reopenedLogin.getByRole("checkbox").click();
+    await reopenedLogin.getByRole("switch").click();
     await expect
-      .poll(() => reopenedLogin.getByRole("checkbox").isDisabled())
+      .poll(() => reopenedLogin.getByRole("switch").isDisabled())
       .toBe(true);
     await app.evaluate(({ app }) => {
       Reflect.set(globalThis, "loginTestStatus", "requires-approval");
@@ -262,7 +256,7 @@ test("login settings explain availability and follow system approval, failure an
     await expect.poll(() => reopenedLogin.textContent()).toContain("等待批准");
     expect(
       await reopenedLogin
-        .getByRole("button", { name: "取消待批准请求" })
+        .getByRole("button", { name: "取消请求" })
         .isDisabled(),
     ).toBe(true);
     expect(
@@ -276,20 +270,16 @@ test("login settings explain availability and follow system approval, failure an
     });
     await expect
       .poll(() =>
-        reopenedLogin
-          .getByRole("button", { name: "取消待批准请求" })
-          .isEnabled(),
+        reopenedLogin.getByRole("button", { name: "取消请求" }).isEnabled(),
       )
       .toBe(true);
     expect(await reopenedLogin.textContent()).toContain("等待批准");
-    expect(await reopenedLogin.getByRole("checkbox").isChecked()).toBe(false);
+    expect(await reopenedLogin.getByRole("switch").isChecked()).toBe(false);
 
-    await reopened.getByRole("button", { name: "取消待批准请求" }).click();
+    await reopened.getByRole("button", { name: "取消请求" }).click();
     await expect
       .poll(() =>
-        reopenedLogin
-          .getByRole("button", { name: "取消待批准请求" })
-          .isDisabled(),
+        reopenedLogin.getByRole("button", { name: "取消请求" }).isDisabled(),
       )
       .toBe(true);
     // pagehide exercises the same root disposal as a native window teardown,
@@ -311,7 +301,7 @@ test("login settings explain availability and follow system approval, failure an
     }, old);
     const finalSettings = await openSettings(app);
     await expect
-      .poll(() => finalSettings.getByRole("checkbox").isChecked())
+      .poll(() => finalSettings.getByRole("switch").isChecked())
       .toBe(true);
 
     await finalSettings.screenshot({

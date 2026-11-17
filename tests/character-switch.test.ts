@@ -4,7 +4,12 @@ import type { Page } from "playwright";
 import { rm, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
-import { openSettings } from "./support/settings";
+import {
+  openSettings,
+  chooseCharacter,
+  selectedCharacter,
+  selectedCharacterName,
+} from "./support/settings";
 import whaleWalking from "../src/assets/characters/whale/motion.json" with { type: "json" };
 
 // An independent image-identity observation: the whale has blue hair/clothes;
@@ -54,11 +59,7 @@ test.each([
     try {
       const { app, pet } = await f.launch();
       const settings = await openSettings(app);
-      await expect
-        .poll(() =>
-          settings.getByRole("combobox", { name: "角色" }).inputValue(),
-        )
-        .toBe("whale");
+      await expect.poll(() => selectedCharacter(settings)).toBe("whale");
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
         .toBe("DeepSeek · 待机");
@@ -106,9 +107,7 @@ test("selection replaces the one pet, retains hidden size and location, and surv
         };
       });
     const before = await native();
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 10000,
@@ -117,14 +116,10 @@ test("selection replaces the one pet, retains hidden size and location, and surv
     expect(await native()).toEqual(before);
     await settings.close();
     settings = await openSettings(app);
-    await expect
-      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
-      .toBe("corgi");
+    await expect.poll(() => selectedCharacter(settings)).toBe("corgi");
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
-    await expect
-      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
-      .toBe("corgi");
+    await expect.poll(() => selectedCharacter(settings)).toBe("corgi");
     expect((await native()).visible).toBe(false);
     expect((await native()).bounds.width).toBe(70);
     await settings
@@ -163,9 +158,7 @@ test("failed persistence keeps the actual and saved character, and retries the f
     let settings = await openSettings(app);
     const obstacle = path.join(f.profile, "preferences.json.tmp");
     await mkdir(obstacle);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await expect
       .poll(() => settings.locator("#character-error").textContent(), {
         timeout: 10000,
@@ -174,9 +167,7 @@ test("failed persistence keeps the actual and saved character, and retries the f
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "DeepSeek · 待机",
     );
-    expect(
-      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-    ).toBe("whale");
+    expect(await selectedCharacter(settings)).toBe("whale");
     await settings.close();
     settings = await openSettings(app);
     expect(await settings.locator("#character-error").isVisible()).toBe(true);
@@ -187,9 +178,7 @@ test("failed persistence keeps the actual and saved character, and retries the f
       .toBe("柯基 · 待机");
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
-    await expect
-      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
-      .toBe("corgi");
+    await expect.poll(() => selectedCharacter(settings)).toBe("corgi");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("柯基 · 待机");
@@ -242,9 +231,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
         callback({ cancel: false });
       });
     }, new URL(pet.url()).origin);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(() => settings.locator("#character-error").textContent(), {
         timeout: 10000,
@@ -270,9 +257,7 @@ test("image failure and a superseded delayed response cannot replace the newest 
     await expect
       .poll(() => settings.locator("#character-status").textContent())
       .toContain("正在准备DeepSeek");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await app.evaluate(() => {
       const control = Reflect.get(globalThis, "imageTransport");
       control.mode = "allow";
@@ -281,7 +266,8 @@ test("image failure and a superseded delayed response cannot replace the newest 
     });
     await expect
       .poll(() => settings.locator("#character-status").textContent())
-      .toBe("当前角色：柯基");
+      .toBe("");
+    expect(await selectedCharacterName(settings)).toBe("柯基");
     // Let the obsolete decode rejection reach the real main process.
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(await settings.locator("#character-error").isVisible()).toBe(false);
@@ -290,41 +276,30 @@ test("image failure and a superseded delayed response cannot replace the newest 
       .toBe("柯基 · 待机");
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
-    await expect
-      .poll(() => settings.getByRole("combobox", { name: "角色" }).inputValue())
-      .toBe("corgi");
+    await expect.poll(() => selectedCharacter(settings)).toBe("corgi");
     await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
         timeout: 10000,
       })
       .toBe("DeepSeek · 待机");
     await expect.poll(() => paintedCharacter(pet)).toBe("whale");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect.poll(() => paintedCharacter(pet)).toBe("whale");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .evaluate((element: HTMLSelectElement) => {
-        for (const target of ["corgi", "whale", "whale"]) {
-          element.value = target;
-          element.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-      });
+    await settings.evaluate(() => {
+      for (const target of ["corgi", "whale", "whale"])
+        document
+          .querySelector<HTMLInputElement>(`input[value="${target}"]`)!
+          .click();
+    });
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(await paintedCharacter(pet)).toBe("whale");
     expect(await settings.locator("#character-error").isVisible()).toBe(false);
-    expect(await settings.locator("#character-status").textContent()).toBe(
-      "当前角色：DeepSeek",
-    );
+    expect(await settings.locator("#character-status").textContent()).toBe("");
+    expect(await selectedCharacterName(settings)).toBe("DeepSeek");
   } finally {
     await f.close();
   }
@@ -366,9 +341,7 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
       });
     });
     f.mark("request-held-preparation");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(
         () =>
@@ -453,9 +426,7 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
     f.mark("restart-with-pending-preparation");
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
-    expect(
-      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-    ).toBe("corgi");
+    expect(await selectedCharacter(settings)).toBe("corgi");
     await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
     f.mark("fresh-selection-with-cold-images");
     await app.evaluate(({ BrowserWindow }) => {
@@ -472,9 +443,7 @@ test("a timed-out preparation keeps the saved choice and cannot complete a later
         else callback({ cancel: false });
       });
     });
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(
         () =>
@@ -548,9 +517,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "development")(
           contents.session.webRequest.onBeforeRequest(null);
         });
       });
-      await settings
-        .getByRole("combobox", { name: "角色" })
-        .selectOption("whale");
+      await chooseCharacter(settings, "whale");
       await expect
         .poll(() =>
           app.evaluate(() => Reflect.get(globalThis, "heldReloadImages")),
@@ -558,12 +525,9 @@ test.runIf(process.env.MOSEY_TEST_MODE === "development")(
         .toBeGreaterThan(0);
       await pet.evaluate(() => location.reload());
       await expect
-        .poll(
-          () => settings.getByRole("combobox", { name: "角色" }).inputValue(),
-          {
-            timeout: 10000,
-          },
-        )
+        .poll(() => selectedCharacter(settings), {
+          timeout: 10000,
+        })
         .toBe("whale");
       await expect.poll(() => paintedCharacter(pet)).toBe("whale");
       expect(await settings.locator("#character-error").isVisible()).toBe(
@@ -642,12 +606,10 @@ test("a held and falling pet keeps its old character until landing, then uses th
     await expect
       .poll(async () => (await bounds()).y)
       .toBeLessThan(ground.y - 50);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .evaluate((element: HTMLSelectElement) => {
-        element.value = "corgi";
-        element.dispatchEvent(new Event("change", { bubbles: true }));
-      });
+    // Choose without pointer input: the pet window holds the mouse drag.
+    await settings.evaluate(() =>
+      document.querySelector<HTMLInputElement>('input[value="corgi"]')!.click(),
+    );
     await expect
       .poll(() => settings.locator("#character-status").textContent(), {
         timeout: 10000,
@@ -663,9 +625,7 @@ test("a held and falling pet keeps its old character until landing, then uses th
       })
       .toBe("柯基 · 待机");
     expect(await bounds()).toEqual(ground);
-    expect(
-      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-    ).toBe("corgi");
+    expect(await selectedCharacter(settings)).toBe("corgi");
     // The same directed input now grabs corgi pixels, proving that replacing
     // images also replaced main-process hit geometry without another window.
     await expect.poll(() => paintedCharacter(pet)).toBe("corgi");
@@ -738,9 +698,7 @@ test("renderer recovery retires a pending preparation and permits an explicit re
         callback({ cancel: false });
       });
     }, new URL(pet.url()).origin);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(() => settings.locator("#character-status").textContent())
       .toContain("正在准备");
@@ -825,9 +783,7 @@ test("walking switches preserve left facing and ground placement at both end siz
             .getBounds(),
         );
       const old = await bounds();
-      await settings
-        .getByRole("combobox", { name: "角色" })
-        .selectOption("corgi");
+      await chooseCharacter(settings, "corgi");
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
           timeout: 5000,
@@ -932,9 +888,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
         timeout: 5000,
       })
       .toBe("DeepSeek · 攀爬");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("corgi");
+    await chooseCharacter(settings, "corgi");
     await expect
       .poll(() => settings.locator("#character-status").textContent(), {
         timeout: 10000,
@@ -959,9 +913,7 @@ test("a switch waits through climbing and commits on observed Dock support witho
     const next = await native();
     expect(next.id).toBe(old.id);
     expect(next.bounds).toEqual({ ...old.bounds, y: top - old.bounds.height });
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("whale");
+    await chooseCharacter(settings, "whale");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("DeepSeek · 待机");

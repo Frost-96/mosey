@@ -16,6 +16,7 @@ import fs from "node:fs";
 import { StringDecoder } from "node:string_decoder";
 import path from "node:path";
 import { dockRecordSchema, helperReceiptSchema } from "./validation-protocol";
+import { dockOrientationMenuId, menuIds } from "../../menu-ids";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_LINE = 64 * 1024;
@@ -83,19 +84,27 @@ export class DockValidation {
   menu(capture: { start(): void; stop(): void }): MenuItemConstructorOptions[] {
     return [
       {
-        label: "Start Dock validation (120 seconds)",
+        id: menuIds.dockValidationStart,
+        label: "开始 Dock 验证（120 秒）",
         enabled: !this.child,
         click: capture.start,
       },
       {
-        label: "Stop Dock validation",
+        id: menuIds.dockValidationStop,
+        label: "停止 Dock 验证",
         click: capture.stop,
       },
-      { label: "Show Dock validation status", click: () => this.show() },
       {
-        label: "Operator Dock orientation",
+        id: menuIds.dockValidationStatus,
+        label: "显示 Dock 验证状态",
+        click: () => this.show(),
+      },
+      {
+        id: menuIds.dockValidationOrientation,
+        label: "Dock 位置（操作员确认）",
         submenu: (["bottom", "left", "right"] as const).map((orientation) => ({
-          label: orientation,
+          id: dockOrientationMenuId(orientation),
+          label: { bottom: "底部", left: "左侧", right: "右侧" }[orientation],
           type: "radio",
           checked: this.orientation === orientation,
           enabled: !this.child,
@@ -143,7 +152,7 @@ export class DockValidation {
   private render() {
     const revision = ++this.renderRevision;
     if (!this.window || this.window.isDestroyed()) return;
-    const body = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Mosey Dock validation</title><style>body{font:16px system-ui;margin:28px;color:#242424;background:#faf9f7}p{line-height:1.5}input{box-sizing:border-box;width:100%;padding:8px}small{line-height:1.5}</style></head><body><h1>Dock validation</h1><p role="status">${escape(this.state)}</p><p>Latest validated native currentness: ${escape(this.currentness)}</p><p>Operator orientation: ${this.orientation}. Confirm the actual Dock position before starting.</p><label>Local log<input aria-label="Local log" readonly value="${escape(this.destination)}"></label><p>Electron screen-recording status: ${escape(systemPreferences.getMediaAccessStatus("screen"))}. Native preflight is reported separately above.</p><small>Experimental local statistics, bounded to 120 seconds. No pet collision edge is accepted. Start and Stop are available in the Dock validation menu. Permission changes require your own System Settings action.</small></body></html>`;
+    const body = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Mosey Dock validation</title><style>body{font:16px system-ui;margin:28px;color:#242424;background:#faf9f7}p{line-height:1.5}input{box-sizing:border-box;width:100%;padding:8px}small{line-height:1.5}</style></head><body><h1>Dock validation</h1><p role="status">${escape(this.state)}</p><p>Latest validated native currentness: ${escape(this.currentness)}</p><p>Operator orientation: ${this.orientation}. Confirm the actual Dock position before starting.</p><label>Local log<input aria-label="Local log" readonly value="${escape(this.destination)}"></label><p>Electron screen-recording status: ${escape(systemPreferences.getMediaAccessStatus("screen"))}. Native preflight is reported separately above.</p><small>Experimental local statistics, bounded to 120 seconds. No pet collision edge is accepted. Start and Stop are in the menu Dock 交互 ▸ 诊断. Permission changes require your own System Settings action.</small></body></html>`;
     const job = this.renderJob;
     // Reentrant input can request a newer document while this snapshot is
     // being built. Only the latest render may publish to the navigation queue.

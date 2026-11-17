@@ -13,52 +13,70 @@ export function LoginSettings({
   openSystemSettings,
 }: LoginSettingsProps) {
   const awaitingApproval = login.status === "requires-approval";
+  const unavailable = login.status === "unavailable";
+  const hint = awaitingApproval
+    ? "请在 系统设置 › 通用 › 登录项 中允许 Mosey。"
+    : login.reason;
+  // On and off are told by the switch itself; the status stays in the live
+  // region for assistive technology and only the other states are shown.
+  const announcedOnly = !awaitingApproval && !unavailable && !login.error;
   return (
     <section aria-labelledby="login-heading">
       <h2 id="login-heading">开机启动</h2>
-      <label>
-        <input
-          id="login-enabled"
-          type="checkbox"
-          checked={login.status === "enabled"}
-          disabled={busy || login.status === "unavailable" || awaitingApproval}
-          onChange={(event) => setEnabled(event.currentTarget.checked)}
-        />{" "}
-        登录后启动 Mosey
-      </label>
-      <p id="login-status" aria-live="polite">
-        {
-          {
-            enabled: "已开启",
-            disabled: "已关闭",
-            "requires-approval":
-              "等待批准：请在系统设置 → 通用 → 登录项中允许 Mosey。",
-            unavailable: "开机启动不可用",
-          }[login.status]
-        }
-      </p>
-      <p id="login-reason" className="hint" hidden={!login.reason}>
-        {login.reason}
-      </p>
-      <p id="login-error" role="alert" hidden={!login.error}>
-        {login.error}
-      </p>
-      <button
-        id="login-cancel"
-        hidden={!awaitingApproval}
-        disabled={busy}
-        onClick={() => setEnabled(false)}
-      >
-        取消待批准请求
-      </button>{" "}
-      <button
-        id="login-system"
-        hidden={!awaitingApproval && !login.error}
-        disabled={busy}
-        onClick={openSystemSettings}
-      >
-        打开系统设置
-      </button>
+      <div className="card">
+        <label className="switch-row">
+          <span>登录后启动 Mosey</span>
+          <input
+            id="login-enabled"
+            type="checkbox"
+            role="switch"
+            checked={login.status === "enabled"}
+            disabled={busy || unavailable || awaitingApproval}
+            onChange={(event) => setEnabled(event.currentTarget.checked)}
+          />
+        </label>
+        <div
+          className={
+            announcedOnly ? "login-detail visually-hidden" : "login-detail"
+          }
+          data-tone={awaitingApproval ? "warning" : undefined}
+        >
+          <p id="login-status" aria-live="polite">
+            {
+              {
+                enabled: "已开启",
+                disabled: "已关闭",
+                "requires-approval": "等待批准",
+                unavailable: "开机启动不可用",
+              }[login.status]
+            }
+          </p>
+          <p id="login-reason" className="hint" hidden={!hint}>
+            {hint}
+          </p>
+          <p id="login-error" role="alert" hidden={!login.error}>
+            {login.error}
+          </p>
+          <div className="actions" hidden={!awaitingApproval && !login.error}>
+            <button
+              id="login-system"
+              className="primary"
+              disabled={busy}
+              onClick={openSystemSettings}
+            >
+              打开系统设置
+            </button>
+            <button
+              id="login-cancel"
+              hidden={!awaitingApproval}
+              disabled={busy}
+              onClick={() => setEnabled(false)}
+            >
+              取消请求
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

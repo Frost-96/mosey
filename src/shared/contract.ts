@@ -109,6 +109,7 @@ export const channels = {
   openLoginSettings: "settings:open-login-settings",
   previewSize: "settings:preview-size",
   showPet: "settings:show-pet",
+  fitSettings: "settings:fit-content",
   settings: "settings:state",
   getPresentation: "pet:get-presentation",
   presentation: "pet:presentation",
@@ -128,6 +129,8 @@ export const loginLaunchSchema = z.strictObject({
   error: z.string().optional(),
 });
 export const loginLaunchRequestSchema = z.boolean();
+// The page reports its natural content height; the window never exceeds the screen.
+export const settingsHeightSchema = z.number().int().min(1).max(10000);
 export const settingsSchema = z.strictObject({
   revision: z.number().int().nonnegative(),
   character: characterSchema,
@@ -142,7 +145,6 @@ export const settingsSchema = z.strictObject({
     .strictObject({
       target: characterSchema,
       reason: z.enum(["load", "save", "recovery"]),
-      detail: z.string().max(500).optional(),
     })
     .optional(),
   size: petSizeSchema,
@@ -159,6 +161,7 @@ export interface SettingsBridge {
   showPet(): Promise<Settings>;
   setLoginLaunch(enabled: boolean): Promise<Settings>;
   openLoginSettings(): Promise<Settings>;
+  fitContent(height: number): void;
   onChange(listener: (state: Settings) => void): () => void;
 }
 declare global {

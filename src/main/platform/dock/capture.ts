@@ -1,6 +1,7 @@
 import type { MenuItemConstructorOptions } from "electron";
 import { DockRuntime, type DockObservation } from "./runtime";
 import { DockValidation } from "./validation";
+import { menuIds } from "../../menu-ids";
 
 type Application = {
   permitted(): boolean;
@@ -65,7 +66,8 @@ export class DockCapture {
 
   menu(): MenuItemConstructorOptions {
     return {
-      label: "Dock validation",
+      id: menuIds.dockValidation,
+      label: "诊断",
       submenu: this.validation.menu({
         start: () => {
           const revision = this.reserve("diagnostic");

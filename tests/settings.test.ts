@@ -16,6 +16,7 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
 import { createPetTestSession } from "./support/pet-session";
+import { menuIds } from "../src/main/menu-ids";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleArgument = `--force-device-scale-factor=${process.env.MOSEY_TEST_SCALE_FACTOR ?? "1"}`;
 test("settings owns presets, reuses its window and preserves hidden intent and failed targets", async () => {
@@ -97,17 +98,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
             : { args: [".", ...args], timeout: 30000 },
         );
       });
-    const invoke = (label: string) =>
+    const invoke = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((x) => x.label === "Mosey")
-            ?.submenu?.items.find((x) => x.label === label);
-          if (!item) throw new Error(`Missing menu ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing menu ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     const petState = () =>
       app!.evaluate(({ BrowserWindow }) => {
@@ -130,28 +129,23 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await expect
       .poll(() =>
         settings!
-          .getByRole("button", { name: "中（默认）" })
+          .getByRole("button", { name: "中", exact: true })
           .getAttribute("aria-pressed"),
       )
       .toBe("true");
-    await invoke("设置…");
+    await invoke(menuIds.settings);
     expect(app.windows()).toHaveLength(2);
     expect(await settings.getByText("柯基", { exact: true }).count()).toBe(1);
     expect(await settings.locator("canvas").count()).toBe(0);
-    expect(
-      await app.evaluate(({ Menu }) =>
+    const applicationItems = await app.evaluate(
+      ({ Menu }, id) =>
         Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.map((x) => x.label),
-      ),
-    ).toContain("Launch at Login");
-    expect(
-      await app.evaluate(({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.map((x) => x.label),
-      ),
-    ).toContain("Pet Size");
+          .getMenuItemById(id)!
+          .submenu!.items.map((x) => x.id),
+      menuIds.application,
+    );
+    expect(applicationItems).not.toContain("login-launch");
+    expect(applicationItems).toContain(menuIds.size);
     await stage("validate IPC boundaries");
     expect(
       await settings.evaluate(() =>
@@ -175,7 +169,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("hidden presets and save failure");
     const petId = (await petState()).id;
-    await invoke("Hide Mosey");
+    await invoke(menuIds.hidePet);
     await expect
       .poll(() => settings!.getByText("宠物已隐藏").isVisible())
       .toBe(true);
@@ -198,10 +192,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     ).toBe("auto");
     const loginNote = settings.getByRole("region", { name: "开机启动" });
     await loginNote.scrollIntoViewIfNeeded();
+    // Layout is fractional (13px text at 1.4 line height) while scrolling
+    // snaps to device pixels, so compare the device pixels the edges paint on.
     expect(
       await loginNote.evaluate((element) => {
         const bounds = element.getBoundingClientRect();
-        return bounds.top >= 0 && bounds.bottom <= innerHeight;
+        const pixel = (value: number) => Math.round(value * devicePixelRatio);
+        return (
+          pixel(bounds.top) >= 0 && pixel(bounds.bottom) <= pixel(innerHeight)
+        );
       }),
     ).toBe(true);
     await stage("save-error screenshot");
@@ -219,7 +218,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
       .getByRole("button", { name: "显示宠物", exact: true })
       .click();
     await expect.poll(async () => (await petState()).visible).toBe(true);
-    await invoke("Hide Mosey");
+    await invoke(menuIds.hidePet);
     await rm(file);
     await mkdir(file);
     await settings.getByRole("button", { name: "小", exact: true }).click();
@@ -238,24 +237,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("new presets");
     await settings.getByRole("button", { name: "小", exact: true }).click();
-    await settings.getByRole("button", { name: "中（默认）" }).click();
+    await settings.getByRole("button", { name: "中", exact: true }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
 
-    expect(
-      await settings
-        .locator("body")
-        .evaluate((element) => getComputedStyle(element).backgroundColor),
-    ).toBe("rgb(246, 245, 242)");
+    // Surfaces follow the system theme; settings-appearance covers both.
     expect(
       await settings
         .locator("body")
         .evaluate((element) => getComputedStyle(element).overflowY),
     ).toBe("auto");
-    expect(
-      await settings
-        .locator("main")
-        .evaluate((element) => getComputedStyle(element).paddingLeft),
-    ).toBe("32px");
     await settings
       .getByRole("region", { name: "开机启动" })
       .scrollIntoViewIfNeeded();
@@ -270,7 +260,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     settings = undefined;
     expect((await petState()).id).toBe(petId);
     expect((await petState()).visible).toBe(false);
-    await invoke("设置…");
+    await invoke(menuIds.settings);
     await expect.poll(() => app!.windows().length).toBe(2);
     await stage("quit after reopening settings");
     await fixture.closeApp();
@@ -340,12 +330,13 @@ test.each([
       const child = app.process();
       // Judge the real process exit, not a driver close acknowledgement that
       // can remain pending after the application has already exited.
-      void onMainLoop(app, ({ Menu }) => {
-        Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.find((item) => item.label === "Quit Mosey")!
-          .click();
-      }).catch(() => {});
+      void onMainLoop(
+        app,
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
+        },
+        menuIds.quit,
+      ).catch(() => {});
       await expect.poll(() => child.exitCode, { timeout: 10000 }).toBe(0);
     };
     session.mark("migrated-hidden-window");
@@ -392,11 +383,11 @@ test.each([
       await expect
         .poll(() => distanceFromGround(app), { timeout: 4000 })
         .toBe(0);
-      await onMainLoop(app, ({ Menu }) =>
-        Menu.getApplicationMenu()!
-          .items.find((x) => x.label === "Mosey")!
-          .submenu!.items.find((x) => x.label === "Hide Mosey")!
-          .click(),
+      await onMainLoop(
+        app,
+        ({ Menu }, id) =>
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click(),
+        menuIds.hidePet,
       );
     }
     session.mark("quit-before-durability-check");

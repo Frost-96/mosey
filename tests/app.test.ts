@@ -26,6 +26,7 @@ import {
 import path from "node:path";
 import os from "node:os";
 import { PNG } from "pngjs";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 // Keep the 1x reload regression reproducible on Retina development machines.
@@ -209,14 +210,16 @@ async function exercisePet() {
     );
     const window = await app.firstWindow({ timeout: 15000 });
     probedPages.pet = window;
-    const menuLabels = await app.evaluate(({ Menu }) =>
-      Menu.getApplicationMenu()
-        ?.items.find((entry) => entry.label === "Mosey")
-        ?.submenu?.items.map((entry) => entry.label),
+    const applicationItems = await app.evaluate(
+      ({ Menu }, id) =>
+        Menu.getApplicationMenu()
+          ?.getMenuItemById(id)
+          ?.submenu?.items.map((entry) => entry.id),
+      menuIds.application,
     );
-    expect(menuLabels).toContain("设置…");
-    expect(menuLabels).toContain("Launch at Login");
-    expect(menuLabels).toContain("Pet Size");
+    expect(applicationItems).toContain(menuIds.settings);
+    expect(applicationItems).not.toContain("login-launch");
+    expect(applicationItems).toContain(menuIds.size);
 
     window.on("pageerror", (error) => {
       errors.push(error.message);
@@ -920,19 +923,17 @@ async function exercisePet() {
       await waitForGround();
     }
     // Preserve the actual manual hide choice while the display topology changes.
-    const invokeVisibility = (label: string) =>
+    const invokeVisibility = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Mosey")
-            ?.submenu?.items.find((entry) => entry.label === label);
-          if (!item) throw new Error(`Missing visibility menu item: ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing visibility menu item: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
-    await invokeVisibility("Hide Mosey");
+    await invokeVisibility(menuIds.hidePet);
     expect((await recoverOnDisplayChange("display-removed")).visible).toBe(
       false,
     );
@@ -942,25 +943,23 @@ async function exercisePet() {
         BrowserWindow.getAllWindows()[0]!.isVisible(),
       ),
     ).toBe(false);
-    await invokeVisibility("Show Mosey");
+    await invokeVisibility(menuIds.showPet);
     await waitForIdlePose();
     expect(errors).toEqual([]);
     // Public menu -> passive status -> local evidence -> owned OS process lifecycle.
-    const invokeDiagnostic = async (label: string) =>
+    const invokeDiagnostic = async (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Dock validation")
-            ?.submenu?.items.find((entry) => entry.label === label);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
           if (!item || !item.enabled)
-            throw new Error(`Diagnostic menu item unavailable: ${label}`);
+            throw new Error(`Diagnostic menu item unavailable: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     const diagnosticWindow = app.waitForEvent("window").catch(() => undefined);
-    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    await invokeDiagnostic(menuIds.dockValidationStart);
     const diagnostic = await diagnosticWindow;
     if (!diagnostic) throw new Error("Diagnostic window did not open");
     probedPages.diagnostic = diagnostic;
@@ -1067,21 +1066,21 @@ async function exercisePet() {
         .toContain("Latest validated native currentness: Unavailable");
       await waitGone(firstRun.nativePID);
     }
-    await invokeDiagnostic("Stop Dock validation");
+    await invokeDiagnostic(menuIds.dockValidationStop);
     await expect
       .poll(() => diagnostic.locator("body").innerText())
       .toContain("Stopped");
     await waitGone(firstRun.nativePID);
-    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    await invokeDiagnostic(menuIds.dockValidationStart);
     const secondRun = await inspectRun();
     expect(secondRun.localLog).not.toBe(firstRun.localLog);
     if (secondRun.capturing) process.kill(secondRun.nativePID, "SIGSTOP");
-    await invokeDiagnostic("Stop Dock validation");
+    await invokeDiagnostic(menuIds.dockValidationStop);
     await expect
       .poll(() => diagnostic.locator("body").innerText(), { timeout: 6000 })
       .toContain("Stopped");
     await waitGone(secondRun.nativePID);
-    await invokeDiagnostic("Start Dock validation (120 seconds)");
+    await invokeDiagnostic(menuIds.dockValidationStart);
     const quitRun = await inspectRun();
     expect(quitRun.localLog).not.toBe(secondRun.localLog);
     if (quitRun.capturing) process.kill(quitRun.nativePID, "SIGSTOP");
@@ -1094,13 +1093,15 @@ async function exercisePet() {
     const closed = new Promise<void>((resolve) =>
       app!.once("close", () => resolve()),
     );
-    await onMainLoop(app, ({ Menu }) => {
-      const quit = Menu.getApplicationMenu()
-        ?.items.find((item) => item.label === "Mosey")
-        ?.submenu?.items.find((item) => item.label === "Quit Mosey");
-      if (!quit) throw new Error("Quit Mosey menu item is absent");
-      quit.click();
-    });
+    await onMainLoop(
+      app,
+      ({ Menu }, id) => {
+        const quit = Menu.getApplicationMenu()?.getMenuItemById(id);
+        if (!quit) throw new Error("Quit Mosey menu item is absent");
+        quit.click();
+      },
+      menuIds.quit,
+    );
     await closed;
     await expect.poll(() => child.exitCode).toBe(0);
     await waitGone(quitRun.nativePID);

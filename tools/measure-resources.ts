@@ -13,6 +13,11 @@ import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
+import {
+  dockStatusCode,
+  type DockStatus,
+} from "../src/main/platform/dock/status.ts";
+import { menuIds } from "../src/main/menu-ids.ts";
 
 // Opt-in observation of the shipped app. No thresholds, fake clocks, native
 // substitutes, or product hooks. Playwright input is not physical input evidence.
@@ -90,7 +95,7 @@ interface Sample {
   actionId: number;
   stablePosture: boolean;
   visibility: string;
-  dockStatus: string | undefined;
+  dockStatus: DockStatus | undefined;
   stableDockStatus: boolean;
   cpuPercentOneCore: number;
   rssMiB: number;
@@ -301,21 +306,20 @@ try {
       },
     );
   });
-  const menu = (label: string) =>
-    app!.evaluate(({ Menu }, label) => {
-      const item = Menu.getApplicationMenu()!
-        .items.find((item) => item.label === "Mosey")!
-        .submenu!.items.find((item) => item.label === label);
-      if (!item) throw new Error(`Missing menu item: ${label}`);
+  const menu = (id: string) =>
+    app!.evaluate(({ Menu }, id) => {
+      const item = Menu.getApplicationMenu()!.getMenuItemById(id);
+      if (!item) throw new Error(`Missing menu item: ${id}`);
       item.click();
-    }, label);
+    }, id);
   const started = performance.now();
-  const dockStatus = () =>
-    app!.evaluate(
-      ({ Menu }) =>
-        Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
-          ?.label,
+  const dockStatus = async () => {
+    const label = await app!.evaluate(
+      ({ Menu }, id) => Menu.getApplicationMenu()?.getMenuItemById(id)?.label,
+      menuIds.dockStatus,
     );
+    return label === undefined ? undefined : dockStatusCode(label);
+  };
   let previousAt = started;
   let previous = processTree(pid);
   for (const [phase, duration] of [
@@ -329,8 +333,8 @@ try {
     console.log(`Resource phase: ${phase}, ${duration}s`);
     if (phase === "dragging") {
       // Begin on a fresh resting frame, not a moving reaction's transparent area.
-      await menu("Hide Mosey");
-      await menu("Show Mosey");
+      await menu(menuIds.hidePet);
+      await menu(menuIds.showPet);
       await pause(600);
       await pet.mouse.move(80, 120);
       await pet.mouse.down();
@@ -340,8 +344,8 @@ try {
       await pet.mouse.move(80, -80, { steps: 6 });
     } else if (phase === "hidden") {
       await pet.mouse.up();
-      await menu("Hide Mosey");
-    } else if (phase === "growth") await menu("Show Mosey");
+      await menu(menuIds.hidePet);
+    } else if (phase === "growth") await menu(menuIds.showPet);
     // Exclude menu/gesture setup from the next phase's CPU and draw counters.
     await pet.evaluate(() => {
       const probe = Reflect.get(window, "resourceProbe") as Sample["drawing"];
@@ -487,7 +491,7 @@ try {
     ]),
   );
   const activeDockSamples = stableDockSamples.filter(
-    (sample) => sample.dockStatus === "Dock interaction active",
+    (sample) => sample.dockStatus === "active",
   );
   report.dockCoverage = {
     activeStatusSamples: activeDockSamples.length,

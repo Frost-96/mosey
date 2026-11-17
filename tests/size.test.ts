@@ -18,6 +18,7 @@ import path from "node:path";
 import os from "node:os";
 import { chooseSize, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
@@ -158,18 +159,16 @@ setTimeout(()=>process.exit(0),120000);
     // Native visibility can precede the bounded work-area reconciliation.
     // Require actual startup settlement, still with strict zero distance.
     await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
-    const choose = (label: string) => chooseSize(app!, label);
-    const invoke = (label: string) =>
+    const choose = (side: 70 | 160 | 240) => chooseSize(app!, side);
+    const invoke = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((item) => item.label === "Mosey")
-            ?.submenu?.items.find((item) => item.label === label);
-          if (!item) throw new Error(`Missing menu item: ${label}`);
+        ({ Menu }, id) => {
+          const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+          if (!item) throw new Error(`Missing menu item: ${id}`);
           item.click();
         },
-        label,
+        id,
       );
     const pixels = () =>
       pet.evaluate(() => {
@@ -185,7 +184,7 @@ setTimeout(()=>process.exit(0),120000);
       ["Medium", 160],
     ] as const) {
       const before = await desktop();
-      await choose(label);
+      await choose(side);
       await expect.poll(async () => (await bounds()).width).toBe(side);
       const after = await desktop();
       const resized = after.bounds;
@@ -341,7 +340,7 @@ setTimeout(()=>process.exit(0),120000);
       .poll(async () => (await bounds()).y)
       .toBeLessThan(beforeLift.y - 100);
     const held = await bounds();
-    await choose("Large");
+    await choose(240);
     const resizedHeld = await bounds();
     expect(resizedHeld.x + resizedHeld.width / 2).toBe(held.x + held.width / 2);
     expect(resizedHeld.y + resizedHeld.height).toBe(held.y + held.height);
@@ -356,7 +355,7 @@ setTimeout(()=>process.exit(0),120000);
     await new Promise((resolve) => setTimeout(resolve, 100));
     // Measure the resize itself in one main-process turn. Separate driver
     // round trips include legitimate falling motion under scheduler load.
-    const { before: falling, after: resizedFalling } = await choose("Small");
+    const { before: falling, after: resizedFalling } = await choose(70);
     expect(resizedFalling.width).toBe(70);
     expect(resizedFalling.x + resizedFalling.width / 2).toBe(
       falling.x + falling.width / 2,
@@ -368,8 +367,8 @@ setTimeout(()=>process.exit(0),120000);
     ).toBeLessThan(30);
     await expect.poll(groundDistance, { timeout: 4000 }).toBe(0);
     // A size write while hidden must retain hidden intent across restart.
-    await invoke("Hide Mosey");
-    await choose("Large");
+    await invoke(menuIds.hidePet);
+    await choose(240);
     await fixture.closeApp();
     app = await launch();
     pet = await app.firstWindow();
@@ -382,7 +381,7 @@ setTimeout(()=>process.exit(0),120000);
           .isVisible(),
       ),
     ).toBe(false);
-    await invoke("Show Mosey");
+    await invoke(menuIds.showPet);
     await expect
       .poll(
         () =>
@@ -418,7 +417,7 @@ setTimeout(()=>process.exit(0),120000);
           .isVisible(),
       ),
     ).toBe(false);
-    await invoke("Show Mosey");
+    await invoke(menuIds.showPet);
     await fixture.closeApp();
     app = undefined;
     await rm(path.join(profile, "preferences.json"));
@@ -426,7 +425,7 @@ setTimeout(()=>process.exit(0),120000);
     app = await launch();
     pet = await app.firstWindow();
     await pet.waitForLoadState("load");
-    await choose("Small");
+    await choose(70);
     expect((await bounds()).width).toBe(240);
     const settings = await openSettings(app);
     expect(

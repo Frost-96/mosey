@@ -54,8 +54,8 @@ test("opening settings waits for confirmed values instead of the initial React v
     session.mark("delayed-settings-confirmation");
     const settings = await openSettings(app);
     expect(await settings.locator("output").textContent()).toBe("110");
-    expect(await settings.getByRole("checkbox").isChecked()).toBe(false);
-    expect(await settings.getByRole("checkbox").isDisabled()).toBe(true);
+    expect(await settings.getByRole("switch").isChecked()).toBe(false);
+    expect(await settings.getByRole("switch").isDisabled()).toBe(true);
     expect(await settings.locator("#login-status").textContent()).toContain(
       "等待批准",
     );

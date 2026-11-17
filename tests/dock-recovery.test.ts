@@ -1,5 +1,9 @@
 import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
+import {
+  dockStatusCode,
+  type DockStatus,
+} from "../src/main/platform/dock/status";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
 import {
@@ -21,6 +25,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { startForge } from "./support/forge";
+import { menuIds } from "../src/main/menu-ids";
 import { distanceFromGround } from "./support/ground";
 import { nativeRuntimeFixture } from "./support/native-runtime";
 
@@ -55,11 +60,11 @@ type Runtime = {
   footY: () => Promise<number>;
   groundDistance: () => Promise<number>;
   children: () => number[];
-  status: () => Promise<string>;
+  status: () => Promise<DockStatus | undefined>;
   spawnedPIDs: () => Promise<number[]>;
   floor: number;
   observation: unknown;
-  invoke: (label: string) => Promise<void>;
+  invoke: (id: string) => Promise<void>;
   app: ElectronApplication;
 };
 async function withRuntime(
@@ -298,12 +303,13 @@ setInterval(()=>{
       );
       // Exactly one public Show; a later display interruption still fails the
       // original first-PID, five-second and uninterrupted-lifecycle assertions.
-      await onMainLoop(app, ({ Menu }) => {
-        Menu.getApplicationMenu()!
-          .items.find((item) => item.label === "Mosey")!
-          .submenu!.items.find((item) => item.label === "Show Mosey")!
-          .click();
-      });
+      await onMainLoop(
+        app,
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
+        },
+        menuIds.showPet,
+      );
     }
     await pet.locator("canvas").waitFor();
     expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
@@ -411,22 +417,21 @@ setInterval(()=>{
       await beginScene();
       await publish(initial);
     }
-    const status = () =>
-      app!.evaluate(
-        ({ Menu }) =>
-          Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
-            .label,
+    const status = async () =>
+      dockStatusCode(
+        await app!.evaluate(
+          ({ Menu }, id) =>
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.label,
+          menuIds.dockStatus,
+        ),
       );
-    const invoke = (label: string) =>
+    const invoke = (id: string) =>
       onMainLoop(
         app!,
-        ({ Menu }, label) => {
-          Menu.getApplicationMenu()!
-            .items.find((i) => i.label === "Mosey")!
-            .submenu!.items.find((i) => i.label === label)!
-            .click();
+        ({ Menu }, id) => {
+          Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
         },
-        label,
+        id,
       );
     if (initial.startupSilence) {
       // A spawned OS process can be visible to ps before its JS entry writes
@@ -532,10 +537,12 @@ setInterval(()=>{
                   ),
                 )
               : undefined,
-          menu: await app.evaluate(({ Menu }) =>
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Mosey")!
-              .submenu!.items.map((i) => i.label),
+          menu: await app.evaluate(
+            ({ Menu }, id) =>
+              Menu.getApplicationMenu()!
+                .getMenuItemById(id)!
+                .submenu!.items.map((i) => i.label),
+            menuIds.application,
           ),
         },
         null,
@@ -624,9 +631,7 @@ test("Explicit source suspension waits on one capture and resumes without Retry"
         expect(await groundDistance()).toBe(0);
         await new Promise((resolve) => setTimeout(resolve, 150));
       }
-      await expect
-        .poll(status)
-        .toBe("Dock source suspended; waiting for updates");
+      await expect.poll(status).toBe("suspended");
       await publish({ observation });
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       expect(children()).toEqual([sourcePID]);
@@ -824,11 +829,11 @@ test("Sparse fresh reports do not replenish the bounded silent-stream recovery b
       // apart, then timely silence JSON. Their uncovered gaps exceed frame freshness.
       await expect
         .poll(status, { timeout: 55000, interval: 150 })
-        .toBe("Dock capture unavailable; Retry Dock interaction");
+        .toBe("retry-required");
       await expect.poll(children, { timeout: 3000 }).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       await new Promise((resolve) => setTimeout(resolve, 1500));
       expect(children()).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
@@ -852,11 +857,11 @@ test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works 
     }) => {
       await expect
         .poll(status, { timeout: 30000, interval: 100 })
-        .toBe("Dock capture unavailable; Retry Dock interaction");
+        .toBe("retry-required");
       await expect.poll(children, { timeout: 3000 }).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
-      await invoke("Hide Mosey");
-      await invoke("Show Mosey");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       await new Promise((resolve) => setTimeout(resolve, 1300));
       expect(children()).toEqual([]);
       await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
@@ -864,7 +869,7 @@ test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works 
       await new Promise((resolve) => setTimeout(resolve, 1300));
       expect(children()).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
-      await invoke("Hide Mosey");
+      await invoke(menuIds.hidePet);
       await expect
         .poll(() =>
           app.evaluate(({ BrowserWindow }) =>
@@ -872,14 +877,14 @@ test("Brief fresh callbacks cannot reset exhaustion, while explicit Retry works 
           ),
         )
         .toBe(false);
-      await expect.poll(status).toBe("Stopped");
+      await expect.poll(status).toBe("stopped");
       await new Promise((resolve) => setTimeout(resolve, 100));
       await publish({ observation });
-      await invoke("Retry Dock interaction");
+      await invoke(menuIds.dockRetry);
       await new Promise((resolve) => setTimeout(resolve, 1300));
       expect(children()).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
-      await invoke("Show Mosey");
+      await invoke(menuIds.showPet);
       await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       expect(await spawnedPIDs()).toHaveLength(5);
@@ -943,7 +948,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
       expect(await spawnedPIDs()).toHaveLength(2);
       await expect.poll(groundDistance).toBe(0);
       await publish({ observation });
-      await invoke("Retry Dock interaction");
+      await invoke(menuIds.dockRetry);
       await expect.poll(children).toHaveLength(1);
       await expect.poll(footY, { timeout: 5000 }).toBe(floor - 75);
       await publish({ reason: "permission_unavailable" });
@@ -953,7 +958,7 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
       expect(await spawnedPIDs()).toHaveLength(3);
       await app.evaluate(({ powerMonitor }) => powerMonitor.emit("suspend"));
       await publish({ observation });
-      await invoke("Retry Dock interaction");
+      await invoke(menuIds.dockRetry);
       await new Promise((resolve) => setTimeout(resolve, 1300));
       expect(children()).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(3);
@@ -969,16 +974,13 @@ test("Capture startup silence recovers while healthy idle, empty frames, brief s
 test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without replenishing the budget", async () => {
   await withRuntime(
     async ({ publish, children, spawnedPIDs, invoke, app, status }) => {
-      const diagnostic = (label: string) =>
+      const diagnostic = (id: string) =>
         onMainLoop(
           app,
-          ({ Menu }, label) => {
-            Menu.getApplicationMenu()!
-              .items.find((i) => i.label === "Dock validation")!
-              .submenu!.items.find((i) => i.label === label)!
-              .click();
+          ({ Menu }, id) => {
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.click();
           },
-          label,
+          id,
         );
       const pauses = ["hidden", "suspended", "diagnostic"] as const;
       await publish({ reason: "callback_silence", ignoreTerm: true });
@@ -987,15 +989,15 @@ test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without 
         // application's 1.5s kill fallback and the pending restart race.
         await expect
           .poll(status, { timeout: 8000, interval: 25 })
-          .toBe("Dock capture callbacks unavailable; restarting");
-        if (pause === "hidden") await invoke("Hide Mosey");
+          .toBe("restarting");
+        if (pause === "hidden") await invoke(menuIds.hidePet);
         else if (pause === "suspended")
           await app.evaluate(({ powerMonitor }) =>
             powerMonitor.emit("suspend"),
           );
         else {
           const opened = app.waitForEvent("window");
-          await diagnostic("Start Dock validation (120 seconds)");
+          await diagnostic(menuIds.dockValidationStart);
           const panel = await opened;
           await panel
             .getByRole("heading", { name: "Dock validation" })
@@ -1005,17 +1007,17 @@ test("Hidden, suspended and diagnostic ownership cancel queued rebuilds without 
         await new Promise((resolve) => setTimeout(resolve, 1300));
         expect(children()).toEqual([]);
         expect(await spawnedPIDs()).toHaveLength(index + 1);
-        if (pause === "hidden") await invoke("Show Mosey");
+        if (pause === "hidden") await invoke(menuIds.showPet);
         else if (pause === "suspended")
           await app.evaluate(({ powerMonitor }) => powerMonitor.emit("resume"));
-        else await diagnostic("Stop Dock validation");
+        else await diagnostic(menuIds.dockValidationStop);
         await expect.poll(children, { timeout: 4000 }).toHaveLength(1);
       }
       // All three attempted recoveries were cancelled by ownership changes.
       // Those ordinary stop/start boundaries must not create another allowance.
       await expect
         .poll(status, { timeout: 8000, interval: 100 })
-        .toBe("Dock capture unavailable; Retry Dock interaction");
+        .toBe("retry-required");
       await expect.poll(children, { timeout: 4000 }).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(4);
     },
@@ -1052,9 +1054,7 @@ test("Sustained fresh callbacks replenish recovery, but non-silent reports with 
       await expect
         .poll(async () => (await spawnedPIDs()).length, { timeout: 8000 })
         .toBe(7);
-      await expect
-        .poll(status, { timeout: 8000 })
-        .toBe("Dock capture unavailable; Retry Dock interaction");
+      await expect.poll(status, { timeout: 8000 }).toBe("retry-required");
       await expect.poll(children, { timeout: 3000 }).toEqual([]);
       expect(await spawnedPIDs()).toHaveLength(7);
     },

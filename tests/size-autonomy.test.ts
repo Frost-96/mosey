@@ -12,6 +12,7 @@ import os from "node:os";
 import { chooseSize, closeSettings, openSettings } from "./support/settings";
 import { startForge } from "./support/forge";
 import { PNG } from "pngjs";
+import { menuIds } from "../src/main/menu-ids";
 
 // A source PNG scaled then mirrored by Canvas can differ from mirroring the
 // already-resampled Canvas at a few alpha contour pixels. Compare silhouettes
@@ -144,17 +145,15 @@ test(
           area: screen.getPrimaryDisplay().workArea,
           at: performance.now(),
         }));
-      const menu = (label: string) =>
+      const menu = (id: string) =>
         onMainLoop(
           app!,
-          ({ Menu }, label) => {
-            const item = Menu.getApplicationMenu()
-              ?.items.find((item) => item.label === "Mosey")
-              ?.submenu?.items.find((item) => item.label === label);
-            if (!item) throw new Error(`Missing menu ${label}`);
+          ({ Menu }, id) => {
+            const item = Menu.getApplicationMenu()?.getMenuItemById(id);
+            if (!item) throw new Error(`Missing menu ${id}`);
             item.click();
           },
-          label,
+          id,
         );
       await pet
         .context()
@@ -207,9 +206,9 @@ test(
         });
         if (diagnostics.length > 48) diagnostics.shift();
       };
-      const choose = async (label: string) => {
-        const resize = await chooseSize(app!, label);
-        await trace("choose " + label);
+      const choose = async (side: 70 | 160 | 240) => {
+        const resize = await chooseSize(app!, side);
+        await trace(`choose ${side}`);
         return resize;
       };
       const pixels = () =>
@@ -259,12 +258,8 @@ test(
       };
       // Calibrate only visible pixels before the first seeded activity; all three
       // initial idle silhouettes face right. Their mirrors are external references.
-      for (const [label, side] of [
-        ["Small", 70],
-        ["Medium", 160],
-        ["Large", 240],
-      ] as const) {
-        await choose(label);
+      for (const side of [70, 160, 240] as const) {
+        await choose(side);
         await expect.poll(footprint).toEqual({ width: side, bottom: side });
         const right = new Set<string>(),
           left = new Set<string>();
@@ -304,7 +299,7 @@ test(
           Math.random = () => random;
         }, random);
         await restClock(600);
-        await menu("Hide Mosey");
+        await menu(menuIds.hidePet);
         // Restoring visibility preserves position. Arrange room for the
         // deliberately left-facing walk instead of relying on old recentering.
         await app!.evaluate(({ BrowserWindow, screen }, atLeftEdge) => {
@@ -321,7 +316,7 @@ test(
             false,
           );
         }, atLeftEdge);
-        await menu("Show Mosey");
+        await menu(menuIds.showPet);
       };
       const visiblePoint = () =>
         pet.evaluate(() => {
@@ -352,12 +347,12 @@ test(
           if (!point) throw new Error("No robust visible body interior");
           return point;
         });
-      for (const [startLabel, endLabel, side] of [
-        ["Small", "Large", 240],
-        ["Large", "Medium", 160],
-        ["Medium", "Small", 70],
+      for (const [start, side] of [
+        [70, 240],
+        [240, 160],
+        [160, 70],
       ] as const) {
-        await choose(startLabel);
+        await choose(start);
         await activity(0.1);
         const origin = await desktop();
         await expect
@@ -368,7 +363,7 @@ test(
           .toBeLessThan(origin.bounds.x - 15);
         await restClock(60000);
         const resize = {
-          ...(await choose(endLabel)),
+          ...(await choose(side)),
           ...(await app.evaluate(({ screen }) => ({
             area: screen.getPrimaryDisplay().workArea,
           }))),
@@ -416,14 +411,14 @@ test(
         await grounded();
         // A primary-display DPR change can occur while hidden. The first visible
         // draw must rebuild the backing store without changing CSS/desktop size.
-        await menu("Hide Mosey");
+        await menu(menuIds.hidePet);
         await displaySession.send("Emulation.setDeviceMetricsOverride", {
           width: side,
           height: side,
           deviceScaleFactor: changedRatio,
           mobile: false,
         });
-        await menu("Show Mosey");
+        await menu(menuIds.showPet);
         await trace("DPR override " + side);
         await expect.poll(raster, { timeout: 2500 }).toMatchObject({
           ratio: changedRatio,
