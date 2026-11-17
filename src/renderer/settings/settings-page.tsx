@@ -86,11 +86,7 @@ function CharacterSettings({
               ? `正在准备${name(pendingCharacter.target)}…`
               : `等待宠物站稳后切换为${name(pendingCharacter.target)}…`)}
         </p>
-        <div
-          id="character-error"
-          className="status-row error"
-          hidden={!failure}
-        >
+        <div id="character-error" className="status-row" hidden={!failure}>
           <p role="alert">
             {failure} {failedCharacter?.detail}
           </p>

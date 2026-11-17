@@ -259,7 +259,7 @@ html[data-page="settings"] .status-row:not(:empty) {
 html[data-page="settings"] .status-row p {
   flex-grow: 1;
 }
-html[data-page="settings"] .status-row.error,
+html[data-page="settings"] .status-row [role="alert"],
 html[data-page="settings"] #login-error {
   color: var(--error);
 }

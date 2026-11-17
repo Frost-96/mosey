@@ -130,9 +130,7 @@ test("login settings explain availability and follow system approval, failure an
       };
       app.emit("activate");
     });
-    await expect
-      .poll(() => login.getByRole("switch").isDisabled())
-      .toBe(false);
+    await expect.poll(() => login.getByRole("switch").isDisabled()).toBe(false);
     await login.getByRole("switch").click();
     await expect.poll(() => login.textContent()).toContain("等待批准");
     expect(await login.getByRole("switch").isChecked()).toBe(false);

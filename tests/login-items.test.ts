@@ -75,9 +75,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       const toggle = settings!
         .getByRole("region", { name: "开机启动" })
         .getByRole("switch");
-      await expect
-        .poll(() => toggle.isChecked())
-        .toBe(previous === "enabled");
+      await expect.poll(() => toggle.isChecked()).toBe(previous === "enabled");
       await toggle.click();
       await expect
         .poll(() =>
