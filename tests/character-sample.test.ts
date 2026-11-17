@@ -5,6 +5,7 @@ import { writeFile } from "node:fs/promises";
 import { createPetTestSession } from "./support/pet-session";
 import { controlRest } from "./support/rest-clock";
 import { distanceFromGround } from "./support/ground";
+import { menuIds, sizeMenuId } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
@@ -135,11 +136,11 @@ test("selected whale paints one character, walks, yields to dragging and returns
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await menu("hide-pet");
+    await menu(menuIds.hidePet);
     await expect
       .poll(async () => (await windowState())[0]!.visible)
       .toBe(false);
-    await menu("show-pet");
+    await menu(menuIds.showPet);
     await expect.poll(async () => (await windowState())[0]!.visible).toBe(true);
     const origin = (await windowState())[0]!.bounds;
     await expect
@@ -222,8 +223,8 @@ test("selected whale paints one character, walks, yields to dragging and returns
       .poll(() => distanceFromGround(app!), { timeout: 5000 })
       .toBe(0);
     for (const [id, size] of [
-      ["pet-size-70", 70],
-      ["pet-size-240", 240],
+      [sizeMenuId(70), 70],
+      [sizeMenuId(240), 240],
     ] as const) {
       await onMainLoop(
         app,

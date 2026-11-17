@@ -16,7 +16,7 @@ import {
 } from "../shared/contract";
 import { petSizeSchema, type PetSize } from "../shared/size";
 
-const width = 460;
+const settingsWidth = 460;
 
 type Controls = {
   read(): Omit<Settings, "revision">;
@@ -89,7 +89,7 @@ export class SettingsWindow {
       const { workArea } = screen.getDisplayMatching(window.getBounds());
       const frame = window.getSize()[1]! - window.getContentSize()[1]!;
       window.setContentSize(
-        width,
+        settingsWidth,
         Math.min(height.data, workArea.height - frame),
       );
     });
@@ -120,7 +120,7 @@ export class SettingsWindow {
     }
     const window = new BrowserWindow({
       title: "Mosey 设置",
-      width,
+      width: settingsWidth,
       height: 560,
       useContentSize: true,
       resizable: false,

@@ -74,7 +74,7 @@ async function start() {
     {
       state: () => {
         const { size, visibility } = pet.settings;
-        return { size, visibility, failed: pet.failed };
+        return { size, visibility, petRendererFailed: pet.failed };
       },
       setVisibility: (next) => pet.setVisibility(next),
       changeSize: (size) => pet.changeSize(size),

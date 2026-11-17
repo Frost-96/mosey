@@ -165,12 +165,10 @@ export function useSettings(bridge: SettingsBridge) {
         receive(await action(), "login");
       } catch (error) {
         if (!retired && revisions.login === startedAtRevision) {
+          console.warn("Login launch request failed", error);
           settings = {
             ...settings,
-            login: {
-              ...settings.login,
-              error: `操作失败：${error instanceof Error ? error.message : String(error)}`,
-            },
+            login: { ...settings.login, error: "操作失败，请重试。" },
           };
         }
       } finally {
@@ -246,6 +244,7 @@ export function useSettings(bridge: SettingsBridge) {
       .then((next) => receive(next))
       .catch((error) => {
         if (retired) return;
+        console.warn("Unable to read settings", error);
         if (revisions.size === -1)
           sizeReadError = "无法读取大小设置，请重新打开设置。";
         if (revisions.login === -1)
@@ -253,7 +252,7 @@ export function useSettings(bridge: SettingsBridge) {
             ...settings,
             login: {
               status: "unavailable",
-              reason: `无法读取开机启动状态：${String(error)}`,
+              reason: "无法读取开机启动状态，请重新打开设置。",
             },
           };
         render();

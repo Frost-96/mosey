@@ -4,19 +4,20 @@ import type { ElectronApplication } from "playwright";
 import { writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createPetTestSession } from "./support/pet-session";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = process.env.MOSEY_TEST_SCALE_FACTOR ?? "1";
 
 test.each([
-  ["build", "show-pet"],
-  ["build", "hide-pet"],
-  ["install", "show-pet"],
-  ["install", "hide-pet"],
+  ["build", menuIds.showPet],
+  ["build", menuIds.hidePet],
+  ["install", menuIds.showPet],
+  ["install", menuIds.hidePet],
 ] as const)(
   "menu %s preserves the newer %s choice",
   async (boundary, command) => {
-    const visible = command === "show-pet";
+    const visible = command === menuIds.showPet;
     // The controlled interleaving concerns menu updates. Native capture and its
     // menu status are exercised by the Dock acceptance suite.
     const session = await createPetTestSession({
@@ -39,16 +40,16 @@ test.each([
       );
       session.mark("controlled-menu-reentry");
       const hooks = await app.evaluateHandle(
-        ({ Menu }, { boundary, command }) => {
+        ({ Menu }, { boundary, command, application }) => {
           const build = Menu.buildFromTemplate;
           const install = Menu.setApplicationMenu;
           let armed = true;
           let inputs = 0;
           const input = (menu: Electron.Menu | null) => {
-            // Only the application menu carries the "mosey" section; the tray
-            // menu built alongside it must not receive the injected command.
+            // Only the application menu carries the application section; the
+            // tray menu built alongside it must not receive the injected command.
             const item = menu
-              ?.getMenuItemById("mosey")
+              ?.getMenuItemById(application)
               ?.submenu?.getMenuItemById(command);
             if (!armed || !item) return;
             armed = false;
@@ -76,17 +77,18 @@ test.each([
             },
           };
         },
-        { boundary, command },
+        { boundary, command, application: menuIds.application },
       );
       restore = () => hooks.evaluate((hooks) => hooks.restore());
       const observed = await app.evaluate(
-        async ({ Menu, BrowserWindow, app }) => {
+        async ({ Menu, BrowserWindow, app }, application) => {
           // Dispatch user input on the ordinary main loop, rather than directly
           // interrupting a Node timer callback through inspector evaluation.
           // The controlled reentry inside the native menu boundary remains intact.
           await new Promise<void>((resolve) => setImmediate(resolve));
           const items = () =>
-            Menu.getApplicationMenu()!.getMenuItemById("mosey")!.submenu!.items;
+            Menu.getApplicationMenu()!.getMenuItemById(application)!.submenu!
+              .items;
           // Activation refreshes the menu from the previous choice. A newer
           // command arrives while that native refresh is still in progress.
           app.emit("activate");
@@ -97,6 +99,7 @@ test.each([
               .isVisible(),
           };
         },
+        menuIds.application,
       );
       const preferences: unknown = JSON.parse(
         await readFile(path.join(session.profile, "preferences.json"), "utf8"),
@@ -124,7 +127,9 @@ test.each([
         visibility: visible ? "visible" : "hidden",
       });
       expect(observed.visible).toBe(visible);
-      expect(observed.menu).toContain(visible ? "hide-pet" : "show-pet");
+      expect(observed.menu).toContain(
+        visible ? menuIds.hidePet : menuIds.showPet,
+      );
       expect(observed.menu).not.toContain(command);
     } catch (error) {
       await app

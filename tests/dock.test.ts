@@ -22,6 +22,7 @@ import os from "node:os";
 import { chooseSize } from "./support/settings";
 import { startForge } from "./support/forge";
 import { closeOwnedElectron } from "./support/owned-electron";
+import { menuIds } from "../src/main/menu-ids";
 
 async function bounded<T>(operation: Promise<T>, timeoutMs: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -684,9 +685,9 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       },
     );
     const diagnosticWindow = app.waitForEvent("window");
-    await invokeDiagnostic("dock-validation-start");
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invokeDiagnostic(menuIds.dockValidationStart);
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     const diagnostic = await diagnosticWindow;
     await diagnostic
       .getByRole("heading", { name: "Dock validation" })
@@ -700,8 +701,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
     expect(
       children().filter((item) => item.command.endsWith("/dock-runtime")),
     ).toEqual([]);
-    await invokeDiagnostic("dock-validation-stop");
-    await invoke("dock-retry");
+    await invokeDiagnostic(menuIds.dockValidationStop);
+    await invoke(menuIds.dockRetry);
     await expect
       .poll(
         () => children().some((item) => item.command.endsWith("/dock-runtime")),
@@ -896,7 +897,7 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       .poll(async () => (await bounds()).x, { timeout: 3000 })
       .toBeGreaterThan(origin.x + 50);
     expect((await bounds()).y + (await bounds()).height).toBe(floor);
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     const hidden = await bounds();
     await setDock(
       "bottom",
@@ -912,12 +913,12 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       ),
     ).toBe(false);
     expect(await bounds()).toEqual(hidden);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     // The previous helper may still be closing when show arrives.
-    await invoke("hide-pet");
-    await invoke("show-pet");
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     await expect
       .poll(async () => (await bounds()).y + (await bounds()).height, {
         timeout: 5000,
@@ -956,8 +957,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       }
     };
     for (const orientation of ["left", "right"] as const) {
-      await invoke("hide-pet");
-      await invoke("show-pet");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       const start = await bounds();
       await expect
         .poll(async () => Math.abs((await bounds()).x - start.x), {
@@ -984,8 +985,8 @@ test("Dock support follows visible overlap, yields to dragging, avoids sides and
       await noSnapback();
     }
     for (const orientation of ["left", "right"] as const) {
-      await invoke("hide-pet");
-      await invoke("show-pet");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       // Establish a fresh rendered pose after show, and keep this directed
       // drag out of the physical cursor's column. Real buttons=0 events from
       // that cursor otherwise cancel synthetic capture while the window moves.
@@ -1348,9 +1349,9 @@ test("real Dock helper clears its capability and exits when transport stops or t
     const menuStatus = async () =>
       dockStatusCode(
         await app!.evaluate(
-          ({ Menu }) =>
-            Menu.getApplicationMenu()!.getMenuItemById("dock-runtime-status")!
-              .label,
+          ({ Menu }, id) =>
+            Menu.getApplicationMenu()!.getMenuItemById(id)!.label,
+          menuIds.dockStatus,
         ),
       );
     const invoke = (id: string) =>
@@ -1406,7 +1407,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
         .poll(menuStatus, { timeout: 4000, interval: 30 })
         .toBe("heartbeat-lost");
     }
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     if (helperPID)
       await expect.poll(() => alive(helperPID!), { timeout: 4000 }).toBe(false);
     await new Promise((resolve) => setTimeout(resolve, 1300));
@@ -1416,7 +1417,7 @@ test("real Dock helper clears its capability and exits when transport stops or t
         BrowserWindow.getAllWindows()[0]!.isVisible(),
       ),
     ).toBe(false);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     const resumed = await waitForCapability();
     const restarted = resumed.pid;
     const shutdown = await closeOwnedElectron(app, applicationProcess);

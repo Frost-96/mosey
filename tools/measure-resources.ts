@@ -17,6 +17,7 @@ import {
   dockStatusCode,
   type DockStatus,
 } from "../src/main/platform/dock/status.ts";
+import { menuIds } from "../src/main/menu-ids.ts";
 
 // Opt-in observation of the shipped app. No thresholds, fake clocks, native
 // substitutes, or product hooks. Playwright input is not physical input evidence.
@@ -314,9 +315,8 @@ try {
   const started = performance.now();
   const dockStatus = async () => {
     const label = await app!.evaluate(
-      ({ Menu }) =>
-        Menu.getApplicationMenu()?.getMenuItemById("dock-runtime-status")
-          ?.label,
+      ({ Menu }, id) => Menu.getApplicationMenu()?.getMenuItemById(id)?.label,
+      menuIds.dockStatus,
     );
     return label === undefined ? undefined : dockStatusCode(label);
   };
@@ -333,8 +333,8 @@ try {
     console.log(`Resource phase: ${phase}, ${duration}s`);
     if (phase === "dragging") {
       // Begin on a fresh resting frame, not a moving reaction's transparent area.
-      await menu("hide-pet");
-      await menu("show-pet");
+      await menu(menuIds.hidePet);
+      await menu(menuIds.showPet);
       await pause(600);
       await pet.mouse.move(80, 120);
       await pet.mouse.down();
@@ -344,8 +344,8 @@ try {
       await pet.mouse.move(80, -80, { steps: 6 });
     } else if (phase === "hidden") {
       await pet.mouse.up();
-      await menu("hide-pet");
-    } else if (phase === "growth") await menu("show-pet");
+      await menu(menuIds.hidePet);
+    } else if (phase === "growth") await menu(menuIds.showPet);
     // Exclude menu/gesture setup from the next phase's CPU and draw counters.
     await pet.evaluate(() => {
       const probe = Reflect.get(window, "resourceProbe") as Sample["drawing"];

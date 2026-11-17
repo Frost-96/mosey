@@ -13,7 +13,9 @@ import {
 import { pawTemplateImage } from "./tray-icon";
 
 type PetMenu = {
-  state(): Pick<Settings, "size" | "visibility"> & { failed: boolean };
+  state(): Pick<Settings, "size" | "visibility"> & {
+    petRendererFailed: boolean;
+  };
   setVisibility(next: "visible" | "hidden"): void;
   changeSize(size: PetSize): void;
   retry(): Promise<void>;

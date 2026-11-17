@@ -8,6 +8,7 @@ import { createPetTestSession } from "./support/pet-session";
 import { distanceFromGround } from "./support/ground";
 import { openSettings } from "./support/settings";
 import { matchPaintedFrames } from "./support/pixels";
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 
@@ -113,7 +114,7 @@ test.each([
       );
     session.mark(`prepare-${phase}`);
     // Exercise real held and released gestures, plus a hidden renderer.
-    if (phase === "hidden") await invoke("hide-pet");
+    if (phase === "hidden") await invoke(menuIds.hidePet);
     else if (phase === "walking" || phase === "sleeping") {
       // Control time/randomness at the system boundary; never set behavior
       // states or recovery counters. Restore these before the actual fault.
@@ -127,8 +128,8 @@ test.each([
         });
         Math.random = () => 0.1;
       });
-      await invoke("hide-pet");
-      await invoke("show-pet");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       if (phase === "sleeping") {
         await app.evaluate(() => {
           const now = Date.now;
@@ -185,7 +186,7 @@ test.each([
             ),
           ).visibility,
         ).toBe("hidden");
-        await invoke("show-pet");
+        await invoke(menuIds.showPet);
         const shown = await renderer.waitUntilReady({ paintedPixels: 1500 });
         expect(matchesIdle(shown.pixels)).toBe(true);
       } else expect(matchesIdle(recovered.pixels)).toBe(true);
@@ -236,13 +237,15 @@ test.each([
     });
     // No old capture/movement survives the recovered renderer.
     await expect.poll(() => distanceFromGround(app)).toBe(0);
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     session.mark("second-renderer-failure");
     await renderer.crash();
     await expect
       .poll(() =>
-        app.evaluate(({ Menu }) =>
-          Boolean(Menu.getApplicationMenu()!.getMenuItemById("retry-pet")),
+        app.evaluate(
+          ({ Menu }, id) =>
+            Boolean(Menu.getApplicationMenu()!.getMenuItemById(id)),
+          menuIds.retryPet,
         ),
       )
       .toBe(true);
@@ -257,7 +260,7 @@ test.each([
     ).toBe(true);
     const retry = async () => {
       session.mark("manual-retry-hidden");
-      await invoke("retry-pet");
+      await invoke(menuIds.retryPet);
       // Keep the original cold-load ordering: show the new document before
       // atlas decode completes, then judge its first painted observation.
       const recovered = await renderer.waitForDocument();
@@ -271,7 +274,7 @@ test.each([
           ),
         ).visibility,
       ).toBe("hidden");
-      await invoke("show-pet");
+      await invoke(menuIds.showPet);
       session.mark("manual-retry-first-paint");
       const shown = await renderer.waitUntilReady({ paintedPixels: 1500 });
       expect(shown.visible).toBe(true);
@@ -309,7 +312,7 @@ test.each([
     session.mark("explicit-quit");
     const processHandle = app.process();
     const exited = app.waitForEvent("close");
-    await invoke("quit");
+    await invoke(menuIds.quit);
     await exited;
     expect(processHandle.exitCode).toBe(0);
   },

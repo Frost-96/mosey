@@ -1,3 +1,5 @@
+import type { DockSurface } from "../behavior/dock-support.ts";
+import type { DailyAction } from "../shared/character-capabilities.ts";
 import type { PetSize } from "../shared/size.ts";
 
 // Stable menu item identities. Labels are presentation and may change freely;
@@ -23,3 +25,8 @@ export const menuIds = {
 } as const;
 
 export const sizeMenuId = (size: PetSize) => `pet-size-${size}`;
+export const dailyActionMenuId = (action: DailyAction) =>
+  `daily-action-${action}`;
+export const dockOrientationMenuId = (
+  orientation: DockSurface["orientation"],
+) => `dock-validation-orientation-${orientation}`;

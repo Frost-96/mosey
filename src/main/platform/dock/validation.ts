@@ -16,7 +16,7 @@ import fs from "node:fs";
 import { StringDecoder } from "node:string_decoder";
 import path from "node:path";
 import { dockRecordSchema, helperReceiptSchema } from "./validation-protocol";
-import { menuIds } from "../../menu-ids";
+import { dockOrientationMenuId, menuIds } from "../../menu-ids";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_LINE = 64 * 1024;
@@ -103,7 +103,7 @@ export class DockValidation {
         id: menuIds.dockValidationOrientation,
         label: "Dock 位置（操作员确认）",
         submenu: (["bottom", "left", "right"] as const).map((orientation) => ({
-          id: `${menuIds.dockValidationOrientation}-${orientation}`,
+          id: dockOrientationMenuId(orientation),
           label: { bottom: "底部", left: "左侧", right: "右侧" }[orientation],
           type: "radio",
           checked: this.orientation === orientation,

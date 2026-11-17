@@ -6,6 +6,7 @@ import {
   selectedCharacter,
   selectedCharacterName,
 } from "./support/settings";
+import { readMainLogFromNow } from "./support/main-log";
 import { writeCharacterFixture } from "./support/character-fixture";
 import { distanceFromGround } from "./support/ground";
 import { observeGeometry } from "./support/geometry-observer";
@@ -107,13 +108,14 @@ test("an incomplete sleep extension reports its missing poses and retains the cu
     await writeCharacterFixture(f.profile, { extra: ["sleeping"] });
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
+    const log = await readMainLogFromNow(app);
     await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => settings.locator("#character-error").textContent())
-      .toContain("settling");
-    expect(await settings.locator("#character-error").textContent()).toContain(
-      "waking",
-    );
+      .toContain("素材加载失败");
+    // The window states the failure in Chinese; the pose names go to the log.
+    await expect.poll(log).toContain("settling");
+    expect(await log()).toContain("waking");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "DeepSeek · 待机",
     );
@@ -495,10 +497,12 @@ test("invalid basic animation playback is rejected before replacing the pet", as
     await writeFile(file, JSON.stringify(manifest));
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
+    const log = await readMainLogFromNow(app);
     await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => settings.locator("#character-error").textContent())
-      .toContain("landing");
+      .toContain("素材加载失败");
+    await expect.poll(log).toContain("landing must use once playback");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "DeepSeek · 待机",
     );

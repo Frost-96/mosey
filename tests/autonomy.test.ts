@@ -11,6 +11,7 @@ import { appendFileSync } from "node:fs";
 import path from "node:path";
 import { PNG } from "pngjs";
 import whaleWalking from "../src/assets/characters/whale/motion.json" with { type: "json" };
+import { menuIds } from "../src/main/menu-ids";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const whale = process.env.MOSEY_TEST_CHARACTER === "whale";
@@ -131,11 +132,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
         },
         id,
       );
-      if (id === "hide-pet" || id === "show-pet")
+      if (id === menuIds.hidePet || id === menuIds.showPet)
         await waitForPetVisibility(
           app!,
           pet,
-          id === "hide-pet" ? "hidden" : "visible",
+          id === menuIds.hidePet ? "hidden" : "visible",
         );
     };
     await pet.locator("canvas").waitFor();
@@ -270,8 +271,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     const origin = await bounds();
     await expect
       .poll(async () => Math.abs((await bounds()).x - origin.x), {
@@ -337,8 +338,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       await app.evaluate((_electron, choice) => {
         Math.random = () => choice;
       }, choice);
-      await invoke("hide-pet");
-      await invoke("show-pet");
+      await invoke(menuIds.hidePet);
+      await invoke(menuIds.showPet);
       const stationary = await bounds();
       checkpoint(`${action}-menu-complete`);
       await expect
@@ -370,8 +371,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       },
       whale ? 0.36 : 0.6,
     );
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     // Directed Playwright input does not move the physical OS cursor. Keep
     // this vertical drag away from it so native buttons=0/capture-loss events
     // do not cancel the simulated held pointer when the window moves beneath it.
@@ -412,8 +413,8 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
     await app.evaluate(() => {
       Math.random = () => 0.1;
     });
-    await invoke("hide-pet");
-    await invoke("show-pet");
+    await invoke(menuIds.hidePet);
+    await invoke(menuIds.showPet);
     const edge = await app.evaluate(({ BrowserWindow, screen }) => {
       const pet = BrowserWindow.getAllWindows()[0]!;
       const area = screen.getPrimaryDisplay().workArea;
@@ -444,11 +445,11 @@ test("autonomous activities stay grounded, yield to interaction and pause withou
       );
     } else expect(destination.x).toBeLessThanOrEqual(edge.x + 150);
     expect(destination.y).toBe(edge.y);
-    await invoke("hide-pet");
+    await invoke(menuIds.hidePet);
     const hidden = await bounds();
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect(await bounds()).toEqual(hidden);
-    await invoke("show-pet");
+    await invoke(menuIds.showPet);
     await new Promise((resolve) => setTimeout(resolve, 250));
     await expect.poll(async () => idleFrames.has(await pixels())).toBe(true);
     const held = await bounds();
