@@ -265,10 +265,12 @@ test("settings follows the system theme, speaks Chinese, fits its content and wo
       .poll(() => settings.getByText("宠物已隐藏").isVisible())
       .toBe(true);
     expect(await latinInterfaceText(settings)).toEqual([]);
-    await settings.evaluate(() =>
-      (document.activeElement as HTMLElement).blur(),
-    );
-    await settings.keyboard.press("Tab");
+    // The banner now leads the page while focus stays on the slider. blur()
+    // would not reset Chromium's sequential navigation starting point: Tab
+    // would continue from the slider to the login switch, which packaged
+    // builds enable. Walk back as a keyboard user does: the three presets,
+    // the character group's single stop, then the banner's button.
+    for (let i = 0; i < 5; i++) await settings.keyboard.press("Shift+Tab");
     expect(
       await settings.evaluate(() => document.activeElement!.textContent),
     ).toBe("显示宠物");
