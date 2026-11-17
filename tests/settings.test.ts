@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { distanceFromGround } from "./support/ground";
 import { test, expect, onTestFinished } from "vitest";
@@ -97,13 +98,17 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         );
       });
     const invoke = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((x) => x.label === "Mosey")
-          ?.submenu?.items.find((x) => x.label === label);
-        if (!item) throw new Error(`Missing menu ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((x) => x.label === "Mosey")
+            ?.submenu?.items.find((x) => x.label === label);
+          if (!item) throw new Error(`Missing menu ${label}`);
+          item.click();
+        },
+        label,
+      );
     const petState = () =>
       app!.evaluate(({ BrowserWindow }) => {
         const pet = BrowserWindow.getAllWindows().find(
@@ -335,14 +340,12 @@ test.each([
       const child = app.process();
       // Judge the real process exit, not a driver close acknowledgement that
       // can remain pending after the application has already exited.
-      void app
-        .evaluate(({ Menu }) => {
-          Menu.getApplicationMenu()!
-            .items.find((item) => item.label === "Mosey")!
-            .submenu!.items.find((item) => item.label === "Quit Mosey")!
-            .click();
-        })
-        .catch(() => {});
+      void onMainLoop(app, ({ Menu }) => {
+        Menu.getApplicationMenu()!
+          .items.find((item) => item.label === "Mosey")!
+          .submenu!.items.find((item) => item.label === "Quit Mosey")!
+          .click();
+      }).catch(() => {});
       await expect.poll(() => child.exitCode, { timeout: 10000 }).toBe(0);
     };
     session.mark("migrated-hidden-window");
@@ -389,7 +392,7 @@ test.each([
       await expect
         .poll(() => distanceFromGround(app), { timeout: 4000 })
         .toBe(0);
-      await app.evaluate(({ Menu }) =>
+      await onMainLoop(app, ({ Menu }) =>
         Menu.getApplicationMenu()!
           .items.find((x) => x.label === "Mosey")!
           .submenu!.items.find((x) => x.label === "Hide Mosey")!

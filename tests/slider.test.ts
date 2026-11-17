@@ -1,7 +1,7 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
-import { withinDeadline } from "./support/deadline";
 import { _electron as electron, type ElectronApplication } from "playwright";
 import { mkdtemp, rm, readFile, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -10,7 +10,10 @@ import os from "node:os";
 import { startForge } from "./support/forge";
 import { openSettings } from "./support/settings";
 import { describeSyntheticDragInterference } from "./support/synthetic-drag-interference";
-import { sampleProcess } from "./support/process-sample-evidence";
+import {
+  afterMainLoopTurn,
+  recordResponsiveness,
+} from "./support/responsiveness-evidence";
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
 const scaleFactor = Number(process.env.MOSEY_TEST_SCALE_FACTOR ?? "1");
 const scaleArgument = `--force-device-scale-factor=${scaleFactor}`;
@@ -296,7 +299,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     await expect
       .poll(() => settings.getByRole("alert").isVisible())
       .toBe(false);
-    await app.evaluate(({ Menu }) =>
+    await onMainLoop(app, ({ Menu }) =>
       Menu.getApplicationMenu()!
         .items.find((item) => item.label === "Mosey")!
         .submenu!.items.find((item) => item.label === "Hide Mosey")!
@@ -352,54 +355,51 @@ test("slider previews without saving, commits on release, and persists nonpreset
     const failedAt = Date.now();
     const failedWhileHeld = holding;
     const evidence = `failure-${packaged ? "packaged" : "development"}-slider`;
-    const settings = app
-      ?.windows()
-      .find((page) => new URL(page.url()).searchParams.has("settings"));
-    const renderer = await withinDeadline("Slider renderer evidence", () =>
-      settings?.evaluate(async () => ({
-        events: Reflect.get(window, "sliderTrace"),
-        held: Reflect.get(window, "sliderHeldPointer"),
-        settings: await window.moseySettings.get(),
-      })),
-    ).catch((error: unknown) => ({ unavailable: String(error) }));
-    const native = await withinDeadline("Slider native evidence", () =>
-      app?.evaluate(({ BrowserWindow }) => ({
-        events: Reflect.get(globalThis, "sliderNativeTrace"),
-        windows: BrowserWindow.getAllWindows().map((window) => ({
-          title: window.getTitle(),
-          bounds: window.getBounds(),
-          visible: window.isVisible(),
-          focused: window.isFocused(),
-        })),
-      })),
-    ).catch((error: unknown) => ({ unavailable: String(error) }));
-    // An unanswered probe leaves no trace of its own. The main thread also
-    // carries every CDP command, so its stacks are kept as the record of what
-    // stalled the run; sampling an exited process fails fast.
-    const pid = app?.process().pid;
-    const sample =
-      pid !== undefined &&
-      ((renderer && "unavailable" in renderer) ||
-        (native && "unavailable" in native))
-        ? await sampleProcess({
-            pid,
-            name: `${evidence}-main-sample`,
-            evidenceDirectory: evidencePath(),
-          })
-        : undefined;
-    await writeFile(
-      evidencePath(`${evidence}-trace.json`),
-      JSON.stringify({ renderer, native, sample }, null, 2),
-    ).catch(() => {});
+    const running = app;
+    const pages = running?.windows() ?? [];
+    const settings = pages.find((page) =>
+      new URL(page.url()).searchParams.has("settings"),
+    );
+    const pet = pages.find(
+      (page) => !new URL(page.url()).searchParams.has("settings"),
+    );
+    // Hide Mosey is dispatched from inspector evaluation before a renderer poll.
+    const { renderers } = await recordResponsiveness({
+      name: evidence,
+      evidenceDirectory: evidencePath(),
+      main: {
+        pid: running?.process().pid,
+        probe:
+          running &&
+          afterMainLoopTurn(running, () =>
+            running.evaluate(({ BrowserWindow }) => ({
+              events: Reflect.get(globalThis, "sliderNativeTrace"),
+              windows: BrowserWindow.getAllWindows().map((window) => ({
+                title: window.getTitle(),
+                bounds: window.getBounds(),
+                visible: window.isVisible(),
+                focused: window.isFocused(),
+              })),
+            })),
+          ),
+      },
+      renderers: {
+        settings:
+          settings &&
+          (() =>
+            settings.evaluate(async () => ({
+              events: Reflect.get(window, "sliderTrace"),
+              held: Reflect.get(window, "sliderHeldPointer"),
+              settings: await window.moseySettings.get(),
+            }))),
+        pet: pet && (() => pet.evaluate(() => document.readyState)),
+      },
+    });
+    const held = renderers.settings.value?.held;
     const interference =
-      failedWhileHeld &&
-      renderer &&
-      "held" in renderer &&
-      Array.isArray(renderer.held)
+      failedWhileHeld && Array.isArray(held)
         ? describeSyntheticDragInterference(
-            renderer.held.filter(
-              (event: { at: number }) => event.at <= failedAt,
-            ),
+            held.filter((event: { at: number }) => event.at <= failedAt),
           )
         : undefined;
     if (interference)

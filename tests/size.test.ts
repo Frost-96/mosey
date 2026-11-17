@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -159,13 +160,17 @@ setTimeout(()=>process.exit(0),120000);
     await expect.poll(groundDistance, { timeout: 3000, interval: 20 }).toBe(0);
     const choose = (label: string) => chooseSize(app!, label);
     const invoke = (label: string) =>
-      app!.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing menu item: ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app!,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((item) => item.label === "Mosey")
+            ?.submenu?.items.find((item) => item.label === label);
+          if (!item) throw new Error(`Missing menu item: ${label}`);
+          item.click();
+        },
+        label,
+      );
     const pixels = () =>
       pet.evaluate(() => {
         const canvas = document.querySelector("canvas")!;

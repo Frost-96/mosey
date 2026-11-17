@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { createElectronFixtureCleanup } from "./support/electron-fixture-cleanup";
@@ -74,7 +75,8 @@ test("diagnostic status keeps the latest Retry during a native permission query"
     await pet.locator("canvas").waitFor({ state: "attached" });
     expect(await pet.evaluate(() => devicePixelRatio)).toBe(scaleFactor);
     const invoke = (section: string, label: string) =>
-      app!.evaluate(
+      onMainLoop(
+        app!,
         ({ Menu }, { section, label }) => {
           Menu.getApplicationMenu()!
             .items.find((item) => item.label === section)!

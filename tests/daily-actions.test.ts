@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { expect, test } from "vitest";
 import { writeFile } from "node:fs/promises";
 import type { ElectronApplication, Page } from "playwright";
@@ -133,13 +134,17 @@ async function nativeActions(app: ElectronApplication, pet: Page) {
     expect(
       items.find((item) => item.id === `daily-action-${action}`)?.enabled,
     ).toBe(true);
-    await app.evaluate((_electron, action) => {
-      const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
-      const item = menu.getMenuItemById(`daily-action-${action}`);
-      if (!item?.enabled)
-        throw new Error(`Unavailable daily action: ${action}`);
-      item.click();
-    }, action);
+    await onMainLoop(
+      app,
+      (_electron, action) => {
+        const menu = Reflect.get(globalThis, "dailyMenus").at(-1) as Menu;
+        const item = menu.getMenuItemById(`daily-action-${action}`);
+        if (!item?.enabled)
+          throw new Error(`Unavailable daily action: ${action}`);
+        item.click();
+      },
+      action,
+    );
     await close();
   };
   return { open, close, choose };
@@ -415,13 +420,17 @@ test("daily seated actions continue under menus, queued commands, dragging, hidi
     await menu.choose("celebrating");
     await waitPosture(pet, "celebrating");
     const invokeVisibility = (label: string) =>
-      app.evaluate(({ Menu }, label) => {
-        const item = Menu.getApplicationMenu()
-          ?.items.find((item) => item.label === "Mosey")
-          ?.submenu?.items.find((item) => item.label === label);
-        if (!item) throw new Error(`Missing visibility command ${label}`);
-        item.click();
-      }, label);
+      onMainLoop(
+        app,
+        ({ Menu }, label) => {
+          const item = Menu.getApplicationMenu()
+            ?.items.find((item) => item.label === "Mosey")
+            ?.submenu?.items.find((item) => item.label === label);
+          if (!item) throw new Error(`Missing visibility command ${label}`);
+          item.click();
+        },
+        label,
+      );
     await invokeVisibility("Hide Mosey");
     await expect
       .poll(async () => (await presentation(pet)).visibility)
@@ -669,7 +678,7 @@ test("open menu commands retire on character selection and same-identity resourc
     const before = await presentation(pet);
     await menu.open();
     const clickOld = () =>
-      app.evaluate(() => {
+      onMainLoop(app, () => {
         const menu = Reflect.get(globalThis, "dailyMenus")[0] as Menu;
         menu.getMenuItemById("daily-action-stretching")!.click();
       });
@@ -864,13 +873,17 @@ test("free activity selects and paints all five daily behaviors without action c
       }, choice);
       await clearTransitions(pet);
       for (const label of ["Hide Mosey", "Show Mosey"])
-        await app.evaluate(({ Menu }, label) => {
-          const item = Menu.getApplicationMenu()
-            ?.items.find((entry) => entry.label === "Mosey")
-            ?.submenu?.items.find((entry) => entry.label === label);
-          if (!item) throw new Error(`Missing visibility item ${label}`);
-          item.click();
-        }, label);
+        await onMainLoop(
+          app,
+          ({ Menu }, label) => {
+            const item = Menu.getApplicationMenu()
+              ?.items.find((entry) => entry.label === "Mosey")
+              ?.submenu?.items.find((entry) => entry.label === label);
+            if (!item) throw new Error(`Missing visibility item ${label}`);
+            item.click();
+          },
+          label,
+        );
       // The shortened wait drops the neutral alignment, so leaving rest can
       // still take up to two idle cycles. Far below the real 18s rest wait.
       await waitPosture(pet, action, 500 + 2 * idleCycle + 2000);

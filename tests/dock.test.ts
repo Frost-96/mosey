@@ -1,3 +1,4 @@
+import { onMainLoop } from "./support/main-loop";
 import { evidencePath } from "./support/evidence";
 import { test, expect, onTestFinished } from "vitest";
 import { _electron as electron, type ElectronApplication } from "playwright";
@@ -1359,7 +1360,8 @@ test("real Dock helper clears its capability and exits when transport stops or t
             .label,
       );
     const invoke = (label: string) =>
-      app!.evaluate(
+      onMainLoop(
+        app!,
         ({ Menu }, label) =>
           Menu.getApplicationMenu()!
             .items.find((i) => i.label === "Mosey")!

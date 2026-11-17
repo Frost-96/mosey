@@ -1,3 +1,7 @@
+// Told apart from a probe that answered with an error: only a missed deadline
+// shows that the process behind the driver stopped responding.
+export class DeadlineExceeded extends Error {}
+
 // Driver calls can stay pending after a test times out. A separate deadline
 // lets the owner close its process; a later rejection remains observed by race.
 export async function withinDeadline<T>(
@@ -13,7 +17,9 @@ export async function withinDeadline<T>(
         timer = setTimeout(
           () =>
             reject(
-              new Error(`${label} exceeded its ${milliseconds}ms deadline`),
+              new DeadlineExceeded(
+                `${label} exceeded its ${milliseconds}ms deadline`,
+              ),
             ),
           milliseconds,
         );
