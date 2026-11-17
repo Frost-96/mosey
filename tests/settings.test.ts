@@ -128,7 +128,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
     await expect
       .poll(() =>
         settings!
-          .getByRole("button", { name: "中（默认）" })
+          .getByRole("button", { name: "中", exact: true })
           .getAttribute("aria-pressed"),
       )
       .toBe("true");
@@ -236,24 +236,15 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
 
     await stage("new presets");
     await settings.getByRole("button", { name: "小", exact: true }).click();
-    await settings.getByRole("button", { name: "中（默认）" }).click();
+    await settings.getByRole("button", { name: "中", exact: true }).click();
     await expect.poll(async () => (await petState()).bounds.width).toBe(160);
 
-    expect(
-      await settings
-        .locator("body")
-        .evaluate((element) => getComputedStyle(element).backgroundColor),
-    ).toBe("rgb(246, 245, 242)");
+    // Surfaces follow the system theme; settings-appearance covers both.
     expect(
       await settings
         .locator("body")
         .evaluate((element) => getComputedStyle(element).overflowY),
     ).toBe("auto");
-    expect(
-      await settings
-        .locator("main")
-        .evaluate((element) => getComputedStyle(element).paddingLeft),
-    ).toBe("32px");
     await settings
       .getByRole("region", { name: "开机启动" })
       .scrollIntoViewIfNeeded();

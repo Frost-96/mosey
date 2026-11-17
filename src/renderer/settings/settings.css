@@ -1,104 +1,377 @@
+/* Platform values live only in these tokens: font, radii, accent and surfaces.
+   The structure below stays platform-neutral; another system adds one set. */
+html[data-page="settings"] {
+  color-scheme: light dark;
+  --font:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    system-ui, sans-serif;
+  --radius-card: 10px;
+  --radius-control: 6px;
+  --accent: #007aff;
+  --primary: #0a64d6;
+  --surface: #f3f3f5;
+  --card: #ffffff;
+  --tile: #f3f3f5;
+  --control: #ffffff;
+  --segment-track: rgba(118, 118, 128, 0.12);
+  --segment-thumb: #ffffff;
+  --switch-off: rgba(120, 120, 128, 0.32);
+  --text: #1d1d1f;
+  --text-secondary: #5f5f64;
+  --border: rgba(0, 0, 0, 0.07);
+  --control-border: rgba(0, 0, 0, 0.14);
+  --separator: rgba(0, 0, 0, 0.08);
+  --error: #c42b1c;
+  --warning: #b25000;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-page="settings"] {
+    --accent: #0a84ff;
+    --primary: #0a6ce0;
+    --surface: #1e1e1e;
+    --card: #2a2a2c;
+    --tile: #363638;
+    --control: #3a3a3c;
+    --segment-track: rgba(118, 118, 128, 0.24);
+    --segment-thumb: #636366;
+    --switch-off: rgba(120, 120, 128, 0.4);
+    --text: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --border: rgba(255, 255, 255, 0.07);
+    --control-border: rgba(255, 255, 255, 0.12);
+    --separator: rgba(255, 255, 255, 0.1);
+    --error: #ff7b6e;
+    --warning: #ffb340;
+  }
+}
+
 html[data-page="settings"],
 html[data-page="settings"] body {
   overflow: auto;
 }
 html[data-page="settings"] body {
   margin: 0;
-  background: #f6f5f2;
-  color: #282723;
-  font:
-    14px -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  font: 13px/1.4 var(--font);
 }
 html[data-page="settings"] main {
-  padding: 28px 32px;
-}
-html[data-page="settings"] h1 {
-  font-size: 24px;
-  margin: 0 0 28px;
-}
-html[data-page="settings"] h2 {
-  font-size: 15px;
-  margin: 0 0 12px;
-}
-html[data-page="settings"] section {
-  margin-bottom: 26px;
-}
-html[data-page="settings"] p {
-  line-height: 1.5;
-  margin: 6px 0 12px;
-}
-html[data-page="settings"] .pet-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px;
-  background: white;
-  border: 1px solid #dedbd4;
-  border-radius: 12px;
-}
-html[data-page="settings"] .pet-card p {
-  margin: 4px 0 0;
-  color: #77736b;
-  font-size: 12px;
-}
-html[data-page="settings"] .pet-mark {
-  font-size: 26px;
-}
-html[data-page="settings"] .selected {
-  margin-left: auto;
-  font-size: 12px;
-  color: #466847;
-}
-html[data-page="settings"] .presets {
-  display: flex;
-  gap: 8px;
-}
-html[data-page="settings"] button {
-  font: inherit;
-  cursor: pointer;
-  border: 1px solid #cfcac0;
-  border-radius: 7px;
-  padding: 8px 14px;
-  background: white;
-  color: inherit;
-}
-html[data-page="settings"] .presets button {
-  flex: 1;
-}
-html[data-page="settings"] button[aria-pressed="true"] {
-  background: #404b3d;
-  color: white;
-  border-color: #404b3d;
-}
-html[data-page="settings"] button:focus-visible {
-  outline: 3px solid #a2b895;
-  outline-offset: 2px;
-}
-html[data-page="settings"] .hint {
-  color: #77736b;
-  font-size: 12px;
-}
-html[data-page="settings"] .hidden-notice,
-html[data-page="settings"] .error {
-  margin-top: 12px;
-  font-size: 12px;
-}
-html[data-page="settings"] .hidden-notice button,
-html[data-page="settings"] .error button {
-  padding: 4px 8px;
-  margin-left: 8px;
-}
-html[data-page="settings"] .error {
-  color: #9c3c29;
+  padding: 16px 20px 20px;
 }
 html[data-page="settings"] [hidden] {
   display: none !important;
 }
+html[data-page="settings"] .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+html[data-page="settings"] p {
+  margin: 0;
+}
+html[data-page="settings"] section + section {
+  margin-top: 20px;
+}
+html[data-page="settings"] h2 {
+  margin: 0 0 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+html[data-page="settings"] .card {
+  padding: 12px;
+  border-radius: var(--radius-card);
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+html[data-page="settings"] svg {
+  flex-shrink: 0;
+  fill: var(--text-secondary);
+}
 
+/* Buttons */
+html[data-page="settings"] button {
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-border);
+  background: var(--control);
+  color: var(--text);
+}
+html[data-page="settings"] button.primary {
+  border-color: transparent;
+  background: var(--primary);
+  color: #ffffff;
+}
+html[data-page="settings"] button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+html[data-page="settings"] :focus-visible,
+html[data-page="settings"] .character:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 1px;
+}
+
+/* Hidden pet banner */
+html[data-page="settings"] .banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 12px 10px 14px;
+  border-radius: var(--radius-card);
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+html[data-page="settings"] .banner svg {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+html[data-page="settings"] .banner span {
+  flex-grow: 1;
+}
+html[data-page="settings"] .banner button {
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+/* Character cards */
+html[data-page="settings"] .characters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+html[data-page="settings"] .character {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border-radius: calc(var(--radius-card) - 2px);
+  background: var(--tile);
+  cursor: pointer;
+}
+html[data-page="settings"] .character:has(input:checked) {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+html[data-page="settings"] .character[data-pending] {
+  box-shadow: 0 0 0 2px var(--separator);
+}
+html[data-page="settings"] .thumbnail {
+  display: block;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  padding: 4px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+html[data-page="settings"] .thumbnail.placeholder {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 8px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: 28px;
+  font-weight: 600;
+}
+html[data-page="settings"] .character .name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+html[data-page="settings"] .character:has(input:checked) .name {
+  font-weight: 600;
+}
+html[data-page="settings"] .badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: none;
+}
+html[data-page="settings"] .character:has(input:checked) .badge {
+  display: block;
+  background: var(--accent);
+}
+html[data-page="settings"] .character:has(input:checked) .badge::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+html[data-page="settings"] .character[data-pending] .badge {
+  display: block;
+  border: 2.5px solid var(--separator);
+  border-top-color: var(--accent);
+  background: none;
+  animation: settings-spin 0.9s linear infinite;
+}
+@keyframes settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-page="settings"] .character[data-pending] .badge {
+    animation: none;
+  }
+}
+
+/* Status rows below a card's controls */
+html[data-page="settings"] .status-row:not(:empty) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--separator);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+html[data-page="settings"] .status-row p {
+  flex-grow: 1;
+}
+html[data-page="settings"] .status-row [role="alert"],
+html[data-page="settings"] #login-error {
+  color: var(--error);
+}
+
+/* Size */
+html[data-page="settings"] .presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 2px;
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--segment-track);
+}
+html[data-page="settings"] .presets button {
+  height: 28px;
+  font-size: 13px;
+  border: none;
+  background: transparent;
+}
+html[data-page="settings"] .presets button[aria-pressed="true"] {
+  background: var(--segment-thumb);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  font-weight: 600;
+}
+html[data-page="settings"] .slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
 html[data-page="settings"] input[type="range"] {
-  width: 100%;
-  margin: 18px 0 0;
-  accent-color: #404b3d;
+  flex-grow: 1;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* Login launch */
+html[data-page="settings"] .card:has(.switch-row) {
+  padding: 0;
+}
+html[data-page="settings"] .switch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+}
+html[data-page="settings"] .switch-row span {
+  flex-grow: 1;
+}
+html[data-page="settings"] .switch-row:has(input:disabled) span {
+  color: var(--text-secondary);
+}
+html[data-page="settings"] input[role="switch"] {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border-radius: 11px;
+  background: var(--switch-off);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+html[data-page="settings"] input[role="switch"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 0.15s;
+}
+html[data-page="settings"] input[role="switch"]:checked {
+  background: var(--accent);
+}
+html[data-page="settings"] input[role="switch"]:checked::before {
+  left: 18px;
+}
+html[data-page="settings"] input[role="switch"]:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+html[data-page="settings"] .login-detail:not(.visually-hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--separator);
+}
+html[data-page="settings"] #login-status {
+  font-weight: 600;
+}
+html[data-page="settings"] .login-detail[data-tone="warning"] #login-status {
+  color: var(--warning);
+}
+html[data-page="settings"] .login-detail .hint,
+html[data-page="settings"] #login-error {
+  font-size: 12px;
+}
+html[data-page="settings"] .login-detail .hint {
+  color: var(--text-secondary);
+}
+html[data-page="settings"] .login-detail .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+html[data-page="settings"] .login-detail .actions button {
+  padding: 4px 12px;
 }

@@ -294,7 +294,7 @@ test("slider previews without saving, commits on release, and persists nonpreset
     });
     await expect.poll(() => settings.getByRole("alert").isVisible()).toBe(true);
     await rm(file + ".tmp", { recursive: true });
-    await settings.getByRole("button", { name: "中（默认）" }).click();
+    await settings.getByRole("button", { name: "中", exact: true }).click();
     await expect.poll(side).toBe(160);
     await expect
       .poll(() => settings.getByRole("alert").isVisible())

@@ -39,7 +39,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       // together so a pending read cannot masquerade as confirmed system state.
       await expect
         .poll(() =>
-          login.getByRole("checkbox").evaluate((input: HTMLInputElement) => ({
+          login.getByRole("switch").evaluate((input: HTMLInputElement) => ({
             checked: input.checked,
             disabled: input.disabled,
           })),
@@ -72,13 +72,11 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
         ({ app }) =>
           app.getLoginItemSettings({ type: "mainAppService" }).status,
       );
-      const checkbox = settings!
+      const toggle = settings!
         .getByRole("region", { name: "开机启动" })
-        .getByRole("checkbox");
-      await expect
-        .poll(() => checkbox.isChecked())
-        .toBe(previous === "enabled");
-      await checkbox.click();
+        .getByRole("switch");
+      await expect.poll(() => toggle.isChecked()).toBe(previous === "enabled");
+      await toggle.click();
       await expect
         .poll(() =>
           app!.evaluate(
@@ -147,7 +145,7 @@ test.runIf(process.env.MOSEY_TEST_MODE === "packaged")(
       await click();
       const reenabled = await read();
       if (reenabled.system.status === "requires-approval") {
-        await settings!.getByRole("button", { name: "取消待批准请求" }).click();
+        await settings!.getByRole("button", { name: "取消请求" }).click();
       } else await click();
       expect((await read()).system.openAtLogin).toBe(false);
       await quit();

@@ -1,6 +1,11 @@
 import { expect, onTestFinished, test } from "vitest";
 import { createPetTestSession } from "./support/pet-session";
-import { openSettings } from "./support/settings";
+import {
+  openSettings,
+  chooseCharacter,
+  selectedCharacter,
+  selectedCharacterName,
+} from "./support/settings";
 import { writeCharacterFixture } from "./support/character-fixture";
 import { distanceFromGround } from "./support/ground";
 import { observeGeometry } from "./support/geometry-observer";
@@ -65,11 +70,9 @@ test("a five-action character is discovered and painted through the ordinary sel
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
     await expect
-      .poll(() => settings.getByRole("option").allTextContents())
+      .poll(() => settings.locator(".character .name").allTextContents())
       .toContain("五动作角色");
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("五动作角色 · 待机");
@@ -104,9 +107,7 @@ test("an incomplete sleep extension reports its missing poses and retains the cu
     await writeCharacterFixture(f.profile, { extra: ["sleeping"] });
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => settings.locator("#character-error").textContent())
       .toContain("settling");
@@ -116,9 +117,7 @@ test("an incomplete sleep extension reports its missing poses and retains the cu
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "DeepSeek · 待机",
     );
-    expect(
-      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-    ).toBe("whale");
+    expect(await selectedCharacter(settings)).toBe("whale");
   } finally {
     await f.close();
   }
@@ -241,9 +240,7 @@ test("a minimal character stays active past sleep time and does not climb a newl
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
     await shortenRest(app, pet);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("五动作角色 · 待机");
@@ -320,9 +317,7 @@ test("a complete sleep extension animates, responds and wakes through its own po
     const settings = await openSettings(app);
     await settings.getByRole("button", { name: "大", exact: true }).click();
     await shortenRest(app, pet);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => pet.locator("canvas").getAttribute("aria-label"))
       .toBe("五动作角色 · 待机");
@@ -394,9 +389,7 @@ test("same-identity versions keep pixels and hit regions together and ignore lat
       });
     });
     await writeCharacterFixture(f.profile, { color: [30, 40, 220], left: 180 });
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() =>
         app.evaluate(
@@ -409,9 +402,7 @@ test("same-identity versions keep pixels and hit regions together and ignore lat
     await app.evaluate(() => {
       Reflect.get(globalThis, "versionTransport").hold = false;
     });
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(async () => (await paintedShape(pet)).green)
       .toBeGreaterThan(200);
@@ -481,9 +472,7 @@ test("same-identity versions keep pixels and hit regions together and ignore lat
     );
     ({ app, pet } = await f.restart());
     settings = await openSettings(app);
-    expect(
-      await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-    ).toBe("minimal");
+    expect(await selectedCharacter(settings)).toBe("minimal");
     expect((await paintedShape(pet)).green).toBeGreaterThan(200);
     expect(
       (await pet.evaluate(() => window.mosey.getPresentation()))
@@ -506,9 +495,7 @@ test("invalid basic animation playback is rejected before replacing the pet", as
     await writeFile(file, JSON.stringify(manifest));
     const { app, pet } = await f.launch();
     const settings = await openSettings(app);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => settings.locator("#character-error").textContent())
       .toContain("landing");
@@ -540,15 +527,12 @@ test("a failed same-identity update retains the visible name and pixels until re
     });
     const obstacle = path.join(f.profile, "preferences.json.tmp");
     await mkdir(obstacle);
-    await settings
-      .getByRole("combobox", { name: "角色" })
-      .selectOption("minimal");
+    await chooseCharacter(settings, "minimal");
     await expect
       .poll(() => settings.locator("#character-error").textContent())
       .toContain("保存失败");
-    expect(await settings.locator("#character-status").textContent()).toBe(
-      "当前角色：五动作角色",
-    );
+    expect(await settings.locator("#character-status").textContent()).toBe("");
+    expect(await selectedCharacterName(settings)).toBe("五动作角色");
     expect(await pet.locator("canvas").getAttribute("aria-label")).toBe(
       "五动作角色 · 待机",
     );
@@ -561,8 +545,9 @@ test("a failed same-identity update retains the visible name and pixels until re
     // Each window renders independently; the pet's label does not acknowledge
     // the settings window's final notification.
     await expect
-      .poll(() => settings.locator("#character-status").textContent())
-      .toBe("当前角色：更新后的角色");
+      .poll(() => selectedCharacterName(settings))
+      .toBe("更新后的角色");
+    expect(await settings.locator("#character-status").textContent()).toBe("");
     await expect
       .poll(async () => (await paintedShape(pet)).green)
       .toBeGreaterThan(200);

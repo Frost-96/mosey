@@ -1,6 +1,7 @@
 import { attachSettingsPage } from "./settings-page";
 
 document.documentElement.dataset.page = "settings";
+document.documentElement.lang = "zh-CN";
 document.querySelector<HTMLLinkElement>("#settings-style")!.media = "all";
 document.title = "Mosey 设置";
 const host = document.createElement("div");

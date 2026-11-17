@@ -1,7 +1,12 @@
 import { evidencePath } from "./support/evidence";
 import { test, expect } from "vitest";
 import { createPetTestSession } from "./support/pet-session";
-import { closeSettings, openSettings } from "./support/settings";
+import {
+  closeSettings,
+  openSettings,
+  chooseCharacter,
+  selectedCharacter,
+} from "./support/settings";
 import type { Settings } from "../src/shared/contract";
 
 const packaged = process.env.MOSEY_TEST_MODE === "packaged";
@@ -141,7 +146,7 @@ test("settings protects edits while independently merging IPC results and notifi
     expect(await slider.inputValue()).toBe("210");
     expect(await settings.locator("output").textContent()).toBe("210");
     expect(await settings.getByText("宠物已隐藏").isVisible()).toBe(true);
-    expect(await settings.getByRole("checkbox").isChecked()).toBe(true);
+    expect(await settings.getByRole("switch").isChecked()).toBe(true);
     await slider.dispatchEvent("pointercancel");
     await expect.poll(() => count("settings:size")).toBe(1);
     await finish("settings:size", { ...initial, revision: 1004, size: 210 });
@@ -150,14 +155,14 @@ test("settings protects edits while independently merging IPC results and notifi
       revision: 1001,
       size: 210,
     });
-    expect(await settings.getByRole("checkbox").isChecked()).toBe(true);
+    expect(await settings.getByRole("switch").isChecked()).toBe(true);
     expect(await settings.getByText("宠物已隐藏").isVisible()).toBe(true);
     await expect
       .poll(() => settings.locator("output").textContent())
       .toBe("210");
     // A size response cannot overwrite login/visibility, even if its full
     // snapshot carries a higher revision. A login response likewise owns no size.
-    await settings.getByRole("checkbox").click();
+    await settings.getByRole("switch").click();
     await settings.getByRole("button", { name: "小", exact: true }).click();
     await settings.getByRole("button", { name: "大", exact: true }).click();
     await expect.poll(() => count("settings:size")).toBe(3);
@@ -173,7 +178,7 @@ test("settings protects edits while independently merging IPC results and notifi
       .toBe("240");
     await finish("settings:login-launch", { ...initial, revision: 1007 });
     await expect
-      .poll(() => settings.getByRole("checkbox").isEnabled())
+      .poll(() => settings.getByRole("switch").isEnabled())
       .toBe(true);
     expect(await slider.inputValue()).toBe("240");
     expect(await settings.getByText("宠物已隐藏").isVisible()).toBe(true);
@@ -277,15 +282,13 @@ test("settings protects edits while independently merging IPC results and notifi
       .poll(() => reopened.locator("output").textContent())
       .toBe("140");
     expect(await reopened.locator(".error").isVisible()).toBe(false);
-    await reopened.getByRole("combobox").selectOption("whale");
+    await chooseCharacter(reopened, "whale");
     await finish("settings:character", initial, true);
     await expect
       .poll(() => reopened.locator("#character-error").textContent())
       .toContain("无法确认角色切换结果");
     await notify({ ...initial, revision: 1015, size: 140, character: "whale" });
-    await expect
-      .poll(() => reopened.getByRole("combobox").inputValue())
-      .toBe("whale");
+    await expect.poll(() => selectedCharacter(reopened)).toBe("whale");
     expect(await reopened.locator("#character-error").isVisible()).toBe(false);
 
     await reopened.screenshot({

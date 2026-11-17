@@ -35,7 +35,7 @@ export async function openSettings(
         if (!candidate) return false;
         try {
           await candidate
-            .getByRole("button", { name: "中（默认）" })
+            .getByRole("button", { name: "中", exact: true })
             .waitFor({ timeout: 1000 });
         } catch (error) {
           if (candidate.isClosed()) return false;
@@ -126,7 +126,7 @@ export async function chooseSize(
   });
   await page
     .getByRole("button", {
-      name: { 70: "小", 160: "中（默认）", 240: "大" }[size],
+      name: { 70: "小", 160: "中", 240: "大" }[size],
       exact: true,
     })
     .click();
@@ -145,4 +145,23 @@ export async function chooseSize(
   // exercised separately; keep its focused controls out of subsequent input.
   await closeSettings(app);
   return observation;
+}
+
+// Character cards are radios labelled by display name; tests address them by
+// stable identity, as the selector previously did with option values.
+export function characterCard(page: Page, id: string) {
+  return page.locator(`label[data-character="${id}"]`);
+}
+export async function chooseCharacter(page: Page, id: string) {
+  await characterCard(page, id).click();
+}
+export function selectedCharacter(page: Page) {
+  return page
+    .locator('input[name="character"]:checked')
+    .evaluate((input: HTMLInputElement) => input.value);
+}
+export function selectedCharacterName(page: Page) {
+  return page
+    .locator('label:has(input[name="character"]:checked) .name')
+    .textContent();
 }

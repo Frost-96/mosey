@@ -13,6 +13,7 @@ import {
   type PetBridge,
   settingsSchema,
   loginLaunchRequestSchema,
+  settingsHeightSchema,
   type SettingsBridge,
 } from "./shared/contract";
 const bridge: PetBridge = {
@@ -114,6 +115,9 @@ const settingsBridge: SettingsBridge = {
     return settingsSchema.parse(
       await ipcRenderer.invoke(channels.openLoginSettings),
     );
+  },
+  fitContent(height) {
+    ipcRenderer.send(channels.fitSettings, settingsHeightSchema.parse(height));
   },
   onChange(listener) {
     const receive = (_event: Electron.IpcRendererEvent, value: unknown) => {

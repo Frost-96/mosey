@@ -2,7 +2,12 @@ import { expect, test } from "vitest";
 import { writeFile } from "node:fs/promises";
 import type { Page } from "playwright";
 import { createPetTestSession } from "./support/pet-session";
-import { openSettings, closeSettings } from "./support/settings";
+import {
+  openSettings,
+  closeSettings,
+  chooseCharacter,
+  selectedCharacter,
+} from "./support/settings";
 import { distanceFromGround } from "./support/ground";
 import { evidencePath } from "./support/evidence";
 
@@ -54,7 +59,7 @@ test.each([
       let { app, pet } = await f.launch();
       let settings = await openSettings(app);
       expect(
-        await settings.locator("#character option").allTextContents(),
+        await settings.locator(".character .name").allTextContents(),
       ).toEqual(["DeepSeek", "Claude", "Gemini", "GPT", "柯基"]);
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
@@ -64,7 +69,7 @@ test.each([
           .find((w) => w.getTitle() === "Mosey")!
           .getBounds(),
       );
-      await settings.getByRole("combobox", { name: "角色" }).selectOption(id);
+      await chooseCharacter(settings, id);
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"), {
           timeout: 10000,
@@ -79,9 +84,7 @@ test.each([
       ).toEqual(before);
       ({ app, pet } = await f.restart());
       settings = await openSettings(app);
-      expect(
-        await settings.getByRole("combobox", { name: "角色" }).inputValue(),
-      ).toBe(id);
+      expect(await selectedCharacter(settings)).toBe(id);
       await expect
         .poll(() => pet.locator("canvas").getAttribute("aria-label"))
         .toBe(`${name} · 待机`);
