@@ -199,8 +199,7 @@ test("settings owns presets, reuses its window and preserves hidden intent and f
         const bounds = element.getBoundingClientRect();
         const pixel = (value: number) => Math.round(value * devicePixelRatio);
         return (
-          pixel(bounds.top) >= 0 &&
-          pixel(bounds.bottom) <= pixel(innerHeight)
+          pixel(bounds.top) >= 0 && pixel(bounds.bottom) <= pixel(innerHeight)
         );
       }),
     ).toBe(true);
