@@ -165,16 +165,23 @@ jobs:
             sleep 10
           done
           echo "ready=true" >> "$GITHUB_OUTPUT"
+      # Without a status function GitHub prepends success(), which would skip
+      # fetching the package after a development failure while the packaged
+      # phase still ran against a missing application.
       - uses: actions/download-artifact@v4
-        if: steps.wait.outputs.ready == 'true'
+        id: download
+        if: ${{ !cancelled() && steps.wait.outputs.ready == 'true' }}
         with:
           name: apple-silicon-app
           path: out
       - name: Unpack the application built by this run
-        if: steps.wait.outputs.ready == 'true'
+        id: unpack
+        if: ${{ !cancelled() && steps.download.outcome == 'success' }}
         run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
       - name: Packaged application acceptance
-        if: ${{ !cancelled() && (steps.package.outcome == 'success' || steps.wait.outputs.ready == 'true') }}
+        # A development failure must not suppress packaged validation either,
+        # but it only runs against an application this shard actually holds.
+        if: ${{ !cancelled() && (steps.package.outcome == 'success' || steps.unpack.outcome == 'success') }}
         env:
           MOSEY_CI_PHASE: packaged
         run: pnpm test:ci --shard=${{ matrix.shard }}/5
