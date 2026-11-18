@@ -10,6 +10,12 @@ export const ownedProcessGroup = (pid: number) =>
     .split("\n")
     .filter((line) => Number(line.trim().split(/\s+/)[2]) === pid);
 
+// Members of the group that have not yet exited (zombies are already gone).
+export const liveProcessGroup = (pid: number) =>
+  ownedProcessGroup(pid).filter(
+    (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
+  );
+
 // Playwright starts Electron in its own process group. Keep the acquired OS
 // handle: its accessor may disappear after a crash or an explicit quit.
 export async function closeOwnedElectron(
@@ -23,10 +29,6 @@ export async function closeOwnedElectron(
   if (!child.pid) throw new Error("Owned Electron process has no PID");
   const pid = child.pid;
   const exited = () => child.exitCode !== null || child.signalCode !== null;
-  const live = () =>
-    ownedProcessGroup(pid).filter(
-      (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
-    );
   const signal = () => {
     try {
       process.kill(-pid, "SIGKILL");
@@ -36,6 +38,8 @@ export async function closeOwnedElectron(
       else if (code !== "ESRCH") throw error;
     }
   };
+  const settled = () => exited() && liveProcessGroup(pid).length === 0;
+  const graceDeadline = performance.now() + graceMs;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let onExit: (() => void) | undefined;
   let forced = false;
@@ -51,24 +55,30 @@ export async function closeOwnedElectron(
           child.once("exit", resolve);
         }),
         new Promise<void>((resolve) => {
-          timer = setTimeout(() => {
-            forced = true;
-            resolve();
-          }, graceMs);
+          timer = setTimeout(resolve, graceMs);
         }),
       ]);
+    // close() resolves once the leader exits; helpers in its group may still be
+    // exiting. Only a group still alive at the grace deadline counts as forced.
+    while (!closeError && !settled()) {
+      if (performance.now() >= graceDeadline) {
+        forced = true;
+        break;
+      }
+      await delay(25);
+    }
   } finally {
     clearTimeout(timer);
     if (onExit) child.off("exit", onExit);
     // Reap helpers even when the leader already exited or close() rejected.
     try {
-      forced ||= !exited() || live().length > 0;
+      forced ||= !settled();
     } finally {
       signal();
     }
   }
   const deadline = performance.now() + 5000;
-  while (!exited() || live().length) {
+  while (!settled()) {
     if (performance.now() >= deadline)
       throw new Error(`Owned Electron process group ${pid} did not exit`, {
         cause: closeError,
