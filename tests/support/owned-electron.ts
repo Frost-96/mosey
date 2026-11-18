@@ -36,6 +36,8 @@ export async function closeOwnedElectron(
       else if (code !== "ESRCH") throw error;
     }
   };
+  const settled = () => exited() && live().length === 0;
+  const graceDeadline = performance.now() + graceMs;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let onExit: (() => void) | undefined;
   let forced = false;
@@ -57,12 +59,18 @@ export async function closeOwnedElectron(
           }, graceMs);
         }),
       ]);
+    // close() resolves once the leader exits; helpers in its group may still be
+    // exiting. Only a group still alive at the grace deadline counts as forced.
+    while (!forced && !closeError && !settled()) {
+      if (performance.now() >= graceDeadline) forced = true;
+      else await delay(25);
+    }
   } finally {
     clearTimeout(timer);
     if (onExit) child.off("exit", onExit);
     // Reap helpers even when the leader already exited or close() rejected.
     try {
-      forced ||= !exited() || live().length > 0;
+      forced ||= !settled();
     } finally {
       signal();
     }

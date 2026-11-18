@@ -6,6 +6,10 @@ import {
   closeOwnedElectron,
   ownedProcessGroup,
 } from "../tests/support/owned-electron.ts";
+import {
+  closeLeader,
+  launchLingeringGroup,
+} from "./lingering-process-group.ts";
 
 const launch = () =>
   spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
@@ -102,8 +106,27 @@ test(
         },
       },
       owned,
+      { graceMs: 500 },
     );
     assert.equal(result.forced, true);
+    assert.deepEqual(live(owned), []);
+  },
+);
+
+test(
+  "helpers that finish exiting shortly after the leader count as a graceful close",
+  { timeout: 10000 },
+  async (t) => {
+    const owned = await launchLingeringGroup(
+      "setTimeout(() => process.exit(0), 300);",
+    );
+    t.after(() => stop(owned));
+    const result = await closeOwnedElectron(
+      { close: closeLeader(owned) },
+      owned,
+      { graceMs: 3000 },
+    );
+    assert.equal(result.forced, false);
     assert.deepEqual(live(owned), []);
   },
 );
