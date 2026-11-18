@@ -165,12 +165,13 @@ jobs:
             sleep 10
           done
           echo "ready=true" >> "$GITHUB_OUTPUT"
-      # Without a status function GitHub prepends success(), which would skip
-      # fetching the package after a development failure while the packaged
-      # phase still ran against a missing application.
-      - uses: actions/download-artifact@v4
+      - name: Fetch the package from shard 1
         id: download
+        # Without a status function GitHub prepends success() here and to
+        # unpacking, skipping both after a development failure, and with them
+        # this shard's packaged validation.
         if: ${{ !cancelled() && steps.wait.outputs.ready == 'true' }}
+        uses: actions/download-artifact@v4
         with:
           name: apple-silicon-app
           path: out
