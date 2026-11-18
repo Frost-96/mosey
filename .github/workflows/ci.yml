@@ -165,16 +165,24 @@ jobs:
             sleep 10
           done
           echo "ready=true" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@v4
-        if: steps.wait.outputs.ready == 'true'
+      - name: Fetch the package from shard 1
+        id: download
+        # Without a status function GitHub prepends success() here and to
+        # unpacking, skipping both after a development failure, and with them
+        # this shard's packaged validation.
+        if: ${{ !cancelled() && steps.wait.outputs.ready == 'true' }}
+        uses: actions/download-artifact@v4
         with:
           name: apple-silicon-app
           path: out
       - name: Unpack the application built by this run
-        if: steps.wait.outputs.ready == 'true'
+        id: unpack
+        if: ${{ !cancelled() && steps.download.outcome == 'success' }}
         run: ditto -x -k out/Mosey-darwin-arm64.zip out/Mosey-darwin-arm64
       - name: Packaged application acceptance
-        if: ${{ !cancelled() && (steps.package.outcome == 'success' || steps.wait.outputs.ready == 'true') }}
+        # A development failure must not suppress packaged validation either,
+        # but it only runs against an application this shard actually holds.
+        if: ${{ !cancelled() && (steps.package.outcome == 'success' || steps.unpack.outcome == 'success') }}
         env:
           MOSEY_CI_PHASE: packaged
         run: pnpm test:ci --shard=${{ matrix.shard }}/5
