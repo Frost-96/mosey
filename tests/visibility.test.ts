@@ -52,8 +52,12 @@ test("manual visibility survives restart, duplicate launches and damaged prefere
       () => rm(root, { recursive: true, force: true }),
     ],
     async () => {
+      // The duplicate quits by itself or not at all; reap it within the
+      // before-close deadline instead of waiting out a graceful quit.
       if (duplicate)
-        await closeOwnedElectron({ close: async () => {} }, duplicate);
+        await closeOwnedElectron({ close: async () => {} }, duplicate, {
+          graceMs: 0,
+        });
     },
   );
   onTestFinished(async ({ task }) => {

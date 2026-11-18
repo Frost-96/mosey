@@ -2,14 +2,11 @@ import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { test } from "node:test";
+import { launchLingeringGroup } from "../tests/support/lingering-process-group.ts";
 import {
   closeOwnedElectron,
-  ownedProcessGroup,
+  liveProcessGroup,
 } from "../tests/support/owned-electron.ts";
-import {
-  closeLeader,
-  launchLingeringGroup,
-} from "./lingering-process-group.ts";
 
 const launch = () =>
   spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
@@ -19,10 +16,7 @@ const launch = () =>
 const stop = async (child: ChildProcess) => {
   await closeOwnedElectron({ close: async () => {} }, child, { graceMs: 25 });
 };
-const live = (child: ChildProcess) =>
-  ownedProcessGroup(child.pid!).filter(
-    (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
-  );
+const live = (child: ChildProcess) => liveProcessGroup(child.pid!);
 
 test(
   "a stalled driver close cannot hide the original startup error or kill another session",
@@ -117,12 +111,17 @@ test(
   "helpers that finish exiting shortly after the leader count as a graceful close",
   { timeout: 10000 },
   async (t) => {
-    const owned = await launchLingeringGroup(
-      "setTimeout(() => process.exit(0), 300);",
-    );
+    const owned = await launchLingeringGroup(300);
     t.after(() => stop(owned));
     const result = await closeOwnedElectron(
-      { close: closeLeader(owned) },
+      {
+        // Like Playwright, close() resolves as soon as the leader exits.
+        close: async () => {
+          const exit = once(owned, "exit");
+          owned.kill("SIGTERM");
+          await exit;
+        },
+      },
       owned,
       { graceMs: 3000 },
     );

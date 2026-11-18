@@ -15,14 +15,11 @@ import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { createElectronFixtureCleanup } from "../tests/support/electron-fixture-cleanup.ts";
 import { emptyDockCapture } from "../tests/support/empty-dock.ts";
+import { launchLingeringGroup } from "../tests/support/lingering-process-group.ts";
 import {
   closeOwnedElectron,
-  ownedProcessGroup,
+  liveProcessGroup,
 } from "../tests/support/owned-electron.ts";
-import {
-  closeLeader,
-  launchLingeringGroup,
-} from "./lingering-process-group.ts";
 
 const startChild = () =>
   spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
@@ -131,15 +128,10 @@ test(
   "an explicit restart accepts helpers that exit shortly after the leader",
   { timeout: 10000 },
   async (t) => {
-    const leader = await launchLingeringGroup(
-      "setTimeout(() => process.exit(0), 300);",
-    );
+    const leader = await launchLingeringGroup(300);
     t.after(() => stopChild(leader));
     const fixture = createElectronFixtureCleanup([]);
-    await fixture.launch(async () => ({
-      process: () => leader,
-      close: closeLeader(leader),
-    }));
+    await fixture.launch(async () => application(leader));
     await fixture.closeApp();
     await fixture.cleanup();
   },
@@ -149,20 +141,12 @@ test(
   "an explicit restart rejects a helper that outlives the grace period",
   { timeout: 15000 },
   async (t) => {
-    const leader = await launchLingeringGroup("");
+    const leader = await launchLingeringGroup();
     t.after(() => stopChild(leader));
     const fixture = createElectronFixtureCleanup([]);
-    await fixture.launch(async () => ({
-      process: () => leader,
-      close: closeLeader(leader),
-    }));
+    await fixture.launch(async () => application(leader));
     await assert.rejects(fixture.closeApp(), /required forced termination/);
-    assert.deepEqual(
-      ownedProcessGroup(leader.pid!).filter(
-        (line) => !line.trim().split(/\s+/)[4]!.startsWith("Z"),
-      ),
-      [],
-    );
+    assert.deepEqual(liveProcessGroup(leader.pid!), []);
     await fixture.cleanup();
   },
 );
